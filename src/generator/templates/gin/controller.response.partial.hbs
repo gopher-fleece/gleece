@@ -1,0 +1,47 @@
+{{#equal ResponseContentType "application/json"}}
+ctx.JSON(httpStatus, gin.H(responseBody))
+{{/equal}}
+
+{{#equal ResponseContentType "application/xml"}}
+ctx.XML(httpStatus, gin.H(responseBody))
+{{/equal}}
+
+{{#equal ResponseContentType "text/html"}}
+ctx.String(httpStatus, responseBody)
+{{/equal}}
+
+{{#equal ResponseContentType "text/plain"}}
+ctx.String(httpStatus, responseBody)
+{{/equal}}
+
+{{#equal ResponseContentType "application/x-www-form-urlencoded"}}
+ctx.String(httpStatus, responseBody)
+{{/equal}}
+
+{{#equal ResponseContentType "multipart/form-data"}}
+ctx.String(httpStatus, "Multipart form handling not typically done in responses")
+{{/equal}}
+
+{{#equal ResponseContentType "application/octet-stream"}}
+ctx.Data(httpStatus, ResponseContentType, []byte(responseBody))
+{{/equal}}
+
+{{#equal ResponseContentType "application/pdf"}}
+ctx.File(responseBody)
+{{/equal}}
+
+{{#equal ResponseContentType "image/png"}}
+ctx.File(responseBody)
+{{/equal}}
+
+{{#equal ResponseContentType "image/jpeg"}}
+ctx.File(responseBody)
+{{/equal}}
+
+{{#equal ResponseContentType "image/gif"}}
+ctx.File(responseBody)
+{{/equal}}
+
+{{#equal ResponseContentType "text/csv"}}
+ctx.String(httpStatus, responseBody)
+{{/equal}}
