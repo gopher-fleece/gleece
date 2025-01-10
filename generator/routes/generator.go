@@ -3,6 +3,7 @@ package routes
 import (
 	"encoding/json"
 	"fmt"
+	"go/format"
 	"os"
 
 	"github.com/aymerick/raymond"
@@ -61,7 +62,16 @@ func registerPartials(engine cmd.RoutingEngineType) {
 	}
 }
 
-// GenerateRoutes Generates an embeds using the given arguments
+func formatCode(code string) (string, error) {
+	formatted, err := format.Source([]byte(code))
+	if err != nil {
+		Logger.Error("Could not format source code - %v", err)
+		return code, err
+	}
+
+	return string(formatted), nil
+}
+
 func GenerateRoutes(args cmd.RoutesConfig, controllerMeta []definitions.ControllerMetadata) error {
 	registerPartials(args.Engine)
 	registerHelpers()
@@ -87,7 +97,9 @@ func GenerateRoutes(args cmd.RoutesConfig, controllerMeta []definitions.Controll
 		return err
 	}
 
-	err = os.WriteFile(args.OutputPath, []byte(result), args.OutputFilePerms.FileMode())
+	Logger.Debug("Formatting %d bytes of output code", len(result))
+	formattedOutput, _ := formatCode(result)
+	err = os.WriteFile(args.OutputPath, []byte(formattedOutput), args.OutputFilePerms.FileMode())
 	if err != nil {
 		Logger.Fatal("Could not write output file at '%s' with permissions '%v' - %v", args.OutputPath, args.OutputFilePerms, err)
 		return err

@@ -7,9 +7,14 @@ import (
 	"go/token"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strconv"
 	"strings"
 
+	MapSet "github.com/deckarep/golang-set/v2"
+
 	"github.com/haimkastner/gleece/definitions"
+	Logger "github.com/haimkastner/gleece/infrastructure/logger"
 )
 
 func ExtractClassMetadata(d ast.GenDecl, baseStruct string) (*definitions.ControllerMetadata, error) {
@@ -99,6 +104,56 @@ func getResponseInterface(funcDecl ast.FuncDecl) definitions.ResponseMetadata {
 	}
 }
 
+func parseErrorResponseComment(comment string) definitions.ErrorResponse {
+	httpCodeMatch := regexp.MustCompile(`^\d{3,3}`)
+	if !httpCodeMatch.Match([]byte(comment)) {
+		panic(fmt.Sprintf("ErrorResponse annotations must start with an HTTP status code. Received value: '%s'", comment))
+	}
+
+	statusCodeUint, err := strconv.ParseUint(comment[:3], 10, 32)
+	if err != nil {
+		panic(fmt.Sprintf("Could not parse ErrorResponse HTTP Code value '%s' - %v", comment[:3], err))
+	}
+
+	statusCode := definitions.EnsureHttpStatusCode(uint(statusCodeUint))
+	return definitions.ErrorResponse{
+		HttpStatusCode: statusCode,
+		Description:    comment[3:],
+	}
+}
+
+func getErrorResponseMetadata(comments []string) []definitions.ErrorResponse {
+	errorResponses := FindAndExtractOccurrences(comments, "@ErrorResponse", 0)
+	responses := []definitions.ErrorResponse{}
+	encounteredCodes := MapSet.NewSet[definitions.HttpStatusCode]()
+
+	for _, errorResponseComment := range errorResponses {
+		response := parseErrorResponseComment(errorResponseComment)
+		if encounteredCodes.ContainsOne(response.HttpStatusCode) {
+			Logger.Warn(
+				"Status code '%d' appears multiple time on a controller receiver. Ignoring. Original Comment: %s",
+				response.HttpStatusCode,
+				errorResponseComment,
+			)
+			continue
+		}
+		responses = append(responses, response)
+		encounteredCodes.Add(response.HttpStatusCode)
+	}
+	return responses
+}
+
+func getExpressionName(expression ast.Expr) string {
+	switch e := expression.(type) {
+	case *ast.Ident:
+		return e.Name
+	case *ast.SelectorExpr:
+		return fmt.Sprintf("%s.%s", e.X, e.Sel.Name)
+	default:
+		panic(fmt.Sprintf("Unsupported expression type '%v'", e))
+	}
+}
+
 func ExtractClassRoutesMetaData(funcDecl ast.FuncDecl) (*definitions.RouteMetadata, error) {
 	routeMetadata := definitions.RouteMetadata{}
 	routeMetadata.OperationId = funcDecl.Name.Name
@@ -118,6 +173,8 @@ func ExtractClassRoutesMetaData(funcDecl ast.FuncDecl) (*definitions.RouteMetada
 	} else {
 		routeMetadata.ResponseSuccessCode = "204"
 	}
+
+	routeMetadata.ErrorResponses = getErrorResponseMetadata(comments)
 
 	// Extract function parameters
 	if funcDecl.Type.Params != nil {
@@ -153,7 +210,10 @@ func ExtractClassRoutesMetaData(funcDecl ast.FuncDecl) (*definitions.RouteMetada
 				// Extract the rest of the line as the description
 				param.Description = strings.TrimSpace(GetTextAfterParenthesis(line, " "+name.Name+" "))
 
-				param.ParamInterface = field.Type.(*ast.Ident).Name
+				// NOTE:
+				// This takes the qualified name - it WILL cause problems if the import is renamed in the controller
+				// i.e., the inferred package name may be different than the actual one
+				param.ParamExpressionName = getExpressionName(field.Type)
 				routeMetadata.FuncParams = append(routeMetadata.FuncParams, param)
 			}
 		}

@@ -1,5 +1,9 @@
 package ctrl
 
+import (
+	"github.com/haimkastner/gleece/temp"
+)
+
 // Extended2Controller
 // @Tag Users2
 // @Route /users2
@@ -24,14 +28,6 @@ type GetUserInput struct {
 	UserID GetUserInput2
 }
 
-// 1 Enumerate entire app
-// 2 Lookup ClassDefinitionNodes
-// GetUserInput2 PKG A,
-// import X
-
-// x.GetUser
-// y.GetUser
-
 //// DoItPlease bla bla bla
 //// @Method GET
 //// @Route /
@@ -49,10 +45,23 @@ type GetUserInput struct {
 // @Method GET
 // @Route /dont
 // @Response 204
+// @ErrorResponse 400 <p>Test Error 400</p>
+// @ErrorResponse 403 <p>Test Error 403</p>
+// @ErrorResponse 403 <p>Test Error 403 #2</p>
 // @Query theInput the_input
 func (ec *ExtendedController) DontDoItPlease(fgd GetUserInput) error {
 	// Print  fgd as a string
 	println(fgd)
+	return nil
+}
+
+// A test for simple imports
+// @Query definedElseWhere Testing simple type import
+// @Method POST
+// @Route /test
+// @Response 204
+// @ErrorResponse 400 <p>Test Error 400</p>
+func (ec *ExtendedController) ExternalTypeTest(definedElseWhere temp.SimpleType) error {
 	return nil
 }
 

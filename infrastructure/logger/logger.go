@@ -5,7 +5,7 @@ import (
 	"log"
 )
 
-var verbosityLevel LogLevel = 2
+var verbosityLevel LogLevel = 0
 
 // A logger's level, valued 0-6 where lower levels higher verbosity
 type LogLevel uint8
