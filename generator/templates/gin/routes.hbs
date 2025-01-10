@@ -2,25 +2,50 @@ package {{{PackageName}}}
 
 import (
 	"github.com/gin-gonic/gin"
-	"net/http"
+	"github.com/haimkastner/gleece/definitions"
 {{#each Imports}}
 	"{{{.}}}"
 {{/each}}
 )
 
+type Controller interface {
+	SetRequest(request any)
+
+	// SetStatus sets the status code for the GleeceController.
+	SetStatus(statusCode definitions.HttpStatusCode)
+
+	// GetStatus gets the status code for the GleeceController.
+	GetStatus() *definitions.HttpStatusCode
+
+	// SetHeader sets a header for the GleeceController.
+	SetHeader(name string, value interface{})
+}
+
+func setResponseStatus(ctx *gin.Context, controller Controller, err error) {
+	if err != nil {
+		status := controller.GetStatus()
+		if status == nil {
+			ctx.Status(500)
+		} else {
+			ctx.Status(int(*status))
+		}
+	}
+}
+
 func RegisterRoutes(engine *gin.Engine) {
 {{#each Controllers}}
 	// {{{Name}}}
 	{{#each Routes}}
-	engine.{{{HttpVerb}}}("{{{../RestMetadata.Path}}}{{{RestMetadata.Path}}}", func(ctx *gin.Context) {
-		controller := {{../Name}}{}
-		controller.SetRequest(ctx)
-	{{#each FuncParams}}
-		{{> RequestArgsParsingPartial}}
-		result{{#equal ../ResponseInterface.Signature "ValueAndError"}}, err{{/equal}} := controller.{{{OperationId}}}({{#each FuncParams}}{{ToLowerCamel Name}}{{#unless @last}}, {{/unless}}{{/each}})
-	})
+		engine.{{{HttpVerb}}}("{{{../RestMetadata.Path}}}{{{RestMetadata.Path}}}", func(ctx *gin.Context) {
+			controller := {{../Name}}{}
+			controller.SetRequest(ctx)
+			{{#each FuncParams}}
+				{{> RequestArgsParsingPartial}}
+			{{/each}}
+		{{#equal ResponseInterface.Signature "ValueAndError"}}value, {{/equal}}err := controller.{{{OperationId}}}({{#each FuncParams}}{{ToLowerCamel Name}}{{#unless @last}}, {{/unless}}{{/each}})
+		setResponseStatus(ctx, &controller, err)
 	{{> RequestResponsePartial}}
-	{{/each}}
+	})
 	{{/each}}
 {{/each}}
 }

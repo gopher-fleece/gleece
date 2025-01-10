@@ -57,36 +57,36 @@ func ExtractFuncReturnTypes(d ast.FuncDecl) (string, definitions.FuncReturnSigna
 
 	// If it's empty array, print error
 	if len(returnTypes) == 0 {
-		println("No return types found for ", d.Name.Name)
-		return "", definitions.FuncRetValue, nil
+		Logger.Warn("No return types found for ", d.Name.Name)
+		return "", definitions.FuncRetError, nil
 	}
 
 	// If it's more then 2, print error, no more them tow are supported
 	if len(returnTypes) > 2 {
-		println("More then 2 return types found for ", d.Name.Name)
-		return "", definitions.FuncRetValue, nil
+		Logger.Warn("More then 2 return types found for ", d.Name.Name)
+		return "", definitions.FuncRetError, nil
 	}
 
 	if len(returnTypes) == 1 {
 
 		// Validate that the only return type is not an error
 		if returnTypes[0] != "error" {
-			println("No error return type found for ", d.Name.Name)
-			return "", definitions.FuncRetValue, nil
+			Logger.Warn("No error return type found for ", d.Name.Name)
+			return "", definitions.FuncRetError, nil
 		}
 		return "", definitions.FuncRetError, nil
 	}
 
 	// Validate that the first return type is NOT an error
 	if returnTypes[0] == "error" {
-		println("No value return type found for ", d.Name.Name)
-		return "", definitions.FuncRetValue, nil
+		Logger.Warn("No value return type found for ", d.Name.Name)
+		return "", definitions.FuncRetError, nil
 	}
 
 	// Validate that the second return type is an error
 	if returnTypes[1] != "error" {
-		println("No error return type found for ", d.Name.Name)
-		return "", definitions.FuncRetValue, nil
+		Logger.Warn("No error return type found for ", d.Name.Name)
+		return "", definitions.FuncRetError, nil
 	}
 
 	return returnTypes[0], definitions.FuncRetValueAndError, nil
@@ -154,75 +154,85 @@ func getExpressionName(expression ast.Expr) string {
 	}
 }
 
-func ExtractClassRoutesMetaData(funcDecl ast.FuncDecl) (*definitions.RouteMetadata, error) {
-	routeMetadata := definitions.RouteMetadata{}
-	routeMetadata.OperationId = funcDecl.Name.Name
-	comments := MapDocListToStrings(funcDecl.Doc.List)
-
-	routeMetadata.HttpVerb = definitions.EnsureValidHttpVerb(FindAndExtract(comments, "@Method"))
-	routeMetadata.Description = FindAndExtract(comments, "@Description")
-	routeMetadata.RestMetadata = BuildRestMetadata(comments)
-	routeMetadata.ResponseInterface = getResponseInterface(funcDecl)
-
+func getRouteSuccessResponseCode(comments []string, routeHasResultValue bool) definitions.HttpStatusCode {
 	responseCode := FindAndExtract(comments, "@ResponseCode")
 
 	if responseCode != "" {
-		routeMetadata.ResponseSuccessCode = responseCode
-	} else if routeMetadata.ResponseInterface.InterfaceName != "" {
-		routeMetadata.ResponseSuccessCode = "200"
-	} else {
-		routeMetadata.ResponseSuccessCode = "204"
+		return definitions.EnsureHttpStatusCodeString(responseCode)
+	}
+	if routeHasResultValue {
+		return definitions.StatusOK
 	}
 
+	return definitions.StatusNoContent
+}
+
+func getRouteParameters(comments []string, routeFuncDecl ast.FuncDecl) []definitions.FuncParam {
+	params := []definitions.FuncParam{}
+
+	for _, field := range routeFuncDecl.Type.Params.List {
+		for _, name := range field.Names {
+			param := definitions.FuncParam{
+				Name: name.Name,
+			}
+			line := SearchForParamTerm(comments, name.Name)
+			if line == "" {
+				Logger.Warn("No line found for ", name.Name)
+				continue
+			}
+
+			// Check whenever the actual name in the HTTP request is different from the function parameter name
+			if httpName := ExtractParenthesesContent(line); httpName != "" {
+				param.Name = httpName
+			}
+
+			if pType := strings.ToLower(ExtractParamTerm(line)); pType != "" {
+				switch pType {
+				case "query":
+					param.ParamType = definitions.Query
+				case "header":
+					param.ParamType = definitions.Header
+				case "path":
+					param.ParamType = definitions.Path
+				case "body":
+					param.ParamType = definitions.Body
+				}
+			}
+
+			// Extract the rest of the line as the description
+			param.Description = strings.TrimSpace(GetTextAfterParenthesis(line, " "+name.Name+" "))
+
+			// NOTE:
+			// This takes the qualified name - it WILL cause problems if the import is renamed in the controller
+			// i.e., the inferred package name may be different than the actual one
+			param.ParamExpressionName = getExpressionName(field.Type)
+			params = append(params, param)
+		}
+	}
+	return params
+}
+
+func ExtractClassRoutesMetaData(routeFuncDecl ast.FuncDecl) (*definitions.RouteMetadata, error) {
+	routeMetadata := definitions.RouteMetadata{}
+	comments := MapDocListToStrings(routeFuncDecl.Doc.List)
+
+	routeMetadata.OperationId = routeFuncDecl.Name.Name
+	routeMetadata.HttpVerb = definitions.EnsureValidHttpVerb(FindAndExtract(comments, "@Method"))
+	routeMetadata.Description = FindAndExtract(comments, "@Description")
+	routeMetadata.RestMetadata = BuildRestMetadata(comments)
+	routeMetadata.ResponseInterface = getResponseInterface(routeFuncDecl)
+	routeMetadata.ResponseSuccessCode = getRouteSuccessResponseCode(comments, routeMetadata.ResponseInterface.InterfaceName != "")
 	routeMetadata.ErrorResponses = getErrorResponseMetadata(comments)
 
 	// Extract function parameters
-	if funcDecl.Type.Params != nil {
-		for _, field := range funcDecl.Type.Params.List {
-			for _, name := range field.Names {
-				param := definitions.FuncParam{
-					Name: name.Name,
-				}
-				line := SearchForParamTerm(comments, name.Name)
-				if line == "" {
-					println("No line found for ", name.Name)
-					continue
-				}
-
-				// Check whenever the actual name in the HTTP request is different from the function parameter name
-				if httpName := ExtractParenthesesContent(line); httpName != "" {
-					param.Name = httpName
-				}
-
-				if pType := strings.ToLower(ExtractParamTerm(line)); pType != "" {
-					switch pType {
-					case "query":
-						param.ParamType = definitions.Query
-					case "header":
-						param.ParamType = definitions.Header
-					case "path":
-						param.ParamType = definitions.Path
-					case "body":
-						param.ParamType = definitions.Body
-					}
-				}
-
-				// Extract the rest of the line as the description
-				param.Description = strings.TrimSpace(GetTextAfterParenthesis(line, " "+name.Name+" "))
-
-				// NOTE:
-				// This takes the qualified name - it WILL cause problems if the import is renamed in the controller
-				// i.e., the inferred package name may be different than the actual one
-				param.ParamExpressionName = getExpressionName(field.Type)
-				routeMetadata.FuncParams = append(routeMetadata.FuncParams, param)
-			}
-		}
+	if routeFuncDecl.Type.Params != nil {
+		routeMetadata.FuncParams = getRouteParameters(comments, routeFuncDecl)
 	}
 
 	// Extract function results
-	if funcDecl.Type.Results != nil {
-
+	if routeFuncDecl.Type.Results != nil {
 	}
+
 	return &routeMetadata, nil
 }
 
@@ -267,6 +277,7 @@ func ExtractMetadata() ([]definitions.ControllerMetadata, error) {
 				if !ok {
 					continue
 				}
+
 				structType := typeSpec.Type.(*ast.StructType)
 				if EmbedsBaseStruct(structType, baseStruct) {
 					return true
@@ -306,10 +317,11 @@ func ExtractMetadata() ([]definitions.ControllerMetadata, error) {
 			if funcDecl == nil {
 				continue
 			}
+
 			// Print the class name from Decl and all functions names from filtered funcDecl
-			fmt.Println(decl.(*ast.GenDecl).Specs[0].(*ast.TypeSpec).Name.Name)
+			Logger.Debug(decl.(*ast.GenDecl).Specs[0].(*ast.TypeSpec).Name.Name)
 			for _, f := range funcDecl {
-				fmt.Println(f.(*ast.FuncDecl).Name.Name)
+				Logger.Debug(f.(*ast.FuncDecl).Name.Name)
 			}
 
 			metadataInfo, _ := ExtractClassMetadata(*decl.(*ast.GenDecl), baseStruct)

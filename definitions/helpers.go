@@ -1,6 +1,9 @@
 package definitions
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+)
 
 var validHttpVerbs = map[string]struct{}{
 	string(HttpGet):     {},
@@ -101,4 +104,12 @@ func EnsureHttpStatusCode(code uint) HttpStatusCode {
 		return HttpStatusCode(code)
 	}
 	panic(fmt.Sprintf("'%d' is not a valid HTTP status code", code))
+}
+
+func EnsureHttpStatusCodeString(code string) HttpStatusCode {
+	parsed, err := strconv.ParseUint(code, 10, 32)
+	if err != nil {
+		panic(fmt.Sprintf("'%s' is not a valid HTTP status code", code))
+	}
+	return EnsureHttpStatusCode(uint(parsed))
 }

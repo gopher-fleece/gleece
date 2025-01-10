@@ -61,8 +61,8 @@ func (ec *ExtendedController) DontDoItPlease(fgd GetUserInput) error {
 // @Route /test
 // @Response 204
 // @ErrorResponse 400 <p>Test Error 400</p>
-func (ec *ExtendedController) ExternalTypeTest(definedElseWhere temp.SimpleType) error {
-	return nil
+func (ec *ExtendedController) ExternalTypeTest(definedElseWhere temp.SimpleType) (string, error) {
+	return "", nil
 }
 
 //// DoItPlease2 bla bla bla

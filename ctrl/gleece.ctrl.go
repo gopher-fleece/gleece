@@ -1,10 +1,14 @@
 package ctrl
 
-import "context"
+import (
+	"context"
+
+	"github.com/haimkastner/gleece/definitions"
+)
 
 // GleeceController provides common functionality for controllers.
 type GleeceController struct {
-	statusCode *int
+	statusCode *definitions.HttpStatusCode
 	headers    map[string]interface{}
 	Ctx        context.Context
 	request    any
@@ -15,12 +19,12 @@ func (gc *GleeceController) SetRequest(request any) {
 }
 
 // SetStatus sets the status code for the GleeceController.
-func (gc *GleeceController) SetStatus(statusCode int) {
+func (gc *GleeceController) SetStatus(statusCode definitions.HttpStatusCode) {
 	gc.statusCode = &statusCode
 }
 
 // GetStatus gets the status code for the GleeceController.
-func (gc *GleeceController) GetStatus() *int {
+func (gc *GleeceController) GetStatus() *definitions.HttpStatusCode {
 	return gc.statusCode
 }
 

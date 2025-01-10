@@ -147,7 +147,7 @@ type RouteMetadata struct {
 	RestMetadata        RestMetadata
 	FuncParams          []FuncParam
 	ResponseInterface   ResponseMetadata
-	ResponseSuccessCode string
+	ResponseSuccessCode HttpStatusCode
 	ErrorResponses      []ErrorResponse
 }
 
@@ -164,7 +164,6 @@ type ControllerMetadata struct {
 type FuncReturnSignature string
 
 const (
-	FuncRetValue         FuncReturnSignature = "Value"
 	FuncRetError         FuncReturnSignature = "Error"
 	FuncRetValueAndError FuncReturnSignature = "ValueAndError"
 )
