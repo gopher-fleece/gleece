@@ -22,4 +22,5 @@ type RoutesConfig struct {
 	TemplateOverrides map[KnownTemplate]string
 	OutputPath        string
 	OutputFilePerms   arguments.FileModeArg
+	PackageName       string
 }

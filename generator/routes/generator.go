@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/aymerick/raymond"
+	"github.com/iancoleman/strcase"
 
 	"github.com/haimkastner/gleece/cmd"
 	"github.com/haimkastner/gleece/definitions"
@@ -14,10 +15,16 @@ import (
 )
 
 // dumpContext Dumps the routes context to the log for debugging purposes
-func dumpContext(ctx RoutesContext) {
+func dumpContext(ctx any) {
 	// It's basically impossible to break the marshaller without some pretty crazy, and very intentional hacks
 	contextJson, _ := json.MarshalIndent(ctx, "\t", "\t")
 	Logger.Debug("Routes Context:\n%s", contextJson)
+}
+
+func registerHelpers() {
+	raymond.RegisterHelper("ToLowerCamel", func(arg string) string {
+		return strcase.ToLowerCamel(arg)
+	})
 }
 
 func getDefaultTemplate(engine cmd.RoutingEngineType) string {
@@ -45,9 +52,21 @@ func getTemplateString(engine cmd.RoutingEngineType, templateFilePath string) (s
 	return string(data), nil
 }
 
+func registerPartials(engine cmd.RoutingEngineType) {
+	switch engine {
+	case cmd.RoutingEngineGin:
+		gin.RegisterPartials()
+	default:
+		panic(fmt.Sprintf("Unknown routing engine type '%v'", engine))
+	}
+}
+
 // GenerateRoutes Generates an embeds using the given arguments
-func GenerateRoutes(args cmd.RoutesConfig, metadata definitions.ApiMetadata) error {
-	ctx, err := GetTemplateContext(args, metadata)
+func GenerateRoutes(args cmd.RoutesConfig, controllerMeta []definitions.ControllerMetadata) error {
+	registerPartials(args.Engine)
+	registerHelpers()
+
+	ctx, err := GetTemplateContext(args, controllerMeta)
 
 	if err != nil {
 		Logger.Fatal("Could not create a context for the template rendering process")

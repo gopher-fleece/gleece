@@ -1,13 +1,13 @@
-{{#equal Type "Path"}}
+{{#equal ParamType "Path"}}
 {{ToLowerCamel Name}} := ctx.Param("{{{Name}}}")
 {{/equal}}
-{{#equal Type "Query"}}
+{{#equal ParamType "Query"}}
 {{ToLowerCamel Name}} := ctx.Query("{{{Name}}}")
 {{/equal}}
-{{#equal Type "Header"}}
+{{#equal ParamType "Header"}}
 {{ToLowerCamel Name}} := ctx.GetHeader("{{{Name}}}")
 {{/equal}}
-{{#equal Type "Body"}}
+{{#equal ParamType "Body"}}
 var {{ToLowerCamel Name}} {{{ValueType}}}
 {{#equal ResponseContentType "application/json"}}
 {{ToLowerCamel Name}} := ctx.ShouldBindJSON(&value)

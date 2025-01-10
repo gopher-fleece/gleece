@@ -48,10 +48,17 @@ type RestMetadata struct {
 }
 
 type FuncParam struct {
-	Name           string
-	ParamType      ParamType
-	ParamInterface string
-	Description    string
+	Name                  string
+	ParamType             ParamType
+	ParamInterface        string
+	Description           string
+	FullyQualifiedPackage string
+}
+
+type ResponseMetadata struct {
+	InterfaceName         string
+	FullyQualifiedPackage string
+	Signature             FuncReturnSignature
 }
 
 type RouteMetadata struct {
@@ -60,19 +67,24 @@ type RouteMetadata struct {
 	Description         string
 	RestMetadata        RestMetadata
 	FuncParams          []FuncParam
-	ResponseInterface   string
+	ResponseInterface   ResponseMetadata
 	ResponseSuccessCode string
 }
 
 type ControllerMetadata struct {
-	Name         string
-	Package      string
-	Tag          string
-	Description  string
-	RestMetadata RestMetadata
-	Routes       []RouteMetadata
+	Name                  string
+	Package               string
+	Tag                   string
+	Description           string
+	RestMetadata          RestMetadata
+	Routes                []RouteMetadata
+	FullyQualifiedPackage string
 }
 
-type ApiMetadata struct {
-	Controllers [] ControllerMetadata
-}
+type FuncReturnSignature string
+
+const (
+	FuncRetValue         FuncReturnSignature = "Value"
+	FuncRetError         FuncReturnSignature = "Error"
+	FuncRetValueAndError FuncReturnSignature = "ValueAndError"
+)

@@ -11,16 +11,12 @@ type Argument struct {
 	ValueType any
 }
 
-type Route struct {
-	Path                string
-	Verb                definitions.HttpVerb
-	RequestContentType  definitions.ContentType
-	ResponseContentType definitions.ContentType
-	Arguments           []Argument
+type RouteCtx struct {
+	definitions.RouteMetadata
 }
 
 type ControllerMeta struct {
-	Routes []Route
+	Routes []RouteCtx
 }
 
 type PackageImport struct {
@@ -30,13 +26,29 @@ type PackageImport struct {
 
 type RoutesContext struct {
 	PackageName string
-	Imports     []PackageImport
-	Routes      []Route
+	Controllers []definitions.ControllerMetadata
+	//Imports     []PackageImport
+	//Routes      []RouteCtx
 }
 
 func GetTemplateContext(
-	cmd.RoutesConfig,
-	definitions.ApiMetadata,
+	config cmd.RoutesConfig,
+	controllers []definitions.ControllerMetadata,
 ) (RoutesContext, error) {
-	return RoutesContext{}, nil
+	ctx := RoutesContext{Controllers: controllers}
+	if len(config.PackageName) > 0 {
+		ctx.PackageName = config.PackageName
+	} else {
+		ctx.PackageName = "routes"
+	}
+
+	/*
+		imports := MapSet.NewSet[string]()
+
+		for _, controller := range metadata.Controllers {
+			// First, add the controller import
+			imports.Add(controller.FullyQualifiedPackage)
+		}
+	*/
+	return ctx, nil
 }

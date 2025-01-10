@@ -10,16 +10,15 @@ import (
 	"strings"
 
 	"github.com/haimkastner/gleece/definitions"
-	. "github.com/haimkastner/gleece/definitions"
 )
 
-func ExtractClassMetadata(d ast.GenDecl, baseStruct string) (*ControllerMetadata, error) {
+func ExtractClassMetadata(d ast.GenDecl, baseStruct string) (*definitions.ControllerMetadata, error) {
 	for _, spec := range d.Specs {
 		if typeSpec, ok := spec.(*ast.TypeSpec); ok {
 			if structType, ok := typeSpec.Type.(*ast.StructType); ok {
 				if EmbedsBaseStruct(structType, baseStruct) {
 					// Initialize metadata for this controller
-					ctrlMetadata := ControllerMetadata{
+					ctrlMetadata := definitions.ControllerMetadata{
 						Name: typeSpec.Name.Name,
 					}
 
@@ -39,7 +38,7 @@ func ExtractClassMetadata(d ast.GenDecl, baseStruct string) (*ControllerMetadata
 	return nil, nil
 }
 
-func ExtractFuncReturnTypes(d ast.FuncDecl) (string, error) {
+func ExtractFuncReturnTypes(d ast.FuncDecl) (string, definitions.FuncReturnSignature, error) {
 	var returnTypes []string
 
 	// Check if the function has results (return values)
@@ -54,13 +53,13 @@ func ExtractFuncReturnTypes(d ast.FuncDecl) (string, error) {
 	// If it's empty array, print error
 	if len(returnTypes) == 0 {
 		println("No return types found for ", d.Name.Name)
-		return "", nil
+		return "", definitions.FuncRetValue, nil
 	}
 
 	// If it's more then 2, print error, no more them tow are supported
 	if len(returnTypes) > 2 {
 		println("More then 2 return types found for ", d.Name.Name)
-		return "", nil
+		return "", definitions.FuncRetValue, nil
 	}
 
 	if len(returnTypes) == 1 {
@@ -68,51 +67,63 @@ func ExtractFuncReturnTypes(d ast.FuncDecl) (string, error) {
 		// Validate that the only return type is not an error
 		if returnTypes[0] != "error" {
 			println("No error return type found for ", d.Name.Name)
-			return "", nil
+			return "", definitions.FuncRetValue, nil
 		}
-		return "void", nil
+		return "", definitions.FuncRetError, nil
 	}
 
 	// Validate that the first return type is NOT an error
 	if returnTypes[0] == "error" {
-		println("No error return type found for ", d.Name.Name)
-		return "", nil
+		println("No value return type found for ", d.Name.Name)
+		return "", definitions.FuncRetValue, nil
 	}
 
 	// Validate that the second return type is an error
 	if returnTypes[1] != "error" {
 		println("No error return type found for ", d.Name.Name)
-		return "", nil
+		return "", definitions.FuncRetValue, nil
 	}
 
-	return returnTypes[0], nil
+	return returnTypes[0], definitions.FuncRetValueAndError, nil
 }
 
-func ExtractClassRoutesMetaData(d ast.FuncDecl) (*RouteMetadata, error) {
-	routeMetadata := RouteMetadata{}
-	routeMetadata.OperationId = d.Name.Name
-	comments := MapDocListToStrings(d.Doc.List)
+func getResponseInterface(funcDecl ast.FuncDecl) definitions.ResponseMetadata {
+	retTypeName, signatureType, err := ExtractFuncReturnTypes(funcDecl)
+	if err != nil {
+		panic((fmt.Sprintf("Could not extract return type for a function declaration '%s': %v", funcDecl.Name.Name, err)))
+	}
+	return definitions.ResponseMetadata{
+		InterfaceName:         retTypeName,
+		Signature:             signatureType,
+		FullyQualifiedPackage: "TODO", // <<<<<<<<<========================
+	}
+}
 
-	routeMetadata.HttpVerb = EnsureValidHttpVerb(FindAndExtract(comments, "@Method"))
+func ExtractClassRoutesMetaData(funcDecl ast.FuncDecl) (*definitions.RouteMetadata, error) {
+	routeMetadata := definitions.RouteMetadata{}
+	routeMetadata.OperationId = funcDecl.Name.Name
+	comments := MapDocListToStrings(funcDecl.Doc.List)
+
+	routeMetadata.HttpVerb = definitions.EnsureValidHttpVerb(FindAndExtract(comments, "@Method"))
 	routeMetadata.Description = FindAndExtract(comments, "@Description")
 	routeMetadata.RestMetadata = BuildRestMetadata(comments)
-	routeMetadata.ResponseInterface, _ = ExtractFuncReturnTypes(d)
+	routeMetadata.ResponseInterface = getResponseInterface(funcDecl)
 
 	responseCode := FindAndExtract(comments, "@ResponseCode")
 
 	if responseCode != "" {
 		routeMetadata.ResponseSuccessCode = responseCode
-	} else if routeMetadata.ResponseInterface != "void" {
+	} else if routeMetadata.ResponseInterface.InterfaceName != "" {
 		routeMetadata.ResponseSuccessCode = "200"
 	} else {
 		routeMetadata.ResponseSuccessCode = "204"
 	}
 
 	// Extract function parameters
-	if d.Type.Params != nil {
-		for _, field := range d.Type.Params.List {
+	if funcDecl.Type.Params != nil {
+		for _, field := range funcDecl.Type.Params.List {
 			for _, name := range field.Names {
-				param := FuncParam{
+				param := definitions.FuncParam{
 					Name: name.Name,
 				}
 				line := SearchForParamTerm(comments, name.Name)
@@ -149,13 +160,13 @@ func ExtractClassRoutesMetaData(d ast.FuncDecl) (*RouteMetadata, error) {
 	}
 
 	// Extract function results
-	if d.Type.Results != nil {
+	if funcDecl.Type.Results != nil {
 
 	}
 	return &routeMetadata, nil
 }
 
-func ExtractMetadata() ([]ControllerMetadata, error) {
+func ExtractMetadata() ([]definitions.ControllerMetadata, error) {
 	// Define the directory containing the Go files
 	dir := "./ctrl"
 
@@ -163,7 +174,7 @@ func ExtractMetadata() ([]ControllerMetadata, error) {
 	baseStruct := "GleeceController"
 
 	// Array to hold metadata
-	var metadata []ControllerMetadata
+	var metadata []definitions.ControllerMetadata
 
 	// Iterate over all Go files in the directory
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
@@ -242,14 +253,14 @@ func ExtractMetadata() ([]ControllerMetadata, error) {
 			}
 
 			metadataInfo, _ := ExtractClassMetadata(*decl.(*ast.GenDecl), baseStruct)
-			ctrlMetadata := ControllerMetadata{}
+			ctrlMetadata := definitions.ControllerMetadata{}
 			ctrlMetadata.Package = node.Name.Name
 			ctrlMetadata.Name = metadataInfo.Name
 			ctrlMetadata.Tag = metadataInfo.Tag
 			ctrlMetadata.Description = metadataInfo.Description
 			ctrlMetadata.RestMetadata = metadataInfo.RestMetadata
 
-			ctrlMetadata.Routes = []RouteMetadata{}
+			ctrlMetadata.Routes = []definitions.RouteMetadata{}
 			for _, f := range funcDecl {
 				routeMetadata, _ := ExtractClassRoutesMetaData(*f.(*ast.FuncDecl))
 				ctrlMetadata.Routes = append(ctrlMetadata.Routes, *routeMetadata)

@@ -9,11 +9,18 @@ import (
 )
 
 func RegisterRoutes(engine *gin.Engine) {
+{{#each Controllers}}
+	// {{{Name}}}
 	{{#each Routes}}
-	engine.{{{Verb}}}("{{{Path}}}", func(ctx *gin.Context) {
-{{#each Arguments}}
-		{{> RoutesRequestArgsParsing}}
-		{{> RoutesControllerResponsePartial}}
-	})
+		engine.{{{HttpVerb}}}("{{{../RestMetadata.Path}}}{{{RestMetadata.Path}}}", func(ctx *gin.Context) {
+			controller := {{../Name}}{}
+			controller.SetRequest(ctx)
+		{{#each FuncParams}}
+			{{> RequestArgsParsingPartial}}
+			result{{#equal ../ResponseInterface.Signature "ValueAndError"}}, err{{/equal}} := controller.{{{OperationId}}}({{#each FuncParams}}{{ToLowerCamel Name}}{{#unless @last}}, {{/unless}}{{/each}})
+		})
+			{{> RequestResponsePartial}}
+		{{/each}}
+	{{/each}}
 {{/each}}
 }

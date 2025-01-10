@@ -7,19 +7,24 @@ type GleeceController struct {
 	statusCode *int
 	headers    map[string]interface{}
 	Ctx        context.Context
+	request    any
+}
+
+func (gc *GleeceController) SetRequest(request any) {
+	gc.request = request
 }
 
 // SetStatus sets the status code for the GleeceController.
-func (bc *GleeceController) SetStatus(statusCode int) {
-	bc.statusCode = &statusCode
+func (gc *GleeceController) SetStatus(statusCode int) {
+	gc.statusCode = &statusCode
 }
 
 // GetStatus gets the status code for the GleeceController.
-func (bc *GleeceController) GetStatus() *int {
-	return bc.statusCode
+func (gc *GleeceController) GetStatus() *int {
+	return gc.statusCode
 }
 
 // SetHeader sets a header for the GleeceController.
-func (bc *GleeceController) SetHeader(name string, value interface{}) {
-	bc.headers[name] = value
+func (gc *GleeceController) SetHeader(name string, value interface{}) {
+	gc.headers[name] = value
 }
