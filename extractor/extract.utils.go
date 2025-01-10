@@ -5,6 +5,8 @@ import (
 	"go/ast"
 	"regexp"
 	"strings"
+
+	"github.com/haimkastner/gleece/definitions"
 )
 
 // SearchForParamTerm searches for a term in a list of strings that comes immediately after "// @" with no space, and with space after it.
@@ -102,8 +104,8 @@ func MapDocListToStrings(docList []*ast.Comment) []string {
 	return result
 }
 
-func BuildRestMetadata(comments []string) RestMetadata {
-	restMetadata := RestMetadata{}
+func BuildRestMetadata(comments []string) definitions.RestMetadata {
+	restMetadata := definitions.RestMetadata{}
 	route := FindAndExtract(comments, "@Route")
 	restMetadata.Path = route
 	return restMetadata

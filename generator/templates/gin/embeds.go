@@ -4,17 +4,22 @@ package gin
 
 import (
 	_ "embed"
+
 	"github.com/aymerick/raymond"
 )
 
-//go:routes.hbs
+//go:embed routes.hbs
 var RoutesTemplate string
 
-//go:controller.response.partial.hbs
+//go:embed response.partial.hbs
 var RoutesControllerResponsePartial string
+
+//go:embed request.args.parsing.hbs
+var RoutesRequestArgsParsing string
 
 var Partials = map[string]string{
 	"RoutesControllerResponsePartial": RoutesControllerResponsePartial,
+	"RoutesRequestArgsParsing":        RoutesRequestArgsParsing,
 }
 
 func RegisterPartials() {

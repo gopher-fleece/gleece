@@ -1,4 +1,14 @@
-package structs
+package definitions
+
+// Enum of HTTP parma type (header, query, path, body)
+type ParamType string
+
+const (
+	Header ParamType = "Header"
+	Query  ParamType = "Query"
+	Path   ParamType = "Path"
+	Body   ParamType = "Body"
+)
 
 type HttpVerb string
 
@@ -32,3 +42,37 @@ const (
 	ContentTypeJavaScript     ContentType = "application/javascript"
 	ContentTypeCSS            ContentType = "text/css"
 )
+
+type RestMetadata struct {
+	Path string
+}
+
+type FuncParam struct {
+	Name           string
+	ParamType      ParamType
+	ParamInterface string
+	Description    string
+}
+
+type RouteMetadata struct {
+	OperationId         string
+	HttpVerb            HttpVerb
+	Description         string
+	RestMetadata        RestMetadata
+	FuncParams          []FuncParam
+	ResponseInterface   string
+	ResponseSuccessCode string
+}
+
+type ControllerMetadata struct {
+	Name         string
+	Package      string
+	Tag          string
+	Description  string
+	RestMetadata RestMetadata
+	Routes       []RouteMetadata
+}
+
+type ApiMetadata struct {
+	Controllers [] ControllerMetadata
+}

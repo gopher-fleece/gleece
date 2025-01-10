@@ -8,7 +8,9 @@ import (
 	"github.com/aymerick/raymond"
 
 	"github.com/haimkastner/gleece/cmd"
-	"github.com/haimkastner/gleece/src/generator/templates/gin"
+	"github.com/haimkastner/gleece/definitions"
+	"github.com/haimkastner/gleece/generator/templates/gin"
+	Logger "github.com/haimkastner/gleece/infrastructure/logger"
 )
 
 // dumpContext Dumps the routes context to the log for debugging purposes
@@ -43,9 +45,9 @@ func getTemplateString(engine cmd.RoutingEngineType, templateFilePath string) (s
 	return string(data), nil
 }
 
-// GenerateEmbedFile Generates an embeds using the given arguments
-func GenerateEmbedFile(args cmd.RoutesConfig) error {
-	ctx, err := GetTemplateContext(args)
+// GenerateRoutes Generates an embeds using the given arguments
+func GenerateRoutes(args cmd.RoutesConfig, metadata definitions.ApiMetadata) error {
+	ctx, err := GetTemplateContext(args, metadata)
 
 	if err != nil {
 		Logger.Fatal("Could not create a context for the template rendering process")

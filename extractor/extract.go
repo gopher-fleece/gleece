@@ -8,63 +8,27 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/haimkastner/gleece/definitions"
+	. "github.com/haimkastner/gleece/definitions"
 )
 
-type RestMetadata struct {
-	Path string
-}
-type CtrlMetadata struct {
-	CtrlName         string
-	CtrlPackage      string
-	CtrlTag          string
-	CtrlDescription  string
-	CtrlRestMetadata RestMetadata
-	Routes           []RouteMetadata
-}
-
-// Enum of HTTP parma type (header, query, path, body)
-type ParamType string
-
-const (
-	Header ParamType = "Header"
-	Query  ParamType = "Query"
-	Path   ParamType = "Path"
-	Body   ParamType = "Body"
-)
-
-type FuncParam struct {
-	Name           string
-	ParamType      ParamType
-	ParamInterface string
-	Description    string
-}
-
-type RouteMetadata struct {
-	OperationName       string
-	RouteMethod         string
-	RouteDescription    string
-	RouteRestMetadata   RestMetadata
-	FuncParams          []FuncParam
-	ResponseInterface   string
-	ResponseSuccessCode string
-}
-
-func ExtractClassMetadata(d ast.GenDecl, baseStruct string) (*CtrlMetadata, error) {
+func ExtractClassMetadata(d ast.GenDecl, baseStruct string) (*ControllerMetadata, error) {
 	for _, spec := range d.Specs {
 		if typeSpec, ok := spec.(*ast.TypeSpec); ok {
 			if structType, ok := typeSpec.Type.(*ast.StructType); ok {
 				if EmbedsBaseStruct(structType, baseStruct) {
 					// Initialize metadata for this controller
-					ctrlMetadata := CtrlMetadata{
-						CtrlName: typeSpec.Name.Name,
+					ctrlMetadata := ControllerMetadata{
+						Name: typeSpec.Name.Name,
 					}
 
 					// Extract comments for tags (e.g., @Tag)
 					if d.Doc != nil {
 						comments := MapDocListToStrings(d.Doc.List)
-						ctrlMetadata.CtrlTag = FindAndExtract(comments, "@Tag")
-						ctrlMetadata.CtrlDescription = FindAndExtract(comments, "@Description")
-						ctrlMetadata.CtrlRestMetadata = BuildRestMetadata(comments)
+						ctrlMetadata.Tag = FindAndExtract(comments, "@Tag")
+						ctrlMetadata.Description = FindAndExtract(comments, "@Description")
+						ctrlMetadata.RestMetadata = BuildRestMetadata(comments)
 					}
 
 					return &ctrlMetadata, nil
@@ -126,12 +90,12 @@ func ExtractFuncReturnTypes(d ast.FuncDecl) (string, error) {
 
 func ExtractClassRoutesMetaData(d ast.FuncDecl) (*RouteMetadata, error) {
 	routeMetadata := RouteMetadata{}
-	routeMetadata.OperationName = d.Name.Name
+	routeMetadata.OperationId = d.Name.Name
 	comments := MapDocListToStrings(d.Doc.List)
 
-	routeMetadata.RouteMethod = FindAndExtract(comments, "@Method")
-	routeMetadata.RouteDescription = FindAndExtract(comments, "@Description")
-	routeMetadata.RouteRestMetadata = BuildRestMetadata(comments)
+	routeMetadata.HttpVerb = EnsureValidHttpVerb(FindAndExtract(comments, "@Method"))
+	routeMetadata.Description = FindAndExtract(comments, "@Description")
+	routeMetadata.RestMetadata = BuildRestMetadata(comments)
 	routeMetadata.ResponseInterface, _ = ExtractFuncReturnTypes(d)
 
 	responseCode := FindAndExtract(comments, "@ResponseCode")
@@ -165,13 +129,13 @@ func ExtractClassRoutesMetaData(d ast.FuncDecl) (*RouteMetadata, error) {
 				if pType := strings.ToLower(ExtractParamTerm(line)); pType != "" {
 					switch pType {
 					case "query":
-						param.ParamType = Query
+						param.ParamType = definitions.Query
 					case "header":
-						param.ParamType = Header
+						param.ParamType = definitions.Header
 					case "path":
-						param.ParamType = Path
+						param.ParamType = definitions.Path
 					case "body":
-						param.ParamType = Body
+						param.ParamType = definitions.Body
 					}
 				}
 
@@ -191,7 +155,7 @@ func ExtractClassRoutesMetaData(d ast.FuncDecl) (*RouteMetadata, error) {
 	return &routeMetadata, nil
 }
 
-func ExtractMetadata() ([]CtrlMetadata, error) {
+func ExtractMetadata() ([]ControllerMetadata, error) {
 	// Define the directory containing the Go files
 	dir := "./ctrl"
 
@@ -199,7 +163,7 @@ func ExtractMetadata() ([]CtrlMetadata, error) {
 	baseStruct := "GleeceController"
 
 	// Array to hold metadata
-	var metadata []CtrlMetadata
+	var metadata []ControllerMetadata
 
 	// Iterate over all Go files in the directory
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
@@ -211,8 +175,8 @@ func ExtractMetadata() ([]CtrlMetadata, error) {
 		}
 
 		// Parse each Go file
-		fset := token.NewFileSet()
-		node, err := parser.ParseFile(fset, path, nil, parser.ParseComments)
+		fileSet := token.NewFileSet()
+		node, err := parser.ParseFile(fileSet, path, nil, parser.ParseComments)
 		if err != nil {
 			fmt.Printf("Error parsing file %s: %v\n", path, err)
 			return err
@@ -271,19 +235,19 @@ func ExtractMetadata() ([]CtrlMetadata, error) {
 			if funcDecl == nil {
 				continue
 			}
-			// Print the class name fomr Decl and all functions names from filtered funcDecl
+			// Print the class name from Decl and all functions names from filtered funcDecl
 			fmt.Println(decl.(*ast.GenDecl).Specs[0].(*ast.TypeSpec).Name.Name)
 			for _, f := range funcDecl {
 				fmt.Println(f.(*ast.FuncDecl).Name.Name)
 			}
 
 			metadataInfo, _ := ExtractClassMetadata(*decl.(*ast.GenDecl), baseStruct)
-			ctrlMetadata := CtrlMetadata{}
-			ctrlMetadata.CtrlPackage = node.Name.Name
-			ctrlMetadata.CtrlName = metadataInfo.CtrlName
-			ctrlMetadata.CtrlTag = metadataInfo.CtrlTag
-			ctrlMetadata.CtrlDescription = metadataInfo.CtrlDescription
-			ctrlMetadata.CtrlRestMetadata = metadataInfo.CtrlRestMetadata
+			ctrlMetadata := ControllerMetadata{}
+			ctrlMetadata.Package = node.Name.Name
+			ctrlMetadata.Name = metadataInfo.Name
+			ctrlMetadata.Tag = metadataInfo.Tag
+			ctrlMetadata.Description = metadataInfo.Description
+			ctrlMetadata.RestMetadata = metadataInfo.RestMetadata
 
 			ctrlMetadata.Routes = []RouteMetadata{}
 			for _, f := range funcDecl {

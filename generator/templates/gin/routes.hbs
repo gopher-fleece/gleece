@@ -1,0 +1,19 @@
+package {{{PackageName}}}
+
+import (
+	"github.com/gin-gonic/gin"
+	"net/http"
+{{#each Imports}}
+	"{{{.}}}"
+{{/each}}
+)
+
+func RegisterRoutes(engine *gin.Engine) {
+	{{#each Routes}}
+	engine.{{{Verb}}}("{{{Path}}}", func(ctx *gin.Context) {
+{{#each Arguments}}
+		{{> RoutesRequestArgsParsing}}
+		{{> RoutesControllerResponsePartial}}
+	})
+{{/each}}
+}
