@@ -18,6 +18,7 @@ Gleece aims to make Go developers’ lives easier by seamlessly integrating API 
 
 Here’s a practical example of how Gleece simplifies your API development:  
 
+
 ```go
 package api
 
@@ -39,6 +40,7 @@ type Info struct {
 	// @Description The number of the house (must be at least 1)
 	HouseNumber int `validate:"gte=1"`
 }
+
 
 // @Description This is a route under
 // @Method POST
@@ -70,6 +72,37 @@ func (ec *UserController) CreateNewUser(name string, info Info, origin string) (
 4. **Automation**:  
    - No manual steps required—your OpenAPI spec is ready to go!  
 
+## 🌐 Integrating with Gin  
+
+If you are using the Gin framework for your HTTP routes, you can easily integrate Gleece by following these steps:
+
+1. **Generate Routes File**:  
+   - Gleece will generate a routes file from your annotated controllers. For example, it might generate `generated_routes.go`.
+
+2. **Import and Register Routes**:  
+   - In your `main.go` file, import the generated routes file and call the `RegisterRoutes` function to register the routes with Gin.
+
+Here's an example:
+
+```go
+package main
+
+import (
+    "github.com/gin-gonic/gin"
+    "github.com/haimkastner/gleece/generated_routes" // Import the generated routes file
+)
+
+func main() {
+    // Create a Gin router
+    router := gin.Default()
+
+    // Register Gleece routes
+    generated_routes.RegisterRoutes(router)
+
+    // Start the server
+    router.Run(":8080")
+}
+```
 ---
 
 ## 🚧 Disclaimer  
