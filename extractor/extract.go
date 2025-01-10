@@ -236,7 +236,49 @@ func ExtractClassRoutesMetaData(routeFuncDecl ast.FuncDecl) (*definitions.RouteM
 	return &routeMetadata, nil
 }
 
+func buildFileSet() (map[string]*ast.File, *token.FileSet, error) {
+	fileToAst := make(map[string]*ast.File)
+	fileSet := token.NewFileSet()
+
+	unNestedSources, err := filepath.Glob("./*,go")
+	if err != nil {
+		return fileToAst, fileSet, err
+	}
+
+	nestedSources, err := filepath.Glob("./**/*.go")
+	if err != nil {
+		return fileToAst, fileSet, err
+	}
+
+	allSources := append(unNestedSources, nestedSources...)
+	for _, sourceFile := range allSources {
+		node, err := parser.ParseFile(fileSet, sourceFile, nil, parser.ParseComments)
+		if err != nil {
+			Logger.Error("Error parsing file %s - %v", sourceFile, err)
+			return fileToAst, fileSet, err
+		}
+		fileToAst[sourceFile] = node
+	}
+
+	return fileToAst, fileSet, nil
+}
+
+func GetMetadata() {
+	nodes, fileSet, err := buildFileSet()
+	if err != nil {
+
+	}
+
+	visitor := &ControllerVisitor{}
+	visitor.Setup(nodes, fileSet)
+	for _, node := range nodes {
+		ast.Walk(visitor, node)
+	}
+}
+
 func ExtractMetadata() ([]definitions.ControllerMetadata, error) {
+	GetMetadata()
+
 	// Define the directory containing the Go files
 	dir := "./ctrl"
 

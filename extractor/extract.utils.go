@@ -3,6 +3,7 @@ package extractor
 import (
 	"fmt"
 	"go/ast"
+	"go/importer"
 	"go/token"
 	"go/types"
 	"regexp"
@@ -157,8 +158,24 @@ func ResolveImport(
 	fileSet *token.FileSet,
 	file *ast.File,
 ) {
-	typesConfig := types.Config{Importer: nil} // Use the default importer
+	typesConfig := types.Config{Importer: importer.Default()} // Use the default importer
 	info := &types.Info{Types: make(map[ast.Expr]types.TypeAndValue)}
-	a, _ := typesConfig.Check(filePath, fileSet, []*ast.File{file}, info)
-	print(a)
+	_, err := typesConfig.Check(filePath, fileSet, []*ast.File{file}, info)
+	if err != nil {
+
+	}
+
+	ast.Inspect(file, func(n ast.Node) bool {
+		switch expr := n.(type) {
+		case *ast.SelectorExpr:
+			// Get the package for the SelectorExpr
+			if obj := info.Uses[expr.Sel]; obj != nil {
+				pkg := obj.Pkg() // This gives the package
+				if pkg != nil {
+					fmt.Printf("SelectorExpr: %s, Full Package: %s\n", expr.Sel.Name, pkg.Path())
+				}
+			}
+		}
+		return true
+	})
 }
