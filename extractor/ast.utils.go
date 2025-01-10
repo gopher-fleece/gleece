@@ -7,20 +7,14 @@ func IsFuncDeclReceiverForStruct(structName string, funcDecl *ast.FuncDecl) bool
 		return false
 	}
 
-	receiver := funcDecl.Recv.List[0].Type
-	ident, ok := receiver.(*ast.Ident)
-	if ok && ident.Name == structName {
-		return true
+	switch expr := funcDecl.Recv.List[0].Type.(type) {
+	case *ast.Ident:
+		return expr.Name == structName
+	case *ast.StarExpr:
+		return expr.X.(*ast.Ident).Name == structName
+	default:
+		return false
 	}
-
-	if starExpr, ok := receiver.(*ast.StarExpr); ok {
-		if ident, ok := starExpr.X.(*ast.Ident); ok {
-			if ident.Name == structName {
-				return true
-			}
-		}
-	}
-	return false
 }
 
 func DoesStructEmbedStruct(structNode *ast.StructType, embeddedStructName string) bool {
