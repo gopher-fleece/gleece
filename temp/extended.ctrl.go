@@ -1,7 +1,7 @@
-package ctrl
+package temp
 
 import (
-	"github.com/haimkastner/gleece/temp"
+	SomeRandomName "github.com/haimkastner/gleece/controller"
 )
 
 // Extended2Controller
@@ -9,7 +9,7 @@ import (
 // @Route /users2
 // @Description This is an extended controller222222222
 type Extended2Controller struct {
-	GleeceController // Embedding the GleeceController to inherit its methods
+	SomeRandomName.GleeceController // Embedding the GleeceController to inherit its methods
 }
 
 // ExtendedController
@@ -17,7 +17,7 @@ type Extended2Controller struct {
 // @Route /users
 // @Description This is an extended controller
 type ExtendedController struct {
-	GleeceController // Embedding the GleeceController to inherit its methods
+	SomeRandomName.GleeceController // Embedding the GleeceController to inherit its methods
 }
 
 type GetUserInput2 struct {
@@ -61,7 +61,7 @@ func (ec *ExtendedController) DontDoItPlease(fgd GetUserInput) error {
 // @Route /test
 // @Response 204
 // @ErrorResponse 400 <p>Test Error 400</p>
-func (ec *ExtendedController) ExternalTypeTest(definedElseWhere temp.SimpleType) (string, error) {
+func (ec *ExtendedController) ExternalTypeTest(definedElseWhere SimpleType) (string, error) {
 	return "", nil
 }
 

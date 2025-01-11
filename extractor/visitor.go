@@ -5,13 +5,15 @@ import (
 	"go/ast"
 	"go/token"
 
+	"github.com/haimkastner/gleece/definitions"
 	Logger "github.com/haimkastner/gleece/infrastructure/logger"
 )
 
 type ControllerVisitor struct {
-	nodes       map[string]*ast.File
-	fileSet     *token.FileSet
-	controllers []*ast.TypeSpec
+	nodes             map[string]*ast.File
+	fileSet           *token.FileSet
+	controllers       []*ast.TypeSpec
+	currentSourceFile *ast.File
 }
 
 func (v *ControllerVisitor) Setup(nodes map[string]*ast.File, fileSet *token.FileSet) {
@@ -21,11 +23,18 @@ func (v *ControllerVisitor) Setup(nodes map[string]*ast.File, fileSet *token.Fil
 
 func (v *ControllerVisitor) Visit(node ast.Node) ast.Visitor {
 	switch currentNode := node.(type) {
+	case *ast.File:
+		// Update the current file when visiting an *ast.File node
+		v.currentSourceFile = currentNode
 	case *ast.TypeSpec:
 		// Check if it's a struct and if it embeds GleeceController
 		if structType, isOk := currentNode.Type.(*ast.StructType); isOk {
-			if DoesStructEmbedStruct(structType, "GleeceController") {
-				v.controllers = append(v.controllers, currentNode)
+			if DoesStructEmbedStruct(
+				v.currentSourceFile,
+				"github.com/haimkastner/gleece/controller",
+				structType,
+				"GleeceController",
+			) {
 				v.visitController(currentNode)
 			}
 		}
@@ -33,14 +42,38 @@ func (v *ControllerVisitor) Visit(node ast.Node) ast.Visitor {
 	return v
 }
 
+func (v ControllerVisitor) createControllerMetadata(controllerNode *ast.TypeSpec) definitions.ControllerMetadata {
+	fullPackageName, fullNameErr := GetFullPackageName(v.currentSourceFile, v.fileSet)
+	packageAlias, aliasErr := GetDefaultPackageAlias(v.currentSourceFile)
+
+	if fullNameErr != nil || aliasErr != nil {
+		panic(fmt.Sprintf("Could not obtain full/partial package name for source file '%s'", v.currentSourceFile.Name))
+	}
+
+	meta := definitions.ControllerMetadata{
+		Name:                  controllerNode.Name.Name,
+		FullyQualifiedPackage: fullPackageName,
+		Package:               packageAlias,
+	}
+
+	if controllerNode.Doc != nil {
+		comments := MapDocListToStrings(controllerNode.Doc.List)
+		meta.Tag = FindAndExtract(comments, "@Tag")
+		meta.Description = FindAndExtract(comments, "@Description")
+		meta.RestMetadata = BuildRestMetadata(comments)
+	}
+
+	return meta
+}
+
 func (v *ControllerVisitor) visitController(controllerNode *ast.TypeSpec) {
-	controllerName := controllerNode.Name.Name
+	controller := v.createControllerMetadata(controllerNode)
 
 	for _, file := range v.nodes {
 		for _, declaration := range file.Decls {
 			switch funcDeclaration := declaration.(type) {
 			case *ast.FuncDecl:
-				if IsFuncDeclReceiverForStruct(controllerName, funcDeclaration) {
+				if IsFuncDeclReceiverForStruct(controller.Name, funcDeclaration) {
 					v.extractMethodDetails(funcDeclaration)
 				}
 			}

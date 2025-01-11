@@ -154,11 +154,11 @@ type RouteMetadata struct {
 type ControllerMetadata struct {
 	Name                  string
 	Package               string
+	FullyQualifiedPackage string
 	Tag                   string
 	Description           string
 	RestMetadata          RestMetadata
 	Routes                []RouteMetadata
-	FullyQualifiedPackage string
 }
 
 type FuncReturnSignature string
