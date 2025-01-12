@@ -147,6 +147,7 @@ type RouteMetadata struct {
 	RestMetadata        RestMetadata
 	FuncParams          []FuncParam
 	ResponseInterface   ResponseMetadata
+	ResponseDescription string
 	ResponseSuccessCode HttpStatusCode
 	ErrorResponses      []ErrorResponse
 }
@@ -167,3 +168,18 @@ const (
 	FuncRetError         FuncReturnSignature = "Error"
 	FuncRetValueAndError FuncReturnSignature = "ValueAndError"
 )
+
+type ModelMetadata struct {
+	Name                  string
+	Package               string
+	FullyQualifiedPackage string
+	Description           string
+	Fields                []FieldMetadata
+}
+
+type FieldMetadata struct {
+	Name        string
+	Type        string
+	Description string
+	Validator   string
+}
