@@ -121,14 +121,6 @@ type RestMetadata struct {
 	Path string
 }
 
-type FuncParam struct {
-	Name                  string
-	ParamType             ParamType
-	ParamExpressionName   string
-	Description           string
-	FullyQualifiedPackage string
-}
-
 type ResponseMetadata struct {
 	InterfaceName         string
 	FullyQualifiedPackage string
@@ -138,6 +130,16 @@ type ResponseMetadata struct {
 type ErrorResponse struct {
 	HttpStatusCode HttpStatusCode
 	Description    string
+}
+
+type FuncParam struct {
+	// The type of the parameter e.g. string, int, etc.
+	ParamInterface        string
+	Name                  string
+	ParamType             ParamType
+	ParamExpressionName   string
+	Description           string
+	FullyQualifiedPackage string
 }
 
 type RouteMetadata struct {
