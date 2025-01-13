@@ -29,33 +29,22 @@ func createErrorResponse(errResp definitions.ErrorResponse) *openapi3.ResponseRe
 	}
 }
 
-func createContentWithSchemaRef(openapi *openapi3.T, interfaceType string) openapi3.Content {
-	var content openapi3.Content
+func createContentWithSchemaRef(openapi *openapi3.T, validationString string, interfaceType string) openapi3.Content {
 
-	specType := ToOpenApiType(interfaceType)
-	switch specType {
-	case "string":
-		content = openapi3.NewContentWithJSONSchema(openapi3.NewStringSchema())
-	case "integer":
-		content = openapi3.NewContentWithJSONSchema(openapi3.NewIntegerSchema())
-	case "boolean":
-		content = openapi3.NewContentWithJSONSchema(openapi3.NewBoolSchema())
-	case "number":
-		content = openapi3.NewContentWithJSONSchema(openapi3.NewFloat64Schema())
-	default:
+	schemaRef := ToOpenApiSchemaRef(interfaceType)
+	if ToOpenApiType(interfaceType) == "object" {
 		// If it's not a primitive type, create a reference to the schema
-		schemaRef := &openapi3.SchemaRef{
+		schemaRef = &openapi3.SchemaRef{
 			Ref:   "#/components/schemas/" + interfaceType,
 			Value: openapi.Components.Schemas[interfaceType].Value,
 		}
-		content = openapi3.NewContentWithJSONSchemaRef(schemaRef)
 	}
-
-	return content
+	BuildSchemaValidation(schemaRef, validationString, interfaceType)
+	return openapi3.NewContentWithJSONSchemaRef(schemaRef)
 }
 
 func createResponseSuccess(openapi *openapi3.T, route definitions.RouteMetadata) *openapi3.ResponseRef {
-	content := createContentWithSchemaRef(openapi, route.ResponseInterface.InterfaceName)
+	content := createContentWithSchemaRef(openapi, "", route.ResponseInterface.InterfaceName)
 	return &openapi3.ResponseRef{
 		Value: &openapi3.Response{
 			Description: &route.ResponseDescription,
@@ -78,26 +67,28 @@ func setNewRouteOperation(openapi *openapi3.T, def definitions.ControllerMetadat
 }
 
 func createPrimitiveParam(param definitions.FuncParam) *openapi3.ParameterRef {
-	paramSchema := &openapi3.Schema{}
+	schema := &openapi3.SchemaRef{
+		Value: ToOpenApiSchema(ToOpenApiType(param.ParamInterface)),
+	}
+	BuildSchemaValidation(schema, param.Validator, param.ParamInterface)
 	return &openapi3.ParameterRef{
 		Value: &openapi3.Parameter{
 			Name:        param.Name,
 			In:          strings.ToLower(string(param.ParamType)),
 			Description: param.Description,
-			Required:    true,
-			Schema: &openapi3.SchemaRef{
-				Value: paramSchema,
-			},
+			Required:    IsFieldRequired(param.Validator),
+			Schema:      schema,
 		},
 	}
 }
 
 func createRequestBodyParam(openapi *openapi3.T, param definitions.FuncParam) *openapi3.RequestBodyRef {
-	content := createContentWithSchemaRef(openapi, param.ParamInterface)
+	content := createContentWithSchemaRef(openapi, param.Validator, param.ParamInterface)
 	return &openapi3.RequestBodyRef{
 		Value: &openapi3.RequestBody{
 			Description: param.Description,
 			Content:     content,
+			Required:    IsFieldRequired(param.Validator),
 		},
 	}
 }

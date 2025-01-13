@@ -18,41 +18,30 @@ func generateModelSpec(openapi *openapi3.T, model definitions.ModelMetadata) {
 	requiredFields := []string{}
 
 	for _, field := range model.Fields {
-		var fieldSchemaRef *openapi3.SchemaRef
-
-		switch field.Type {
-		case "string":
-			fieldSchemaRef = &openapi3.SchemaRef{Value: openapi3.NewStringSchema()}
-		case "int", "int8", "int16", "int32", "int64", "uint", "uint8", "uint16", "uint32", "uint64":
-			fieldSchemaRef = &openapi3.SchemaRef{Value: openapi3.NewIntegerSchema()}
-		case "bool":
-			fieldSchemaRef = &openapi3.SchemaRef{Value: openapi3.NewBoolSchema()}
-		case "float32", "float64":
-			fieldSchemaRef = &openapi3.SchemaRef{Value: openapi3.NewFloat64Schema()}
-		default:
+		fieldSchemaRef := ToOpenApiSchemaRef(field.Type)
+		if ToOpenApiType(field.Type) == "object" {
 			// Handle other types or complex types as references to other schemas
 			fieldSchemaRef = &openapi3.SchemaRef{
 				Ref: "#/components/schemas/" + field.Type,
 			}
 		}
 
-		// fieldSchemaRef.Value.Description = field.Description
+		if fieldSchemaRef.Value != nil {
+			fieldSchemaRef.Value.Description = field.Description
+		}
+
+		BuildSchemaValidation(fieldSchemaRef, field.Validator, field.Type)
 
 		// Add field to schema properties
 		schema.Properties[field.Name] = fieldSchemaRef
 
-		// If Validator indicates that the field is required, add it to the required list
-		if field.Validator == "required" {
+		// If the field should be required, add its name to the requiredFields slice
+		if IsFieldRequired(field.Validator) {
 			requiredFields = append(requiredFields, field.Name)
 		}
 	}
 
-	// Add required fields to schema
-	if len(requiredFields) > 0 {
-		schema.Required = requiredFields
-	}
-
-	// Add required fields to schema
+	// Add required fields to the schema
 	if len(requiredFields) > 0 {
 		schema.Required = requiredFields
 	}

@@ -140,6 +140,7 @@ type FuncParam struct {
 	ParamExpressionName   string
 	Description           string
 	FullyQualifiedPackage string
+	Validator             string
 }
 
 type RouteMetadata struct {
