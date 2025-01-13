@@ -1,8 +1,6 @@
 package ctrl
 
 import (
-	"context"
-
 	"github.com/haimkastner/gleece/definitions"
 )
 
@@ -10,8 +8,8 @@ import (
 type GleeceController struct {
 	statusCode *definitions.HttpStatusCode
 	headers    map[string]interface{}
-	Ctx        context.Context
-	request    any
+	// Request is the HTTP request from the underlying routing engine (gin, echo etc.)
+	request any
 }
 
 func (gc *GleeceController) SetRequest(request any) {

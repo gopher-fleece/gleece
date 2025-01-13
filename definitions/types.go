@@ -117,8 +117,31 @@ const (
 	ContentTypeCSS            ContentType = "text/css"
 )
 
+type ImportType string
+
+const (
+	ImportTypeNone  ImportType = "None"
+	ImportTypeAlias ImportType = "Alias"
+	ImportTypeDot   ImportType = "Dot"
+)
+
+type FuncReturnValue struct {
+	TypeName        string
+	Import          ImportType
+	FullPackageName string
+}
+
 type RestMetadata struct {
 	Path string
+}
+
+type TypeMetadata struct {
+	Name                  string
+	FullyQualifiedPackage string
+	DefaultPackageAlias   string
+	Description           string
+	Import                ImportType
+	IsUniverseType        bool
 }
 
 type ResponseMetadata struct {
@@ -153,6 +176,8 @@ type RouteMetadata struct {
 	ResponseDescription string
 	ResponseSuccessCode HttpStatusCode
 	ErrorResponses      []ErrorResponse
+	RequestContentType  ContentType
+	ResponseContentType ContentType
 }
 
 type ControllerMetadata struct {

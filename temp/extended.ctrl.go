@@ -2,15 +2,10 @@ package temp
 
 import (
 	SomeRandomName "github.com/haimkastner/gleece/controller"
+	"github.com/haimkastner/gleece/temp/nested"
+	. "github.com/haimkastner/gleece/temp/nested"
+	CustomAlias "github.com/haimkastner/gleece/temp/nested"
 )
-
-// Extended2Controller
-// @Tag Users2
-// @Route /users2
-// @Description This is an extended controller222222222
-type Extended2Controller struct {
-	SomeRandomName.GleeceController // Embedding the GleeceController to inherit its methods
-}
 
 // ExtendedController
 // @Tag Users
@@ -28,17 +23,8 @@ type GetUserInput struct {
 	UserID GetUserInput2
 }
 
-//// DoItPlease bla bla bla
-//// @Method GET
-//// @Route /
-//// @Query(the_input) theInput ParameterId kaki
-//// @Body(theBody)     theBody      The body of the request YAP
-//// @Header data
-//// @ResponseCode 200
-//func (ec *ExtendedController) DoItPlease(theInput GetUserInput2, theBody CreateUserInput, data string) (string, error) {
-//
-//	return "OK?", nil
-//}
+type DefinedInSameFile struct {
+}
 
 // DontDoItPlease bla bla bla
 // @Query fgd fdffdf
@@ -61,8 +47,36 @@ func (ec *ExtendedController) DontDoItPlease(fgd GetUserInput) error {
 // @Route /test
 // @Response 204
 // @ErrorResponse 400 <p>Test Error 400</p>
-func (ec *ExtendedController) ExternalTypeTest(definedElseWhere SimpleType) (string, error) {
-	return "", nil
+func (ec *ExtendedController) ImportedWithDefaultAliasRetType(definedElseWhere nested.SimpleType) (nested.ImportedWithDefaultAlias, error) {
+	return nested.ImportedWithDefaultAlias{}, nil
+}
+
+// A test for simple imports
+// @Query definedElseWhere Testing simple type import
+// @Method POST
+// @Route /test2
+// @Response 204
+// @ErrorResponse 400 <p>Test Error 400</p>
+func (ec *ExtendedController) ImportedWithCustomAliasRetType() (CustomAlias.ImportedWithCustomAlias, error) {
+	return CustomAlias.ImportedWithCustomAlias{}, nil
+}
+
+// A test for simple imports
+// @Method POST
+// @Route /test3
+// @Response 204
+// @ErrorResponse 400 <p>Test Error 400</p>
+func (ec *ExtendedController) ImportedWithDotRetType() (ImportedWithDot, error) {
+	return ImportedWithDot{}, nil
+}
+
+// A test for simple imports
+// @Method POST
+// @Route /test4
+// @Response 204
+// @ErrorResponse 400 <p>Test Error 400</p>
+func (ec *ExtendedController) DefinedInSameFileRetType() (DefinedInSameFile, error) {
+	return DefinedInSameFile{}, nil
 }
 
 //// DoItPlease2 bla bla bla

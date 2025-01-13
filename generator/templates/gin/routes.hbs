@@ -40,11 +40,23 @@ func RegisterRoutes(engine *gin.Engine) {
 			controller := {{../Name}}{}
 			controller.SetRequest(ctx)
 			{{#each FuncParams}}
+				// Partial Start: RequestArgsParsingPartial
 				{{> RequestArgsParsingPartial}}
+				// Partial End: RequestArgsParsingPartial
 			{{/each}}
 		{{#equal ResponseInterface.Signature "ValueAndError"}}value, {{/equal}}err := controller.{{{OperationId}}}({{#each FuncParams}}{{ToLowerCamel Name}}{{#unless @last}}, {{/unless}}{{/each}})
 		setResponseStatus(ctx, &controller, err)
+	// Partial Start: RequestResponsePartial
 	{{> RequestResponsePartial}}
+	// Partial End: RequestResponsePartial
+
+	if err != nil {
+		{{#if ErrorMiddleware}}
+			ctx.{{{ResponseContentType}}}(errorMiddleware(ctx, err, {{{ResponseContentType}}}))
+		{{#else}}
+			ctx.JSON("")
+		{{/if}}
+	}
 	})
 	{{/each}}
 {{/each}}

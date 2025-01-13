@@ -97,10 +97,29 @@ func getResponseInterface(funcDecl ast.FuncDecl) definitions.ResponseMetadata {
 	if err != nil {
 		panic((fmt.Sprintf("Could not extract return type for a function declaration '%s': %v", funcDecl.Name.Name, err)))
 	}
+
 	return definitions.ResponseMetadata{
 		InterfaceName:         retTypeName,
 		Signature:             signatureType,
 		FullyQualifiedPackage: "TODO", // <<<<<<<<<========================
+	}
+}
+
+func GetResponseInterface(file *ast.File, fileSet *token.FileSet, funcDecl ast.FuncDecl) definitions.ResponseMetadata {
+	retTypeName, signatureType, err := ExtractFuncReturnTypes(funcDecl)
+	if err != nil {
+		panic((fmt.Sprintf("Could not extract return type for a function declaration '%s': %v", funcDecl.Name.Name, err)))
+	}
+
+	packageName, err := GetFullPackageName(file, fileSet)
+	if err != nil {
+		panic((fmt.Sprintf("Could not determine full package name for file '%s' - %v", file.Name.Name, err)))
+	}
+
+	return definitions.ResponseMetadata{
+		InterfaceName:         retTypeName,
+		Signature:             signatureType,
+		FullyQualifiedPackage: packageName,
 	}
 }
 
@@ -264,15 +283,11 @@ func buildFileSet() (map[string]*ast.File, *token.FileSet, error) {
 }
 
 func GetMetadata() {
-	nodes, fileSet, err := buildFileSet()
-	if err != nil {
-
-	}
-
 	visitor := &ControllerVisitor{}
-	visitor.Setup(nodes, fileSet)
-	for _, node := range nodes {
-		ast.Walk(visitor, node)
+
+	visitor.Init([]string{"./*.go", "./**/*.go"})
+	for _, file := range visitor.GetFiles() {
+		ast.Walk(visitor, file)
 	}
 }
 
