@@ -178,7 +178,20 @@ type RouteMetadata struct {
 	ErrorResponses      []ErrorResponse
 	RequestContentType  ContentType
 	ResponseContentType ContentType
+	Security            []RouteSecurity
 }
+
+type RouteSecurity struct {
+	Name        string
+	Permissions []RoutePermission
+}
+
+type RoutePermission string
+
+const (
+	Read  RoutePermission = "read"
+	Write RoutePermission = "write"
+)
 
 type ControllerMetadata struct {
 	Name                  string
@@ -211,3 +224,20 @@ type FieldMetadata struct {
 	Description string
 	Validator   string
 }
+
+type SecuritySchemeType string
+
+const (
+	APIKey        SecuritySchemeType = "apiKey"
+	OAuth2        SecuritySchemeType = "oauth2"
+	OpenIDConnect SecuritySchemeType = "openIdConnect"
+	HTTP          SecuritySchemeType = "http"
+)
+
+type SecuritySchemeIn string
+
+const (
+	InQuery  SecuritySchemeIn = "query"
+	InHeader SecuritySchemeIn = "header"
+	InCookie SecuritySchemeIn = "cookie"
+)

@@ -45,6 +45,21 @@ func createResponseSuccess(openapi *openapi3.T, route definitions.RouteMetadata)
 	}
 }
 
+func buildOperationSecurityRequirement(route definitions.RouteMetadata) *openapi3.SecurityRequirements {
+	securityRequirement := openapi3.NewSecurityRequirement()
+
+	for _, security := range route.Security {
+		// Convert the array of permissions to a string array
+		rawPermissions := []string{}
+		for _, permission := range security.Permissions {
+			rawPermissions = append(rawPermissions, string(permission))
+		}
+		securityRequirement[security.Name] = rawPermissions
+	}
+
+	return &openapi3.SecurityRequirements{securityRequirement}
+}
+
 func setNewRouteOperation(openapi *openapi3.T, def definitions.ControllerMetadata, route definitions.RouteMetadata, operation *openapi3.Operation) {
 	// Set the operation in the path item
 	routePath := def.RestMetadata.Path + route.RestMetadata.Path
@@ -54,6 +69,9 @@ func setNewRouteOperation(openapi *openapi3.T, def definitions.ControllerMetadat
 	if pathItem == nil {
 		pathItem = &openapi3.PathItem{}
 	}
+	// Add the security requirement to the operation
+	operation.Security = buildOperationSecurityRequirement(route)
+
 	pathItem.SetOperation(string(route.HttpVerb), operation)
 	openapi.Paths.Set(routePath, pathItem)
 }

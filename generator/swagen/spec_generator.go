@@ -10,9 +10,17 @@ import (
 	"github.com/haimkastner/gleece/definitions"
 )
 
+type SecuritySchemeConfig struct {
+	SecurityName string                         `json:"name"`
+	FieldName    string                         `json:"fieldName"`
+	Type         definitions.SecuritySchemeType `json:"type"`
+	In           definitions.SecuritySchemeIn   `json:"in"`
+}
+
 type OpenAPIGeneratorConfig struct {
-	Info    openapi3.Info
-	BaseURL string
+	Info            openapi3.Info          `json:"info"`
+	BaseURL         string                 `json:"base_url"`
+	SecuritySchemes []SecuritySchemeConfig `json:"securitySchemes"`
 }
 
 // GenerateSpec generates the OpenAPI specification
@@ -32,6 +40,8 @@ func GenerateSpec(config OpenAPIGeneratorConfig, defs []definitions.ControllerMe
 			Schemas: openapi3.Schemas{},
 		},
 	}
+
+	GenerateSecuritySpec(openapi, &config.SecuritySchemes)
 
 	GenerateModelsSpec(openapi, models)
 
