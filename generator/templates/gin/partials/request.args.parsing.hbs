@@ -1,0 +1,55 @@
+
+{{#equal PassedIn "Path"}}
+	{{ToLowerCamel Name}}Raw := ctx.Param("{{{Name}}}")
+	{{> RequestSwitchParamType}}
+{{/equal}}
+
+{{#equal PassedIn "Query"}}
+	{{ToLowerCamel Name}}Raw := ctx.Query("{{{Name}}}")
+	{{> RequestSwitchParamType}}
+{{/equal}}
+
+{{#equal PassedIn "Header"}}
+	{{ToLowerCamel Name}}Raw := ctx.GetHeader("{{{Name}}}")
+	{{> RequestSwitchParamType}}
+{{/equal}}
+
+{{#equal PassedIn "Body"}}
+	var {{ToLowerCamel Name}} {{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}.{{/if}}{{{TypeMeta.Name}}}
+	{{#equal ResponseContentType "application/json"}}
+		{{ToLowerCamel Name}} := ctx.ShouldBindJSON(&value)
+	{{/equal}}
+	{{#equal ResponseContentType "application/xml"}}
+		{{ToLowerCamel Name}} := ctx.ShouldBindXML(&value)
+	{{/equal}}
+	{{#equal ResponseContentType "text/html"}}
+		{{ToLowerCamel Name}} := ctx.ShouldBind(&value)
+	{{/equal}}
+	{{#equal ResponseContentType "text/plain"}}
+		{{ToLowerCamel Name}} := ctx.ShouldBind(&value)
+	{{/equal}}
+	{{#equal ResponseContentType "application/x-www-form-urlencoded"}}
+		{{ToLowerCamel Name}} := ctx.ShouldBind(&value)
+	{{/equal}}
+	{{#equal ResponseContentType "multipart/form-data"}}
+		{{ToLowerCamel Name}} := ctx.ShouldBind(&value)
+	{{/equal}}
+	{{#equal ResponseContentType "application/octet-stream"}}
+		{{ToLowerCamel Name}} := ctx.ShouldBind(&value)
+	{{/equal}}
+	{{#equal ResponseContentType "application/pdf"}}
+		{{ToLowerCamel Name}} := ctx.ShouldBind(&value)
+	{{/equal}}
+	{{#equal ResponseContentType "image/png"}}
+		{{ToLowerCamel Name}} := ctx.ShouldBind(&value)
+	{{/equal}}
+	{{#equal ResponseContentType "image/jpeg"}}
+		{{ToLowerCamel Name}} := ctx.ShouldBind(&value)
+	{{/equal}}
+	{{#equal ResponseContentType "image/gif"}}
+		{{ToLowerCamel Name}} := ctx.ShouldBind(&value)
+	{{/equal}}
+	{{#equal ResponseContentType "text/csv"}}
+		{{ToLowerCamel Name}} := ctx.ShouldBind(&value)
+	{{/equal}}
+{{/equal}}

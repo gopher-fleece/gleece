@@ -1,13 +1,13 @@
 package definitions
 
 // Enum of HTTP parma type (header, query, path, body)
-type ParamType string
+type ParamPassedIn string
 
 const (
-	Header ParamType = "Header"
-	Query  ParamType = "Query"
-	Path   ParamType = "Path"
-	Body   ParamType = "Body"
+	PassedInHeader ParamPassedIn = "Header"
+	PassedInQuery  ParamPassedIn = "Query"
+	PassedInPath   ParamPassedIn = "Path"
+	PassedInBody   ParamPassedIn = "Body"
 )
 
 type HttpVerb string
@@ -125,14 +125,26 @@ const (
 	ImportTypeDot   ImportType = "Dot"
 )
 
-type FuncReturnValue struct {
-	TypeName        string
-	Import          ImportType
-	FullPackageName string
-}
-
 type RestMetadata struct {
 	Path string
+}
+
+type ParamMeta struct {
+	Name     string
+	TypeMeta TypeMetadata
+}
+
+type FuncParam struct {
+	ParamMeta
+	PassedIn           ParamPassedIn
+	NameInSchema       string
+	Description        string
+	UniqueImportSerial uint64
+}
+
+type FuncReturnValue struct {
+	TypeMetadata
+	UniqueImportSerial uint64
 }
 
 type TypeMetadata struct {
@@ -144,22 +156,16 @@ type TypeMetadata struct {
 	IsUniverseType        bool
 }
 
-type ResponseMetadata struct {
-	InterfaceName         string
-	FullyQualifiedPackage string
-	Signature             FuncReturnSignature
-}
-
 type ErrorResponse struct {
 	HttpStatusCode HttpStatusCode
 	Description    string
 }
 
-type FuncParam struct {
+type FuncParamLegacy struct {
 	// The type of the parameter e.g. string, int, etc.
 	ParamInterface        string
 	Name                  string
-	ParamType             ParamType
+	ParamType             ParamPassedIn
 	ParamExpressionName   string
 	Description           string
 	FullyQualifiedPackage string
@@ -172,13 +178,24 @@ type RouteMetadata struct {
 	Description         string
 	RestMetadata        RestMetadata
 	FuncParams          []FuncParam
-	ResponseInterface   ResponseMetadata
+	Responses           []FuncReturnValue
+	HasReturnValue      bool
 	ResponseDescription string
 	ResponseSuccessCode HttpStatusCode
 	ErrorResponses      []ErrorResponse
 	RequestContentType  ContentType
 	ResponseContentType ContentType
 	Security            []RouteSecurity // OR between security routes
+}
+
+func (m RouteMetadata) GetValueReturnType() *TypeMetadata {
+	if len(m.Responses) <= 1 {
+		// No return value, just error
+		return nil
+	}
+
+	// We're assuming the controller method's return signature always starts with the value
+	return &m.Responses[0].TypeMetadata
 }
 
 type RouteSecurity struct {
@@ -199,13 +216,6 @@ type ControllerMetadata struct {
 	RestMetadata          RestMetadata
 	Routes                []RouteMetadata
 }
-
-type FuncReturnSignature string
-
-const (
-	FuncRetError         FuncReturnSignature = "Error"
-	FuncRetValueAndError FuncReturnSignature = "ValueAndError"
-)
 
 type ModelMetadata struct {
 	Name                  string

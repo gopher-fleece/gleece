@@ -35,7 +35,7 @@ type DefinedInSameFile struct {
 // @ErrorResponse 403 <p>Test Error 403</p>
 // @ErrorResponse 403 <p>Test Error 403 #2</p>
 // @Query theInput the_input
-func (ec *ExtendedController) DontDoItPlease(fgd GetUserInput) error {
+func (ec *ExtendedController) DontDoItPlease(fgd uint64) error {
 	// Print  fgd as a string
 	println(fgd)
 	return nil
@@ -47,7 +47,7 @@ func (ec *ExtendedController) DontDoItPlease(fgd GetUserInput) error {
 // @Route /test
 // @Response 204
 // @ErrorResponse 400 <p>Test Error 400</p>
-func (ec *ExtendedController) ImportedWithDefaultAliasRetType(definedElseWhere nested.SimpleType) (nested.ImportedWithDefaultAlias, error) {
+func (ec *ExtendedController) ImportedWithDefaultAliasRetType(definedElseWhere string) (nested.ImportedWithDefaultAlias, error) {
 	return nested.ImportedWithDefaultAlias{}, nil
 }
 
@@ -76,6 +76,18 @@ func (ec *ExtendedController) ImportedWithDotRetType() (ImportedWithDot, error) 
 // @Response 204
 // @ErrorResponse 400 <p>Test Error 400</p>
 func (ec *ExtendedController) DefinedInSameFileRetType() (DefinedInSameFile, error) {
+	return DefinedInSameFile{}, nil
+}
+
+// A test for multiple params
+// @Method POST
+// @Body p1 Body test
+// @Header p2 Header test
+// @Query(anotherName) p3 Query test
+// @Route /test4
+// @Response 204
+// @ErrorResponse 400 <p>Test Error 400</p>
+func (ec *ExtendedController) MultipleParams(p1 string, p2 uint, p3 bool) (DefinedInSameFile, error) {
 	return DefinedInSameFile{}, nil
 }
 

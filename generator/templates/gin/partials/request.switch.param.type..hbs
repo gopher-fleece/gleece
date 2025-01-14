@@ -1,0 +1,113 @@
+
+{{#equal TypeMeta.Name "string"}}
+  if {{ToLowerCamel Name}}Raw != "" {
+    // Validation for string (optional)
+    if err := validator.Validate({{ToLowerCamel Name}}Raw); err != nil {
+      // Handle validation error
+    }
+  }
+{{/equal}}
+
+{{#equal TypeMeta.Name "int"}}
+  {{ToLowerCamel Name}}, err := strconv.Atoi({{ToLowerCamel Name}}Raw)
+  if err != nil {
+    // Handle error
+  }
+  // Pass to validator
+{{/equal}}
+
+{{#equal TypeMeta.Name "int8"}}
+  {{ToLowerCamel Name}}, err := strconv.ParseInt({{ToLowerCamel Name}}Raw, 10, 8)
+  if err != nil {
+    // Handle error
+  }
+  // Pass to validator
+{{/equal}}
+
+{{#equal TypeMeta.Name "int16"}}
+  {{ToLowerCamel Name}}, err := strconv.ParseInt({{ToLowerCamel Name}}Raw, 10, 16)
+  if err != nil {
+    // Handle error
+  }
+  // Pass to validator
+{{/equal}}
+
+{{#equal TypeMeta.Name "int32"}}
+  {{ToLowerCamel Name}}, err := strconv.ParseInt({{ToLowerCamel Name}}Raw, 10, 32)
+  if err != nil {
+    // Handle error
+  }
+  // Pass to validator
+{{/equal}}
+
+{{#equal TypeMeta.Name "int64"}}
+  {{ToLowerCamel Name}}, err := strconv.ParseInt({{ToLowerCamel Name}}Raw, 10, 64)
+  if err != nil {
+    // Handle error
+  }
+  // Pass to validator
+{{/equal}}
+
+{{#equal TypeMeta.Name "uint"}}
+  {{ToLowerCamel Name}}, err := strconv.ParseUint({{ToLowerCamel Name}}Raw, 10, 0)
+  if err != nil {
+    // Handle error
+  }
+  // Pass to validator
+{{/equal}}
+
+{{#equal TypeMeta.Name "uint8"}}
+  {{ToLowerCamel Name}}, err := strconv.ParseUint({{ToLowerCamel Name}}Raw, 10, 8)
+  if err != nil {
+    // Handle error
+  }
+  // Pass to validator
+{{/equal}}
+
+{{#equal TypeMeta.Name "uint16"}}
+  {{ToLowerCamel Name}}, err := strconv.ParseUint({{ToLowerCamel Name}}Raw, 10, 16)
+  if err != nil {
+    // Handle error
+  }
+  // Pass to validator
+{{/equal}}
+
+{{#equal TypeMeta.Name "uint32"}}
+  {{ToLowerCamel Name}}, err := strconv.ParseUint({{ToLowerCamel Name}}Raw, 10, 32)
+  if err != nil {
+    // Handle error
+  }
+  // Pass to validator
+{{/equal}}
+
+{{#equal TypeMeta.Name "uint64"}}
+  {{ToLowerCamel Name}}, err := strconv.ParseUint({{ToLowerCamel Name}}Raw, 10, 64)
+  if err != nil {
+    // Handle error
+  }
+  // Pass to validator
+{{/equal}}
+
+{{#equal TypeMeta.Name "bool"}}
+  {{ToLowerCamel Name}}, err := strconv.ParseBool({{ToLowerCamel Name}}Raw)
+  if err != nil {
+    // Handle error
+  }
+  // Pass to validator
+{{/equal}}
+
+{{#equal TypeMeta.Name "float32"}}
+  {{ToLowerCamel Name}}, err := strconv.ParseFloat({{ToLowerCamel Name}}Raw, 32)
+  if err != nil {
+    // Handle error
+  }
+  // Pass to validator
+{{/equal}}
+
+{{#equal TypeMeta.Name "float64"}}
+  {{ToLowerCamel Name}}, err := strconv.ParseFloat({{ToLowerCamel Name}}Raw, 64)
+  if err != nil {
+    // Handle error
+  }
+  // Pass to validator
+{{/equal}}

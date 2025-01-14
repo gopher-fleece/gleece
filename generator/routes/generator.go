@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go/format"
 	"os"
+	"path/filepath"
 
 	"github.com/aymerick/raymond"
 	"github.com/iancoleman/strcase"
@@ -99,6 +100,9 @@ func GenerateRoutes(args cmd.RoutesConfig, controllerMeta []definitions.Controll
 
 	Logger.Debug("Formatting %d bytes of output code", len(result))
 	formattedOutput, _ := formatCode(result)
+	if err := os.MkdirAll(filepath.Dir(args.OutputPath), 0755); err != nil {
+		return err
+	}
 	err = os.WriteFile(args.OutputPath, []byte(formattedOutput), args.OutputFilePerms.FileMode())
 	if err != nil {
 		Logger.Fatal("Could not write output file at '%s' with permissions '%v' - %v", args.OutputPath, args.OutputFilePerms, err)

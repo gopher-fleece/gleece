@@ -1,12 +1,6 @@
 package {{{PackageName}}}
 
-import (
-	"github.com/gin-gonic/gin"
-	"github.com/haimkastner/gleece/definitions"
-{{#each Imports}}
-	"{{{.}}}"
-{{/each}}
-)
+{{> Imports}}
 
 type Controller interface {
 	SetRequest(request any)
@@ -37,23 +31,25 @@ func RegisterRoutes(engine *gin.Engine) {
 	// {{{Name}}}
 	{{#each Routes}}
 		engine.{{{HttpVerb}}}("{{{../RestMetadata.Path}}}{{{RestMetadata.Path}}}", func(ctx *gin.Context) {
-			controller := {{../Name}}{}
+			controller := {{{Name}}}Import.{{../Name}}{}
 			controller.SetRequest(ctx)
 			{{#each FuncParams}}
-				// Partial Start: RequestArgsParsingPartial
-				{{> RequestArgsParsingPartial}}
-				// Partial End: RequestArgsParsingPartial
+				// Partial Start: RequestArgsParsing
+				{{> RequestArgsParsing}}
+				// Partial End: RequestArgsParsing
 			{{/each}}
-		{{#equal ResponseInterface.Signature "ValueAndError"}}value, {{/equal}}err := controller.{{{OperationId}}}({{#each FuncParams}}{{ToLowerCamel Name}}{{#unless @last}}, {{/unless}}{{/each}})
+
+		{{#equal HasReturnValue true}}value, {{/equal}}err := controller.{{{OperationId}}}({{#each FuncParams}}{{ToLowerCamel Name}}{{#unless @last}}, {{/unless}}{{/each}})
+
 		setResponseStatus(ctx, &controller, err)
-	// Partial Start: RequestResponsePartial
-	{{> RequestResponsePartial}}
-	// Partial End: RequestResponsePartial
+	// Partial Start: RequestResponse
+	{{> RequestResponse}}
+	// Partial End: RequestResponse
 
 	if err != nil {
 		{{#if ErrorMiddleware}}
 			ctx.{{{ResponseContentType}}}(errorMiddleware(ctx, err, {{{ResponseContentType}}}))
-		{{#else}}
+		{{else}}
 			ctx.JSON("")
 		{{/if}}
 	}

@@ -6,7 +6,7 @@ import (
 )
 
 type Argument struct {
-	Type      definitions.ParamType
+	Type      definitions.ParamPassedIn
 	Name      string
 	ValueType any
 }

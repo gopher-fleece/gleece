@@ -1,0 +1,21 @@
+import (
+	"strconv"
+	"github.com/go-playground/validator/v10"
+	"github.com/gin-gonic/gin"
+	"github.com/haimkastner/gleece/definitions"
+{{#each Controllers}}
+	{{{Name}}}Import "{{{FullyQualifiedPackage}}}"
+	{{#each Routes}}
+		{{#each FuncParams}}
+			{{#if TypeMeta.FullyQualifiedPackage}}
+				Param{{{UniqueImportSerial}}}{{{Name}}} "{{{TypeMeta.FullyQualifiedPackage}}}"
+			{{/if}}
+		{{/each}}
+		{{#each Responses}}
+			{{#if FullyQualifiedPackage}}
+				Response{{{UniqueImportSerial}}}{{{Name}}} "{{{FullyQualifiedPackage}}}"
+			{{/if}}
+		{{/each}}
+	{{/each}}
+{{/each}}
+)
