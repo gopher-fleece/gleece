@@ -178,20 +178,17 @@ type RouteMetadata struct {
 	ErrorResponses      []ErrorResponse
 	RequestContentType  ContentType
 	ResponseContentType ContentType
-	Security            []RouteSecurity
+	Security            []RouteSecurity // OR between security routes
 }
 
 type RouteSecurity struct {
-	Name        string
-	Permissions []RoutePermission
+	SecurityMethod []SecurityMethod // AND between security methods
 }
 
-type RoutePermission string
-
-const (
-	Read  RoutePermission = "read"
-	Write RoutePermission = "write"
-)
+type SecurityMethod struct {
+	Name        string
+	Permissions []string
+}
 
 type ControllerMetadata struct {
 	Name                  string

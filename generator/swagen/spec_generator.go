@@ -11,6 +11,7 @@ import (
 )
 
 type SecuritySchemeConfig struct {
+	Description  string                         `json:"description"`
 	SecurityName string                         `json:"name"`
 	FieldName    string                         `json:"fieldName"`
 	Type         definitions.SecuritySchemeType `json:"type"`

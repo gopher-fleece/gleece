@@ -22,7 +22,7 @@ func createErrorResponse(errResp definitions.ErrorResponse) *openapi3.ResponseRe
 	errResString := errResp.Description
 	response := &openapi3.Response{
 		Description: &errResString,
-		Content:     openapi3.NewContentWithJSONSchema(openapi3.NewStringSchema()),
+		Content:     openapi3.NewContentWithJSONSchema(openapi3.NewObjectSchema()),
 	}
 	return &openapi3.ResponseRef{
 		Value: response,
@@ -45,19 +45,24 @@ func createResponseSuccess(openapi *openapi3.T, route definitions.RouteMetadata)
 	}
 }
 
-func buildOperationSecurityRequirement(route definitions.RouteMetadata) *openapi3.SecurityRequirements {
-	securityRequirement := openapi3.NewSecurityRequirement()
+func buildSecurityMethod(securityMethods []definitions.SecurityMethod) *openapi3.SecurityRequirement {
+	securityRequirement := openapi3.SecurityRequirement{}
 
-	for _, security := range route.Security {
-		// Convert the array of permissions to a string array
-		rawPermissions := []string{}
-		for _, permission := range security.Permissions {
-			rawPermissions = append(rawPermissions, string(permission))
-		}
-		securityRequirement[security.Name] = rawPermissions
+	for _, securityMethod := range securityMethods {
+		securityRequirement[securityMethod.Name] = securityMethod.Permissions
 	}
 
-	return &openapi3.SecurityRequirements{securityRequirement}
+	return &securityRequirement
+}
+
+func generateOperationSecurity(operation *openapi3.Operation, route definitions.RouteMetadata) {
+	securityRequirements := openapi3.SecurityRequirements{}
+
+	for _, routeSecurity := range route.Security {
+		securityRequirements = append(securityRequirements, *buildSecurityMethod(routeSecurity.SecurityMethod))
+	}
+
+	operation.Security = &securityRequirements
 }
 
 func setNewRouteOperation(openapi *openapi3.T, def definitions.ControllerMetadata, route definitions.RouteMetadata, operation *openapi3.Operation) {
@@ -69,14 +74,12 @@ func setNewRouteOperation(openapi *openapi3.T, def definitions.ControllerMetadat
 	if pathItem == nil {
 		pathItem = &openapi3.PathItem{}
 	}
-	// Add the security requirement to the operation
-	operation.Security = buildOperationSecurityRequirement(route)
 
 	pathItem.SetOperation(string(route.HttpVerb), operation)
 	openapi.Paths.Set(routePath, pathItem)
 }
 
-func createPrimitiveParam(openapi *openapi3.T, param definitions.FuncParam) *openapi3.ParameterRef {
+func createRouteParam(openapi *openapi3.T, param definitions.FuncParam) *openapi3.ParameterRef {
 	schemaRef := InterfaceToSchemaRef(openapi, param.ParamInterface)
 	BuildSchemaValidation(schemaRef, param.Validator, param.ParamInterface)
 	return &openapi3.ParameterRef{
@@ -107,7 +110,7 @@ func generateParams(openapi *openapi3.T, route definitions.RouteMetadata, operat
 		if param.ParamType == definitions.Body {
 			operation.RequestBody = createRequestBodyParam(openapi, param)
 		} else {
-			operation.Parameters = append(operation.Parameters, createPrimitiveParam(openapi, param))
+			operation.Parameters = append(operation.Parameters, createRouteParam(openapi, param))
 		}
 	}
 }
@@ -129,6 +132,9 @@ func generateControllerSpec(openapi *openapi3.T, def definitions.ControllerMetad
 		operation.Responses.Set(HttpStatusCodeToString(route.ResponseSuccessCode), createResponseSuccess(openapi, route))
 
 		generateParams(openapi, route, operation)
+
+		// Add the security requirement to the operation
+		generateOperationSecurity(operation, route)
 
 		// Finally, set the operation in the path item
 		setNewRouteOperation(openapi, def, route, operation)

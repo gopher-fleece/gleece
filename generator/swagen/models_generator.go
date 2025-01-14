@@ -47,34 +47,14 @@ func generateModelSpec(openapi *openapi3.T, model definitions.ModelMetadata) {
 	}
 }
 
+// Fill the schema references in the components
 func fillSchemaRef(openapi *openapi3.T) {
-	// Once building all models is done, fill the missing references values (openapi.Components.Schemas)
-	for _, schema := range openapi.Components.Schemas {
-		for _, prop := range schema.Value.Properties {
-			fillPropertyRef(openapi, prop)
-		}
-	}
-}
-
-func fillPropertyRef(openapi *openapi3.T, prop *openapi3.SchemaRef) {
-	if prop.Ref != "" {
-		// Get the name from the #/components/schemas/{name} format...
-		propName := prop.Ref[len("#/components/schemas/"):]
-		// ...and set the value to the actual schema
-		prop.Value = openapi.Components.Schemas[propName].Value
-	}
-
-	if prop.Value != nil && prop.Value.Items != nil && prop.Value.Items.Ref != "" {
-		// Handle array item references
-		itemPropName := prop.Value.Items.Ref[len("#/components/schemas/"):]
-		prop.Value.Items.Value = openapi.Components.Schemas[itemPropName].Value
-	}
-
-	// Recursively fill references for nested objects if they exist
-	if prop.Value != nil && prop.Value.Properties != nil {
-		for _, nestedProp := range prop.Value.Properties {
-			fillPropertyRef(openapi, nestedProp)
-		}
+	// Iterate over all EmptyRefSchemas
+	for _, schemaRefMap := range schemaRefMap {
+		// Get the schema from the components
+		schema := openapi.Components.Schemas[schemaRefMap.InterfaceType].Value
+		// Set the schema reference to the schema
+		schemaRefMap.SchemaRef.Value = schema
 	}
 }
 

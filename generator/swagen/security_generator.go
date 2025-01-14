@@ -9,9 +9,10 @@ func GenerateSecuritySpec(openapi *openapi3.T, securityConfig *[]SecuritySchemeC
 	for _, scheme := range *securityConfig {
 		securitySchemes[scheme.SecurityName] = &openapi3.SecuritySchemeRef{
 			Value: &openapi3.SecurityScheme{
-				Type: string(scheme.Type),
-				In:   string(scheme.In),
-				Name: scheme.FieldName,
+				Type:        string(scheme.Type),
+				In:          string(scheme.In),
+				Name:        scheme.FieldName,
+				Description: scheme.Description,
 			},
 		}
 	}
