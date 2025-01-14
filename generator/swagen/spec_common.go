@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/haimkastner/gleece/infrastructure/logger"
 )
 
 type SchemaRefMap struct {
@@ -65,11 +66,15 @@ func BuildSchemaValidation(schema *openapi3.SchemaRef, validationString string, 
 			// Greater than (only makes sense for numeric fields)
 			if specType == "integer" || specType == "number" {
 				schema.Value.Min = ParseNumber(ruleValue)
+			} else {
+				logger.Warn("Validation rule 'gt' is only applicable to numeric fields")
 			}
 		case "lt":
 			// Less than (only makes sense for numeric fields)
 			if specType == "integer" || specType == "number" {
 				schema.Value.Max = ParseNumber(ruleValue)
+			} else {
+				logger.Warn("Validation rule 'lt' is only applicable to numeric fields")
 			}
 		case "min":
 			// Minimum length for strings, minimum value for numbers
@@ -77,6 +82,8 @@ func BuildSchemaValidation(schema *openapi3.SchemaRef, validationString string, 
 				schema.Value.MinLength = *ParseInteger(ruleValue)
 			} else if specType == "integer" || specType == "number" {
 				schema.Value.Min = ParseNumber(ruleValue)
+			} else {
+				logger.Warn("Validation rule 'min' is only applicable to string or numeric fields")
 			}
 		case "max":
 			// Maximum length for strings, maximum value for numbers
@@ -84,26 +91,36 @@ func BuildSchemaValidation(schema *openapi3.SchemaRef, validationString string, 
 				schema.Value.MaxLength = ParseInteger(ruleValue)
 			} else if specType == "integer" || specType == "number" {
 				schema.Value.Max = ParseNumber(ruleValue)
+			} else {
+				logger.Warn("Validation rule 'max' is only applicable to string or numeric fields")
 			}
 		case "pattern":
 			// Regular expression pattern for strings
 			if specType == "string" {
 				schema.Value.Pattern = ruleValue
+			} else {
+				logger.Warn("Validation rule 'pattern' is only applicable to string fields")
 			}
 		case "minItems":
 			// Minimum number of items for arrays
 			if specType == "array" {
 				schema.Value.MinItems = *ParseInteger(ruleValue)
+			} else {
+				logger.Warn("Validation rule 'minItems' is only applicable to array fields")
 			}
 		case "maxItems":
 			// Maximum number of items for arrays
 			if specType == "array" {
 				schema.Value.MaxItems = ParseInteger(ruleValue)
+			} else {
+				logger.Warn("Validation rule 'maxItems' is only applicable to array fields")
 			}
 		case "uniqueItems":
 			// Ensure all items in the array are unique
 			if specType == "array" {
 				schema.Value.UniqueItems = *ParseBool(ruleValue)
+			} else {
+				logger.Warn("Validation rule 'uniqueItems' is only applicable to array fields")
 			}
 		case "enum":
 			// Enum values for strings or numbers
@@ -155,8 +172,11 @@ func ToOpenApiSchema(typeName string) *openapi3.Schema {
 		return openapi3.NewFloat64Schema()
 	case "array":
 		return openapi3.NewArraySchema()
-	default:
+	case "object":
 		return openapi3.NewObjectSchema()
+	default:
+		logger.Fatal("Unknown type: " + typeName)
+		return openapi3.NewSchema()
 	}
 }
 
@@ -165,4 +185,13 @@ func ToOpenApiSchemaRef(typeName string) *openapi3.SchemaRef {
 	return &openapi3.SchemaRef{
 		Value: schema,
 	}
+}
+
+func IsSecurityNameInSecuritySchemes(securitySchemes []SecuritySchemeConfig, securityName string) bool {
+	for _, securityScheme := range securitySchemes {
+		if securityScheme.SecurityName == securityName {
+			return true
+		}
+	}
+	return false
 }

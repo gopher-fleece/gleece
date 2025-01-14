@@ -19,9 +19,10 @@ type SecuritySchemeConfig struct {
 }
 
 type OpenAPIGeneratorConfig struct {
-	Info            openapi3.Info          `json:"info"`
-	BaseURL         string                 `json:"base_url"`
-	SecuritySchemes []SecuritySchemeConfig `json:"securitySchemes"`
+	Info                 openapi3.Info               `json:"info"`
+	BaseURL              string                      `json:"base_url"`
+	SecuritySchemes      []SecuritySchemeConfig      `json:"securitySchemes"`
+	DefaultRouteSecurity []definitions.RouteSecurity `json:"defaultSecurity"`
 }
 
 // GenerateSpec generates the OpenAPI specification
@@ -47,7 +48,7 @@ func GenerateSpec(config OpenAPIGeneratorConfig, defs []definitions.ControllerMe
 	GenerateModelsSpec(openapi, models)
 
 	// Run on each route in definitions
-	GenerateControllersSpec(openapi, defs)
+	GenerateControllersSpec(openapi, &config, defs)
 
 	// Validate the spec to ensure it meets OpenAPI requirements
 	if err := openapi.Validate(context.Background()); err != nil {

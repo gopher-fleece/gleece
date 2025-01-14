@@ -5,6 +5,7 @@ import (
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/haimkastner/gleece/definitions"
+	"github.com/haimkastner/gleece/infrastructure/logger"
 )
 
 func createOperation(def definitions.ControllerMetadata, route definitions.RouteMetadata) *openapi3.Operation {
@@ -51,21 +52,34 @@ func createResponseSuccess(openapi *openapi3.T, route definitions.RouteMetadata)
 	}
 }
 
-func buildSecurityMethod(securityMethods []definitions.SecurityMethod) *openapi3.SecurityRequirement {
+func buildSecurityMethod(securitySchemes []SecuritySchemeConfig, securityMethods []definitions.SecurityMethod) *openapi3.SecurityRequirement {
 	securityRequirement := openapi3.SecurityRequirement{}
 
 	for _, securityMethod := range securityMethods {
+
+		// Make sure the name is exist in the openapi security schemes
+		if !IsSecurityNameInSecuritySchemes(securitySchemes, securityMethod.Name) {
+			// Add logs that shoes the method name that is not exist in the security schemes
+			logger.Fatal("Security method name is not exist in the security schemes")
+			continue
+		}
 		securityRequirement[securityMethod.Name] = securityMethod.Permissions
 	}
 
 	return &securityRequirement
 }
 
-func generateOperationSecurity(operation *openapi3.Operation, route definitions.RouteMetadata) {
+func generateOperationSecurity(operation *openapi3.Operation, config *OpenAPIGeneratorConfig, route definitions.RouteMetadata) {
 	securityRequirements := openapi3.SecurityRequirements{}
 
-	for _, routeSecurity := range route.Security {
-		securityRequirements = append(securityRequirements, *buildSecurityMethod(routeSecurity.SecurityMethod))
+	routeSecurity := route.Security
+
+	if len(routeSecurity) == 0 {
+		routeSecurity = config.DefaultRouteSecurity
+	}
+
+	for _, security := range routeSecurity {
+		securityRequirements = append(securityRequirements, *buildSecurityMethod(config.SecuritySchemes, security.SecurityMethod))
 	}
 
 	operation.Security = &securityRequirements
@@ -122,7 +136,7 @@ func generateParams(openapi *openapi3.T, route definitions.RouteMetadata, operat
 }
 
 // GenerateControllerSpec generates the specification for a controller
-func generateControllerSpec(openapi *openapi3.T, def definitions.ControllerMetadata) {
+func generateControllerSpec(openapi *openapi3.T, config *OpenAPIGeneratorConfig, def definitions.ControllerMetadata) {
 	// Iterate over the routes in the controller
 	for _, route := range def.Routes {
 		// Create a new Operation for the route
@@ -140,16 +154,16 @@ func generateControllerSpec(openapi *openapi3.T, def definitions.ControllerMetad
 		generateParams(openapi, route, operation)
 
 		// Add the security requirement to the operation
-		generateOperationSecurity(operation, route)
+		generateOperationSecurity(operation, config, route)
 
 		// Finally, set the operation in the path item
 		setNewRouteOperation(openapi, def, route, operation)
 	}
 }
 
-func GenerateControllersSpec(openapi *openapi3.T, defs []definitions.ControllerMetadata) {
+func GenerateControllersSpec(openapi *openapi3.T, config *OpenAPIGeneratorConfig, defs []definitions.ControllerMetadata) {
 	// Iterate over the routes in the controller
 	for _, def := range defs {
-		generateControllerSpec(openapi, def)
+		generateControllerSpec(openapi, config, def)
 	}
 }
