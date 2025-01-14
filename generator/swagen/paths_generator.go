@@ -36,7 +36,13 @@ func createContentWithSchemaRef(openapi *openapi3.T, validationString string, in
 }
 
 func createResponseSuccess(openapi *openapi3.T, route definitions.RouteMetadata) *openapi3.ResponseRef {
-	content := createContentWithSchemaRef(openapi, "", route.ResponseInterface.InterfaceName)
+	content := openapi3.NewContent()
+
+	// If the repose is not a void, create a content with schema ref
+	if route.ResponseInterface.Signature == definitions.FuncRetValueAndError {
+		content = createContentWithSchemaRef(openapi, "", route.ResponseInterface.InterfaceName)
+	}
+
 	return &openapi3.ResponseRef{
 		Value: &openapi3.Response{
 			Description: &route.ResponseDescription,
