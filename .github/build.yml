@@ -1,0 +1,70 @@
+name: Gleece CI/CD ⚙️
+
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1️⃣ Checkout repository 🛎️
+        uses: actions/checkout@v4
+
+      - name: 2️⃣ Set up Go 🚀
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.3'
+
+      - name: 3️⃣ Install dependencies 📦
+        run: |
+          go mod download
+          go install github.com/onsi/ginkgo/v2/ginkgo@latest
+
+      - name: 4️⃣ Run tests 🧪
+        run: |
+          ginkgo ./...
+
+      - name: 5️⃣ Bump version 🔢
+        if: github.ref == 'refs/heads/main'
+        id: update_version
+        run: |
+          VERSION=$(cat .release/package_version)
+          IFS='.' read -r -a version <<< "$VERSION"
+          MAJOR=${version[0]}
+          MINOR=${version[1]}
+          PATCH=${version[2]}
+          NEW_PATCH=$((PATCH + 1))
+          NEXT_VERSION="$MAJOR.$MINOR.$NEW_PATCH"
+          echo $NEXT_VERSION > .release/package_version
+          echo "VERSION=v$NEXT_VERSION" >> $GITHUB_OUTPUT
+
+      - name: 6️⃣ Get version info 📝
+        id: version_info
+        run: |
+          body=$(git log -1 --pretty=%B | sed -n '1p')
+          echo "BODY=$body" >> $GITHUB_OUTPUT
+
+      - name: 7️⃣ Commit and push version 📤
+        if: github.ref == 'refs/heads/main'
+        uses: devops-infra/action-commit-push@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          commit_message: Update to version ${{ steps.update_version.outputs.VERSION }} [skip-ci]
+
+      - name: 8️⃣ Create Release 📦
+        if: github.ref == 'refs/heads/main'
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.update_version.outputs.VERSION }}
+          name: Package Version ${{ steps.update_version.outputs.VERSION }}
+          body: ${{ steps.version_info.outputs.BODY }}
+          draft: false
+          prerelease: true
+
+      - name: 9️⃣ Notify pkg.go.dev 🔔
+        if: github.ref == 'refs/heads/main'
+        run: |
+          curl -sSf https://proxy.golang.org/github.com/haimkastner/gleece/@v/${{ steps.update_version.outputs.VERSION }}.info || echo "Failed to notify pkg.go.dev"
