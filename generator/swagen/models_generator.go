@@ -58,9 +58,10 @@ func fillSchemaRef(openapi *openapi3.T) {
 	}
 }
 
-func GenerateModelsSpec(openapi *openapi3.T, models []definitions.ModelMetadata) {
+func GenerateModelsSpec(openapi *openapi3.T, models []definitions.ModelMetadata) error {
 	for _, model := range models {
 		generateModelSpec(openapi, model)
 	}
 	fillSchemaRef(openapi)
+	return nil
 }

@@ -1,11 +1,12 @@
 package swagen
 
 import (
+	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/haimkastner/gleece/definitions"
-	"github.com/haimkastner/gleece/infrastructure/logger"
 )
 
 func createOperation(def definitions.ControllerMetadata, route definitions.RouteMetadata) *openapi3.Operation {
@@ -52,24 +53,24 @@ func createResponseSuccess(openapi *openapi3.T, route definitions.RouteMetadata)
 	}
 }
 
-func buildSecurityMethod(securitySchemes []SecuritySchemeConfig, securityMethods []definitions.SecurityMethod) *openapi3.SecurityRequirement {
+func buildSecurityMethod(securitySchemes []SecuritySchemeConfig, securityMethods []definitions.SecurityMethod) (*openapi3.SecurityRequirement, error) {
 	securityRequirement := openapi3.SecurityRequirement{}
 
 	for _, securityMethod := range securityMethods {
 
 		// Make sure the name is exist in the openapi security schemes
 		if !IsSecurityNameInSecuritySchemes(securitySchemes, securityMethod.Name) {
-			// Add logs that shoes the method name that is not exist in the security schemes
-			logger.Fatal("Security method name is not exist in the security schemes")
-			continue
+			errStr := fmt.Sprintf("Security method name %s is not exists in the defined security schemes %v", securityMethod.Name, securitySchemes)
+			// Create error object and return it, add the method name that is not exist in the security schemes
+			return nil, errors.New(errStr)
 		}
 		securityRequirement[securityMethod.Name] = securityMethod.Permissions
 	}
 
-	return &securityRequirement
+	return &securityRequirement, nil
 }
 
-func generateOperationSecurity(operation *openapi3.Operation, config *OpenAPIGeneratorConfig, route definitions.RouteMetadata) {
+func generateOperationSecurity(operation *openapi3.Operation, config *OpenAPIGeneratorConfig, route definitions.RouteMetadata) error {
 	securityRequirements := openapi3.SecurityRequirements{}
 
 	routeSecurity := route.Security
@@ -79,10 +80,17 @@ func generateOperationSecurity(operation *openapi3.Operation, config *OpenAPIGen
 	}
 
 	for _, security := range routeSecurity {
-		securityRequirements = append(securityRequirements, *buildSecurityMethod(config.SecuritySchemes, security.SecurityMethod))
+		securityRequirement, err := buildSecurityMethod(config.SecuritySchemes, security.SecurityMethod)
+
+		if err != nil {
+			errStr := fmt.Sprintf("Building security %s for %s failed: %s", route.OperationId, security.SecurityMethod, err.Error())
+			return errors.New(errStr)
+		}
+		securityRequirements = append(securityRequirements, *securityRequirement)
 	}
 
 	operation.Security = &securityRequirements
+	return nil
 }
 
 func setNewRouteOperation(openapi *openapi3.T, def definitions.ControllerMetadata, route definitions.RouteMetadata, operation *openapi3.Operation) {
@@ -136,7 +144,7 @@ func generateParams(openapi *openapi3.T, route definitions.RouteMetadata, operat
 }
 
 // GenerateControllerSpec generates the specification for a controller
-func generateControllerSpec(openapi *openapi3.T, config *OpenAPIGeneratorConfig, def definitions.ControllerMetadata) {
+func generateControllerSpec(openapi *openapi3.T, config *OpenAPIGeneratorConfig, def definitions.ControllerMetadata) error {
 	// Iterate over the routes in the controller
 	for _, route := range def.Routes {
 		// Create a new Operation for the route
@@ -154,16 +162,23 @@ func generateControllerSpec(openapi *openapi3.T, config *OpenAPIGeneratorConfig,
 		generateParams(openapi, route, operation)
 
 		// Add the security requirement to the operation
-		generateOperationSecurity(operation, config, route)
+		if err := generateOperationSecurity(operation, config, route); err != nil {
+			return err
+		}
 
 		// Finally, set the operation in the path item
 		setNewRouteOperation(openapi, def, route, operation)
 	}
+	return nil
 }
 
-func GenerateControllersSpec(openapi *openapi3.T, config *OpenAPIGeneratorConfig, defs []definitions.ControllerMetadata) {
+func GenerateControllersSpec(openapi *openapi3.T, config *OpenAPIGeneratorConfig, defs []definitions.ControllerMetadata) error {
 	// Iterate over the routes in the controller
 	for _, def := range defs {
-		generateControllerSpec(openapi, config, def)
+		if err := generateControllerSpec(openapi, config, def); err != nil {
+			errStr := fmt.Sprintf("Building controller %s failed: %s", def.Name, err.Error())
+			return errors.New(errStr)
+		}
 	}
+	return nil
 }

@@ -1,4 +1,4 @@
-package main_test
+package swagen
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestGleece(t *testing.T) {
+func TestSwagenModule(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Gleece Suite")
+	RunSpecs(t, "Swagen Module Suite")
 }
