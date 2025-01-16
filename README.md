@@ -1,6 +1,13 @@
 # Gleece  
-🎉 **Gleece** - Bringing joy and ease to API development in Go! 🚀  
 
+
+[![gleece](https://github.com/haimkastner/gleece/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/haimkastner/gleece/actions/workflows/build.yml)
+ [![Latest Release](https://img.shields.io/github/v/release/haimkastner/gleece)](https://github.com/haimkastner/gleece/releases)
+[![GitHub stars](https://img.shields.io/github/stars/haimkastner/gleece.svg?style=social&label=Stars)](https://github.com/haimkastner/gleece/stargazers) 
+[![License](https://img.shields.io/github/license/haimkastner/gleece.svg?style=social)](https://github.com/haimkastner/gleece/blob/master/LICENSE)
+[![Go Reference](https://pkg.go.dev/badge/github.com/haimkastner/gleece.svg)](https://pkg.go.dev/github.com/haimkastner/gleece)
+
+🎉 **Gleece** - Bringing joy and ease to API development in Go! 🚀  
 ---
 
 ## 🌟 Philosophy  
