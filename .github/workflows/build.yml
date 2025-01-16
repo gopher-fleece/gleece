@@ -29,8 +29,8 @@ jobs:
         env:
           COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          go test -race -covermode atomic -coverprofile=covprofile ./...
-          goveralls -coverprofile=covprofile -service=github
+          go test -race -covermode atomic -coverprofile=dist/covprofile ./...
+          goveralls -coverprofile=dist/covprofile -service=github
 
       - name: 6️⃣ Bump version 🔢
         if: github.ref == 'refs/heads/main'
