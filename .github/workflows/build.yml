@@ -26,6 +26,7 @@ jobs:
           ginkgo ./...
 
       - name: 5️⃣ Send coverage 📊
+        if: github.ref == 'refs/heads/main'
         env:
           COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

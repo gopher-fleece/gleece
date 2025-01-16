@@ -6,7 +6,7 @@
 [![GitHub stars](https://img.shields.io/github/stars/haimkastner/gleece.svg?style=social&label=Stars)](https://github.com/haimkastner/gleece/stargazers) 
 [![License](https://img.shields.io/github/license/haimkastner/gleece.svg?style=social)](https://github.com/haimkastner/gleece/blob/master/LICENSE)
 [![Go Reference](https://pkg.go.dev/badge/github.com/haimkastner/gleece.svg)](https://pkg.go.dev/github.com/haimkastner/gleece)
-
+[![Coverage Status](https://coveralls.io/repos/github/haimkastner/gleece/badge.svg?branch=main)](https://coveralls.io/github/haimkastner/gleece?branch=main)
 🎉 **Gleece** - Bringing joy and ease to API development in Go! 🚀  
 ---
 
