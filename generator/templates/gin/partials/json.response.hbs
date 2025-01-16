@@ -1,0 +1,7 @@
+{{#equal HasReturnValue true}}
+	ctx.JSON(statusCode, value)
+{{/equal}}
+{{#equal HasReturnValue false}}
+	ctx.Header("Content-Type", "application/json")
+	ctx.Status(statusCode)
+{{/equal}}

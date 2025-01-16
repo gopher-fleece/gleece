@@ -11,15 +11,31 @@ import (
 //go:embed routes.hbs
 var RoutesTemplate string
 
-//go:embed request.args.parsing.hbs
-var RequestArgsParsingPartial string
+//////////////////
+//   Partials   //
+//////////////////
 
-//go:embed request.response.partial.hbs
-var RequestResponsePartial string
+//go:embed partials/imports.hbs
+var Imports string
+
+//go:embed partials/request.args.parsing.hbs
+var RequestArgsParsing string
+
+//go:embed partials/request.switch.param.type..hbs
+var RequestSwitchParamType string
+
+//go:embed partials/reply.response.hbs
+var ReplyResponse string
+
+//go:embed partials/json.response.hbs
+var JsonResponse string
 
 var Partials = map[string]string{
-	"RequestArgsParsingPartial": RequestArgsParsingPartial,
-	"RequestResponsePartial":    RequestResponsePartial,
+	"Imports":                Imports,
+	"RequestArgsParsing":     RequestArgsParsing,
+	"JsonResponse":           JsonResponse,
+	"ReplyResponse":          ReplyResponse,
+	"RequestSwitchParamType": RequestSwitchParamType,
 }
 
 func RegisterPartials() {

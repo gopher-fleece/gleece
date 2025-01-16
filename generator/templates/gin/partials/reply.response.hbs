@@ -1,0 +1,4 @@
+statusCode := getStatusCode(&controller, {{{HasReturnValue}}}, opError)
+{{#equal ResponseContentType "application/json"}}
+	{{> JsonResponse}}
+{{/equal}}

@@ -3,6 +3,8 @@ package definitions
 import (
 	"fmt"
 	"strconv"
+
+	"github.com/haimkastner/gleece/external"
 )
 
 var validHttpVerbs = map[string]struct{}{
@@ -18,68 +20,68 @@ var validHttpVerbs = map[string]struct{}{
 }
 
 var validHttpStatusCode = map[uint]struct{}{
-	uint(StatusContinue):                      {},
-	uint(StatusSwitchingProtocols):            {},
-	uint(StatusProcessing):                    {},
-	uint(StatusEarlyHints):                    {},
-	uint(StatusOK):                            {},
-	uint(StatusCreated):                       {},
-	uint(StatusAccepted):                      {},
-	uint(StatusNonAuthoritativeInfo):          {},
-	uint(StatusNoContent):                     {},
-	uint(StatusResetContent):                  {},
-	uint(StatusPartialContent):                {},
-	uint(StatusMultiStatus):                   {},
-	uint(StatusAlreadyReported):               {},
-	uint(StatusIMUsed):                        {},
-	uint(StatusMultipleChoices):               {},
-	uint(StatusMovedPermanently):              {},
-	uint(StatusFound):                         {},
-	uint(StatusSeeOther):                      {},
-	uint(StatusNotModified):                   {},
-	uint(StatusUseProxy):                      {},
-	uint(StatusTemporaryRedirect):             {},
-	uint(StatusPermanentRedirect):             {},
-	uint(StatusBadRequest):                    {},
-	uint(StatusUnauthorized):                  {},
-	uint(StatusPaymentRequired):               {},
-	uint(StatusForbidden):                     {},
-	uint(StatusNotFound):                      {},
-	uint(StatusMethodNotAllowed):              {},
-	uint(StatusNotAcceptable):                 {},
-	uint(StatusProxyAuthRequired):             {},
-	uint(StatusRequestTimeout):                {},
-	uint(StatusConflict):                      {},
-	uint(StatusGone):                          {},
-	uint(StatusLengthRequired):                {},
-	uint(StatusPreconditionFailed):            {},
-	uint(StatusRequestEntityTooLarge):         {},
-	uint(StatusRequestURITooLong):             {},
-	uint(StatusUnsupportedMediaType):          {},
-	uint(StatusRequestedRangeNotSatisfiable):  {},
-	uint(StatusExpectationFailed):             {},
-	uint(StatusTeapot):                        {},
-	uint(StatusMisdirectedRequest):            {},
-	uint(StatusUnprocessableEntity):           {},
-	uint(StatusLocked):                        {},
-	uint(StatusFailedDependency):              {},
-	uint(StatusTooEarly):                      {},
-	uint(StatusUpgradeRequired):               {},
-	uint(StatusPreconditionRequired):          {},
-	uint(StatusTooManyRequests):               {},
-	uint(StatusRequestHeaderFieldsTooLarge):   {},
-	uint(StatusUnavailableForLegalReasons):    {},
-	uint(StatusInternalServerError):           {},
-	uint(StatusNotImplemented):                {},
-	uint(StatusBadGateway):                    {},
-	uint(StatusServiceUnavailable):            {},
-	uint(StatusGatewayTimeout):                {},
-	uint(StatusHTTPVersionNotSupported):       {},
-	uint(StatusVariantAlsoNegotiates):         {},
-	uint(StatusInsufficientStorage):           {},
-	uint(StatusLoopDetected):                  {},
-	uint(StatusNotExtended):                   {},
-	uint(StatusNetworkAuthenticationRequired): {},
+	uint(external.StatusContinue):                      {},
+	uint(external.StatusSwitchingProtocols):            {},
+	uint(external.StatusProcessing):                    {},
+	uint(external.StatusEarlyHints):                    {},
+	uint(external.StatusOK):                            {},
+	uint(external.StatusCreated):                       {},
+	uint(external.StatusAccepted):                      {},
+	uint(external.StatusNonAuthoritativeInfo):          {},
+	uint(external.StatusNoContent):                     {},
+	uint(external.StatusResetContent):                  {},
+	uint(external.StatusPartialContent):                {},
+	uint(external.StatusMultiStatus):                   {},
+	uint(external.StatusAlreadyReported):               {},
+	uint(external.StatusIMUsed):                        {},
+	uint(external.StatusMultipleChoices):               {},
+	uint(external.StatusMovedPermanently):              {},
+	uint(external.StatusFound):                         {},
+	uint(external.StatusSeeOther):                      {},
+	uint(external.StatusNotModified):                   {},
+	uint(external.StatusUseProxy):                      {},
+	uint(external.StatusTemporaryRedirect):             {},
+	uint(external.StatusPermanentRedirect):             {},
+	uint(external.StatusBadRequest):                    {},
+	uint(external.StatusUnauthorized):                  {},
+	uint(external.StatusPaymentRequired):               {},
+	uint(external.StatusForbidden):                     {},
+	uint(external.StatusNotFound):                      {},
+	uint(external.StatusMethodNotAllowed):              {},
+	uint(external.StatusNotAcceptable):                 {},
+	uint(external.StatusProxyAuthRequired):             {},
+	uint(external.StatusRequestTimeout):                {},
+	uint(external.StatusConflict):                      {},
+	uint(external.StatusGone):                          {},
+	uint(external.StatusLengthRequired):                {},
+	uint(external.StatusPreconditionFailed):            {},
+	uint(external.StatusRequestEntityTooLarge):         {},
+	uint(external.StatusRequestURITooLong):             {},
+	uint(external.StatusUnsupportedMediaType):          {},
+	uint(external.StatusRequestedRangeNotSatisfiable):  {},
+	uint(external.StatusExpectationFailed):             {},
+	uint(external.StatusTeapot):                        {},
+	uint(external.StatusMisdirectedRequest):            {},
+	uint(external.StatusUnprocessableEntity):           {},
+	uint(external.StatusLocked):                        {},
+	uint(external.StatusFailedDependency):              {},
+	uint(external.StatusTooEarly):                      {},
+	uint(external.StatusUpgradeRequired):               {},
+	uint(external.StatusPreconditionRequired):          {},
+	uint(external.StatusTooManyRequests):               {},
+	uint(external.StatusRequestHeaderFieldsTooLarge):   {},
+	uint(external.StatusUnavailableForLegalReasons):    {},
+	uint(external.StatusInternalServerError):           {},
+	uint(external.StatusNotImplemented):                {},
+	uint(external.StatusBadGateway):                    {},
+	uint(external.StatusServiceUnavailable):            {},
+	uint(external.StatusGatewayTimeout):                {},
+	uint(external.StatusHTTPVersionNotSupported):       {},
+	uint(external.StatusVariantAlsoNegotiates):         {},
+	uint(external.StatusInsufficientStorage):           {},
+	uint(external.StatusLoopDetected):                  {},
+	uint(external.StatusNotExtended):                   {},
+	uint(external.StatusNetworkAuthenticationRequired): {},
 }
 
 func IsValidHttpVerb(verb string) bool {
@@ -99,14 +101,14 @@ func IsValidHttpStatusCode(code uint) bool {
 	return exists
 }
 
-func EnsureHttpStatusCode(code uint) HttpStatusCode {
+func EnsureHttpStatusCode(code uint) external.HttpStatusCode {
 	if IsValidHttpStatusCode(code) {
-		return HttpStatusCode(code)
+		return external.HttpStatusCode(code)
 	}
 	panic(fmt.Sprintf("'%d' is not a valid HTTP status code", code))
 }
 
-func EnsureHttpStatusCodeString(code string) HttpStatusCode {
+func EnsureHttpStatusCodeString(code string) external.HttpStatusCode {
 	parsed, err := strconv.ParseUint(code, 10, 32)
 	if err != nil {
 		panic(fmt.Sprintf("'%s' is not a valid HTTP status code", code))

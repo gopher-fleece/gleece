@@ -246,6 +246,8 @@ func GetTypeMetaByIdent(
 			return meta, err
 		}
 
+		// Verify the identifier does in fact exist in the current package.
+		// Not strictly needed but helps with safety.
 		exists, _ := DoesTypeOrInterfaceExistInPackage(packages, currentPackageName, ident)
 		if !exists {
 			return meta, fmt.Errorf("identifier %s does not correlate to a type or interface in package %s", ident.Name, currentPackageName)
@@ -282,8 +284,6 @@ func GetTypeMetaBySelectorExpr(
 		return meta, fmt.Errorf("could not convert a selector expression's 'X' to an identifier. Sel name: %s", typeOrInterfaceName)
 	}
 
-	meta.DefaultPackageAlias = importAlias.Name
-
 	aliasedFullName := aliasedImports[importAlias.Name]
 	if len(aliasedFullName) == 0 { // If there's no alias, the string will be empty
 		for maybeFullPackageName, fullPackageName := range aliasedImports {
@@ -294,12 +294,14 @@ func GetTypeMetaBySelectorExpr(
 				// The secondary 'maybeFullPackageName == fullPackageName' check is mostly just-in-case - for default aliases
 				// we expect the the mapped key to equal the mapped value.
 				meta.FullyQualifiedPackage = fullPackageName
+				meta.DefaultPackageAlias = GetDefaultAlias(fullPackageName)
 				break
 			}
 		}
 	} else {
 		// Imported with a custom alias
 		meta.FullyQualifiedPackage = aliasedFullName
+		meta.DefaultPackageAlias = GetDefaultAlias(aliasedFullName)
 	}
 	return meta, nil
 }
@@ -320,19 +322,49 @@ func GetFieldUsageType(
 	}
 }
 
+func GetFuncParameterTypeList(
+	file *ast.File,
+	fileSet *token.FileSet,
+	packages []*packages.Package,
+	funcDecl *ast.FuncDecl,
+) ([]definitions.ParamMeta, error) {
+	paramTypes := []definitions.ParamMeta{}
+
+	if funcDecl.Type.Params == nil || funcDecl.Type.Params.List == nil {
+		return paramTypes, nil
+	}
+
+	for _, field := range funcDecl.Type.Params.List {
+		meta, err := GetFieldUsageType(file, fileSet, packages, field)
+		if err != nil {
+			return paramTypes, err
+		}
+		paramTypes = append(paramTypes, definitions.ParamMeta{Name: field.Names[0].Name, TypeMeta: meta})
+	}
+
+	return paramTypes, nil
+}
+
 func GetFuncReturnTypeList(
 	file *ast.File,
 	fileSet *token.FileSet,
 	packages []*packages.Package,
-	funcDecl ast.FuncDecl,
-) {
+	funcDecl *ast.FuncDecl,
+) ([]definitions.TypeMetadata, error) {
+	returnTypes := []definitions.TypeMetadata{}
+
 	if funcDecl.Type.Results == nil {
-		// return []
+		return returnTypes, nil
 	}
 
 	for _, field := range funcDecl.Type.Results.List {
-		GetFieldUsageType(file, fileSet, packages, field)
+		meta, err := GetFieldUsageType(file, fileSet, packages, field)
+		if err != nil {
+			return returnTypes, err
+		}
+		returnTypes = append(returnTypes, meta)
 	}
+	return returnTypes, nil
 }
 
 // IsIdentFromDotImport resolves whether an `*ast.Ident` refers to a type from a dot-imported package.

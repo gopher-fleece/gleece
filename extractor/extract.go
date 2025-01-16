@@ -14,6 +14,7 @@ import (
 	MapSet "github.com/deckarep/golang-set/v2"
 
 	"github.com/haimkastner/gleece/definitions"
+	"github.com/haimkastner/gleece/external"
 	Logger "github.com/haimkastner/gleece/infrastructure/logger"
 )
 
@@ -43,86 +44,6 @@ func ExtractClassMetadata(d ast.GenDecl, baseStruct string) (*definitions.Contro
 	return nil, nil
 }
 
-func ExtractFuncReturnTypes(d ast.FuncDecl) (string, definitions.FuncReturnSignature, error) {
-	var returnTypes []string
-
-	// Check if the function has results (return values)
-	if d.Type.Results != nil {
-		for _, field := range d.Type.Results.List {
-			if ident, ok := field.Type.(*ast.Ident); ok {
-				returnTypes = append(returnTypes, ident.Name)
-			}
-		}
-	}
-
-	// If it's empty array, print error
-	if len(returnTypes) == 0 {
-		Logger.Warn("No return types found for ", d.Name.Name)
-		return "", definitions.FuncRetError, nil
-	}
-
-	// If it's more then 2, print error, no more them tow are supported
-	if len(returnTypes) > 2 {
-		Logger.Warn("More then 2 return types found for ", d.Name.Name)
-		return "", definitions.FuncRetError, nil
-	}
-
-	if len(returnTypes) == 1 {
-
-		// Validate that the only return type is not an error
-		if returnTypes[0] != "error" {
-			Logger.Warn("No error return type found for ", d.Name.Name)
-			return "", definitions.FuncRetError, nil
-		}
-		return "", definitions.FuncRetError, nil
-	}
-
-	// Validate that the first return type is NOT an error
-	if returnTypes[0] == "error" {
-		Logger.Warn("No value return type found for ", d.Name.Name)
-		return "", definitions.FuncRetError, nil
-	}
-
-	// Validate that the second return type is an error
-	if returnTypes[1] != "error" {
-		Logger.Warn("No error return type found for ", d.Name.Name)
-		return "", definitions.FuncRetError, nil
-	}
-
-	return returnTypes[0], definitions.FuncRetValueAndError, nil
-}
-
-func getResponseInterface(funcDecl ast.FuncDecl) definitions.ResponseMetadata {
-	retTypeName, signatureType, err := ExtractFuncReturnTypes(funcDecl)
-	if err != nil {
-		panic((fmt.Sprintf("Could not extract return type for a function declaration '%s': %v", funcDecl.Name.Name, err)))
-	}
-
-	return definitions.ResponseMetadata{
-		InterfaceName:         retTypeName,
-		Signature:             signatureType,
-		FullyQualifiedPackage: "TODO", // <<<<<<<<<========================
-	}
-}
-
-func GetResponseInterface(file *ast.File, fileSet *token.FileSet, funcDecl ast.FuncDecl) definitions.ResponseMetadata {
-	retTypeName, signatureType, err := ExtractFuncReturnTypes(funcDecl)
-	if err != nil {
-		panic((fmt.Sprintf("Could not extract return type for a function declaration '%s': %v", funcDecl.Name.Name, err)))
-	}
-
-	packageName, err := GetFullPackageName(file, fileSet)
-	if err != nil {
-		panic((fmt.Sprintf("Could not determine full package name for file '%s' - %v", file.Name.Name, err)))
-	}
-
-	return definitions.ResponseMetadata{
-		InterfaceName:         retTypeName,
-		Signature:             signatureType,
-		FullyQualifiedPackage: packageName,
-	}
-}
-
 func parseErrorResponseComment(comment string) definitions.ErrorResponse {
 	httpCodeMatch := regexp.MustCompile(`^\d{3,3}`)
 	if !httpCodeMatch.Match([]byte(comment)) {
@@ -144,7 +65,7 @@ func parseErrorResponseComment(comment string) definitions.ErrorResponse {
 func getErrorResponseMetadata(comments []string) []definitions.ErrorResponse {
 	errorResponses := FindAndExtractOccurrences(comments, "@ErrorResponse", 0)
 	responses := []definitions.ErrorResponse{}
-	encounteredCodes := MapSet.NewSet[definitions.HttpStatusCode]()
+	encounteredCodes := MapSet.NewSet[external.HttpStatusCode]()
 
 	for _, errorResponseComment := range errorResponses {
 		response := parseErrorResponseComment(errorResponseComment)
@@ -173,25 +94,25 @@ func getExpressionName(expression ast.Expr) string {
 	}
 }
 
-func getRouteSuccessResponseCode(comments []string, routeHasResultValue bool) definitions.HttpStatusCode {
+func getRouteSuccessResponseCode(comments []string, routeHasResultValue bool) external.HttpStatusCode {
 	responseCode := FindAndExtract(comments, "@ResponseCode")
 
 	if responseCode != "" {
 		return definitions.EnsureHttpStatusCodeString(responseCode)
 	}
 	if routeHasResultValue {
-		return definitions.StatusOK
+		return external.StatusOK
 	}
 
-	return definitions.StatusNoContent
+	return external.StatusNoContent
 }
 
-func getRouteParameters(comments []string, routeFuncDecl ast.FuncDecl) []definitions.FuncParam {
-	params := []definitions.FuncParam{}
+func getRouteParameters(comments []string, routeFuncDecl ast.FuncDecl) []definitions.FuncParamLegacy {
+	params := []definitions.FuncParamLegacy{}
 
 	for _, field := range routeFuncDecl.Type.Params.List {
 		for _, name := range field.Names {
-			param := definitions.FuncParam{
+			param := definitions.FuncParamLegacy{
 				Name: name.Name,
 			}
 			line := SearchForParamTerm(comments, name.Name)
@@ -208,13 +129,13 @@ func getRouteParameters(comments []string, routeFuncDecl ast.FuncDecl) []definit
 			if pType := strings.ToLower(ExtractParamTerm(line)); pType != "" {
 				switch pType {
 				case "query":
-					param.ParamType = definitions.Query
+					param.ParamType = definitions.PassedInQuery
 				case "header":
-					param.ParamType = definitions.Header
+					param.ParamType = definitions.PassedInHeader
 				case "path":
-					param.ParamType = definitions.Path
+					param.ParamType = definitions.PassedInPath
 				case "body":
-					param.ParamType = definitions.Body
+					param.ParamType = definitions.PassedInBody
 				}
 			}
 
@@ -239,13 +160,13 @@ func ExtractClassRoutesMetaData(routeFuncDecl ast.FuncDecl) (*definitions.RouteM
 	routeMetadata.HttpVerb = definitions.EnsureValidHttpVerb(FindAndExtract(comments, "@Method"))
 	routeMetadata.Description = FindAndExtract(comments, "@Description")
 	routeMetadata.RestMetadata = BuildRestMetadata(comments)
-	routeMetadata.ResponseInterface = getResponseInterface(routeFuncDecl)
-	routeMetadata.ResponseSuccessCode = getRouteSuccessResponseCode(comments, routeMetadata.ResponseInterface.InterfaceName != "")
+	// routeMetadata.Response = getResponseInterface(routeFuncDecl)
+	// routeMetadata.ResponseSuccessCode = getRouteSuccessResponseCode(comments, routeMetadata.Response.InterfaceName != "")
 	routeMetadata.ErrorResponses = getErrorResponseMetadata(comments)
 
 	// Extract function parameters
 	if routeFuncDecl.Type.Params != nil {
-		routeMetadata.FuncParams = getRouteParameters(comments, routeFuncDecl)
+		//	routeMetadata.FuncParams = getRouteParameters(comments, routeFuncDecl)
 	}
 
 	// Extract function results
@@ -255,40 +176,28 @@ func ExtractClassRoutesMetaData(routeFuncDecl ast.FuncDecl) (*definitions.RouteM
 	return &routeMetadata, nil
 }
 
-func buildFileSet() (map[string]*ast.File, *token.FileSet, error) {
-	fileToAst := make(map[string]*ast.File)
-	fileSet := token.NewFileSet()
-
-	unNestedSources, err := filepath.Glob("./*,go")
-	if err != nil {
-		return fileToAst, fileSet, err
+func GetMetadata(codeFileGlobs ...string) ([]definitions.ControllerMetadata, error) {
+	var globs []string
+	if len(codeFileGlobs) > 0 {
+		globs = codeFileGlobs
+	} else {
+		globs = []string{"./*.go", "./**/*.go"}
 	}
 
-	nestedSources, err := filepath.Glob("./**/*.go")
-	if err != nil {
-		return fileToAst, fileSet, err
-	}
-
-	allSources := append(unNestedSources, nestedSources...)
-	for _, sourceFile := range allSources {
-		node, err := parser.ParseFile(fileSet, sourceFile, nil, parser.ParseComments)
-		if err != nil {
-			Logger.Error("Error parsing file %s - %v", sourceFile, err)
-			return fileToAst, fileSet, err
-		}
-		fileToAst[sourceFile] = node
-	}
-
-	return fileToAst, fileSet, nil
-}
-
-func GetMetadata() {
 	visitor := &ControllerVisitor{}
-
-	visitor.Init([]string{"./*.go", "./**/*.go"})
+	visitor.Init(globs)
 	for _, file := range visitor.GetFiles() {
 		ast.Walk(visitor, file)
 	}
+
+	lastErr := visitor.GetLastError()
+	if lastErr != nil {
+		Logger.Error("Visitor encountered at-least one error. Last error - %v", *lastErr)
+		return []definitions.ControllerMetadata{}, *lastErr
+	}
+	controllers, _ := visitor.DumpContext()
+	Logger.Info("%v", controllers)
+	return visitor.GetControllers(), nil
 }
 
 func ExtractMetadata() ([]definitions.ControllerMetadata, error) {

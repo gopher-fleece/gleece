@@ -38,13 +38,7 @@ func createContentWithSchemaRef(openapi *openapi3.T, validationString string, in
 }
 
 func createResponseSuccess(openapi *openapi3.T, route definitions.RouteMetadata) *openapi3.ResponseRef {
-	content := openapi3.NewContent()
-
-	// If the repose is not a void, create a content with schema ref
-	if route.ResponseInterface.Signature == definitions.FuncRetValueAndError {
-		content = createContentWithSchemaRef(openapi, "", route.ResponseInterface.InterfaceName)
-	}
-
+	content := createContentWithSchemaRef(openapi, "", route.Responses.InterfaceName)
 	return &openapi3.ResponseRef{
 		Value: &openapi3.Response{
 			Description: &route.ResponseDescription,
@@ -107,7 +101,7 @@ func setNewRouteOperation(openapi *openapi3.T, def definitions.ControllerMetadat
 	openapi.Paths.Set(routePath, pathItem)
 }
 
-func createRouteParam(openapi *openapi3.T, param definitions.FuncParam) *openapi3.ParameterRef {
+func createRouteParam(openapi *openapi3.T, param definitions.FuncParamLegacy) *openapi3.ParameterRef {
 	schemaRef := InterfaceToSchemaRef(openapi, param.ParamInterface)
 	BuildSchemaValidation(schemaRef, param.Validator, param.ParamInterface)
 	return &openapi3.ParameterRef{
@@ -121,7 +115,7 @@ func createRouteParam(openapi *openapi3.T, param definitions.FuncParam) *openapi
 	}
 }
 
-func createRequestBodyParam(openapi *openapi3.T, param definitions.FuncParam) *openapi3.RequestBodyRef {
+func createRequestBodyParam(openapi *openapi3.T, param definitions.FuncParamLegacy) *openapi3.RequestBodyRef {
 	content := createContentWithSchemaRef(openapi, param.Validator, param.ParamInterface)
 	return &openapi3.RequestBodyRef{
 		Value: &openapi3.RequestBody{
@@ -135,7 +129,7 @@ func createRequestBodyParam(openapi *openapi3.T, param definitions.FuncParam) *o
 func generateParams(openapi *openapi3.T, route definitions.RouteMetadata, operation *openapi3.Operation) {
 	// Iterate over FuncParams and create parameters
 	for _, param := range route.FuncParams {
-		if param.ParamType == definitions.Body {
+		if param.ParamType == definitions.PassedInBody {
 			operation.RequestBody = createRequestBodyParam(openapi, param)
 		} else {
 			operation.Parameters = append(operation.Parameters, createRouteParam(openapi, param))

@@ -1,12 +1,12 @@
 package ctrl
 
 import (
-	"github.com/haimkastner/gleece/definitions"
+	"github.com/haimkastner/gleece/external"
 )
 
 // GleeceController provides common functionality for controllers.
 type GleeceController struct {
-	statusCode *definitions.HttpStatusCode
+	statusCode *external.HttpStatusCode
 	headers    map[string]interface{}
 	// Request is the HTTP request from the underlying routing engine (gin, echo etc.)
 	request any
@@ -17,12 +17,12 @@ func (gc *GleeceController) SetRequest(request any) {
 }
 
 // SetStatus sets the status code for the GleeceController.
-func (gc *GleeceController) SetStatus(statusCode definitions.HttpStatusCode) {
+func (gc *GleeceController) SetStatus(statusCode external.HttpStatusCode) {
 	gc.statusCode = &statusCode
 }
 
 // GetStatus gets the status code for the GleeceController.
-func (gc *GleeceController) GetStatus() *definitions.HttpStatusCode {
+func (gc *GleeceController) GetStatus() *external.HttpStatusCode {
 	return gc.statusCode
 }
 
