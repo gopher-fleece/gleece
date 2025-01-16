@@ -4,10 +4,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/haimkastner/gleece/definitions"
+	"github.com/haimkastner/gleece/external"
 )
 
-func HttpStatusCodeToString(httpStatusCode definitions.HttpStatusCode) string {
+func HttpStatusCodeToString(httpStatusCode external.HttpStatusCode) string {
 	statusCode := uint64(httpStatusCode)
 	return strconv.FormatUint(statusCode, 10)
 }

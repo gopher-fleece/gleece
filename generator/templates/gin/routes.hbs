@@ -2,31 +2,56 @@ package {{{PackageName}}}
 
 {{> Imports}}
 
-type Controller interface {
-	SetRequest(request any)
+var validatorInstance *validator.Validate
 
-	// SetStatus sets the status code for the GleeceController.
-	SetStatus(statusCode definitions.HttpStatusCode)
+func getStatusCode(controller external.Controller, hasReturnValue bool, err error) int {
+	if controller.GetStatus() != nil {
+		return int(*controller.GetStatus())
+	} 
 
-	// GetStatus gets the status code for the GleeceController.
-	GetStatus() *definitions.HttpStatusCode
+	if err != nil {
+		return http.StatusInternalServerError
+	}
 
-	// SetHeader sets a header for the GleeceController.
-	SetHeader(name string, value interface{})
+	if hasReturnValue {
+		return http.StatusNoContent
+	}
+
+	return http.StatusOK
 }
 
-func setResponseStatus(ctx *gin.Context, controller Controller, err error) {
+func bindAndValidateBody[TOutput any](ctx *gin.Context, contentType string, output *TOutput) error {
+	var err error
+
+	bodyBytes, err := io.ReadAll(ctx.Request.Body)
 	if err != nil {
-		status := controller.GetStatus()
-		if status == nil {
-			ctx.Status(500)
-		} else {
-			ctx.Status(int(*status))
-		}
+		return err
 	}
+
+	var deserializedOutput TOutput
+
+	switch contentType {
+	case "application/json":
+		err = json.Unmarshal(bodyBytes, &deserializedOutput)
+	default:
+		return fmt.Errorf("content-type %s is not currently supported by the validation subsystem", contentType)
+	}
+
+	if err != nil {
+		return err
+	}
+
+	if err = validatorInstance.Struct(&deserializedOutput); err != nil {
+		return err
+	}
+
+	output = &deserializedOutput
+
+	return nil
 }
 
 func RegisterRoutes(engine *gin.Engine) {
+	validatorInstance = validator.New()
 {{#each Controllers}}
 	// {{{Name}}}
 	{{#each Routes}}
@@ -34,26 +59,14 @@ func RegisterRoutes(engine *gin.Engine) {
 			controller := {{{Name}}}Import.{{../Name}}{}
 			controller.SetRequest(ctx)
 			{{#each FuncParams}}
-				// Partial Start: RequestArgsParsing
 				{{> RequestArgsParsing}}
-				// Partial End: RequestArgsParsing
 			{{/each}}
 
-		{{#equal HasReturnValue true}}value, {{/equal}}err := controller.{{{OperationId}}}({{#each FuncParams}}{{ToLowerCamel Name}}{{#unless @last}}, {{/unless}}{{/each}})
+		{{#equal HasReturnValue true}}value, {{/equal}}opError := controller.{{{OperationId}}}({{#each FuncParams}}{{ToLowerCamel Name}}{{#unless @last}}, {{/unless}}{{/each}})
 
-		setResponseStatus(ctx, &controller, err)
-	// Partial Start: RequestResponse
-	{{> RequestResponse}}
-	// Partial End: RequestResponse
-
-	if err != nil {
-		{{#if ErrorMiddleware}}
-			ctx.{{{ResponseContentType}}}(errorMiddleware(ctx, err, {{{ResponseContentType}}}))
-		{{else}}
-			ctx.JSON("")
-		{{/if}}
-	}
+		{{> ReplyResponse}}
 	})
+
 	{{/each}}
 {{/each}}
 }

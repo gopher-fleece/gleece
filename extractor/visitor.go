@@ -274,11 +274,13 @@ func (v *ControllerVisitor) visitMethod(funcDecl *ast.FuncDecl) (definitions.Rou
 	comments := MapDocListToStrings(funcDecl.Doc.List)
 
 	meta := definitions.RouteMetadata{
-		OperationId:    funcDecl.Name.Name,
-		HttpVerb:       definitions.EnsureValidHttpVerb(FindAndExtract(comments, "@Method")),
-		Description:    FindAndExtract(comments, "@Description"),
-		RestMetadata:   BuildRestMetadata(comments),
-		ErrorResponses: getErrorResponseMetadata(comments),
+		OperationId:         funcDecl.Name.Name,
+		HttpVerb:            definitions.EnsureValidHttpVerb(FindAndExtract(comments, "@Method")),
+		Description:         FindAndExtract(comments, "@Description"),
+		RestMetadata:        BuildRestMetadata(comments),
+		ErrorResponses:      getErrorResponseMetadata(comments),
+		RequestContentType:  definitions.ContentTypeJSON, // Hardcoded for now, should be supported via comments later
+		ResponseContentType: definitions.ContentTypeJSON, // Hardcoded for now, should be supported via comments later
 	}
 
 	// Check whether the method is an API endpoint, i.e., has all the relevant metadata.

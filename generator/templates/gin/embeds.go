@@ -24,13 +24,17 @@ var RequestArgsParsing string
 //go:embed partials/request.switch.param.type..hbs
 var RequestSwitchParamType string
 
-//go:embed partials/request.response.hbs
-var RequestResponse string
+//go:embed partials/reply.response.hbs
+var ReplyResponse string
+
+//go:embed partials/json.response.hbs
+var JsonResponse string
 
 var Partials = map[string]string{
 	"Imports":                Imports,
 	"RequestArgsParsing":     RequestArgsParsing,
-	"RequestResponse":        RequestResponse,
+	"JsonResponse":           JsonResponse,
+	"ReplyResponse":          ReplyResponse,
 	"RequestSwitchParamType": RequestSwitchParamType,
 }
 

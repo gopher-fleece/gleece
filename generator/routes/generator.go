@@ -3,7 +3,6 @@ package routes
 import (
 	"encoding/json"
 	"fmt"
-	"go/format"
 	"os"
 	"path/filepath"
 
@@ -12,6 +11,7 @@ import (
 
 	"github.com/haimkastner/gleece/cmd"
 	"github.com/haimkastner/gleece/definitions"
+	"github.com/haimkastner/gleece/generator/compilation"
 	"github.com/haimkastner/gleece/generator/templates/gin"
 	Logger "github.com/haimkastner/gleece/infrastructure/logger"
 )
@@ -63,16 +63,6 @@ func registerPartials(engine cmd.RoutingEngineType) {
 	}
 }
 
-func formatCode(code string) (string, error) {
-	formatted, err := format.Source([]byte(code))
-	if err != nil {
-		Logger.Error("Could not format source code - %v", err)
-		return code, err
-	}
-
-	return string(formatted), nil
-}
-
 func GenerateRoutes(args cmd.RoutesConfig, controllerMeta []definitions.ControllerMetadata) error {
 	registerPartials(args.Engine)
 	registerHelpers()
@@ -99,7 +89,7 @@ func GenerateRoutes(args cmd.RoutesConfig, controllerMeta []definitions.Controll
 	}
 
 	Logger.Debug("Formatting %d bytes of output code", len(result))
-	formattedOutput, _ := formatCode(result)
+	formattedOutput, _ := compilation.OptimizeImportsAndFormat(result)
 	if err := os.MkdirAll(filepath.Dir(args.OutputPath), 0755); err != nil {
 		return err
 	}

@@ -14,6 +14,7 @@ import (
 	MapSet "github.com/deckarep/golang-set/v2"
 
 	"github.com/haimkastner/gleece/definitions"
+	"github.com/haimkastner/gleece/external"
 	Logger "github.com/haimkastner/gleece/infrastructure/logger"
 )
 
@@ -64,7 +65,7 @@ func parseErrorResponseComment(comment string) definitions.ErrorResponse {
 func getErrorResponseMetadata(comments []string) []definitions.ErrorResponse {
 	errorResponses := FindAndExtractOccurrences(comments, "@ErrorResponse", 0)
 	responses := []definitions.ErrorResponse{}
-	encounteredCodes := MapSet.NewSet[definitions.HttpStatusCode]()
+	encounteredCodes := MapSet.NewSet[external.HttpStatusCode]()
 
 	for _, errorResponseComment := range errorResponses {
 		response := parseErrorResponseComment(errorResponseComment)
@@ -93,17 +94,17 @@ func getExpressionName(expression ast.Expr) string {
 	}
 }
 
-func getRouteSuccessResponseCode(comments []string, routeHasResultValue bool) definitions.HttpStatusCode {
+func getRouteSuccessResponseCode(comments []string, routeHasResultValue bool) external.HttpStatusCode {
 	responseCode := FindAndExtract(comments, "@ResponseCode")
 
 	if responseCode != "" {
 		return definitions.EnsureHttpStatusCodeString(responseCode)
 	}
 	if routeHasResultValue {
-		return definitions.StatusOK
+		return external.StatusOK
 	}
 
-	return definitions.StatusNoContent
+	return external.StatusNoContent
 }
 
 func getRouteParameters(comments []string, routeFuncDecl ast.FuncDecl) []definitions.FuncParamLegacy {
