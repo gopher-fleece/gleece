@@ -27,3 +27,11 @@ func main() {
 		defs,
 	)
 }
+
+/*
+	CLI Main. Uncomment when ready
+func main() {
+	cmd.Execute()
+}
+
+*/
