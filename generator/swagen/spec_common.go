@@ -28,7 +28,7 @@ func InterfaceToSchemaRef(openapi *openapi3.T, interfaceType string) *openapi3.S
 			fieldSchemaRef.Value = openapi.Components.Schemas[interfaceType].Value
 		} else {
 			// If the schema is not found in the components, add it to the EmptyRefSchemas slice so later we can fill it
-			schemaRefMap = append(schemaRefMap, SchemaRefMap{InterfaceType: interfaceType, SchemaRef: fieldSchemaRef})
+			// schemaRefMap = append(schemaRefMap, SchemaRefMap{InterfaceType: interfaceType, SchemaRef: fieldSchemaRef})
 		}
 	}
 	if openapiType == "array" {
