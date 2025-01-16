@@ -29,6 +29,7 @@ jobs:
         env:
           COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          mkdir dist
           go test -race -covermode atomic -coverprofile=dist/covprofile ./...
           goveralls -coverprofile=dist/covprofile -service=github
 
