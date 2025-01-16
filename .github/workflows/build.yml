@@ -29,12 +29,16 @@ jobs:
         id: update_version
         run: |
           VERSION=$(cat .release/package_version)
-          IFS='.' read -r -a version <<< "$VERSION"
-          MAJOR=${version[0]}
-          MINOR=${version[1]}
-          PATCH=${version[2]}
+          IFS='-' read -r version suffix <<< "$VERSION"
+          IFS='.' read -r -a version_parts <<< "$version"
+          MAJOR=${version_parts[0]}
+          MINOR=${version_parts[1]}
+          PATCH=${version_parts[2]}
           NEW_PATCH=$((PATCH + 1))
           NEXT_VERSION="$MAJOR.$MINOR.$NEW_PATCH"
+          if [ -n "$suffix" ]; then
+            NEXT_VERSION="$NEXT_VERSION-$suffix"
+          fi
           echo $NEXT_VERSION > .release/package_version
           echo "VERSION=v$NEXT_VERSION" >> $GITHUB_OUTPUT
 
