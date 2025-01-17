@@ -48,6 +48,24 @@ const (
 	ContentTypeCSS            ContentType = "text/css"
 )
 
+type HideMethodType string
+
+const (
+	HideMethodNever     HideMethodType = "Never"
+	HideMethodAlways    HideMethodType = "Always"
+	HideMethodCondition HideMethodType = "Condition"
+)
+
+type MethodHideOptions struct {
+	Type      HideMethodType
+	Condition string
+}
+
+type DeprecationOptions struct {
+	Deprecated  bool
+	Description string
+}
+
 type ImportType string
 
 const (
@@ -105,19 +123,58 @@ type FuncParamLegacy struct {
 }
 
 type RouteMetadata struct {
-	OperationId         string
-	HttpVerb            HttpVerb
-	Description         string
-	RestMetadata        RestMetadata
-	FuncParams          []FuncParam
-	Responses           []FuncReturnValue
-	HasReturnValue      bool
+	// The handler function's and operation name in the OpenAPI schema
+	OperationId string
+
+	// The HTTP verb this method expects (i.e., GET, POST etc.)
+	HttpVerb HttpVerb
+
+	// Controls whether the method is hidden in schema and when
+	Hiding MethodHideOptions
+
+	// Defines whether the method is considered deprecated
+	Deprecation DeprecationOptions
+
+	// The operation's description
+	Description string
+
+	// Additional metadata related to the operation such as it's URL
+	RestMetadata RestMetadata
+
+	// Metadata on the handler function's parameters
+	FuncParams []FuncParam
+
+	// Metadata on the handler function's return values
+	Responses []FuncReturnValue
+
+	// Indicates whether the operation returns a value on success.
+	//
+	// Note that the framework enforces at-least an error return value from all controller methods
+	HasReturnValue bool
+
+	// A description for success responses
 	ResponseDescription string
+
+	// The HTTP code expected to be returned from a successful call
+	//
+	// TODO: Needs to be an array
 	ResponseSuccessCode external.HttpStatusCode
-	ErrorResponses      []ErrorResponse
-	RequestContentType  ContentType
+
+	// Metadata on the type of errors that may be returned from the operation
+	ErrorResponses []ErrorResponse
+
+	// The expected request content type.
+	//
+	// Currently hard-coded to application/json.
+	RequestContentType ContentType
+
+	// The expected response content type.
+	//
+	// Currently hard-coded to application/json.
 	ResponseContentType ContentType
-	Security            []RouteSecurity // OR between security routes
+
+	// The security schema/s used for the operation
+	Security []RouteSecurity // OR between security routes
 }
 
 func (m RouteMetadata) GetValueReturnType() *TypeMetadata {

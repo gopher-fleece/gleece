@@ -6,6 +6,7 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"runtime"
 	"strings"
 
 	"github.com/bmatcuk/doublestar/v4"
@@ -29,7 +30,39 @@ type ControllerVisitor struct {
 	currentSourceFile *ast.File
 	currentGenDecl    *ast.GenDecl
 
-	lastError *error
+	diagnosticStack []string
+	lastError       *error
+}
+
+func (v *ControllerVisitor) enter(message string) {
+	var formattedMessage string
+	if len(message) > 0 {
+		formattedMessage = fmt.Sprintf("- (%s)", message)
+	}
+
+	pc, file, line, ok := runtime.Caller(1)
+	if !ok {
+		v.diagnosticStack = append(v.diagnosticStack, fmt.Sprintf("<unknown>.<unknown> - %s", formattedMessage))
+		Logger.Warn("Could not determine caller for diagnostic message %s", formattedMessage)
+		return
+	}
+
+	fn := runtime.FuncForPC(pc)
+	if fn == nil {
+		v.diagnosticStack = append(v.diagnosticStack, fmt.Sprintf("%s:%d - %s", file, line, formattedMessage))
+		Logger.Warn("Could not determine caller function for diagnostic message %s", formattedMessage)
+		return
+	}
+
+	v.diagnosticStack = append(v.diagnosticStack, fmt.Sprintf("%s\n\t\t%s:%d%s", fn.Name(), file, line, formattedMessage))
+}
+
+func (v *ControllerVisitor) exit() {
+	v.diagnosticStack = v.diagnosticStack[:len(v.diagnosticStack)-1]
+}
+
+func (v *ControllerVisitor) GetFormattedDiagnosticStack() string {
+	return strings.Join(v.diagnosticStack, "\n")
 }
 
 func (v *ControllerVisitor) Init(sourceFileGlobs []string) error {
@@ -130,12 +163,14 @@ func (v *ControllerVisitor) Visit(node ast.Node) ast.Visitor {
 	return v
 }
 
-func (v *ControllerVisitor) createControllerMetadata(controllerNode *ast.TypeSpec) definitions.ControllerMetadata {
+func (v *ControllerVisitor) createControllerMetadata(controllerNode *ast.TypeSpec) (definitions.ControllerMetadata, error) {
 	fullPackageName, fullNameErr := GetFullPackageName(v.currentSourceFile, v.fileSet)
 	packageAlias, aliasErr := GetDefaultPackageAlias(v.currentSourceFile)
 
 	if fullNameErr != nil || aliasErr != nil {
-		panic(fmt.Sprintf("Could not obtain full/partial package name for source file '%s'", v.currentSourceFile.Name))
+		return definitions.ControllerMetadata{}, fmt.Errorf(
+			"could not obtain full/partial package name for source file '%s'", v.currentSourceFile.Name,
+		)
 	}
 
 	meta := definitions.ControllerMetadata{
@@ -158,11 +193,19 @@ func (v *ControllerVisitor) createControllerMetadata(controllerNode *ast.TypeSpe
 		meta.Description = FindAndExtract(comments, "@Description")
 		meta.RestMetadata = BuildRestMetadata(comments)
 	}
-	return meta
+
+	return meta, nil
 }
 
 func (v *ControllerVisitor) visitController(controllerNode *ast.TypeSpec) (definitions.ControllerMetadata, error) {
-	controller := v.createControllerMetadata(controllerNode)
+	v.enter(fmt.Sprintf("Controller %s", controllerNode.Name.Name))
+	defer v.exit()
+
+	controller, err := v.createControllerMetadata(controllerNode)
+
+	if err != nil {
+		return controller, err
+	}
 
 	for _, file := range v.sourceFiles {
 		for _, declaration := range file.Decls {
@@ -191,6 +234,9 @@ func (v *ControllerVisitor) visitController(controllerNode *ast.TypeSpec) (defin
 }
 
 func (v *ControllerVisitor) getFuncParams(funcDecl *ast.FuncDecl, comments []string) ([]definitions.FuncParam, error) {
+	v.enter("")
+	defer v.exit()
+
 	funcParams := []definitions.FuncParam{}
 
 	paramTypes, err := GetFuncParameterTypeList(v.currentSourceFile, v.fileSet, v.packages, funcDecl)
@@ -199,6 +245,10 @@ func (v *ControllerVisitor) getFuncParams(funcDecl *ast.FuncDecl, comments []str
 	}
 
 	for _, param := range paramTypes {
+		// Record state for diagnostics
+		v.enter(fmt.Sprintf("Param %s", param.Name))
+		defer v.exit()
+
 		line := SearchForParamTerm(comments, param.Name)
 		if line == "" {
 			return funcParams, fmt.Errorf("no comment metadata found for %v", param.Name)
@@ -245,6 +295,9 @@ func (v *ControllerVisitor) getFuncParams(funcDecl *ast.FuncDecl, comments []str
 }
 
 func (v *ControllerVisitor) getFuncReturnValue(funcDecl *ast.FuncDecl) ([]definitions.FuncReturnValue, error) {
+	v.enter("")
+	defer v.exit()
+
 	returnTypes, err := GetFuncReturnTypeList(v.currentSourceFile, v.fileSet, v.packages, funcDecl)
 	if err != nil {
 		return []definitions.FuncReturnValue{}, err
@@ -264,7 +317,49 @@ func (v *ControllerVisitor) getFuncReturnValue(funcDecl *ast.FuncDecl) ([]defini
 	return values, nil
 }
 
+func (v ControllerVisitor) getMethodHideOpts(comments []string) definitions.MethodHideOptions {
+	hiddenComment := GetAttribute(comments, "@Hidden")
+	if hiddenComment == nil {
+		// No '@Hidden' attribute
+		return definitions.MethodHideOptions{Type: definitions.HideMethodNever}
+	}
+
+	if len(*hiddenComment) <= 0 {
+		return definitions.MethodHideOptions{Type: definitions.HideMethodAlways}
+	}
+
+	// Technically a bit redundant since we know by length whether there's a condition defined
+	// but nothing stops user from adding text to the comment so this mostly serves as a validation
+	enclosedText := ExtractParenthesesContentFromCleanedComment(*hiddenComment)
+	if enclosedText == nil || len(*enclosedText) <= 0 {
+		// Standard '@Hidden' attribute; Always hide.
+		return definitions.MethodHideOptions{Type: definitions.HideMethodAlways}
+	}
+
+	// A '@Hidden(condition)' attribute
+	return definitions.MethodHideOptions{Type: definitions.HideMethodCondition, Condition: *enclosedText}
+}
+
+func (v ControllerVisitor) getDeprecationOpts(comments []string) definitions.DeprecationOptions {
+	deprecatedComment := GetAttribute(comments, "@Deprecated")
+	if deprecatedComment == nil {
+		// No '@Deprecated' attribute
+		return definitions.DeprecationOptions{Deprecated: false}
+	}
+
+	if len(*deprecatedComment) <= 0 {
+		// '@Deprecated' with no description
+		return definitions.DeprecationOptions{Deprecated: true}
+	}
+
+	// '@Deprecated' with a comment
+	return definitions.DeprecationOptions{Deprecated: true, Description: *deprecatedComment}
+}
+
 func (v *ControllerVisitor) visitMethod(funcDecl *ast.FuncDecl) (definitions.RouteMetadata, bool, error) {
+	v.enter(fmt.Sprintf("Method %s", funcDecl.Name.Name))
+	defer v.exit()
+
 	// Check whether there are any comments on the method - we expect all API endpoints to contain comments.
 	// No comments - not an API endpoint.
 	if funcDecl.Doc == nil || funcDecl.Doc.List == nil || len(funcDecl.Doc.List) <= 0 {
@@ -277,6 +372,8 @@ func (v *ControllerVisitor) visitMethod(funcDecl *ast.FuncDecl) (definitions.Rou
 		OperationId:         funcDecl.Name.Name,
 		HttpVerb:            definitions.EnsureValidHttpVerb(FindAndExtract(comments, "@Method")),
 		Description:         FindAndExtract(comments, "@Description"),
+		Hiding:              v.getMethodHideOpts(comments),
+		Deprecation:         v.getDeprecationOpts(comments),
 		RestMetadata:        BuildRestMetadata(comments),
 		ErrorResponses:      getErrorResponseMetadata(comments),
 		RequestContentType:  definitions.ContentTypeJSON, // Hardcoded for now, should be supported via comments later

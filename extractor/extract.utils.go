@@ -61,6 +61,18 @@ func ExtractParamTerm(line string) string {
 	return "" // Return empty if no match is found
 }
 
+func ExtractParenthesesContentFromCleanedComment(comment string) *string {
+	re := regexp.MustCompile(`\(([^)]+)\)`)
+
+	// Find the first match
+	match := re.FindStringSubmatch(comment)
+	if len(match) > 1 {
+		return &match[1] // Return the content inside the parentheses
+	}
+
+	return nil
+}
+
 // ExtractParenthesesContent extracts the text inside parentheses after the word immediately following "@"
 // If no parentheses exist, it returns an empty string.
 func ExtractParenthesesContent(line string) string {
@@ -82,6 +94,22 @@ func FindAndExtract(input []string, search string) string {
 		return matches[0]
 	}
 	return ""
+}
+
+func GetAttribute(inputComments []string, attribute string) *string {
+	for _, rawStr := range inputComments {
+		str := strings.TrimPrefix(strings.TrimPrefix(rawStr, "// "), "//")
+		if strings.HasPrefix(strings.TrimSpace(str), attribute) {
+			result := strings.TrimPrefix(str, attribute)
+			trimmedResult := strings.Trim(result, " ")
+			return &trimmedResult
+		}
+	}
+	return nil
+}
+
+func AttributeExists(inputComments []string, attribute string) bool {
+	return GetAttribute(inputComments, attribute) != nil
 }
 
 func FindAndExtractOccurrences(input []string, search string, maxMatchCount uint) []string {
