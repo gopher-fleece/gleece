@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/haimkastner/gleece/definitions"
 	"github.com/haimkastner/gleece/infrastructure/logger"
 )
 
@@ -187,7 +188,7 @@ func ToOpenApiSchemaRef(typeName string) *openapi3.SchemaRef {
 	}
 }
 
-func IsSecurityNameInSecuritySchemes(securitySchemes []SecuritySchemeConfig, securityName string) bool {
+func IsSecurityNameInSecuritySchemes(securitySchemes []definitions.SecuritySchemeConfig, securityName string) bool {
 	for _, securityScheme := range securitySchemes {
 		if securityScheme.SecurityName == securityName {
 			return true

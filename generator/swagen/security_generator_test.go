@@ -2,6 +2,7 @@ package swagen
 
 import (
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/haimkastner/gleece/definitions"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -15,7 +16,7 @@ var _ = Describe("Common Utilities", func() {
 				},
 			}
 
-			securityConfig := []SecuritySchemeConfig{
+			securityConfig := []definitions.SecuritySchemeConfig{
 				{
 					SecurityName: "apiKeyAuth",
 					Type:         "apiKey",

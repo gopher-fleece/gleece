@@ -2,6 +2,7 @@ package swagen
 
 import (
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/haimkastner/gleece/definitions"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -181,7 +182,7 @@ var _ = Describe("Spec Common", func() {
 
 	Describe("IsSecurityNameInSecuritySchemes", func() {
 		It("should return true if security name exists in schemes", func() {
-			securitySchemes := []SecuritySchemeConfig{
+			securitySchemes := []definitions.SecuritySchemeConfig{
 				{SecurityName: "oauth2"},
 				{SecurityName: "apiKey"},
 			}
@@ -190,7 +191,7 @@ var _ = Describe("Spec Common", func() {
 		})
 
 		It("should return false if security name does not exist in schemes", func() {
-			securitySchemes := []SecuritySchemeConfig{
+			securitySchemes := []definitions.SecuritySchemeConfig{
 				{SecurityName: "oauth2"},
 				{SecurityName: "apiKey"},
 			}

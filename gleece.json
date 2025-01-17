@@ -1,0 +1,42 @@
+{
+    "openAPIGeneratorConfig": {
+      "info": {
+        "title": "Sample API",
+        "description": "This is a sample API",
+        "termsOfService": "http://example.com/terms/",
+        "contact": {
+          "name": "API Support",
+          "url": "http://www.example.com/support",
+          "email": "support@example.com"
+        },
+        "license": {
+          "name": "Apache 2.0",
+          "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0.0"
+      },
+      "base_url": "https://api.example.com",
+      "securitySchemes": [
+        {
+          "description": "API Key for accessing the API",
+          "name": "apiKeyAuth",
+          "fieldName": "apiKey",
+          "type": "apiKey",
+          "in": "header"
+        }
+      ],
+      "defaultSecurity": [
+        {
+          "securityMethod": [
+            {
+              "name": "apiKeyAuth",
+              "permissions": ["read", "write"]
+            }
+          ]
+        }
+      ],
+      "specGeneratorConfig": {
+        "outputPath": "./dist/swagger.json"
+      }
+    }
+  }

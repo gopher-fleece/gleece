@@ -1,6 +1,9 @@
 package definitions
 
-import "github.com/haimkastner/gleece/external"
+import (
+	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/haimkastner/gleece/external"
+)
 
 // Enum of HTTP parma type (header, query, path, body)
 type ParamPassedIn string
@@ -128,12 +131,12 @@ func (m RouteMetadata) GetValueReturnType() *TypeMetadata {
 }
 
 type RouteSecurity struct {
-	SecurityMethod []SecurityMethod // AND between security methods
+	SecurityMethod []SecurityMethod `json:"securityMethod" validate:"not_nil_array"` // AND between security methods
 }
 
 type SecurityMethod struct {
-	Name        string
-	Permissions []string
+	Name        string   `json:"name" validate:"required,starts_with_letter"`
+	Permissions []string `json:"permissions" validate:"not_nil_array"`
 }
 
 type ControllerMetadata struct {
@@ -177,3 +180,26 @@ const (
 	InHeader SecuritySchemeIn = "header"
 	InCookie SecuritySchemeIn = "cookie"
 )
+
+type SpecGeneratorConfig struct {
+	OutputPath string `json:"outputPath" validate:"required"`
+}
+
+type SecuritySchemeConfig struct {
+	Description  string             `json:"description" validate:"required"`
+	SecurityName string             `json:"name" validate:"required,starts_with_letter"`
+	FieldName    string             `json:"fieldName" validate:"required,starts_with_letter"`
+	Type         SecuritySchemeType `json:"type" validate:"required,security_schema_type"` // see SecuritySchemeType
+	In           SecuritySchemeIn   `json:"in" validate:"required,security_schema_in"`     // see SecuritySchemeIn
+}
+
+type OpenAPIGeneratorConfig struct {
+	Info                 openapi3.Info          `json:"info" validate:"required"`
+	BaseURL              string                 `json:"base_url" validate:"required,url"`
+	SecuritySchemes      []SecuritySchemeConfig `json:"securitySchemes" validate:"not_nil_array"`
+	DefaultRouteSecurity []RouteSecurity        `json:"defaultSecurity" validate:"not_nil_array"`
+	SpecGeneratorConfig  SpecGeneratorConfig    `json:"specGeneratorConfig" validate:"required"`
+}
+type GleeceConfig struct {
+	OpenAPIGeneratorConfig OpenAPIGeneratorConfig `json:"openAPIGeneratorConfig" validate:"required"`
+}

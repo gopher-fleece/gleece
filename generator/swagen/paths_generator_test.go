@@ -9,7 +9,7 @@ import (
 
 var _ = Describe("Swagen", func() {
 	var openapi *openapi3.T
-	var config *OpenAPIGeneratorConfig
+	var config *definitions.OpenAPIGeneratorConfig
 
 	BeforeEach(func() {
 		openapi = &openapi3.T{
@@ -18,8 +18,8 @@ var _ = Describe("Swagen", func() {
 			},
 			Paths: openapi3.NewPaths(),
 		}
-		config = &OpenAPIGeneratorConfig{
-			SecuritySchemes: []SecuritySchemeConfig{
+		config = &definitions.OpenAPIGeneratorConfig{
+			SecuritySchemes: []definitions.SecuritySchemeConfig{
 				{
 					SecurityName: "apiKeyAuth",
 					Type:         "apiKey",
