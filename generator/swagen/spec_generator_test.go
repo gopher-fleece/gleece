@@ -265,7 +265,7 @@ var _ = Describe("Spec Generator", func() {
 			},
 		}
 
-		jsonBytes, err := GenerateSpec(OpenAPIGeneratorConfig{
+		jsonBytes, err := GenerateSpec(&definitions.OpenAPIGeneratorConfig{
 			Info: openapi3.Info{
 				Title:       "My API",
 				Version:     "1.0.0",
@@ -280,7 +280,7 @@ var _ = Describe("Spec Generator", func() {
 				},
 			},
 			BaseURL: "http://localhost:8080",
-			SecuritySchemes: []SecuritySchemeConfig{
+			SecuritySchemes: []definitions.SecuritySchemeConfig{
 				{
 					SecurityName: "ApiKeyAuth",
 					FieldName:    "X-API-Key2",
@@ -388,7 +388,7 @@ var _ = Describe("Spec Generator", func() {
 
 		models := []definitions.ModelMetadata{}
 
-		_, err := GenerateSpec(OpenAPIGeneratorConfig{
+		_, err := GenerateSpec(&definitions.OpenAPIGeneratorConfig{
 			Info: openapi3.Info{
 				Title:   "My API",
 				Version: "1.0.0",

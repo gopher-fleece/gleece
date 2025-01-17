@@ -3,29 +3,16 @@ package swagen
 import (
 	"context"
 	"encoding/json"
+	"os"
+	"path/filepath"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/haimkastner/gleece/definitions"
 	"github.com/haimkastner/gleece/infrastructure/logger"
 )
 
-type SecuritySchemeConfig struct {
-	Description  string                         `json:"description"`
-	SecurityName string                         `json:"name"`
-	FieldName    string                         `json:"fieldName"`
-	Type         definitions.SecuritySchemeType `json:"type"`
-	In           definitions.SecuritySchemeIn   `json:"in"`
-}
-
-type OpenAPIGeneratorConfig struct {
-	Info                 openapi3.Info               `json:"info"`
-	BaseURL              string                      `json:"base_url"`
-	SecuritySchemes      []SecuritySchemeConfig      `json:"securitySchemes"`
-	DefaultRouteSecurity []definitions.RouteSecurity `json:"defaultSecurity"`
-}
-
 // GenerateSpec generates the OpenAPI specification
-func GenerateSpec(config OpenAPIGeneratorConfig, defs []definitions.ControllerMetadata, models []definitions.ModelMetadata) ([]byte, error) {
+func GenerateSpec(config *definitions.OpenAPIGeneratorConfig, defs []definitions.ControllerMetadata, models []definitions.ModelMetadata) ([]byte, error) {
 
 	// Create a new OpenAPI specification using 3.0.0
 	openapi := &openapi3.T{
@@ -54,7 +41,7 @@ func GenerateSpec(config OpenAPIGeneratorConfig, defs []definitions.ControllerMe
 	}
 	logger.Info("Models spec generated successfully")
 
-	if err := GenerateControllersSpec(openapi, &config, defs); err != nil {
+	if err := GenerateControllersSpec(openapi, config, defs); err != nil {
 		logger.Error("Failed to generate controllers spec:", err)
 		return nil, err
 	}
@@ -77,20 +64,32 @@ func GenerateSpec(config OpenAPIGeneratorConfig, defs []definitions.ControllerMe
 	logger.Info("OpenAPI specification generated successfully")
 	return jsonBytes, nil
 
-	// // Create the output directory if it doesn't exist
-	// if err := os.MkdirAll("dist", os.ModePerm); err != nil {
-	// 	logger.Error("Failed to create directory:", err)
-	// 	return nil, err
-	// }
+}
 
-	// // Write the JSON to the file
-	// filePath := "dist/spec.json"
-	// if err := os.WriteFile(filePath, jsonBytes, 0644); err != nil {
-	// 	fmt.Println("Failed to write file:", err)
-	// 	return nil, err
-	// }
+func GenerateAndOutputSpec(config *definitions.OpenAPIGeneratorConfig, defs []definitions.ControllerMetadata, models []definitions.ModelMetadata) error {
+	jsonBytes, err := GenerateSpec(config, defs, models)
 
-	// // Print the path to the generated JSON file
-	// fmt.Println("OpenAPI specification written to:", filePath)
+	if err != nil {
+		return err
+	}
+
+	// Extract path from file path
+	// Extract the directory path
+	dirPath := filepath.Dir(config.SpecGeneratorConfig.OutputPath)
+	// Create the output directory if it doesn't exist
+	if err := os.MkdirAll(dirPath, os.ModePerm); err != nil {
+		logger.Error("Failed to create directory:", err)
+		return err
+	}
+
+	// Write the JSON to the file
+	if err := os.WriteFile(config.SpecGeneratorConfig.OutputPath, jsonBytes, 0644); err != nil {
+		logger.Error("Failed to write file:", err)
+		return err
+	}
+
+	// Print the path to the generated JSON file
+	logger.Info("OpenAPI specification written to:", config.SpecGeneratorConfig.OutputPath)
+	return nil
 
 }

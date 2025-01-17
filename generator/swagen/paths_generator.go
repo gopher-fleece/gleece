@@ -56,7 +56,7 @@ func createResponseSuccess(openapi *openapi3.T, route definitions.RouteMetadata)
 	}
 }
 
-func buildSecurityMethod(securitySchemes []SecuritySchemeConfig, securityMethods []definitions.SecurityMethod) (*openapi3.SecurityRequirement, error) {
+func buildSecurityMethod(securitySchemes []definitions.SecuritySchemeConfig, securityMethods []definitions.SecurityMethod) (*openapi3.SecurityRequirement, error) {
 	securityRequirement := openapi3.SecurityRequirement{}
 
 	for _, securityMethod := range securityMethods {
@@ -73,7 +73,7 @@ func buildSecurityMethod(securitySchemes []SecuritySchemeConfig, securityMethods
 	return &securityRequirement, nil
 }
 
-func generateOperationSecurity(operation *openapi3.Operation, config *OpenAPIGeneratorConfig, route definitions.RouteMetadata) error {
+func generateOperationSecurity(operation *openapi3.Operation, config *definitions.OpenAPIGeneratorConfig, route definitions.RouteMetadata) error {
 	securityRequirements := openapi3.SecurityRequirements{}
 
 	routeSecurity := route.Security
@@ -147,7 +147,7 @@ func generateParams(openapi *openapi3.T, route definitions.RouteMetadata, operat
 }
 
 // GenerateControllerSpec generates the specification for a controller
-func generateControllerSpec(openapi *openapi3.T, config *OpenAPIGeneratorConfig, def definitions.ControllerMetadata) error {
+func generateControllerSpec(openapi *openapi3.T, config *definitions.OpenAPIGeneratorConfig, def definitions.ControllerMetadata) error {
 	// Iterate over the routes in the controller
 	for _, route := range def.Routes {
 		// Create a new Operation for the route
@@ -176,7 +176,7 @@ func generateControllerSpec(openapi *openapi3.T, config *OpenAPIGeneratorConfig,
 	return nil
 }
 
-func GenerateControllersSpec(openapi *openapi3.T, config *OpenAPIGeneratorConfig, defs []definitions.ControllerMetadata) error {
+func GenerateControllersSpec(openapi *openapi3.T, config *definitions.OpenAPIGeneratorConfig, defs []definitions.ControllerMetadata) error {
 	// Iterate over the routes in the controller
 	for _, def := range defs {
 		if err := generateControllerSpec(openapi, config, def); err != nil {
