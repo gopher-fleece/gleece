@@ -72,7 +72,19 @@ var _ = Describe("Swagen", func() {
 		It("should create a success response", func() {
 			route := definitions.RouteMetadata{
 				ResponseDescription: "Success1",
-				ResponseInterface:   definitions.ResponseMetadata{Signature: definitions.FuncRetValueAndError, InterfaceName: "int"},
+				Responses: []definitions.FuncReturnValue{
+					{
+						TypeMetadata: definitions.TypeMetadata{
+							Name:        "int",
+							Description: "Bla bla",
+						},
+					},
+					{
+						TypeMetadata: definitions.TypeMetadata{
+							Name: "error",
+						},
+					},
+				},
 				ResponseSuccessCode: 200,
 			}
 			responseRef := createResponseSuccess(openapi, route)
@@ -143,8 +155,19 @@ var _ = Describe("Swagen", func() {
 						RestMetadata:        definitions.RestMetadata{Path: "/test"},
 						ResponseSuccessCode: 200,
 						ResponseDescription: "Success",
-						ResponseInterface:   definitions.ResponseMetadata{Signature: definitions.FuncRetValueAndError, InterfaceName: "string"},
-						FuncParams:          []definitions.FuncParam{},
+						Responses: []definitions.FuncReturnValue{
+							{
+								TypeMetadata: definitions.TypeMetadata{
+									Name: "string",
+								},
+							},
+							{
+								TypeMetadata: definitions.TypeMetadata{
+									Name: "error",
+								},
+							},
+						},
+						FuncParams: []definitions.FuncParam{},
 					},
 				},
 			}
@@ -169,7 +192,18 @@ var _ = Describe("Swagen", func() {
 							RestMetadata:        definitions.RestMetadata{Path: "/test"},
 							ResponseSuccessCode: 200,
 							ResponseDescription: "Success",
-							ResponseInterface:   definitions.ResponseMetadata{Signature: definitions.FuncRetValueAndError, InterfaceName: "string"},
+							Responses: []definitions.FuncReturnValue{
+								{
+									TypeMetadata: definitions.TypeMetadata{
+										Name: "string",
+									},
+								},
+								{
+									TypeMetadata: definitions.TypeMetadata{
+										Name: "error",
+									},
+								},
+							},
 						},
 					},
 				},

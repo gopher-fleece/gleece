@@ -38,7 +38,16 @@ func createContentWithSchemaRef(openapi *openapi3.T, validationString string, in
 }
 
 func createResponseSuccess(openapi *openapi3.T, route definitions.RouteMetadata) *openapi3.ResponseRef {
-	content := createContentWithSchemaRef(openapi, "", route.Responses.InterfaceName)
+
+	valueReturnType := route.GetValueReturnType()
+	if valueReturnType == nil {
+		return &openapi3.ResponseRef{
+			Value: &openapi3.Response{
+				Description: &route.ResponseDescription,
+			},
+		}
+	}
+	content := createContentWithSchemaRef(openapi, "", valueReturnType.Name)
 	return &openapi3.ResponseRef{
 		Value: &openapi3.Response{
 			Description: &route.ResponseDescription,
@@ -101,13 +110,13 @@ func setNewRouteOperation(openapi *openapi3.T, def definitions.ControllerMetadat
 	openapi.Paths.Set(routePath, pathItem)
 }
 
-func createRouteParam(openapi *openapi3.T, param definitions.FuncParamLegacy) *openapi3.ParameterRef {
-	schemaRef := InterfaceToSchemaRef(openapi, param.ParamInterface)
-	BuildSchemaValidation(schemaRef, param.Validator, param.ParamInterface)
+func createRouteParam(openapi *openapi3.T, param definitions.FuncParam) *openapi3.ParameterRef {
+	schemaRef := InterfaceToSchemaRef(openapi, param.TypeMeta.Name)
+	BuildSchemaValidation(schemaRef, param.Validator, param.TypeMeta.Name)
 	return &openapi3.ParameterRef{
 		Value: &openapi3.Parameter{
 			Name:        param.Name,
-			In:          strings.ToLower(string(param.ParamType)),
+			In:          strings.ToLower(string(param.PassedIn)),
 			Description: param.Description,
 			Required:    IsFieldRequired(param.Validator),
 			Schema:      schemaRef,
@@ -115,8 +124,8 @@ func createRouteParam(openapi *openapi3.T, param definitions.FuncParamLegacy) *o
 	}
 }
 
-func createRequestBodyParam(openapi *openapi3.T, param definitions.FuncParamLegacy) *openapi3.RequestBodyRef {
-	content := createContentWithSchemaRef(openapi, param.Validator, param.ParamInterface)
+func createRequestBodyParam(openapi *openapi3.T, param definitions.FuncParam) *openapi3.RequestBodyRef {
+	content := createContentWithSchemaRef(openapi, param.Validator, param.TypeMeta.Name)
 	return &openapi3.RequestBodyRef{
 		Value: &openapi3.RequestBody{
 			Description: param.Description,
@@ -129,7 +138,7 @@ func createRequestBodyParam(openapi *openapi3.T, param definitions.FuncParamLega
 func generateParams(openapi *openapi3.T, route definitions.RouteMetadata, operation *openapi3.Operation) {
 	// Iterate over FuncParams and create parameters
 	for _, param := range route.FuncParams {
-		if param.ParamType == definitions.PassedInBody {
+		if param.PassedIn == definitions.PassedInBody {
 			operation.RequestBody = createRequestBodyParam(openapi, param)
 		} else {
 			operation.Parameters = append(operation.Parameters, createRouteParam(openapi, param))
@@ -144,13 +153,14 @@ func generateControllerSpec(openapi *openapi3.T, config *OpenAPIGeneratorConfig,
 		// Create a new Operation for the route
 		operation := createOperation(def, route)
 
+		// TODO: the API to get error VS route.ErrorResponses
+
 		// Iterate over the error responses
 		for _, errResp := range route.ErrorResponses {
 			// Set the response using the Set method
 			operation.Responses.Set(HttpStatusCodeToString(errResp.HttpStatusCode), createErrorResponse(errResp))
 		}
 
-		// Set the success response
 		operation.Responses.Set(HttpStatusCodeToString(route.ResponseSuccessCode), createResponseSuccess(openapi, route))
 
 		generateParams(openapi, route, operation)

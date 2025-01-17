@@ -1,7 +1,7 @@
 package swagen
 
 import (
-	"github.com/haimkastner/gleece/definitions"
+	"github.com/haimkastner/gleece/external"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -10,7 +10,7 @@ var _ = Describe("Spec Utilities", func() {
 
 	Describe("HttpStatusCodeToString", func() {
 		It("should convert HttpStatusCode to string", func() {
-			code := definitions.HttpStatusCode(200)
+			code := external.HttpStatusCode(200)
 			Expect(HttpStatusCodeToString(code)).To(Equal("200"))
 		})
 	})

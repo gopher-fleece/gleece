@@ -68,6 +68,7 @@ type FuncParam struct {
 	NameInSchema       string
 	Description        string
 	UniqueImportSerial uint64
+	Validator          string
 }
 
 type FuncReturnValue struct {

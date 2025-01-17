@@ -3,10 +3,12 @@ package swagen
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"reflect"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/haimkastner/gleece/definitions"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -65,60 +67,92 @@ var _ = Describe("Spec Generator", func() {
 						},
 					},
 					ResponseSuccessCode: 200,
-					ResponseInterface: definitions.ResponseMetadata{
-						InterfaceName:         "[]ExampleSchema",
-						Signature:             definitions.FuncRetValueAndError,
-						FullyQualifiedPackage: "example",
+					Responses: []definitions.FuncReturnValue{
+						{
+							TypeMetadata: definitions.TypeMetadata{
+								Name:                  "[]ExampleSchema",
+								FullyQualifiedPackage: "example",
+							},
+						},
+						{
+							TypeMetadata: definitions.TypeMetadata{
+								Name: "error",
+							},
+						},
 					},
 					FuncParams: []definitions.FuncParam{
 						{
-							Name:           "my_name",
-							ParamType:      definitions.Query,
-							Description:    "Example query param",
-							ParamInterface: "string",
-							Validator:      "required,email",
+							ParamMeta: definitions.ParamMeta{
+								Name: "my_name",
+								TypeMeta: definitions.TypeMetadata{
+									Name: "string",
+								},
+							},
+							PassedIn:    definitions.PassedInQuery,
+							Description: "Example query param",
+							Validator:   "required,email",
 						},
 						{
-							Name:           "my_names",
-							ParamType:      definitions.Query,
-							Description:    "Example query ARR param",
-							ParamInterface: "[]ExampleSchema",
-							Validator:      "",
+							ParamMeta: definitions.ParamMeta{
+								Name: "my_names",
+								TypeMeta: definitions.TypeMetadata{
+									Name: "[]ExampleSchema",
+								},
+							},
+							PassedIn:    definitions.PassedInQuery,
+							Description: "Example query ARR param",
+							Validator:   "",
 						},
 						{
-							Name:           "my_header",
-							ParamType:      definitions.Header,
-							Description:    "Example Header param",
-							ParamInterface: "bool",
-							Validator:      "required",
+							ParamMeta: definitions.ParamMeta{
+								Name: "my_header",
+								TypeMeta: definitions.TypeMetadata{
+									Name: "bool",
+								},
+							},
+							PassedIn:    definitions.PassedInHeader,
+							Description: "Example Header param",
+							Validator:   "required",
 						},
 						{
-							Name:           "my_number",
-							ParamType:      definitions.Header,
-							Description:    "Example Header num param",
-							ParamInterface: "float64",
-							Validator:      "gt=1,lt=100",
+							ParamMeta: definitions.ParamMeta{
+								Name: "my_number",
+								TypeMeta: definitions.TypeMetadata{
+									Name: "float64",
+								},
+							},
+							PassedIn:    definitions.PassedInHeader,
+							Description: "Example Header num param",
+							Validator:   "gt=1,lt=100",
 						},
 						{
-							Name:           "my_path",
-							ParamType:      definitions.Path,
-							Description:    "Example Path param",
-							ParamInterface: "int",
-							Validator:      "required",
+							ParamMeta: definitions.ParamMeta{
+								Name: "my_path",
+								TypeMeta: definitions.TypeMetadata{
+									Name: "int",
+								},
+							},
+							PassedIn:    definitions.PassedInPath,
+							Description: "Example Path param",
+							Validator:   "required",
 						},
 						// {
 						// 	Name:           "the_content",
-						// 	ParamType:      definitions.Body,
+						// 	PassedIn:      definitions.Body,
 						// 	Description:    "Example Body param",
 						// 	ParamInterface: "[]ExampleSchema",
 						// 	Validator:      "required",
 						// },
 						{
-							Name:           "the_content",
-							ParamType:      definitions.Body,
-							Description:    "Example Body param",
-							ParamInterface: "string",
-							Validator:      "required,email",
+							ParamMeta: definitions.ParamMeta{
+								Name: "the_content",
+								TypeMeta: definitions.TypeMetadata{
+									Name: "string",
+								},
+							},
+							PassedIn:    definitions.PassedInBody,
+							Description: "Example Body param",
+							Validator:   "required,email",
 						},
 					},
 				},
@@ -136,10 +170,18 @@ var _ = Describe("Spec Generator", func() {
 						},
 					},
 					ResponseSuccessCode: 200,
-					ResponseInterface: definitions.ResponseMetadata{
-						InterfaceName:         "int",
-						Signature:             definitions.FuncRetValueAndError,
-						FullyQualifiedPackage: "example",
+					Responses: []definitions.FuncReturnValue{
+						{
+							TypeMetadata: definitions.TypeMetadata{
+								Name:                  "int",
+								FullyQualifiedPackage: "example",
+							},
+						},
+						{
+							TypeMetadata: definitions.TypeMetadata{
+								Name: "error",
+							},
+						},
 					},
 					ResponseDescription: "Example response OK",
 				},
@@ -157,10 +199,12 @@ var _ = Describe("Spec Generator", func() {
 						},
 					},
 					ResponseSuccessCode: 204,
-					ResponseInterface: definitions.ResponseMetadata{
-						InterfaceName:         "",
-						Signature:             definitions.FuncRetError,
-						FullyQualifiedPackage: "example",
+					Responses: []definitions.FuncReturnValue{
+						{
+							TypeMetadata: definitions.TypeMetadata{
+								Name: "error",
+							},
+						},
 					},
 					ResponseDescription: "Example response OK for 204",
 				},
@@ -275,6 +319,24 @@ var _ = Describe("Spec Generator", func() {
 		if err != nil {
 			Fail("Failed to compare JSONs: " + err.Error())
 		}
+
+		// Output the generated JSON and the expected JSON to files to easy testing troubleshooting
+		// Create the output directory if it doesn't exist
+		if err := os.MkdirAll("dist", os.ModePerm); err != nil {
+			fmt.Println("Failed to create directory:", err)
+		}
+
+		// Write the JSON to the file
+		filePath := "dist/org-spec.json"
+		if err := os.WriteFile(filePath, fullyFeaturesSpec, 0644); err != nil {
+			fmt.Println("Failed to write file:", err)
+		}
+
+		// Write the JSON to the file
+		filePath2 := "dist/test-spec.json"
+		if err := os.WriteFile(filePath2, jsonBytes, 0644); err != nil {
+			fmt.Println("Failed to write file:", err)
+		}
 		Expect(areEqual).To(BeTrue())
 	})
 
@@ -306,10 +368,18 @@ var _ = Describe("Spec Generator", func() {
 						},
 					},
 					ResponseSuccessCode: 200,
-					ResponseInterface: definitions.ResponseMetadata{
-						InterfaceName:         "[]string",
-						Signature:             definitions.FuncRetValueAndError,
-						FullyQualifiedPackage: "example",
+					Responses: []definitions.FuncReturnValue{
+						{
+							TypeMetadata: definitions.TypeMetadata{
+								Name:                  "[]string",
+								FullyQualifiedPackage: "example",
+							},
+						},
+						{
+							TypeMetadata: definitions.TypeMetadata{
+								Name: "error",
+							},
+						},
 					},
 					FuncParams: []definitions.FuncParam{},
 				},
