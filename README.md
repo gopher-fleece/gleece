@@ -55,8 +55,8 @@ type Info struct {
 
 
 // @Description This is a route under
-// @Method (POST)
-// @Route (/user)
+// @Method(POST)
+// @Route(/user)
 // @Query(name) The name
 // @Body(info) The info of the user
 // @Header(origin, { name: x-origin }) The origin of the user
@@ -85,8 +85,8 @@ func (ec *UserController) CreateNewUser(name string, info Info, origin string) (
 
    ```go
    // @Description This is a route under
-   // @Method (POST)
-   // @Route (/user)
+   // @Method(POST)
+   // @Route(/user)
    // @Query(name) The name
    // @Body(info) The info of the user
    // @Header(origin, { name: x-origin }) The origin of the user
@@ -100,8 +100,8 @@ func (ec *UserController) CreateNewUser(name string, info Info, origin string) (
    ```
    
    * `@Description`: Provides a description of the route.
-   * `@Method (POST)`: Specifies that the route should handle POST requests.
-   * `@Route (/user)`: Sets the route path to /user.
+   * `@Method(POST)`: Specifies that the route should handle POST requests.
+   * `@Route(/user)`: Sets the route path to /user.
    * `@Query(name)`: Indicates that the name parameter should be taken from the query string.
    * `@Body(info)`: Specifies that the info parameter should come from the request body.
    * `@Header(origin, { name: x-origin })`: Indicates that the origin parameter should be taken from the request header named x-origin.
