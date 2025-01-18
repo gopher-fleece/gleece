@@ -15,11 +15,22 @@ type ExtendedController struct {
 	SomeRandomName.GleeceController // Embedding the GleeceController to inherit its methods
 }
 
+type EmbedsAnError struct {
+	error
+}
+
 type DefinedInSameFile struct {
 }
 
+// A test for returning embedded errors
+// @Method POST
+// @Route /test/embedded/error
+func (ec *ExtendedController) ReturnEmbedsAndError() EmbedsAnError {
+	return EmbedsAnError{}
+}
+
 // A test for simple imports
-// @Query definedElseWhere Testing simple type import
+// @Query(name: definedElseWhere; validator: something) Testing simple type import
 // @Method POST
 // @Route /test
 // @Response 204

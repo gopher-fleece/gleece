@@ -192,7 +192,7 @@ func GetMetadata(codeFileGlobs ...string) ([]definitions.ControllerMetadata, err
 
 	lastErr := visitor.GetLastError()
 	if lastErr != nil {
-		Logger.Error("Visitor encountered at-least one error. Last error - %v", *lastErr)
+		Logger.Error("Visitor encountered at-least one error. Last error:\n%v\n\t%s", *lastErr, visitor.GetFormattedDiagnosticStack())
 		return []definitions.ControllerMetadata{}, *lastErr
 	}
 	controllers, _ := visitor.DumpContext()

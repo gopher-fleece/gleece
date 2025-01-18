@@ -221,8 +221,9 @@ func GetTypeMetaByIdent(
 	comments := GetCommentsFromIdent(ident)
 
 	meta := definitions.TypeMetadata{
-		Name:        ident.Name,
-		Description: FindAndExtract(comments, "@Description"),
+		Name:           ident.Name,
+		Description:    FindAndExtract(comments, "@Description"),
+		IdentifierNode: ident,
 	}
 
 	if IsUniverseType(ident.Name) {
@@ -273,9 +274,10 @@ func GetTypeMetaBySelectorExpr(
 
 	comments := GetCommentsFromIdent(selector.Sel)
 	meta := definitions.TypeMetadata{
-		Name:        typeOrInterfaceName,
-		Description: FindAndExtract(comments, "@Description"),
-		Import:      definitions.ImportTypeAlias,
+		Name:           typeOrInterfaceName,
+		Description:    FindAndExtract(comments, "@Description"),
+		Import:         definitions.ImportTypeAlias,
+		IdentifierNode: selector.Sel,
 	}
 
 	// Resolve the importAlias part to a full package
@@ -306,7 +308,7 @@ func GetTypeMetaBySelectorExpr(
 	return meta, nil
 }
 
-func GetFieldUsageType(
+func GetFieldMetadata(
 	file *ast.File,
 	fileSet *token.FileSet,
 	packages []*packages.Package,
@@ -335,7 +337,7 @@ func GetFuncParameterTypeList(
 	}
 
 	for _, field := range funcDecl.Type.Params.List {
-		meta, err := GetFieldUsageType(file, fileSet, packages, field)
+		meta, err := GetFieldMetadata(file, fileSet, packages, field)
 		if err != nil {
 			return paramTypes, err
 		}
@@ -358,7 +360,7 @@ func GetFuncReturnTypeList(
 	}
 
 	for _, field := range funcDecl.Type.Results.List {
-		meta, err := GetFieldUsageType(file, fileSet, packages, field)
+		meta, err := GetFieldMetadata(file, fileSet, packages, field)
 		if err != nil {
 			return returnTypes, err
 		}
@@ -513,4 +515,30 @@ func FilterPackageByFullName(packages []*packages.Package, fullName string) *pac
 		}
 	}
 	return nil
+}
+
+func FindStruct(pkg *packages.Package, structName string) *ast.StructType {
+	// Traverse all the syntax trees (ASTs) in the loaded package
+	for _, file := range pkg.Syntax {
+		// Traverse all declarations in the AST file
+		for _, decl := range file.Decls {
+			// Look for type declarations (ast.GenDecl)
+			if genDecl, ok := decl.(*ast.GenDecl); ok {
+				// Iterate over all the specs in the general declaration
+				for _, spec := range genDecl.Specs {
+					// Look for type specs (ast.TypeSpec)
+					if typeSpec, ok := spec.(*ast.TypeSpec); ok {
+						// Check if the type is a struct type
+						if structType, ok := typeSpec.Type.(*ast.StructType); ok {
+							// Match the struct's name with the input name
+							if typeSpec.Name.Name == structName {
+								return structType
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	return nil // Struct not found
 }

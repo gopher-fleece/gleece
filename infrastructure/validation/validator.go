@@ -1,18 +1,18 @@
-package validator
+package validation
 
 import (
 	"reflect"
 	"unicode"
 
-	go_validator "github.com/go-playground/validator/v10"
+	"github.com/go-playground/validator/v10"
 	"github.com/haimkastner/gleece/definitions"
 )
 
 // Global validator instance
-var Validate *go_validator.Validate
+var ValidatorInstance *validator.Validate
 
 // Custom validation function to check if the slice is not nil
-func validateNotNilSlice(fl go_validator.FieldLevel) bool {
+func validateNotNilSlice(fl validator.FieldLevel) bool {
 	field := fl.Field()
 	if field.Kind() == reflect.Slice {
 		return !field.IsNil()
@@ -21,7 +21,7 @@ func validateNotNilSlice(fl go_validator.FieldLevel) bool {
 }
 
 // Custom validation function to check if a string starts with a letter
-func validateStartsWithLetter(fl go_validator.FieldLevel) bool {
+func validateStartsWithLetter(fl validator.FieldLevel) bool {
 	field := fl.Field().String()
 	if field == "" {
 		return false
@@ -31,7 +31,7 @@ func validateStartsWithLetter(fl go_validator.FieldLevel) bool {
 }
 
 // registerEnumValidator creates a custom validation function for enum types
-func registerEnumValidator(enumValues interface{}) go_validator.Func {
+func registerEnumValidator(enumValues interface{}) validator.Func {
 	values := reflect.ValueOf(enumValues)
 	allowedValues := make(map[interface{}]struct{})
 
@@ -39,7 +39,7 @@ func registerEnumValidator(enumValues interface{}) go_validator.Func {
 		allowedValues[values.Index(i).Interface()] = struct{}{}
 	}
 
-	return func(fl go_validator.FieldLevel) bool {
+	return func(fl validator.FieldLevel) bool {
 		field := fl.Field().Interface()
 		_, ok := allowedValues[field]
 		return ok
@@ -48,16 +48,36 @@ func registerEnumValidator(enumValues interface{}) go_validator.Func {
 
 func InitValidator() {
 	// Initialize the validator instance
-	Validate = go_validator.New()
+	ValidatorInstance = validator.New()
 
 	// Register custom validation functions globally
-	Validate.RegisterValidation("not_nil_array", validateNotNilSlice)
-	Validate.RegisterValidation("starts_with_letter", validateStartsWithLetter)
+	ValidatorInstance.RegisterValidation("not_nil_array", validateNotNilSlice)
+	ValidatorInstance.RegisterValidation("starts_with_letter", validateStartsWithLetter)
 
 	// Register enum validation functions
 
 	// SecuritySchemeIn
-	Validate.RegisterValidation("security_schema_in", registerEnumValidator([]definitions.SecuritySchemeIn{definitions.InQuery, definitions.InHeader, definitions.InCookie}))
+	ValidatorInstance.RegisterValidation(
+		"security_schema_in",
+		registerEnumValidator(
+			[]definitions.SecuritySchemeIn{
+				definitions.InQuery,
+				definitions.InHeader,
+				definitions.InCookie,
+			},
+		),
+	)
+
 	// SecuritySchemeType
-	Validate.RegisterValidation("security_schema_type", registerEnumValidator([]definitions.SecuritySchemeType{definitions.APIKey, definitions.OAuth2, definitions.OpenIDConnect, definitions.HTTP}))
+	ValidatorInstance.RegisterValidation(
+		"security_schema_type",
+		registerEnumValidator(
+			[]definitions.SecuritySchemeType{
+				definitions.APIKey,
+				definitions.OAuth2,
+				definitions.OpenIDConnect,
+				definitions.HTTP,
+			},
+		),
+	)
 }

@@ -1,6 +1,8 @@
 package definitions
 
 import (
+	"go/ast"
+
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/haimkastner/gleece/external"
 )
@@ -104,6 +106,7 @@ type TypeMetadata struct {
 	Description           string
 	Import                ImportType
 	IsUniverseType        bool
+	IdentifierNode        *ast.Ident
 }
 
 type ErrorResponse struct {

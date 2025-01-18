@@ -1,51 +1,11 @@
 package main
 
 import (
-	"encoding/json"
-	"errors"
-	"flag"
-	"fmt"
-	"os"
-
-	go_validator "github.com/go-playground/validator/v10"
-	"github.com/haimkastner/gleece/cmd"
-	"github.com/haimkastner/gleece/cmd/arguments"
-	"github.com/haimkastner/gleece/definitions"
 	"github.com/haimkastner/gleece/extractor"
-	"github.com/haimkastner/gleece/generator/routes"
-	"github.com/haimkastner/gleece/generator/swagen"
-	Logger "github.com/haimkastner/gleece/infrastructure/logger"
-	"github.com/haimkastner/gleece/infrastructure/validator"
+	"github.com/haimkastner/gleece/infrastructure/validation"
 )
 
-func obtainConfig(configPath string) (*definitions.GleeceConfig, error) {
-
-	// Read the JSON file
-	fileContent, err := os.ReadFile(configPath)
-	if err != nil {
-		return nil, errors.New(fmt.Sprintf("Error reading file: %v", err.Error()))
-	}
-
-	// Unmarshal the JSON content into the struct
-	var config definitions.GleeceConfig
-	err = json.Unmarshal(fileContent, &config)
-	if err != nil {
-		return nil, errors.New(fmt.Sprintf("Error unmarshaling JSON: %v", err))
-	}
-
-	// Validate the struct
-	err = validator.Validate.Struct(config)
-	if err != nil {
-		// Validation failed
-		for _, err := range err.(go_validator.ValidationErrors) {
-			Logger.Error("Field '%s' failed validation: %s", err.StructField(), err.Tag())
-		}
-		return nil, errors.New("Validation failed")
-	}
-
-	return &config, nil
-}
-
+/*
 func main() {
 	validator.InitValidator()
 
@@ -84,11 +44,11 @@ func main() {
 		defs,
 	)
 }
-
-/*
-	CLI Main. Uncomment when ready
-func main() {
-	cmd.Execute()
-}
-
 */
+
+// CLI Main. Uncomment when ready
+func main() {
+	validation.InitValidator()
+	extractor.GetMetadata()
+	// cmd.Execute()
+}

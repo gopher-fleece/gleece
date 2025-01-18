@@ -3,6 +3,7 @@ package cmd
 import (
 	"os"
 
+	"github.com/haimkastner/gleece/cmd/arguments"
 	"github.com/haimkastner/gleece/generator"
 	Logger "github.com/haimkastner/gleece/infrastructure/logger"
 	"github.com/spf13/cobra"
@@ -14,7 +15,7 @@ var rootCmd = &cobra.Command{
 	Short: "Gleece - A Simplified Framework for Building REST APIs in Go",
 	Long: `Gleece - A Simplified Framework for Building REST APIs in Go
 
-				⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣤⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+                          ⢀⣀⣤⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 			⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⡖⠋⠀⠀⠀⣉⣷⠤⣶⡒⠦⣤⡴⠒⠒⠲⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 			⠀⠀⠀⠀⠀⢠⠴⠚⠉⠉⠓⢦⡀⢠⠞⠁⠀⠀⠀⠉⢢⡀⠀⠀⠀⠀⠘⠒⠒⠲⣄⠀⠀⠀⠀⠀⠀⠀
 			⠀⠀⠀⠀⠀⠏⠀⠀⠀⢀⣀⡀⢹⡏⢀⣀⡀⠀⠀⠀⠀⢷⠀⠀⠀⠀⠀⠀⠀⠀⠸⠦⢤⡀⠀⠀⠀⠀
@@ -41,7 +42,7 @@ By enforcing consistency between your contracts and implementation, Gleece helps
 
 Whether you're building a simple service or a complex application, Gleece ensures consistency, scalability, and developer productivity`,
 	Run: func(cmd *cobra.Command, args []string) {
-		err := generator.GenerateSpecAndRoutes()
+		err := generator.GenerateSpecAndRoutes(arguments.CliArguments{ConfigPath: "./gleece.config.json"})
 		if err != nil {
 			Logger.Fatal("Failed to generate spec and routes: %v", err)
 			os.Exit(1)
