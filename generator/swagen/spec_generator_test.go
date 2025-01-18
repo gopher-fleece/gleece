@@ -190,7 +190,7 @@ var _ = Describe("Spec Generator", func() {
 					ResponseDescription: "Example response OK",
 				},
 				{
-					Deprecation: &definitions.DeprecationOptions{
+					Deprecation: definitions.DeprecationOptions{
 						Description: "This route is deprecated example",
 						Deprecated:  true,
 					},
@@ -216,6 +216,33 @@ var _ = Describe("Spec Generator", func() {
 					},
 					ResponseDescription: "Example response OK for 204",
 				},
+				{
+					HttpVerb: "PUT",
+					RestMetadata: definitions.RestMetadata{
+						Path: "/example-route",
+					},
+					Description: "NOT SHOWN",
+					OperationId: "exampleRoutePut",
+					ErrorResponses: []definitions.ErrorResponse{
+						{
+							Description:    "Internal server error",
+							HttpStatusCode: 500,
+						},
+					},
+					ResponseSuccessCode: 204,
+					Responses: []definitions.FuncReturnValue{
+						{
+							TypeMetadata: definitions.TypeMetadata{
+								Name: "error",
+							},
+						},
+					},
+					ResponseDescription: "Example response OK for 204",
+					Hiding: definitions.MethodHideOptions{
+						Type:      definitions.HideMethodAlways,
+						Condition: "",
+					},
+				},
 			},
 		})
 
@@ -239,7 +266,7 @@ var _ = Describe("Spec Generator", func() {
 						Validator:   "required,email",
 					},
 				},
-				Deprecation: &definitions.DeprecationOptions{
+				Deprecation: definitions.DeprecationOptions{
 					Description: "This model is deprecated example",
 					Deprecated:  true,
 				},

@@ -198,4 +198,37 @@ var _ = Describe("Spec Common", func() {
 			Expect(IsSecurityNameInSecuritySchemes(securitySchemes, "basicAuth")).To(BeFalse())
 		})
 	})
+
+	Describe("IsHiddenAsset", func() {
+		It("should return false if hideOptions.Type is HideMethodNever", func() {
+			hideOptions := definitions.MethodHideOptions{Type: definitions.HideMethodNever}
+			Expect(IsHiddenAsset(&hideOptions)).To(BeFalse())
+		})
+
+		It("should return true if hideOptions.Type is HideMethodAlways", func() {
+			hideOptions := definitions.MethodHideOptions{Type: definitions.HideMethodAlways}
+			Expect(IsHiddenAsset(&hideOptions)).To(BeTrue())
+		})
+
+		It("should return false for other hideOptions.Type values (TODO: Check the condition)", func() {
+			hideOptions := definitions.MethodHideOptions{Type: "someOtherType"}
+			Expect(IsHiddenAsset(&hideOptions)).To(BeFalse())
+		})
+	})
+
+	Describe("IsDeprecated", func() {
+		It("should return false if deprecationOptions is nil", func() {
+			Expect(IsDeprecated(nil)).To(BeFalse())
+		})
+
+		It("should return false if deprecationOptions.Deprecated is false", func() {
+			deprecationOptions := &definitions.DeprecationOptions{Deprecated: false}
+			Expect(IsDeprecated(deprecationOptions)).To(BeFalse())
+		})
+
+		It("should return true if deprecationOptions.Deprecated is true", func() {
+			deprecationOptions := &definitions.DeprecationOptions{Deprecated: true}
+			Expect(IsDeprecated(deprecationOptions)).To(BeTrue())
+		})
+	})
 })

@@ -123,7 +123,7 @@ type RouteMetadata struct {
 	Hiding MethodHideOptions
 
 	// Defines whether the method is considered deprecated
-	Deprecation *DeprecationOptions
+	Deprecation DeprecationOptions
 
 	// The operation's description
 	Description string
@@ -202,7 +202,7 @@ type ModelMetadata struct {
 	FullyQualifiedPackage string
 	Description           string
 	Fields                []FieldMetadata
-	Deprecation           *DeprecationOptions
+	Deprecation           DeprecationOptions
 }
 
 type FieldMetadata struct {

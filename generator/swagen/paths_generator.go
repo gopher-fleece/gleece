@@ -7,6 +7,7 @@ import (
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/haimkastner/gleece/definitions"
+	"github.com/haimkastner/gleece/infrastructure/logger"
 )
 
 func createOperation(def definitions.ControllerMetadata, route definitions.RouteMetadata) *openapi3.Operation {
@@ -17,6 +18,7 @@ func createOperation(def definitions.ControllerMetadata, route definitions.Route
 		OperationID: route.OperationId,
 		Tags:        []string{def.Tag},
 		Parameters:  []*openapi3.ParameterRef{},
+		Deprecated:  IsDeprecated(&route.Deprecation),
 	}
 }
 
@@ -154,16 +156,16 @@ func generateParams(openapi *openapi3.T, route definitions.RouteMetadata, operat
 	}
 }
 
-func handleRouteDeprecation(route definitions.RouteMetadata, operation *openapi3.Operation) {
-	if route.Deprecation != nil && *&route.Deprecation.Deprecated {
-		operation.Deprecated = true
-	}
-}
-
 // GenerateControllerSpec generates the specification for a controller
 func generateControllerSpec(openapi *openapi3.T, config *definitions.OpenAPIGeneratorConfig, def definitions.ControllerMetadata) error {
 	// Iterate over the routes in the controller
 	for _, route := range def.Routes {
+
+		if IsHiddenAsset(&route.Hiding) {
+			logger.Info(fmt.Sprintf("Skipping hidden route: %v %s (%s)", route.HttpVerb, route.RestMetadata.Path, route.OperationId))
+			continue
+		}
+
 		// Create a new Operation for the route
 		operation := createOperation(def, route)
 
@@ -183,8 +185,6 @@ func generateControllerSpec(openapi *openapi3.T, config *definitions.OpenAPIGene
 		if err := generateOperationSecurity(operation, config, route); err != nil {
 			return err
 		}
-
-		handleRouteDeprecation(route, operation)
 
 		// Finally, set the operation in the path item
 		setNewRouteOperation(openapi, def, route, operation)
