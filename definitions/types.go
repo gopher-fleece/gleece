@@ -177,6 +177,16 @@ func (m RouteMetadata) GetValueReturnType() *TypeMetadata {
 	return &m.Responses[0].TypeMetadata
 }
 
+func (m RouteMetadata) GetErrorReturnType() *TypeMetadata {
+	if len(m.Responses) <= 1 {
+		// If there is only one return value, it's the error
+		return &m.Responses[0].TypeMetadata
+	}
+
+	// We're assuming the controller method's return signature always ends with the error
+	return &m.Responses[1].TypeMetadata
+}
+
 type RouteSecurity struct {
 	SecurityMethod []SecurityMethod `json:"securityMethod" validate:"not_nil_array"` // AND between security methods
 }

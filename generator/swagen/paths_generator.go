@@ -22,11 +22,13 @@ func createOperation(def definitions.ControllerMetadata, route definitions.Route
 	}
 }
 
-func createErrorResponse(errResp definitions.ErrorResponse) *openapi3.ResponseRef {
+func createErrorResponse(openapi *openapi3.T, route definitions.RouteMetadata, errResp definitions.ErrorResponse) *openapi3.ResponseRef {
+	errorReturnType := route.GetErrorReturnType()
+	content := createContentWithSchemaRef(openapi, "", errorReturnType.Name)
 	errResString := errResp.Description
 	response := &openapi3.Response{
 		Description: &errResString,
-		Content:     openapi3.NewContentWithJSONSchema(openapi3.NewObjectSchema()),
+		Content:     content,
 	}
 	return &openapi3.ResponseRef{
 		Value: response,
@@ -169,12 +171,10 @@ func generateControllerSpec(openapi *openapi3.T, config *definitions.OpenAPIGene
 		// Create a new Operation for the route
 		operation := createOperation(def, route)
 
-		// TODO: the API to get error VS route.ErrorResponses
-
 		// Iterate over the error responses
 		for _, errResp := range route.ErrorResponses {
 			// Set the response using the Set method
-			operation.Responses.Set(HttpStatusCodeToString(errResp.HttpStatusCode), createErrorResponse(errResp))
+			operation.Responses.Set(HttpStatusCodeToString(errResp.HttpStatusCode), createErrorResponse(openapi, route, errResp))
 		}
 
 		operation.Responses.Set(HttpStatusCodeToString(route.ResponseSuccessCode), createResponseSuccess(openapi, route))

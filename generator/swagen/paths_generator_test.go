@@ -58,13 +58,25 @@ var _ = Describe("Swagen", func() {
 
 	Describe("createErrorResponse", func() {
 		It("should create an error response", func() {
+			route := definitions.RouteMetadata{
+				ResponseDescription: "Success1",
+				Responses: []definitions.FuncReturnValue{
+					{
+						TypeMetadata: definitions.TypeMetadata{
+							Name:        "int",
+							Description: "Bla bla",
+						},
+					},
+				},
+				ResponseSuccessCode: 200,
+			}
 			errResp := definitions.ErrorResponse{
 				Description:    "Error occurred",
 				HttpStatusCode: 500,
 			}
-			responseRef := createErrorResponse(errResp)
+			responseRef := createErrorResponse(openapi, route, errResp)
 			Expect(*responseRef.Value.Description).To(Equal("Error occurred"))
-			Expect(responseRef.Value.Content).To(Equal(openapi3.NewContentWithJSONSchema(openapi3.NewObjectSchema())))
+			Expect(responseRef.Value.Content).To(Equal(openapi3.NewContentWithJSONSchema(openapi3.NewIntegerSchema())))
 		})
 	})
 
