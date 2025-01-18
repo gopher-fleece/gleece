@@ -8,6 +8,18 @@ import (
 var objectType = &openapi3.Types{"object"}
 var arrayType = &openapi3.Types{"array"}
 
+func handleModelFieldDeprecation(field definitions.FieldMetadata, schema *openapi3.Schema) {
+	if field.Deprecation != nil && *&field.Deprecation.Deprecated {
+		schema.Deprecated = true
+	}
+}
+
+func handleModelDeprecation(model definitions.ModelMetadata, schema *openapi3.Schema) {
+	if model.Deprecation != nil && *&model.Deprecation.Deprecated {
+		schema.Deprecated = true
+	}
+}
+
 func generateModelSpec(openapi *openapi3.T, model definitions.ModelMetadata) {
 	schema := &openapi3.Schema{
 		Title:       model.Name,
@@ -21,11 +33,11 @@ func generateModelSpec(openapi *openapi3.T, model definitions.ModelMetadata) {
 	for _, field := range model.Fields {
 		fieldSchemaRef := InterfaceToSchemaRef(openapi, field.Type)
 
-		if fieldSchemaRef.Value != nil {
-			fieldSchemaRef.Value.Description = field.Description
-		}
+		fieldSchemaRef.Value.Description = field.Description
 
 		BuildSchemaValidation(fieldSchemaRef, field.Validator, field.Type)
+
+		handleModelFieldDeprecation(field, fieldSchemaRef.Value)
 
 		// Add field to schema properties
 		schema.Properties[field.Name] = fieldSchemaRef
@@ -40,6 +52,8 @@ func generateModelSpec(openapi *openapi3.T, model definitions.ModelMetadata) {
 	if len(requiredFields) > 0 {
 		schema.Required = requiredFields
 	}
+
+	handleModelDeprecation(model, schema)
 
 	// Add schema to components
 	openapi.Components.Schemas[model.Name] = &openapi3.SchemaRef{

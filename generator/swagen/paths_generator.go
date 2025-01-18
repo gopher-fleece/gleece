@@ -110,10 +110,16 @@ func setNewRouteOperation(openapi *openapi3.T, def definitions.ControllerMetadat
 	openapi.Paths.Set(routePath, pathItem)
 }
 
+func handleRouteParamDeprecation(routeParam definitions.FuncParam, specParam *openapi3.ParameterRef) {
+	if routeParam.Deprecation != nil && *&routeParam.Deprecation.Deprecated {
+		specParam.Value.Deprecated = true
+	}
+}
+
 func createRouteParam(openapi *openapi3.T, param definitions.FuncParam) *openapi3.ParameterRef {
 	schemaRef := InterfaceToSchemaRef(openapi, param.TypeMeta.Name)
 	BuildSchemaValidation(schemaRef, param.Validator, param.TypeMeta.Name)
-	return &openapi3.ParameterRef{
+	specParam := &openapi3.ParameterRef{
 		Value: &openapi3.Parameter{
 			Name:        param.Name,
 			In:          strings.ToLower(string(param.PassedIn)),
@@ -122,6 +128,8 @@ func createRouteParam(openapi *openapi3.T, param definitions.FuncParam) *openapi
 			Schema:      schemaRef,
 		},
 	}
+	handleRouteParamDeprecation(param, specParam)
+	return specParam
 }
 
 func createRequestBodyParam(openapi *openapi3.T, param definitions.FuncParam) *openapi3.RequestBodyRef {
@@ -143,6 +151,12 @@ func generateParams(openapi *openapi3.T, route definitions.RouteMetadata, operat
 		} else {
 			operation.Parameters = append(operation.Parameters, createRouteParam(openapi, param))
 		}
+	}
+}
+
+func handleRouteDeprecation(route definitions.RouteMetadata, operation *openapi3.Operation) {
+	if route.Deprecation != nil && *&route.Deprecation.Deprecated {
+		operation.Deprecated = true
 	}
 }
 
@@ -169,6 +183,8 @@ func generateControllerSpec(openapi *openapi3.T, config *definitions.OpenAPIGene
 		if err := generateOperationSecurity(operation, config, route); err != nil {
 			return err
 		}
+
+		handleRouteDeprecation(route, operation)
 
 		// Finally, set the operation in the path item
 		setNewRouteOperation(openapi, def, route, operation)

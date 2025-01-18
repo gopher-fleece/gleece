@@ -90,6 +90,7 @@ type FuncParam struct {
 	Description        string
 	UniqueImportSerial uint64
 	Validator          string
+	Deprecation        *DeprecationOptions
 }
 
 type FuncReturnValue struct {
@@ -111,17 +112,6 @@ type ErrorResponse struct {
 	Description    string
 }
 
-type FuncParamLegacy struct {
-	// The type of the parameter e.g. string, int, etc.
-	ParamInterface        string
-	Name                  string
-	ParamType             ParamPassedIn
-	ParamExpressionName   string
-	Description           string
-	FullyQualifiedPackage string
-	Validator             string
-}
-
 type RouteMetadata struct {
 	// The handler function's and operation name in the OpenAPI schema
 	OperationId string
@@ -133,7 +123,7 @@ type RouteMetadata struct {
 	Hiding MethodHideOptions
 
 	// Defines whether the method is considered deprecated
-	Deprecation DeprecationOptions
+	Deprecation *DeprecationOptions
 
 	// The operation's description
 	Description string
@@ -212,6 +202,7 @@ type ModelMetadata struct {
 	FullyQualifiedPackage string
 	Description           string
 	Fields                []FieldMetadata
+	Deprecation           *DeprecationOptions
 }
 
 type FieldMetadata struct {
@@ -219,6 +210,7 @@ type FieldMetadata struct {
 	Type        string
 	Description string
 	Validator   string
+	Deprecation *DeprecationOptions
 }
 
 type SecuritySchemeType string
