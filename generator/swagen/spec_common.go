@@ -196,3 +196,22 @@ func IsSecurityNameInSecuritySchemes(securitySchemes []definitions.SecuritySchem
 	}
 	return false
 }
+
+func IsHiddenAsset(hideOptions *definitions.MethodHideOptions) bool {
+	if hideOptions == nil {
+		return false
+	}
+	if hideOptions.Type == definitions.HideMethodNever {
+		return false
+	}
+	if hideOptions.Type == definitions.HideMethodAlways {
+		return true
+	}
+
+	// TODO: Check the condition...
+	return false
+}
+
+func IsDeprecated(deprecationOptions *definitions.DeprecationOptions) bool {
+	return deprecationOptions != nil && deprecationOptions.Deprecated
+}

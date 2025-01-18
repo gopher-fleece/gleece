@@ -107,50 +107,50 @@ func getRouteSuccessResponseCode(comments []string, routeHasResultValue bool) ex
 	return external.StatusNoContent
 }
 
-func getRouteParameters(comments []string, routeFuncDecl ast.FuncDecl) []definitions.FuncParamLegacy {
-	params := []definitions.FuncParamLegacy{}
+// func getRouteParameters(comments []string, routeFuncDecl ast.FuncDecl) []definitions.FuncParamLegacy {
+// 	params := []definitions.FuncParamLegacy{}
 
-	for _, field := range routeFuncDecl.Type.Params.List {
-		for _, name := range field.Names {
-			param := definitions.FuncParamLegacy{
-				Name: name.Name,
-			}
-			line := SearchForParamTerm(comments, name.Name)
-			if line == "" {
-				Logger.Warn("No line found for ", name.Name)
-				continue
-			}
+// 	for _, field := range routeFuncDecl.Type.Params.List {
+// 		for _, name := range field.Names {
+// 			param := definitions.FuncParamLegacy{
+// 				Name: name.Name,
+// 			}
+// 			line := SearchForParamTerm(comments, name.Name)
+// 			if line == "" {
+// 				Logger.Warn("No line found for ", name.Name)
+// 				continue
+// 			}
 
-			// Check whenever the actual name in the HTTP request is different from the function parameter name
-			if httpName := ExtractParenthesesContent(line); httpName != "" {
-				param.Name = httpName
-			}
+// 			// Check whenever the actual name in the HTTP request is different from the function parameter name
+// 			if httpName := ExtractParenthesesContent(line); httpName != "" {
+// 				param.Name = httpName
+// 			}
 
-			if pType := strings.ToLower(ExtractParamTerm(line)); pType != "" {
-				switch pType {
-				case "query":
-					param.ParamType = definitions.PassedInQuery
-				case "header":
-					param.ParamType = definitions.PassedInHeader
-				case "path":
-					param.ParamType = definitions.PassedInPath
-				case "body":
-					param.ParamType = definitions.PassedInBody
-				}
-			}
+// 			if pType := strings.ToLower(ExtractParamTerm(line)); pType != "" {
+// 				switch pType {
+// 				case "query":
+// 					param.ParamType = definitions.PassedInQuery
+// 				case "header":
+// 					param.ParamType = definitions.PassedInHeader
+// 				case "path":
+// 					param.ParamType = definitions.PassedInPath
+// 				case "body":
+// 					param.ParamType = definitions.PassedInBody
+// 				}
+// 			}
 
-			// Extract the rest of the line as the description
-			param.Description = strings.TrimSpace(GetTextAfterParenthesis(line, " "+name.Name+" "))
+// 			// Extract the rest of the line as the description
+// 			param.Description = strings.TrimSpace(GetTextAfterParenthesis(line, " "+name.Name+" "))
 
-			// NOTE:
-			// This takes the qualified name - it WILL cause problems if the import is renamed in the controller
-			// i.e., the inferred package name may be different than the actual one
-			param.ParamExpressionName = getExpressionName(field.Type)
-			params = append(params, param)
-		}
-	}
-	return params
-}
+// 			// NOTE:
+// 			// This takes the qualified name - it WILL cause problems if the import is renamed in the controller
+// 			// i.e., the inferred package name may be different than the actual one
+// 			param.ParamExpressionName = getExpressionName(field.Type)
+// 			params = append(params, param)
+// 		}
+// 	}
+// 	return params
+// }
 
 func ExtractClassRoutesMetaData(routeFuncDecl ast.FuncDecl) (*definitions.RouteMetadata, error) {
 	routeMetadata := definitions.RouteMetadata{}
