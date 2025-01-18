@@ -65,20 +65,20 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           commit_message: Update to version ${{ steps.update_version.outputs.VERSION }} [skip-ci]
 
-      - name: 9️⃣ Create Release 📦
-        if: github.ref == 'refs/heads/main'
-        id: create_release
-        uses: softprops/action-gh-release@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ steps.update_version.outputs.VERSION }}
-          name: Package Version ${{ steps.update_version.outputs.VERSION }}
-          body: ${{ steps.version_info.outputs.BODY }}
-          draft: false
-          prerelease: true
+      # - name: 9️⃣ Create Release 📦
+      #   if: github.ref == 'refs/heads/main'
+      #   id: create_release
+      #   uses: softprops/action-gh-release@v2
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     tag_name: ${{ steps.update_version.outputs.VERSION }}
+      #     name: Package Version ${{ steps.update_version.outputs.VERSION }}
+      #     body: ${{ steps.version_info.outputs.BODY }}
+      #     draft: false
+      #     prerelease: true
 
-      - name: 🔟 Notify pkg.go.dev 🔔
-        if: github.ref == 'refs/heads/main'
-        run: |
-          curl -sSf https://proxy.golang.org/github.com/haimkastner/gleece/@v/${{ steps.update_version.outputs.VERSION }}.info || echo "Failed to notify pkg.go.dev"
+      # - name: 🔟 Notify pkg.go.dev 🔔
+      #   if: github.ref == 'refs/heads/main'
+      #   run: |
+      #     curl -sSf https://proxy.golang.org/github.com/haimkastner/gleece/@v/${{ steps.update_version.outputs.VERSION }}.info || echo "Failed to notify pkg.go.dev"
