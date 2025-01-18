@@ -40,7 +40,7 @@ import (
 )
 
 // @Tag My API
-// @Route /base-route
+// @Route(/base-route)
 // @Description This is a description of that "tag"
 type UserController struct {
 	ctrl.GleeceController // Embedding the GleeceController
@@ -55,11 +55,11 @@ type Info struct {
 
 
 // @Description This is a route under
-// @Method POST
-// @Route /user
-// @Query name The name
-// @Body info The info of the user
-// @Header(x-origin) origin The origin of the user
+// @Method (POST)
+// @Route (/user)
+// @Query(name) The name
+// @Body(info) The info of the user
+// @Header(origin, { name: x-origin }) The origin of the user
 // @ResponseDescription The ID of the newly created user
 func (ec *UserController) CreateNewUser(name string, info Info, origin string) (string, error) {
 	// Do the logic....
@@ -68,8 +68,44 @@ func (ec *UserController) CreateNewUser(name string, info Info, origin string) (
 }
 ```
 ### What’s Happening Here?  
+
 1. **Annotations**:  
-   - Gleece uses annotations (like `@Tag`, `@Route`, and `@Description`) to automatically generate OpenAPI documentation.  
+   - Gleece uses annotations to automatically generate routes & OpenAPI documentation. The format for the annotations is:
+
+   ```go
+   // {{ annotation }} {{ ( {{theBasicRequiredParam}}, { json5 attributes } ) }} {{ description }}
+   ```
+
+   - **Annotation**: This is always required and specifies the type of annotation, such as `@Tag`, `@Route`, `@Method`, etc.
+   - **theBasicRequiredParam**: This parameter is required depending on the type of annotation. For example, `@Route` requires a route path, `@Method` requires an HTTP method, etc.
+   - **json5 attributes**: These are optional attributes in JSON5 format that provide additional information for the annotation. For example, in `@Header(origin, { name: x-origin })`, `{ name: x-origin }` is a JSON5 attribute specifying the name of the header in the http request, while the `origin` is the name of the parameter in the given function.
+   - **Description**: This is an optional description that provides further details about the annotation. It helps in generating more descriptive documentation.
+
+   Let's break down an example annotation:
+
+   ```go
+   // @Description This is a route under
+   // @Method (POST)
+   // @Route (/user)
+   // @Query(name) The name
+   // @Body(info) The info of the user
+   // @Header(origin, { name: x-origin }) The origin of the user
+   // @ResponseDescription The ID of the newly created user
+   func (ec *UserController) CreateNewUser(name string, info Info, origin string) (string, error) {
+       // Do the logic....
+       userId := uuid.New()
+       return userId.String(), nil
+   }
+
+   ```
+   
+   * `@Description`: Provides a description of the route.
+   * `@Method (POST)`: Specifies that the route should handle POST requests.
+   * `@Route (/user)`: Sets the route path to /user.
+   * `@Query(name)`: Indicates that the name parameter should be taken from the query string.
+   * `@Body(info)`: Specifies that the info parameter should come from the request body.
+   * `@Header(origin, { name: x-origin })`: Indicates that the origin parameter should be taken from the request header named x-origin.
+   * `@ResponseDescription`: Provides a description of the response, specifying that it will return the ID of the newly created user.
 
 2. **Validation Handled by Gleece**:  
    - Input validation is simplified by Gleece using [go-playground/validator](https://github.com/go-playground/validator) format.  
