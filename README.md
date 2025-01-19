@@ -16,7 +16,9 @@
 ## Philosophy  
 Developing APIs doesn’t have to be a chore - it should be simple, efficient, and enjoyable.  
 
-Gone are the days of manually writing repetitive boilerplate code or struggling to keep your API documentation in sync with your implementation. 🚫🛠️ With Gleece, you can:  
+Gone are the days of manually writing repetitive boilerplate code or struggling to keep your API documentation in sync with your implementation.
+
+With Gleece, you can:  
 - 🔧 **Simplify** your API development process.  
 - 📜 Automatically **generate OpenAPI specs** directly from your code.  
 - 🎯 Ensure your APIs are always **well-documented and consistent**.  
