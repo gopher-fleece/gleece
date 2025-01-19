@@ -48,9 +48,9 @@ type UserController struct {
 
 type Info struct {
 	// @Description The address
-	Address string `validate:"required"`
+	Address string `json:"address" validate:"required"`
 	// @Description The number of the house (must be at least 1)
-	HouseNumber int `validate:"gte=1"`
+	HouseNumber int `json:"houseNumber" validate:"gte=1"`
 }
 
 
@@ -62,7 +62,7 @@ type Info struct {
 // @Header(origin, { name: x-origin }) The origin of the user
 // @Response(200) The ID of the newly created user
 // @ErrorResponse(500) The error when process failed
-// @Security(ApiKeyAuth, { scopes: [read:users, write:users] })
+// @Security(ApiKeyAuth, { scopes: ["read:users", "write:users"] })
 func (ec *UserController) CreateNewUser(name string, info Info, origin string) (string, error) {
 	// Do the logic....
 	userId := uuid.New()

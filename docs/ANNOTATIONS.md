@@ -34,7 +34,7 @@ These annotations are used at the controller class level.
 | Annotation      | Purpose                                                    | Parameter          | JSON5 Options Ref                     | Required | Comment |
 |-----------------|------------------------------------------------------------|--------------------|---------------------------------------|----------|---------|
 | `@Method`       | Defines the HTTP method for the route                      | httpVerb           | -                                     | Yes      |         | 
-| `@Route`        | Defines the route path for the method                      | path               | -                                     | Yes      |         |
+| `@Route`        | Defines the route path for the method                      | path               | -                                     | Yes      | Route var supports [OpenAPI v3 Specification - Path Templating](https://swagger.io/specification/v3/) (e.g. `/users/{userId}`)   |
 | `@Query`        | Defines a query parameter for the endpoint                 | paramName          | [Query Options](#query-options)       | No       | Support description |
 | `@Header`       | Defines an header parameter for the endpoint               | paramName          | [Header Options](#header-options)     | No       | Support description |
 | `@Path`         | Defines a path parameter for the endpoint                  | paramName          | [Path Options](#path-options)         | No       | Support description |
