@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/haimkastner/gleece/external"
+	"github.com/gopher-fleece/gleece/external"
 )
 
 var validHttpVerbs = map[string]struct{}{

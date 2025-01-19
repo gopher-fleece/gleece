@@ -1,14 +1,14 @@
 **Gleece** - Bringing joy and ease to API development in Go! 🚀   
 
 
-[![gleece](https://github.com/haimkastner/gleece/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/haimkastner/gleece/actions/workflows/build.yml)
-[![Latest Release](https://img.shields.io/github/v/release/haimkastner/gleece)](https://github.com/haimkastner/gleece/releases)
-[![Coverage Status](https://coveralls.io/repos/github/haimkastner/gleece/badge.svg?branch=main)](https://coveralls.io/github/haimkastner/gleece?branch=main)
+[![gleece](https://github.com/gopher-fleece/gleece/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/gopher-fleece/gleece/actions/workflows/build.yml)
+[![Latest Release](https://img.shields.io/github/v/release/gopher-fleece/gleece)](https://github.com/gopher-fleece/gleece/releases)
+[![Coverage Status](https://coveralls.io/repos/github/gopher-fleece/gleece/badge.svg?branch=main)](https://coveralls.io/github/gopher-fleece/gleece?branch=main)
 
-[![GitHub stars](https://img.shields.io/github/stars/haimkastner/gleece.svg?style=social&label=Stars)](https://github.com/haimkastner/gleece/stargazers) 
-[![License](https://img.shields.io/github/license/haimkastner/gleece.svg?style=social)](https://github.com/haimkastner/gleece/blob/master/LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/gopher-fleece/gleece.svg?style=social&label=Stars)](https://github.com/gopher-fleece/gleece/stargazers) 
+[![License](https://img.shields.io/github/license/gopher-fleece/gleece.svg?style=social)](https://github.com/gopher-fleece/gleece/blob/master/LICENSE)
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/haimkastner/gleece.svg)](https://pkg.go.dev/github.com/haimkastner/gleece)
+[![Go Reference](https://pkg.go.dev/badge/github.com/gopher-fleece/gleece.svg)](https://pkg.go.dev/github.com/gopher-fleece/gleece)
 
 
 ---
@@ -36,7 +36,7 @@ package api
 
 import (
 	"github.com/google/uuid"
-	"github.com/haimkastner/gleece/ctrl" // Importing GleeceController
+	"github.com/gopher-fleece/gleece/ctrl" // Importing GleeceController
 )
 
 // @Tag My API
@@ -94,7 +94,7 @@ func (ec *UserController) CreateNewUser(name string, info Info, origin string) (
    - Gleece processes these validation rules automatically during request handling and returns 422 in case of not passing validation.  
 
 3. **Controllers**:  
-   - Simply embed the `GleeceController` (imported from `github.com/haimkastner/gleece/ctrl`) into your own controllers to gain its functionality.  
+   - Simply embed the `GleeceController` (imported from `github.com/gopher-fleece/gleece/ctrl`) into your own controllers to gain its functionality.  
 
 4. **Automation**:  
    - No manual steps required—your OpenAPI spec is ready to go!  
@@ -116,7 +116,7 @@ package main
 
 import (
     "github.com/gin-gonic/gin"
-    "github.com/haimkastner/gleece/generated_routes" // Import the generated routes file
+    "github.com/gopher-fleece/gleece/generated_routes" // Import the generated routes file
 )
 
 func main() {

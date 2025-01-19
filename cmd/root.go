@@ -3,8 +3,8 @@ package cmd
 import (
 	"os"
 
-	"github.com/haimkastner/gleece/generator"
-	Logger "github.com/haimkastner/gleece/infrastructure/logger"
+	"github.com/gopher-fleece/gleece/generator"
+	Logger "github.com/gopher-fleece/gleece/infrastructure/logger"
 	"github.com/spf13/cobra"
 )
 

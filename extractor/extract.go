@@ -13,9 +13,9 @@ import (
 
 	MapSet "github.com/deckarep/golang-set/v2"
 
-	"github.com/haimkastner/gleece/definitions"
-	"github.com/haimkastner/gleece/external"
-	Logger "github.com/haimkastner/gleece/infrastructure/logger"
+	"github.com/gopher-fleece/gleece/definitions"
+	"github.com/gopher-fleece/gleece/external"
+	Logger "github.com/gopher-fleece/gleece/infrastructure/logger"
 )
 
 func ExtractClassMetadata(d ast.GenDecl, baseStruct string) (*definitions.ControllerMetadata, error) {

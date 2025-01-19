@@ -1,10 +1,10 @@
 package temp
 
 import (
-	SomeRandomName "github.com/haimkastner/gleece/controller"
-	"github.com/haimkastner/gleece/test/types"
-	. "github.com/haimkastner/gleece/test/types"
-	CustomAlias "github.com/haimkastner/gleece/test/types"
+	SomeRandomName "github.com/gopher-fleece/gleece/controller"
+	"github.com/gopher-fleece/gleece/test/types"
+	. "github.com/gopher-fleece/gleece/test/types"
+	CustomAlias "github.com/gopher-fleece/gleece/test/types"
 )
 
 // ExtendedController

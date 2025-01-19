@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/haimkastner/gleece/cmd/arguments"
+	"github.com/gopher-fleece/gleece/cmd/arguments"
 )
 
 type KnownTemplate string

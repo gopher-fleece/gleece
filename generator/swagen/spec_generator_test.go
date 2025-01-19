@@ -7,7 +7,7 @@ import (
 	"reflect"
 
 	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/haimkastner/gleece/definitions"
+	"github.com/gopher-fleece/gleece/definitions"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"

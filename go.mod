@@ -1,4 +1,4 @@
-module github.com/haimkastner/gleece
+module github.com/gopher-fleece/gleece
 
 go 1.23.4
 

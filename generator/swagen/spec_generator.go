@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 
 	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/haimkastner/gleece/definitions"
-	"github.com/haimkastner/gleece/infrastructure/logger"
+	"github.com/gopher-fleece/gleece/definitions"
+	"github.com/gopher-fleece/gleece/infrastructure/logger"
 )
 
 // GenerateSpec generates the OpenAPI specification

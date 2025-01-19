@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	MapSet "github.com/deckarep/golang-set/v2"
-	"github.com/haimkastner/gleece/definitions"
+	"github.com/gopher-fleece/gleece/definitions"
 	"golang.org/x/tools/go/packages"
 )
 

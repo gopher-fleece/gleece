@@ -9,11 +9,11 @@ import (
 	"github.com/aymerick/raymond"
 	"github.com/iancoleman/strcase"
 
-	"github.com/haimkastner/gleece/cmd"
-	"github.com/haimkastner/gleece/definitions"
-	"github.com/haimkastner/gleece/generator/compilation"
-	"github.com/haimkastner/gleece/generator/templates/gin"
-	Logger "github.com/haimkastner/gleece/infrastructure/logger"
+	"github.com/gopher-fleece/gleece/cmd"
+	"github.com/gopher-fleece/gleece/definitions"
+	"github.com/gopher-fleece/gleece/generator/compilation"
+	"github.com/gopher-fleece/gleece/generator/templates/gin"
+	Logger "github.com/gopher-fleece/gleece/infrastructure/logger"
 )
 
 // dumpContext Dumps the routes context to the log for debugging purposes

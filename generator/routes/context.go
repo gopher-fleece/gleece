@@ -1,8 +1,8 @@
 package routes
 
 import (
-	"github.com/haimkastner/gleece/cmd"
-	"github.com/haimkastner/gleece/definitions"
+	"github.com/gopher-fleece/gleece/cmd"
+	"github.com/gopher-fleece/gleece/definitions"
 )
 
 type Argument struct {

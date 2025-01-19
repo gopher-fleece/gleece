@@ -8,14 +8,14 @@ import (
 	"os"
 
 	go_validator "github.com/go-playground/validator/v10"
-	"github.com/haimkastner/gleece/cmd"
-	"github.com/haimkastner/gleece/cmd/arguments"
-	"github.com/haimkastner/gleece/definitions"
-	"github.com/haimkastner/gleece/extractor"
-	"github.com/haimkastner/gleece/generator/routes"
-	"github.com/haimkastner/gleece/generator/swagen"
-	Logger "github.com/haimkastner/gleece/infrastructure/logger"
-	"github.com/haimkastner/gleece/infrastructure/validator"
+	"github.com/gopher-fleece/gleece/cmd"
+	"github.com/gopher-fleece/gleece/cmd/arguments"
+	"github.com/gopher-fleece/gleece/definitions"
+	"github.com/gopher-fleece/gleece/extractor"
+	"github.com/gopher-fleece/gleece/generator/routes"
+	"github.com/gopher-fleece/gleece/generator/swagen"
+	Logger "github.com/gopher-fleece/gleece/infrastructure/logger"
+	"github.com/gopher-fleece/gleece/infrastructure/validator"
 )
 
 func obtainConfig(configPath string) (*definitions.GleeceConfig, error) {

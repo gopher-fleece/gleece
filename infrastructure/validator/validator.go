@@ -5,7 +5,7 @@ import (
 	"unicode"
 
 	go_validator "github.com/go-playground/validator/v10"
-	"github.com/haimkastner/gleece/definitions"
+	"github.com/gopher-fleece/gleece/definitions"
 )
 
 // Global validator instance

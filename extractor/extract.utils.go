@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/haimkastner/gleece/definitions"
+	"github.com/gopher-fleece/gleece/definitions"
 )
 
 // SearchForParamTerm searches for a term in a list of strings that comes immediately after "// @" with no space, and with space after it.

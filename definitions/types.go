@@ -2,7 +2,7 @@ package definitions
 
 import (
 	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/haimkastner/gleece/external"
+	"github.com/gopher-fleece/gleece/external"
 )
 
 // Enum of HTTP parma type (header, query, path, body)

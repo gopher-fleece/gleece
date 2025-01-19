@@ -11,8 +11,8 @@ import (
 
 	"github.com/bmatcuk/doublestar/v4"
 	MapSet "github.com/deckarep/golang-set/v2"
-	"github.com/haimkastner/gleece/definitions"
-	Logger "github.com/haimkastner/gleece/infrastructure/logger"
+	"github.com/gopher-fleece/gleece/definitions"
+	Logger "github.com/gopher-fleece/gleece/infrastructure/logger"
 	"golang.org/x/tools/go/packages"
 )
 
@@ -146,7 +146,7 @@ func (v *ControllerVisitor) Visit(node ast.Node) ast.Visitor {
 		if structType, isOk := currentNode.Type.(*ast.StructType); isOk {
 			if DoesStructEmbedStruct(
 				v.currentSourceFile,
-				"github.com/haimkastner/gleece/controller",
+				"github.com/gopher-fleece/gleece/controller",
 				structType,
 				"GleeceController",
 			) {
