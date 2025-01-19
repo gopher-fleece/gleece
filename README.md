@@ -1,4 +1,4 @@
-# Gleece  
+**Gleece** - Bringing joy and ease to API development in Go! 🚀   
 
 
 [![gleece](https://github.com/haimkastner/gleece/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/haimkastner/gleece/actions/workflows/build.yml)
@@ -11,12 +11,10 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/haimkastner/gleece.svg)](https://pkg.go.dev/github.com/haimkastner/gleece)
 
 
-
-🎉 **Gleece** - Bringing joy and ease to API development in Go! 🚀  
 ---
 
-## 🌟 Philosophy  
-Developing APIs doesn’t have to be a chore - it should be simple, efficient, and enjoyable. 💡✨  
+## Philosophy  
+Developing APIs doesn’t have to be a chore - it should be simple, efficient, and enjoyable.  
 
 Gone are the days of manually writing repetitive boilerplate code or struggling to keep your API documentation in sync with your implementation. 🚫🛠️ With Gleece, you can:  
 - 🔧 **Simplify** your API development process.  
@@ -58,9 +56,11 @@ type Info struct {
 // @Method(POST)
 // @Route(/user)
 // @Query(name) The name
-// @Body(info) The info of the user
+// @Body(info, { validate: required }) The info of the user
 // @Header(origin, { name: x-origin }) The origin of the user
-// @ResponseDescription The ID of the newly created user
+// @Response(200) The ID of the newly created user
+// @ErrorResponse(500) The error when process failed
+// @Security(ApiKeyAuth, { scopes: [read:users, write:users] })
 func (ec *UserController) CreateNewUser(name string, info Info, origin string) (string, error) {
 	// Do the logic....
 	userId := uuid.New()
@@ -81,38 +81,15 @@ func (ec *UserController) CreateNewUser(name string, info Info, origin string) (
    - **json5 attributes**: These are optional attributes in JSON5 format that provide additional information for the annotation. For example, in `@Header(origin, { name: x-origin })`, `{ name: x-origin }` is a JSON5 attribute specifying the name of the header in the http request, while the `origin` is the name of the parameter in the given function.
    - **Description**: This is an optional description that provides further details about the annotation. It helps in generating more descriptive documentation.
 
-   Let's break down an example annotation:
+   See full supported [annotations](./docs/ANNOTATIONS.md) documentation
 
-   ```go
-   // @Description This is a route under
-   // @Method(POST)
-   // @Route(/user)
-   // @Query(name) The name
-   // @Body(info) The info of the user
-   // @Header(origin, { name: x-origin }) The origin of the user
-   // @ResponseDescription The ID of the newly created user
-   func (ec *UserController) CreateNewUser(name string, info Info, origin string) (string, error) {
-       // Do the logic....
-       userId := uuid.New()
-       return userId.String(), nil
-   }
-
-   ```
-   
-   * `@Description`: Provides a description of the route.
-   * `@Method(POST)`: Specifies that the route should handle POST requests.
-   * `@Route(/user)`: Sets the route path to /user.
-   * `@Query(name)`: Indicates that the name parameter should be taken from the query string.
-   * `@Body(info)`: Specifies that the info parameter should come from the request body.
-   * `@Header(origin, { name: x-origin })`: Indicates that the origin parameter should be taken from the request header named x-origin.
-   * `@ResponseDescription`: Provides a description of the response, specifying that it will return the ID of the newly created user.
 
 2. **Validation Handled by Gleece**:  
    - Input validation is simplified by Gleece using [go-playground/validator](https://github.com/go-playground/validator) format.  
    - You define validation rules directly on your struct fields:  
      - `validate:"required"` ensures the `Address` field is mandatory.  
      - `validate:"gte=1"` ensures the `HouseNumber` field has a value of at least 1.  
-   - Gleece processes these validation rules automatically during request handling.  
+   - Gleece processes these validation rules automatically during request handling and returns 422 in case of not passing validation.  
 
 3. **Controllers**:  
    - Simply embed the `GleeceController` (imported from `github.com/haimkastner/gleece/ctrl`) into your own controllers to gain its functionality.  
@@ -155,11 +132,11 @@ func main() {
 
 ## 🚧 Disclaimer  
 ⚠️ **Work in Progress** 🚨  
-Gleece is currently an under-development project. 🛠️ We’re working hard to make it amazing.
+Gleece is currently an under-development project.  We’re working hard to make it amazing.
 
-We’d love your feedback and contributions as we shape Gleece together! 🤝✨  
+We’d love your feedback and contributions as we shape Gleece together!
 
-Stay tuned for updates, and feel free to open issues or pull requests to help us improve! 🌟  
+Stay tuned for updates, and feel free to open issues or pull requests to help us improve!  
 
 ---
 
@@ -167,6 +144,4 @@ Stay tuned for updates, and feel free to open issues or pull requests to help us
 Gleece is licensed under the **MIT License**. 📄 You are free to use, modify, and distribute it with attribution. See the `LICENSE` file for details.  
 
 ---
-
-🌟 **Let’s make API development gleam with Gleece!** 🌟  
 
