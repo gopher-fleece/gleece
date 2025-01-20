@@ -135,6 +135,110 @@ func (v *ControllerVisitor) getNextImportId() uint64 {
 	return value
 }
 
+/*
+	func (v *ControllerVisitor) visitAndStorType(typeToVisit definitions.TypeMetadata) {
+		if typeToVisit.IsUniverseType {
+			// Ignore primitives
+			continue
+		}
+
+
+		 pkg := FilterPackageByFullName(v.packages, typeToVisit.FullyQualifiedPackage)
+		FindStruct()
+		visitor.VisitStruct(typeToVisit.FullyQualifiedPackage, typeToVisit.Name, )
+	}
+*/
+func (v *ControllerVisitor) addToTypeMap(existingTypesMap *map[string]string, typeMeta definitions.TypeMetadata) (bool, error) {
+	if typeMeta.IsUniverseType {
+		return false, nil
+	}
+
+	existsInPackage, exists := (*existingTypesMap)[typeMeta.Name]
+	if exists {
+		if existsInPackage == typeMeta.FullyQualifiedPackage {
+			// Same type referenced from a separate location
+			return false, nil
+		}
+
+		return false, v.getFrozenError(
+			"type '%s' exists in more that one package (%s and %s). This is not currently supported",
+			typeMeta.Name,
+			typeMeta.FullyQualifiedPackage,
+			existsInPackage,
+		)
+	}
+
+	(*existingTypesMap)[typeMeta.Name] = typeMeta.FullyQualifiedPackage
+	return true, nil
+}
+
+func (v *ControllerVisitor) insertRouteTypeList(
+	existingTypesMap *map[string]string,
+	existingModels *[]*definitions.TypeMetadata,
+	route *definitions.RouteMetadata,
+) error {
+
+	for _, param := range route.FuncParams {
+		shouldAdd, err := v.addToTypeMap(existingTypesMap, param.TypeMeta)
+		if err != nil {
+			return v.frozenError(err)
+		}
+
+		if shouldAdd {
+			(*existingModels) = append((*existingModels), &param.TypeMeta)
+		}
+	}
+
+	for _, param := range route.Responses {
+		shouldAdd, err := v.addToTypeMap(existingTypesMap, param.TypeMetadata)
+		if err != nil {
+			return v.frozenError(err)
+		}
+
+		if shouldAdd {
+			(*existingModels) = append((*existingModels), &param.TypeMetadata)
+		}
+	}
+
+	return nil
+}
+
+func (v *ControllerVisitor) GetModelsMetadata() ([]*StructInfo, error) {
+	existingTypesMap := make(map[string]string)
+	models := []*definitions.TypeMetadata{}
+
+	// visitor := NewTypeVisitor()
+	for _, controller := range v.controllers {
+		for _, route := range controller.Routes {
+			v.insertRouteTypeList(&existingTypesMap, &models, &route)
+		}
+	}
+
+	typeVisitor := NewTypeVisitor()
+	for _, model := range models {
+		pkg := FilterPackageByFullName(v.packages, model.FullyQualifiedPackage)
+		if pkg == nil {
+			return nil, v.getFrozenError("could not get a packages.Package for '%s'", model.FullyQualifiedPackage)
+		}
+
+		structNode, err := FindTypesStructInPackage(pkg, model.Name)
+		if err != nil {
+			return nil, v.frozenError(err)
+		}
+
+		if structNode == nil {
+			return nil, v.getFrozenError("could not find struct '%s' in package '%s'", model.Name, model.FullyQualifiedPackage)
+		}
+
+		err = typeVisitor.VisitStruct(model.FullyQualifiedPackage, model.Name, structNode)
+		if err != nil {
+			return nil, v.frozenError(err)
+		}
+	}
+
+	return typeVisitor.GetStructs(), nil
+}
+
 func (v *ControllerVisitor) loadMappings(sourceFileGlobs []string) error {
 	v.sourceFiles = make(map[string]*ast.File)
 	v.fileSet = token.NewFileSet()

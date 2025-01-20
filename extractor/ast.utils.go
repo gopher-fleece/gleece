@@ -550,19 +550,29 @@ func FindStruct(pkg *packages.Package, structName string) *ast.StructType {
 	return nil // Struct not found
 }
 
-func IsPointerType(containingPackage *packages.Package, expr ast.Expr) bool {
-	switch parent := expr.(type) {
-	case *ast.UnaryExpr:
-		// Check if this expression is explicitly dereferenced
-		if parent.Op == token.MUL {
-			return true
-		}
-	case *ast.Ident, *ast.SelectorExpr:
-		// Check type information for pointers
-		if tv, ok := containingPackage.TypesInfo.Types[parent]; ok {
-			_, isPointer := tv.Type.Underlying().(*types.Pointer)
-			return isPointer
-		}
+func FindTypesStructInPackage(pkg *packages.Package, structName string) (*types.Struct, error) {
+	// Ensure the package has type information.
+	if pkg.Types == nil || pkg.Types.Scope() == nil {
+		return nil, fmt.Errorf("package does not contain type information")
 	}
-	return false
+
+	// Look for the struct name in the package scope.
+	obj := pkg.Types.Scope().Lookup(structName)
+	if obj == nil {
+		return nil, fmt.Errorf("struct %q not found in package %q", structName, pkg.PkgPath)
+	}
+
+	// Ensure the object is a named type.
+	typeName, ok := obj.(*types.TypeName)
+	if !ok {
+		return nil, fmt.Errorf("%q is not a named type", structName)
+	}
+
+	// Ensure the named type is a struct.
+	structType, ok := typeName.Type().Underlying().(*types.Struct)
+	if !ok {
+		return nil, fmt.Errorf("%q is not a struct type", structName)
+	}
+
+	return structType, nil
 }

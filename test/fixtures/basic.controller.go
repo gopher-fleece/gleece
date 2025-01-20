@@ -25,8 +25,8 @@ type DefinedInSameFile struct {
 // A test for returning embedded errors
 // @Method(POST)
 // @Route(/test/embedded/error)
-func (ec *ExtendedController) ReturnEmbedsAndError() EmbedsAnError {
-	return EmbedsAnError{}
+func (ec *ExtendedController) ReturnEmbedsAndError() (HoldsVeryNestedStructs, EmbedsAnError) {
+	return HoldsVeryNestedStructs{}, EmbedsAnError{}
 }
 
 // A test for simple imports

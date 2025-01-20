@@ -69,6 +69,9 @@ func getMetadata(codeFileGlobs ...string) ([]definitions.ControllerMetadata, err
 	} else {
 		Logger.Info("%v", ctx)
 	}
+
+	// val, err := visitor.GetModelsMetadata()
+	// Logger.Debug("%s, %s", val, err)
 	return visitor.GetControllers(), nil
 }
 
