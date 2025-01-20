@@ -279,11 +279,11 @@ type RoutesConfig struct {
 	Engine            RoutingEngineType        `json:"engine" validate:"required,oneof=gin"`
 	TemplateOverrides map[KnownTemplate]string `json:"templateOverrides"`
 	OutputPath        string                   `json:"outputPath" validate:"required,filepath"`
-	OutputFilePerms   string                   `json:"outputFilePerms" validate:"regex=^(0?[0-7]{3})$"`
+	OutputFilePerms   string                   `json:"outputFilePerms" validate:"regex=^(0?[0-7]{3})?$"`
 	PackageName       string                   `json:"packageName"`
 }
 
 type GleeceConfig struct {
 	OpenAPIGeneratorConfig OpenAPIGeneratorConfig `json:"openAPIGeneratorConfig" validate:"required"`
-	RoutesConfig           RoutesConfig
+	RoutesConfig           RoutesConfig           `json:"routesConfig" validate:"required"`
 }

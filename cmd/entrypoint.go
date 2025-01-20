@@ -44,7 +44,7 @@ func getConfig(configPath string) (*definitions.GleeceConfig, error) {
 	return &config, nil
 }
 
-func getMetadata(codeFileGlobs ...string) ([]definitions.ControllerMetadata, error) {
+func getMetadata(codeFileGlobs ...string) ([]definitions.ControllerMetadata, []*extractor.StructInfo, error) {
 	var globs []string
 	if len(codeFileGlobs) > 0 {
 		globs = codeFileGlobs
@@ -61,7 +61,7 @@ func getMetadata(codeFileGlobs ...string) ([]definitions.ControllerMetadata, err
 	lastErr := visitor.GetLastError()
 	if lastErr != nil {
 		Logger.Error("Visitor encountered at-least one error. Last error:\n%v\n\t%s", *lastErr, visitor.GetFormattedDiagnosticStack())
-		return []definitions.ControllerMetadata{}, *lastErr
+		return nil, nil, *lastErr
 	}
 	ctx, err := visitor.DumpContext()
 	if err != nil {
@@ -70,36 +70,74 @@ func getMetadata(codeFileGlobs ...string) ([]definitions.ControllerMetadata, err
 		Logger.Info("%v", ctx)
 	}
 
-	// val, err := visitor.GetModelsMetadata()
-	// Logger.Debug("%s, %s", val, err)
-	return visitor.GetControllers(), nil
+	val, err := visitor.GetModelsMetadata()
+	if err != nil {
+		Logger.Error("Failed to get models metadata: %v", err)
+		return nil, nil, err
+	}
+	return visitor.GetControllers(), val, nil
 }
 
-func getConfigAndMetadata(args arguments.CliArguments) (*definitions.GleeceConfig, []definitions.ControllerMetadata, error) {
+func getConfigAndMetadata(args arguments.CliArguments) (*definitions.GleeceConfig, []definitions.ControllerMetadata, []*extractor.StructInfo, error) {
 	config, err := getConfig(args.ConfigPath)
 	if err != nil {
-		return nil, []definitions.ControllerMetadata{}, err
+		return nil, nil, nil, err
 	}
 
 	Logger.Info("Generating spec. Configuration file: %s", args.ConfigPath)
 
-	defs, err := getMetadata()
+	defs, models, err := getMetadata()
 	if err != nil {
 		Logger.Fatal("Could not collect metadata - %v", err)
-		return nil, []definitions.ControllerMetadata{}, err
+		return nil, nil, nil, err
 	}
 
-	return config, defs, nil
+	return config, defs, models, nil
 }
 
-func generateSpec(args arguments.CliArguments) error {
-	config, meta, err := getConfigAndMetadata(args)
+func GenerateSpec(args arguments.CliArguments) error {
+	config, meta, models, err := getConfigAndMetadata(args)
 	if err != nil {
 		return err
 	}
 
+	// TODO: Yuval, do it properly for all usage
+	specModels := []definitions.ModelMetadata{}
+	for _, model := range models {
+		// Build fields
+		finalFields := []definitions.FieldMetadata{}
+		for _, field := range model.Fields {
+			finalFields = append(finalFields, definitions.FieldMetadata{
+				Name:        field.Name,
+				Type:        field.Type,
+				Description: "TBD FIELD DESCRIPTION",
+				// Validator:   field.Validator,
+				// Deprecation: field.Deprecation,
+			})
+		}
+
+		specModels = append(specModels, definitions.ModelMetadata{
+			Name:        model.Name,
+			Description: "TBD MODEL DESCRIPTION",
+			Fields:      finalFields,
+			// Deprecation:           model.Deprecation,
+		})
+	}
+
+	specModels = append(specModels, definitions.ModelMetadata{
+		Name:        "Rfc7807Error",
+		Description: "TBD ERROR DESCRIPTION",
+		Fields: []definitions.FieldMetadata{
+			{
+				Name:        "code",
+				Type:        "int",
+				Description: "TBD ERROR CODE DESCRIPTION",
+			},
+		},
+	})
+
 	// Generate the spec
-	if err := swagen.GenerateAndOutputSpec(&config.OpenAPIGeneratorConfig, meta, []definitions.ModelMetadata{}); err != nil {
+	if err := swagen.GenerateAndOutputSpec(&config.OpenAPIGeneratorConfig, meta, specModels); err != nil {
 		Logger.Fatal("Failed to generate OpenAPI spec - %v", err)
 		return err
 	}
@@ -108,7 +146,7 @@ func generateSpec(args arguments.CliArguments) error {
 }
 
 func GenerateRoutes(args arguments.CliArguments) error {
-	config, meta, err := getConfigAndMetadata(args)
+	config, meta, _, err := getConfigAndMetadata(args)
 	if err != nil {
 		return err
 	}
@@ -116,9 +154,15 @@ func GenerateRoutes(args arguments.CliArguments) error {
 	return nil
 }
 
-func generateSpecAndRoutes(args arguments.CliArguments) error {
-	config, meta, err := getConfigAndMetadata(args)
+func GenerateSpecAndRoutes(args arguments.CliArguments) error {
+	config, meta, _, err := getConfigAndMetadata(args)
 	if err != nil {
+		return err
+	}
+
+	// Generate the routes first
+	if err := routes.GenerateRoutes(config, meta); err != nil {
+		Logger.Fatal("Failed to generate routes - %v", err)
 		return err
 	}
 
@@ -127,10 +171,6 @@ func generateSpecAndRoutes(args arguments.CliArguments) error {
 		Logger.Fatal("Failed to generate OpenAPI spec - %v", err)
 		return err
 	}
-
-	//////////////////////
-	// Add gen routes here
-	//////////////////////
 
 	return nil
 }

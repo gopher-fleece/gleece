@@ -24,6 +24,13 @@ func createOperation(def definitions.ControllerMetadata, route definitions.Route
 
 func createErrorResponse(openapi *openapi3.T, route definitions.RouteMetadata, errResp definitions.ErrorResponse) *openapi3.ResponseRef {
 	errorReturnType := route.GetErrorReturnType()
+
+	// Every vanilla error should be RFC7807
+	// User can override it by inheriting from error and add it's own error schema (as any other schema)
+	if errorReturnType.Name == "error" {
+		errorReturnType.Name = "Rfc7807Error"
+	}
+
 	content := createContentWithSchemaRef(openapi, "", errorReturnType.Name)
 	errResString := errResp.Description
 	response := &openapi3.Response{

@@ -37,6 +37,11 @@ func (v *TypeVisitor) VisitStruct(pkgName, structName string, structType *types.
 		field := structType.Field(i)
 		fieldType := field.Type()
 
+		// Skip embedded error fields.
+		if field.Name() == "error" && field.Type().String() == "error" {
+			continue
+		}
+
 		switch t := fieldType.(type) {
 		case *types.Pointer:
 			// Raise error for pointer fields.

@@ -53,14 +53,12 @@ These annotations are used at the controller class level.
 |-----------------|------------------------------------------------------------|--------------|------------------------------------|----------|---------|
 | `@Description`  | Provides a detailed description of the schema              | -            | -                                  | No       |         | 
 | `@Deprecated`   | Marks the schema as deprecated                             | -            | -                                  | No       |         |
-| `@Hidden`       | Hides the schema from API documentation                    | -            | -                                  | No       |         |
 
 ## Field Annotations - Property
 | Annotation      | Purpose                                                    | Parameter     | JSON5 Options Ref                 | Required | Comment |
 |-----------------|------------------------------------------------------------|--------------|------------------------------------|----------|---------|
 | `@Description`  | Provides a detailed description of the property            | -            | -                                  | No       |         | 
 | `@Deprecated`   | Marks the property as deprecated                           | -            | -                                  | No       |         |
-| `@Hidden`       | Hides the property from API documentation                  | -            | -                                  | No       |         |
 
 > A struct's property supported the standard json and validate in the field tag e.g. `json:"fieldName" validate:"required"`
 
