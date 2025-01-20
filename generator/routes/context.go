@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"github.com/gopher-fleece/gleece/cmd"
 	"github.com/gopher-fleece/gleece/definitions"
 )
 
@@ -32,7 +31,7 @@ type RoutesContext struct {
 }
 
 func GetTemplateContext(
-	config cmd.RoutesConfig,
+	config definitions.RoutesConfig,
 	controllers []definitions.ControllerMetadata,
 ) (RoutesContext, error) {
 	ctx := RoutesContext{Controllers: controllers}

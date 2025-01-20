@@ -223,6 +223,7 @@ func GetTypeMetaByIdent(
 	meta := definitions.TypeMetadata{
 		Name:        ident.Name,
 		Description: FindAndExtract(comments, "@Description"),
+		// IdentifierNode: ident,
 	}
 
 	if IsUniverseType(ident.Name) {
@@ -276,6 +277,7 @@ func GetTypeMetaBySelectorExpr(
 		Name:        typeOrInterfaceName,
 		Description: FindAndExtract(comments, "@Description"),
 		Import:      definitions.ImportTypeAlias,
+		// IdentifierNode: selector.Sel,
 	}
 
 	// Resolve the importAlias part to a full package
@@ -303,10 +305,11 @@ func GetTypeMetaBySelectorExpr(
 		meta.FullyQualifiedPackage = aliasedFullName
 		meta.DefaultPackageAlias = GetDefaultAlias(aliasedFullName)
 	}
+
 	return meta, nil
 }
 
-func GetFieldUsageType(
+func GetFieldMetadata(
 	file *ast.File,
 	fileSet *token.FileSet,
 	packages []*packages.Package,
@@ -317,6 +320,12 @@ func GetFieldUsageType(
 		return GetTypeMetaByIdent(file, fileSet, packages, fieldType)
 	case *ast.SelectorExpr:
 		return GetTypeMetaBySelectorExpr(file, fileSet, packages, fieldType)
+	case *ast.StarExpr:
+		meta, err := GetFieldMetadata(file, fileSet, packages, &ast.Field{Type: fieldType.X})
+		if err == nil {
+			meta.IsByAddress = true
+		}
+		return meta, err
 	default:
 		return definitions.TypeMetadata{}, fmt.Errorf("cannot get field usage type - fieldType %v is invalid", fieldType)
 	}
@@ -335,7 +344,7 @@ func GetFuncParameterTypeList(
 	}
 
 	for _, field := range funcDecl.Type.Params.List {
-		meta, err := GetFieldUsageType(file, fileSet, packages, field)
+		meta, err := GetFieldMetadata(file, fileSet, packages, field)
 		if err != nil {
 			return paramTypes, err
 		}
@@ -358,7 +367,7 @@ func GetFuncReturnTypeList(
 	}
 
 	for _, field := range funcDecl.Type.Results.List {
-		meta, err := GetFieldUsageType(file, fileSet, packages, field)
+		meta, err := GetFieldMetadata(file, fileSet, packages, field)
 		if err != nil {
 			return returnTypes, err
 		}
@@ -513,4 +522,47 @@ func FilterPackageByFullName(packages []*packages.Package, fullName string) *pac
 		}
 	}
 	return nil
+}
+
+func FindStruct(pkg *packages.Package, structName string) *ast.StructType {
+	// Traverse all the syntax trees (ASTs) in the loaded package
+	for _, file := range pkg.Syntax {
+		// Traverse all declarations in the AST file
+		for _, decl := range file.Decls {
+			// Look for type declarations (ast.GenDecl)
+			if genDecl, ok := decl.(*ast.GenDecl); ok {
+				// Iterate over all the specs in the general declaration
+				for _, spec := range genDecl.Specs {
+					// Look for type specs (ast.TypeSpec)
+					if typeSpec, ok := spec.(*ast.TypeSpec); ok {
+						// Check if the type is a struct type
+						if structType, ok := typeSpec.Type.(*ast.StructType); ok {
+							// Match the struct's name with the input name
+							if typeSpec.Name.Name == structName {
+								return structType
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	return nil // Struct not found
+}
+
+func IsPointerType(containingPackage *packages.Package, expr ast.Expr) bool {
+	switch parent := expr.(type) {
+	case *ast.UnaryExpr:
+		// Check if this expression is explicitly dereferenced
+		if parent.Op == token.MUL {
+			return true
+		}
+	case *ast.Ident, *ast.SelectorExpr:
+		// Check type information for pointers
+		if tv, ok := containingPackage.TypesInfo.Types[parent]; ok {
+			_, isPointer := tv.Type.Underlying().(*types.Pointer)
+			return isPointer
+		}
+	}
+	return false
 }
