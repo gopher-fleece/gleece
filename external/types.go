@@ -75,13 +75,12 @@ const (
 )
 
 type Rfc7807Error struct {
-	Type        string
-	Title       string
-	Detail      string
-	Instance    string
-	HttpCode    int
-	ReferenceId string
-	Extensions  map[string]string
+	Type       string
+	Title      string
+	Detail     string
+	Status     int
+	Instance   string
+	Extensions map[string]string
 }
 
 type Controller interface {

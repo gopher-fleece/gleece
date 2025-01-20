@@ -1,8 +1,10 @@
 package main
 
 import (
-	"github.com/haimkastner/gleece/extractor"
-	"github.com/haimkastner/gleece/infrastructure/validation"
+	"github.com/gopher-fleece/gleece/cmd"
+	"github.com/gopher-fleece/gleece/cmd/arguments"
+	Logger "github.com/gopher-fleece/gleece/infrastructure/logger"
+	"github.com/gopher-fleece/gleece/infrastructure/validation"
 )
 
 /*
@@ -49,6 +51,9 @@ func main() {
 // CLI Main. Uncomment when ready
 func main() {
 	validation.InitValidator()
-	extractor.GetMetadata()
+	err := cmd.GenerateRoutes(arguments.CliArguments{ConfigPath: "./gleece.json"})
+	if err != nil {
+		Logger.Fatal("Failed to generate routes: %v", err)
+	}
 	// cmd.Execute()
 }

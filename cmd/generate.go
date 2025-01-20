@@ -3,9 +3,8 @@ package cmd
 import (
 	"os"
 
-	"github.com/haimkastner/gleece/cmd/arguments"
-	"github.com/haimkastner/gleece/generator"
-	Logger "github.com/haimkastner/gleece/infrastructure/logger"
+	"github.com/gopher-fleece/gleece/cmd/arguments"
+	Logger "github.com/gopher-fleece/gleece/infrastructure/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -22,7 +21,7 @@ var specCommand = &cobra.Command{
 	Use:   "spec",
 	Short: "Generates an OpenAPI schema from the codebase using the specified configuration file",
 	Run: func(cmd *cobra.Command, args []string) {
-		err := generator.GenerateSpec(cliArgs)
+		err := generateSpec(cliArgs)
 		if err != nil {
 			Logger.Fatal("Failed to generate spec: %v", err)
 			os.Exit(1)
@@ -34,7 +33,7 @@ var routesCommand = &cobra.Command{
 	Use:   "routes",
 	Short: "Generates a routing middleware file from the codebase using the specified configuration file",
 	Run: func(cmd *cobra.Command, args []string) {
-		err := generator.GenerateSpec(cliArgs)
+		err := GenerateRoutes(cliArgs)
 		if err != nil {
 			Logger.Fatal("Failed to generate routes: %v", err)
 			os.Exit(1)
@@ -46,7 +45,7 @@ var specAndRoutesCommand = &cobra.Command{
 	Use:   "spec-and-routes",
 	Short: "Generates an OpenAPI schema and a routing middleware file from the codebase using the specified configuration file",
 	Run: func(cmd *cobra.Command, args []string) {
-		err := generator.GenerateSpec(cliArgs)
+		err := generateSpecAndRoutes(cliArgs)
 		if err != nil {
 			Logger.Fatal("Failed to generate spec and routes: %v", err)
 			os.Exit(1)

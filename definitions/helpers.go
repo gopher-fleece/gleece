@@ -2,9 +2,10 @@ package definitions
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 
-	"github.com/haimkastner/gleece/external"
+	"github.com/gopher-fleece/gleece/external"
 )
 
 var validHttpVerbs = map[string]struct{}{
@@ -108,10 +109,23 @@ func EnsureHttpStatusCode(code uint) external.HttpStatusCode {
 	panic(fmt.Sprintf("'%d' is not a valid HTTP status code", code))
 }
 
-func EnsureHttpStatusCodeString(code string) external.HttpStatusCode {
+func ConvertToHttpStatus(code string) (external.HttpStatusCode, error) {
 	parsed, err := strconv.ParseUint(code, 10, 32)
 	if err != nil {
-		panic(fmt.Sprintf("'%s' is not a valid HTTP status code", code))
+		return 0, err
 	}
-	return EnsureHttpStatusCode(uint(parsed))
+
+	parsedCode := uint(parsed)
+	if !IsValidHttpStatusCode(parsedCode) {
+		return 0, fmt.Errorf("'%s' is not a valid HTTP status code", code)
+	}
+	return external.HttpStatusCode(parsedCode), nil
+}
+
+func PermissionStringToFileMod(permissionString string) (os.FileMode, error) {
+	permission, err := strconv.ParseUint(permissionString, 8, 32)
+	if err != nil || permission&^uint64(os.ModePerm) != 0 {
+		return 0, fmt.Errorf("must be a valid UNIX FileMode value")
+	}
+	return os.FileMode(permission), err
 }

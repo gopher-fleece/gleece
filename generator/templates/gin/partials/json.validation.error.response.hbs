@@ -1,0 +1,14 @@
+validationError := external.Rfc7807Error{
+	Type:       http.StatusText(http.StatusUnprocessableEntity),
+	Detail:     fmt.Sprintf(
+		"A request was made to operation '{{{OperationId}}}' but parameter %s did not pass validation - Expected %s but got %s",
+		"{{ToLowerCamel Name}}",
+		"{{{TypeMeta.Name}}}",
+		reflect.TypeOf({{ToLowerCamel Name}}Raw).String(),
+	),
+	Status:     http.StatusUnprocessableEntity,
+	Instance:   "/gleece/validation/{{{../../Name}}}/{{{OperationId}}}",
+	Extensions: map[string]string{"error": err.Error()},
+}
+ctx.JSON(http.StatusUnprocessableEntity, validationError)
+return

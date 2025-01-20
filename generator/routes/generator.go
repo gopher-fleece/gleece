@@ -9,11 +9,10 @@ import (
 	"github.com/aymerick/raymond"
 	"github.com/iancoleman/strcase"
 
-	"github.com/haimkastner/gleece/cmd"
-	"github.com/haimkastner/gleece/definitions"
-	"github.com/haimkastner/gleece/generator/compilation"
-	"github.com/haimkastner/gleece/generator/templates/gin"
-	Logger "github.com/haimkastner/gleece/infrastructure/logger"
+	"github.com/gopher-fleece/gleece/definitions"
+	"github.com/gopher-fleece/gleece/generator/compilation"
+	"github.com/gopher-fleece/gleece/generator/templates/gin"
+	Logger "github.com/gopher-fleece/gleece/infrastructure/logger"
 )
 
 // dumpContext Dumps the routes context to the log for debugging purposes
@@ -27,11 +26,44 @@ func registerHelpers() {
 	raymond.RegisterHelper("ToLowerCamel", func(arg string) string {
 		return strcase.ToLowerCamel(arg)
 	})
+
+	raymond.RegisterHelper("LastTypeNameEquals", func(types []definitions.FuncReturnValue, value string, options *raymond.Options) string {
+		if len(types) <= 0 {
+			panic("GetLastTypeName received a 0-length array")
+		}
+
+		if types[len(types)-1].Name == value {
+			return options.Fn()
+		}
+
+		return options.Inverse()
+	})
+
+	raymond.RegisterHelper("LastTypeIsByAddress", func(types []definitions.FuncReturnValue, options *raymond.Options) string {
+		if len(types) <= 0 {
+			panic("GetLastTypeName received a 0-length array")
+		}
+
+		if types[len(types)-1].IsByAddress {
+			return options.Fn()
+		}
+
+		return options.Inverse()
+	})
+
+	raymond.RegisterHelper("GetLastTyeFullyQualified", func(types []definitions.FuncReturnValue) string {
+		if len(types) <= 0 {
+			panic("GetLastTypeName received a 0-length array")
+		}
+
+		last := types[len(types)-1]
+		return fmt.Sprintf("Response%d%s.%s", last.UniqueImportSerial, last.Name, last.Name)
+	})
 }
 
-func getDefaultTemplate(engine cmd.RoutingEngineType) string {
+func getDefaultTemplate(engine definitions.RoutingEngineType) string {
 	switch engine {
-	case cmd.RoutingEngineGin:
+	case definitions.RoutingEngineGin:
 		return gin.RoutesTemplate
 	}
 	// This should not happen. It indicates a breakage in the build itself.
@@ -40,7 +72,7 @@ func getDefaultTemplate(engine cmd.RoutingEngineType) string {
 
 // getTemplateString Gets the contents of the HandleBars template to use.
 // If `templateFilePath` is empty, returns the default, built-in template, otherwise, the content of the provided template
-func getTemplateString(engine cmd.RoutingEngineType, templateFilePath string) (string, error) {
+func getTemplateString(engine definitions.RoutingEngineType, templateFilePath string) (string, error) {
 	if len(templateFilePath) == 0 {
 		return getDefaultTemplate(engine), nil
 	}
@@ -54,16 +86,18 @@ func getTemplateString(engine cmd.RoutingEngineType, templateFilePath string) (s
 	return string(data), nil
 }
 
-func registerPartials(engine cmd.RoutingEngineType) {
+func registerPartials(engine definitions.RoutingEngineType) {
 	switch engine {
-	case cmd.RoutingEngineGin:
+	case definitions.RoutingEngineGin:
 		gin.RegisterPartials()
 	default:
 		panic(fmt.Sprintf("Unknown routing engine type '%v'", engine))
 	}
 }
 
-func GenerateRoutes(args cmd.RoutesConfig, controllerMeta []definitions.ControllerMetadata) error {
+func GenerateRoutes(config *definitions.GleeceConfig, controllerMeta []definitions.ControllerMetadata) error {
+	args := (*config).RoutesConfig
+
 	registerPartials(args.Engine)
 	registerHelpers()
 
@@ -76,7 +110,7 @@ func GenerateRoutes(args cmd.RoutesConfig, controllerMeta []definitions.Controll
 
 	dumpContext(ctx)
 
-	template, err := getTemplateString(args.Engine, args.TemplateOverrides[cmd.TemplateRoutes])
+	template, err := getTemplateString(args.Engine, args.TemplateOverrides[definitions.TemplateRoutes])
 	if err != nil {
 		Logger.Fatal("Could not obtain the template file's contents")
 		return err
@@ -89,11 +123,26 @@ func GenerateRoutes(args cmd.RoutesConfig, controllerMeta []definitions.Controll
 	}
 
 	Logger.Debug("Formatting %d bytes of output code", len(result))
-	formattedOutput, _ := compilation.OptimizeImportsAndFormat(result)
-	if err := os.MkdirAll(filepath.Dir(args.OutputPath), 0755); err != nil {
+	formattedOutput, err := compilation.OptimizeImportsAndFormat(result)
+	if err != nil {
+		Logger.Warn("Could not format output - %v", err)
+		formattedOutput = result
+	}
+
+	err = os.MkdirAll(filepath.Dir(args.OutputPath), 0755)
+	if err != nil {
 		return err
 	}
-	err = os.WriteFile(args.OutputPath, []byte(formattedOutput), args.OutputFilePerms.FileMode())
+
+	var fileMode os.FileMode
+	parsed, err := definitions.PermissionStringToFileMod(args.OutputFilePerms)
+	if err != nil {
+		Logger.Warn("Could not convert permission string '%s' to FileMod. Using 0644 instead", args.OutputFilePerms)
+		fileMode = os.FileMode(0644)
+	} else {
+		fileMode = parsed
+	}
+	err = os.WriteFile(args.OutputPath, []byte(formattedOutput), fileMode)
 	if err != nil {
 		Logger.Fatal("Could not write output file at '%s' with permissions '%v' - %v", args.OutputPath, args.OutputFilePerms, err)
 		return err

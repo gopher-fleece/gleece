@@ -81,4 +81,4 @@ jobs:
       - name: 🔟 Notify pkg.go.dev 🔔
         if: github.ref == 'refs/heads/main'
         run: |
-          curl -sSf https://proxy.golang.org/github.com/haimkastner/gleece/@v/${{ steps.update_version.outputs.VERSION }}.info || echo "Failed to notify pkg.go.dev"
+          curl -sSf https://proxy.golang.org/github.com/gopher-fleece/gleece/@v/${{ steps.update_version.outputs.VERSION }}.info || echo "Failed to notify pkg.go.dev"

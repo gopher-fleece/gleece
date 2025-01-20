@@ -3,6 +3,7 @@ package compilation
 import (
 	"fmt"
 	"go/format"
+	"strings"
 
 	"golang.org/x/tools/imports"
 )
@@ -20,5 +21,6 @@ func OptimizeImportsAndFormat(sourceCode string) (string, error) {
 		return "", fmt.Errorf("failed to format source code: %w", err)
 	}
 
-	return string(formattedSource), nil
+	collapsed := []byte(strings.ReplaceAll(string(formattedSource), "\n\n", "\n"))
+	return string(collapsed), nil
 }

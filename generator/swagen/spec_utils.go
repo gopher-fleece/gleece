@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/haimkastner/gleece/external"
+	"github.com/gopher-fleece/gleece/external"
 )
 
 func HttpStatusCodeToString(httpStatusCode external.HttpStatusCode) string {

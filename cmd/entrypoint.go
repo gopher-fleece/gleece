@@ -1,17 +1,19 @@
-package generator
+package cmd
 
 import (
 	"encoding/json"
 	"fmt"
+	"go/ast"
 	"os"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/haimkastner/gleece/cmd/arguments"
-	"github.com/haimkastner/gleece/definitions"
-	"github.com/haimkastner/gleece/extractor"
-	"github.com/haimkastner/gleece/generator/swagen"
-	Logger "github.com/haimkastner/gleece/infrastructure/logger"
-	"github.com/haimkastner/gleece/infrastructure/validation"
+	"github.com/gopher-fleece/gleece/cmd/arguments"
+	"github.com/gopher-fleece/gleece/definitions"
+	"github.com/gopher-fleece/gleece/extractor"
+	"github.com/gopher-fleece/gleece/generator/routes"
+	"github.com/gopher-fleece/gleece/generator/swagen"
+	Logger "github.com/gopher-fleece/gleece/infrastructure/logger"
+	"github.com/gopher-fleece/gleece/infrastructure/validation"
 )
 
 func getConfig(configPath string) (*definitions.GleeceConfig, error) {
@@ -42,6 +44,34 @@ func getConfig(configPath string) (*definitions.GleeceConfig, error) {
 	return &config, nil
 }
 
+func getMetadata(codeFileGlobs ...string) ([]definitions.ControllerMetadata, error) {
+	var globs []string
+	if len(codeFileGlobs) > 0 {
+		globs = codeFileGlobs
+	} else {
+		globs = []string{"./*.go", "./**/*.go"}
+	}
+
+	visitor := &extractor.ControllerVisitor{}
+	visitor.Init(globs)
+	for _, file := range visitor.GetFiles() {
+		ast.Walk(visitor, file)
+	}
+
+	lastErr := visitor.GetLastError()
+	if lastErr != nil {
+		Logger.Error("Visitor encountered at-least one error. Last error:\n%v\n\t%s", *lastErr, visitor.GetFormattedDiagnosticStack())
+		return []definitions.ControllerMetadata{}, *lastErr
+	}
+	ctx, err := visitor.DumpContext()
+	if err != nil {
+		Logger.Error("Failed to dump context: %v", err)
+	} else {
+		Logger.Info("%v", ctx)
+	}
+	return visitor.GetControllers(), nil
+}
+
 func getConfigAndMetadata(args arguments.CliArguments) (*definitions.GleeceConfig, []definitions.ControllerMetadata, error) {
 	config, err := getConfig(args.ConfigPath)
 	if err != nil {
@@ -50,7 +80,7 @@ func getConfigAndMetadata(args arguments.CliArguments) (*definitions.GleeceConfi
 
 	Logger.Info("Generating spec. Configuration file: %s", args.ConfigPath)
 
-	defs, err := extractor.GetMetadata()
+	defs, err := getMetadata()
 	if err != nil {
 		Logger.Fatal("Could not collect metadata - %v", err)
 		return nil, []definitions.ControllerMetadata{}, err
@@ -59,7 +89,7 @@ func getConfigAndMetadata(args arguments.CliArguments) (*definitions.GleeceConfi
 	return config, defs, nil
 }
 
-func GenerateSpec(args arguments.CliArguments) error {
+func generateSpec(args arguments.CliArguments) error {
 	config, meta, err := getConfigAndMetadata(args)
 	if err != nil {
 		return err
@@ -75,16 +105,15 @@ func GenerateSpec(args arguments.CliArguments) error {
 }
 
 func GenerateRoutes(args arguments.CliArguments) error {
-	/*
-		config, meta, err := getConfigAndMetadata(args)
-		if err != nil {
-			return err
-		}
-	*/
+	config, meta, err := getConfigAndMetadata(args)
+	if err != nil {
+		return err
+	}
+	routes.GenerateRoutes(config, meta)
 	return nil
 }
 
-func GenerateSpecAndRoutes(args arguments.CliArguments) error {
+func generateSpecAndRoutes(args arguments.CliArguments) error {
 	config, meta, err := getConfigAndMetadata(args)
 	if err != nil {
 		return err

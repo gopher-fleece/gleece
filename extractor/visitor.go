@@ -12,8 +12,9 @@ import (
 
 	"github.com/bmatcuk/doublestar/v4"
 	MapSet "github.com/deckarep/golang-set/v2"
-	"github.com/haimkastner/gleece/definitions"
-	Logger "github.com/haimkastner/gleece/infrastructure/logger"
+	"github.com/gopher-fleece/gleece/definitions"
+	"github.com/gopher-fleece/gleece/external"
+	Logger "github.com/gopher-fleece/gleece/infrastructure/logger"
 	"golang.org/x/tools/go/packages"
 )
 
@@ -79,7 +80,7 @@ func (v *ControllerVisitor) Visit(node ast.Node) ast.Visitor {
 		if structType, isOk := currentNode.Type.(*ast.StructType); isOk {
 			if DoesStructEmbedStruct(
 				v.currentSourceFile,
-				"github.com/haimkastner/gleece/controller",
+				"github.com/gopher-fleece/gleece/controller",
 				structType,
 				"GleeceController",
 			) {
@@ -270,26 +271,28 @@ func (v *ControllerVisitor) getFuncParams(funcDecl *ast.FuncDecl, comments []str
 		v.enter(fmt.Sprintf("Param %s", param.Name))
 		defer v.exit()
 
-		line := SearchForParamTerm(comments, param.Name)
-		if line == "" {
-			return funcParams, v.getFrozenError("no comment metadata found for %v", param.Name)
+		holder, _ := NewAttributeHolder(comments)
+		paramAttrib := holder.FindFirstByValue(param.Name)
+		if paramAttrib == nil {
+			return funcParams, v.getFrozenError("parameter '%s' does not have a matching documentation attribute", param.Name)
 		}
 
 		finalParamMeta := definitions.FuncParam{
 			ParamMeta:          param,
-			Description:        strings.TrimSpace(GetTextAfterParenthesis(line, " "+param.Name+" ")),
+			Description:        paramAttrib.Description,
 			UniqueImportSerial: v.getNextImportId(),
 		}
 
-		if nameInSchema := ExtractParenthesesContent(line); nameInSchema != "" {
-			finalParamMeta.NameInSchema = nameInSchema
+		paramAlias := paramAttrib.GetProperty(PropertyName)
+		if paramAlias != nil && len(*paramAlias) > 0 {
+			// Parameter has a schema alias
+			finalParamMeta.NameInSchema = *paramAlias
 		} else {
 			finalParamMeta.NameInSchema = param.Name
 		}
 
 		// Currently, only body param can be an object type
-		passedIn := strings.ToLower(ExtractParamTerm(line))
-		switch passedIn {
+		switch strings.ToLower(paramAttrib.Name) {
 		case "query":
 			finalParamMeta.PassedIn = definitions.PassedInQuery
 			if !finalParamMeta.TypeMeta.IsUniverseType {
@@ -390,43 +393,86 @@ func (v *ControllerVisitor) getFuncReturnValue(funcDecl *ast.FuncDecl) ([]defini
 	return values, nil
 }
 
-func (v ControllerVisitor) getMethodHideOpts(comments []string) definitions.MethodHideOptions {
-	hiddenComment := GetAttribute(comments, "@Hidden")
-	if hiddenComment == nil {
+func (v ControllerVisitor) getMethodHideOpts(attributes *AttributesHolder) definitions.MethodHideOptions {
+	attr := attributes.GetFirst(AttributeHidden)
+	if attr == nil {
 		// No '@Hidden' attribute
 		return definitions.MethodHideOptions{Type: definitions.HideMethodNever}
 	}
 
-	if len(*hiddenComment) <= 0 {
+	if attr.Properties == nil || len(attr.Properties) <= 0 {
 		return definitions.MethodHideOptions{Type: definitions.HideMethodAlways}
 	}
 
 	// Technically a bit redundant since we know by length whether there's a condition defined
 	// but nothing stops user from adding text to the comment so this mostly serves as a validation
-	enclosedText := ExtractParenthesesContentFromCleanedComment(*hiddenComment)
-	if enclosedText == nil || len(*enclosedText) <= 0 {
+	if len(attr.Value) <= 0 {
 		// Standard '@Hidden' attribute; Always hide.
 		return definitions.MethodHideOptions{Type: definitions.HideMethodAlways}
 	}
 
 	// A '@Hidden(condition)' attribute
-	return definitions.MethodHideOptions{Type: definitions.HideMethodCondition, Condition: *enclosedText}
+	return definitions.MethodHideOptions{Type: definitions.HideMethodCondition, Condition: attr.Value}
 }
 
-func (v ControllerVisitor) getDeprecationOpts(comments []string) definitions.DeprecationOptions {
-	deprecatedComment := GetAttribute(comments, "@Deprecated")
-	if deprecatedComment == nil {
-		// No '@Deprecated' attribute
+func (v ControllerVisitor) getDeprecationOpts(attributes *AttributesHolder) definitions.DeprecationOptions {
+	attr := attributes.GetFirst(AttributeDeprecated)
+	if attr == nil {
 		return definitions.DeprecationOptions{Deprecated: false}
 	}
 
-	if len(*deprecatedComment) <= 0 {
+	if len(attr.Description) <= 0 {
 		// '@Deprecated' with no description
 		return definitions.DeprecationOptions{Deprecated: true}
 	}
 
 	// '@Deprecated' with a comment
-	return definitions.DeprecationOptions{Deprecated: true, Description: *deprecatedComment}
+	return definitions.DeprecationOptions{Deprecated: true, Description: attr.Description}
+}
+
+func (v ControllerVisitor) getErrorResponseMetadata(attributes *AttributesHolder) ([]definitions.ErrorResponse, error) {
+	responseAttributes := attributes.GetAll(AttributeErrorResponse)
+
+	responses := []definitions.ErrorResponse{}
+	encounteredCodes := MapSet.NewSet[external.HttpStatusCode]()
+
+	for _, attr := range responseAttributes {
+		code, err := definitions.ConvertToHttpStatus(attr.Value)
+		if err != nil {
+			return responses, err
+		}
+
+		if encounteredCodes.ContainsOne(code) {
+			Logger.Warn(
+				"Status code '%d' appears multiple time on a controller receiver. Ignoring. Original Comment: %s",
+				code,
+				attr,
+			)
+			continue
+		}
+		responses = append(responses, definitions.ErrorResponse{HttpStatusCode: code, Description: attr.Description})
+		encounteredCodes.Add(code)
+	}
+
+	return responses, nil
+}
+
+func (v *ControllerVisitor) getResponseStatusCode(attributes *AttributesHolder, hasReturnValue bool) (external.HttpStatusCode, error) {
+	// Set the success response code based on whether function returns a value or only error (200 vs 204)
+	response := attributes.GetFirst(AttributeResponse)
+	if response != nil && len(response.Value) > 0 {
+		code, err := definitions.ConvertToHttpStatus(response.Value)
+		if err != nil {
+			return 0, v.frozenError(err)
+		}
+		return code, nil
+	}
+
+	if hasReturnValue {
+		return external.StatusOK, nil
+	}
+
+	return external.StatusNoContent, nil
 }
 
 func (v *ControllerVisitor) visitMethod(funcDecl *ast.FuncDecl) (definitions.RouteMetadata, bool, error) {
@@ -440,15 +486,36 @@ func (v *ControllerVisitor) visitMethod(funcDecl *ast.FuncDecl) (definitions.Rou
 	}
 
 	comments := MapDocListToStrings(funcDecl.Doc.List)
+	attributes, err := NewAttributeHolder(comments)
+	if err != nil {
+		return definitions.RouteMetadata{}, true, v.frozenError(err)
+	}
+
+	methodAttr := attributes.GetFirst(AttributeMethod)
+	if methodAttr == nil {
+		Logger.Info("Method '%s' does not have a @Method attribute and will be ignored", funcDecl.Name.Name)
+		return definitions.RouteMetadata{}, true, nil
+	}
+
+	routePath := attributes.GetFirstPropertyValueOrEmpty(AttributeRoute)
+	if len(routePath) <= 0 {
+		Logger.Info("Method '%s' does not have an @Route attribute and will be ignored", funcDecl.Name.Name)
+		return definitions.RouteMetadata{}, true, nil
+	}
+
+	errorResponses, err := v.getErrorResponseMetadata(&attributes)
+	if err != nil {
+		return definitions.RouteMetadata{}, true, v.frozenError(err)
+	}
 
 	meta := definitions.RouteMetadata{
 		OperationId:         funcDecl.Name.Name,
-		HttpVerb:            definitions.EnsureValidHttpVerb(FindAndExtract(comments, "@Method")),
-		Description:         FindAndExtract(comments, "@Description"),
-		Hiding:              v.getMethodHideOpts(comments),
-		Deprecation:         v.getDeprecationOpts(comments),
-		RestMetadata:        BuildRestMetadata(comments),
-		ErrorResponses:      getErrorResponseMetadata(comments),
+		HttpVerb:            definitions.EnsureValidHttpVerb(methodAttr.Value),
+		Description:         attributes.GetFirstPropertyValueOrEmpty(AttributeDescription),
+		Hiding:              v.getMethodHideOpts(&attributes),
+		Deprecation:         v.getDeprecationOpts(&attributes),
+		RestMetadata:        definitions.RestMetadata{Path: routePath},
+		ErrorResponses:      errorResponses,
 		RequestContentType:  definitions.ContentTypeJSON, // Hardcoded for now, should be supported via comments later
 		ResponseContentType: definitions.ContentTypeJSON, // Hardcoded for now, should be supported via comments later
 	}
@@ -463,20 +530,23 @@ func (v *ControllerVisitor) visitMethod(funcDecl *ast.FuncDecl) (definitions.Rou
 	// Retrieve parameter information
 	funcParams, err := v.getFuncParams(funcDecl, comments)
 	if err != nil {
-		return meta, true, err
+		return meta, true, v.frozenError(err)
 	}
 	meta.FuncParams = funcParams
 
 	// Set the function's return types
 	responses, err := v.getFuncReturnValue(funcDecl)
 	if err != nil {
-		return meta, true, err
+		return meta, true, v.frozenError(err)
 	}
 	meta.Responses = responses
 	meta.HasReturnValue = len(responses) > 1
 
-	// Set the success response code based on whether function returns a value or only error (200 vs 204)
-	meta.ResponseSuccessCode = getRouteSuccessResponseCode(comments, meta.HasReturnValue)
+	successResponseCode, err := v.getResponseStatusCode(&attributes, meta.HasReturnValue)
+	if err != nil {
+		return meta, true, v.frozenError(err)
+	}
+	meta.ResponseSuccessCode = successResponseCode
 
 	return meta, isApiEndpoint, nil
 }

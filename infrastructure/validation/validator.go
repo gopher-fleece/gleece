@@ -2,10 +2,12 @@ package validation
 
 import (
 	"reflect"
+	"regexp"
+	"strings"
 	"unicode"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/haimkastner/gleece/definitions"
+	"github.com/gopher-fleece/gleece/definitions"
 )
 
 // Global validator instance
@@ -46,6 +48,24 @@ func registerEnumValidator(enumValues interface{}) validator.Func {
 	}
 }
 
+func validateRegex(fl validator.FieldLevel) bool {
+	// Get the regex pattern from the tag's parameter
+	params := strings.SplitN(fl.Param(), ":", 2)
+	if len(params) < 1 {
+		return false // Invalid tag usage
+	}
+
+	// Compile the regex
+	re, err := regexp.Compile(params[0])
+	if err != nil {
+		return false // Invalid regex
+	}
+
+	// Validate the field value
+	value := fl.Field().String()
+	return re.MatchString(value)
+}
+
 func InitValidator() {
 	// Initialize the validator instance
 	ValidatorInstance = validator.New()
@@ -53,6 +73,7 @@ func InitValidator() {
 	// Register custom validation functions globally
 	ValidatorInstance.RegisterValidation("not_nil_array", validateNotNilSlice)
 	ValidatorInstance.RegisterValidation("starts_with_letter", validateStartsWithLetter)
+	ValidatorInstance.RegisterValidation("regex", validateRegex)
 
 	// Register enum validation functions
 

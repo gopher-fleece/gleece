@@ -1,10 +1,8 @@
 package definitions
 
 import (
-	"go/ast"
-
 	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/haimkastner/gleece/external"
+	"github.com/gopher-fleece/gleece/external"
 )
 
 // Enum of HTTP parma type (header, query, path, body)
@@ -106,7 +104,8 @@ type TypeMetadata struct {
 	Description           string
 	Import                ImportType
 	IsUniverseType        bool
-	IdentifierNode        *ast.Ident
+	IsByAddress           bool
+	// IdentifierNode        *ast.Ident
 }
 
 type ErrorResponse struct {
@@ -260,6 +259,29 @@ type OpenAPIGeneratorConfig struct {
 	DefaultRouteSecurity []RouteSecurity        `json:"defaultSecurity" validate:"not_nil_array"`
 	SpecGeneratorConfig  SpecGeneratorConfig    `json:"specGeneratorConfig" validate:"required"`
 }
+
+type KnownTemplate string
+
+const (
+	TemplateRoutes                    KnownTemplate = "routes"
+	TemplateControllerResponsePartial KnownTemplate = "controller.response.partial"
+)
+
+type RoutingEngineType string
+
+const (
+	RoutingEngineGin RoutingEngineType = "gin"
+)
+
+type RoutesConfig struct {
+	Engine            RoutingEngineType        `json:"engine" validate:"required,oneof=gin"`
+	TemplateOverrides map[KnownTemplate]string `json:"templateOverrides"`
+	OutputPath        string                   `json:"outputPath" validate:"required,filepath"`
+	OutputFilePerms   string                   `json:"outputFilePerms" validate:"regex=^(0?[0-7]{3})$"`
+	PackageName       string                   `json:"packageName"`
+}
+
 type GleeceConfig struct {
 	OpenAPIGeneratorConfig OpenAPIGeneratorConfig `json:"openAPIGeneratorConfig" validate:"required"`
+	RoutesConfig           RoutesConfig
 }

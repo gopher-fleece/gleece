@@ -1,7 +1,7 @@
 package swagen
 
 import (
-	"github.com/haimkastner/gleece/external"
+	"github.com/gopher-fleece/gleece/external"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )

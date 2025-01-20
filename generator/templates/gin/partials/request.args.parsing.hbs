@@ -18,6 +18,6 @@
 	var {{ToLowerCamel Name}} {{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}.{{/if}}{{{TypeMeta.Name}}}
 	err := bindAndValidateBody[{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}.{{/if}}{{{TypeMeta.Name}}}](ctx, "{{{ResponseContentType}}}", &{{ToLowerCamel Name}})
 	if err != nil {
-		// Handle error
+		{{> JsonValidationErrorResponse }}
 	}
 {{/equal}}

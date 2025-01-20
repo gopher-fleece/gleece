@@ -1,7 +1,7 @@
 package ctrl
 
 import (
-	"github.com/haimkastner/gleece/external"
+	"github.com/gopher-fleece/gleece/external"
 )
 
 // GleeceController provides common functionality for controllers.

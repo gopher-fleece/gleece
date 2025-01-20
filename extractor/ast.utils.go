@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	MapSet "github.com/deckarep/golang-set/v2"
-	"github.com/haimkastner/gleece/definitions"
+	"github.com/gopher-fleece/gleece/definitions"
 	"golang.org/x/tools/go/packages"
 )
 
@@ -221,9 +221,9 @@ func GetTypeMetaByIdent(
 	comments := GetCommentsFromIdent(ident)
 
 	meta := definitions.TypeMetadata{
-		Name:           ident.Name,
-		Description:    FindAndExtract(comments, "@Description"),
-		IdentifierNode: ident,
+		Name:        ident.Name,
+		Description: FindAndExtract(comments, "@Description"),
+		// IdentifierNode: ident,
 	}
 
 	if IsUniverseType(ident.Name) {
@@ -274,10 +274,10 @@ func GetTypeMetaBySelectorExpr(
 
 	comments := GetCommentsFromIdent(selector.Sel)
 	meta := definitions.TypeMetadata{
-		Name:           typeOrInterfaceName,
-		Description:    FindAndExtract(comments, "@Description"),
-		Import:         definitions.ImportTypeAlias,
-		IdentifierNode: selector.Sel,
+		Name:        typeOrInterfaceName,
+		Description: FindAndExtract(comments, "@Description"),
+		Import:      definitions.ImportTypeAlias,
+		// IdentifierNode: selector.Sel,
 	}
 
 	// Resolve the importAlias part to a full package
@@ -305,6 +305,7 @@ func GetTypeMetaBySelectorExpr(
 		meta.FullyQualifiedPackage = aliasedFullName
 		meta.DefaultPackageAlias = GetDefaultAlias(aliasedFullName)
 	}
+
 	return meta, nil
 }
 
@@ -319,6 +320,12 @@ func GetFieldMetadata(
 		return GetTypeMetaByIdent(file, fileSet, packages, fieldType)
 	case *ast.SelectorExpr:
 		return GetTypeMetaBySelectorExpr(file, fileSet, packages, fieldType)
+	case *ast.StarExpr:
+		meta, err := GetFieldMetadata(file, fileSet, packages, &ast.Field{Type: fieldType.X})
+		if err == nil {
+			meta.IsByAddress = true
+		}
+		return meta, err
 	default:
 		return definitions.TypeMetadata{}, fmt.Errorf("cannot get field usage type - fieldType %v is invalid", fieldType)
 	}
@@ -541,4 +548,21 @@ func FindStruct(pkg *packages.Package, structName string) *ast.StructType {
 		}
 	}
 	return nil // Struct not found
+}
+
+func IsPointerType(containingPackage *packages.Package, expr ast.Expr) bool {
+	switch parent := expr.(type) {
+	case *ast.UnaryExpr:
+		// Check if this expression is explicitly dereferenced
+		if parent.Op == token.MUL {
+			return true
+		}
+	case *ast.Ident, *ast.SelectorExpr:
+		// Check type information for pointers
+		if tv, ok := containingPackage.TypesInfo.Types[parent]; ok {
+			_, isPointer := tv.Type.Underlying().(*types.Pointer)
+			return isPointer
+		}
+	}
+	return false
 }
