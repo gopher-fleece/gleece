@@ -34,36 +34,36 @@ jobs:
           go test -race -covermode atomic -coverprofile=dist/covprofile ./...
           goveralls -coverprofile=dist/covprofile -service=github
 
-      - name: 6️⃣ Bump version 🔢
-        if: github.ref == 'refs/heads/main'
-        id: update_version
-        run: |
-          VERSION=$(cat .release/package_version)
-          IFS='-' read -r version suffix <<< "$VERSION"
-          IFS='.' read -r -a version_parts <<< "$version"
-          MAJOR=${version_parts[0]}
-          MINOR=${version_parts[1]}
-          PATCH=${version_parts[2]}
-          NEW_PATCH=$((PATCH + 1))
-          NEXT_VERSION="$MAJOR.$MINOR.$NEW_PATCH"
-          if [ -n "$suffix" ]; then
-            NEXT_VERSION="$NEXT_VERSION-$suffix"
-          fi
-          echo $NEXT_VERSION > .release/package_version
-          echo "VERSION=v$NEXT_VERSION" >> $GITHUB_OUTPUT
+      # - name: 6️⃣ Bump version 🔢
+      #   if: github.ref == 'refs/heads/main'
+      #   id: update_version
+      #   run: |
+      #     VERSION=$(cat .release/package_version)
+      #     IFS='-' read -r version suffix <<< "$VERSION"
+      #     IFS='.' read -r -a version_parts <<< "$version"
+      #     MAJOR=${version_parts[0]}
+      #     MINOR=${version_parts[1]}
+      #     PATCH=${version_parts[2]}
+      #     NEW_PATCH=$((PATCH + 1))
+      #     NEXT_VERSION="$MAJOR.$MINOR.$NEW_PATCH"
+      #     if [ -n "$suffix" ]; then
+      #       NEXT_VERSION="$NEXT_VERSION-$suffix"
+      #     fi
+      #     echo $NEXT_VERSION > .release/package_version
+      #     echo "VERSION=v$NEXT_VERSION" >> $GITHUB_OUTPUT
 
-      - name: 7️⃣ Get version info 📝
-        id: version_info
-        run: |
-          body=$(git log -1 --pretty=%B | sed -n '1p')
-          echo "BODY=$body" >> $GITHUB_OUTPUT
+      # - name: 7️⃣ Get version info 📝
+      #   id: version_info
+      #   run: |
+      #     body=$(git log -1 --pretty=%B | sed -n '1p')
+      #     echo "BODY=$body" >> $GITHUB_OUTPUT
 
-      - name: 8️⃣ Commit and push version 📤
-        if: github.ref == 'refs/heads/main'
-        uses: devops-infra/action-commit-push@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          commit_message: Update to version ${{ steps.update_version.outputs.VERSION }} [skip-ci]
+      # - name: 8️⃣ Commit and push version 📤
+      #   if: github.ref == 'refs/heads/main'
+      #   uses: devops-infra/action-commit-push@master
+      #   with:
+      #     github_token: ${{ secrets.GITHUB_TOKEN }}
+      #     commit_message: Update to version ${{ steps.update_version.outputs.VERSION }} [skip-ci]
 
       # - name: 9️⃣ Create Release 📦
       #   if: github.ref == 'refs/heads/main'
