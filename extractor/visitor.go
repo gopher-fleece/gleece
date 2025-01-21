@@ -135,32 +135,39 @@ func (v *ControllerVisitor) getNextImportId() uint64 {
 	return value
 }
 
-/*
-	func (v *ControllerVisitor) visitAndStorType(typeToVisit definitions.TypeMetadata) {
-		if typeToVisit.IsUniverseType {
-			// Ignore primitives
-			continue
-		}
-
-
-		 pkg := FilterPackageByFullName(v.packages, typeToVisit.FullyQualifiedPackage)
-		FindStruct()
-		visitor.VisitStruct(typeToVisit.FullyQualifiedPackage, typeToVisit.Name, )
-	}
-*/
-func (v *ControllerVisitor) addToTypeMap(existingTypesMap *map[string]string, typeMeta definitions.TypeMetadata) (bool, error) {
+func (v *ControllerVisitor) addToTypeMap(
+	existingTypesMap *map[string]string,
+	existingModels *[]definitions.TypeMetadata,
+	typeMeta definitions.TypeMetadata,
+) error {
 	if typeMeta.IsUniverseType {
-		return false, nil
+		// When encountering a "plain" error for the first time, translate it into an RFC error and add it as a type.
+		if typeMeta.Name == "error" {
+			_, exists := (*existingTypesMap)[definitions.Rfc7807ErrorName]
+			if !exists {
+				(*existingTypesMap)[definitions.Rfc7807ErrorName] = definitions.Rfc7807ErrorFullPackage
+				(*existingModels) = append((*existingModels), definitions.TypeMetadata{
+					Name:                  definitions.Rfc7807ErrorName,
+					FullyQualifiedPackage: definitions.Rfc7807ErrorFullPackage,
+					DefaultPackageAlias:   "external",
+					Description:           "A standard RFC-7807 error",
+					Import:                definitions.ImportTypeAlias,
+					IsUniverseType:        false,
+					IsByAddress:           false,
+				})
+			}
+		}
+		return nil
 	}
 
 	existsInPackage, exists := (*existingTypesMap)[typeMeta.Name]
 	if exists {
 		if existsInPackage == typeMeta.FullyQualifiedPackage {
 			// Same type referenced from a separate location
-			return false, nil
+			return nil
 		}
 
-		return false, v.getFrozenError(
+		return v.getFrozenError(
 			"type '%s' exists in more that one package (%s and %s). This is not currently supported",
 			typeMeta.Name,
 			typeMeta.FullyQualifiedPackage,
@@ -169,52 +176,48 @@ func (v *ControllerVisitor) addToTypeMap(existingTypesMap *map[string]string, ty
 	}
 
 	(*existingTypesMap)[typeMeta.Name] = typeMeta.FullyQualifiedPackage
-	return true, nil
+	(*existingModels) = append((*existingModels), typeMeta)
+	return nil
 }
 
 func (v *ControllerVisitor) insertRouteTypeList(
 	existingTypesMap *map[string]string,
-	existingModels *[]*definitions.TypeMetadata,
+	existingModels *[]definitions.TypeMetadata,
 	route *definitions.RouteMetadata,
 ) error {
 
 	for _, param := range route.FuncParams {
-		shouldAdd, err := v.addToTypeMap(existingTypesMap, param.TypeMeta)
+		err := v.addToTypeMap(existingTypesMap, existingModels, param.TypeMeta)
 		if err != nil {
 			return v.frozenError(err)
-		}
-
-		if shouldAdd {
-			(*existingModels) = append((*existingModels), &param.TypeMeta)
 		}
 	}
 
 	for _, param := range route.Responses {
-		shouldAdd, err := v.addToTypeMap(existingTypesMap, param.TypeMetadata)
+		err := v.addToTypeMap(existingTypesMap, existingModels, param.TypeMetadata)
 		if err != nil {
 			return v.frozenError(err)
-		}
-
-		if shouldAdd {
-			(*existingModels) = append((*existingModels), &param.TypeMetadata)
 		}
 	}
 
 	return nil
 }
 
-func (v *ControllerVisitor) GetModelsMetadata() ([]*StructInfo, error) {
-	existingTypesMap := make(map[string]string)
-	models := []*definitions.TypeMetadata{}
+func (v *ControllerVisitor) GetModelsFlat() ([]definitions.ModelMetadata, error) {
+	if len(v.controllers) <= 0 {
+		return []definitions.ModelMetadata{}, nil
+	}
 
-	// visitor := NewTypeVisitor()
+	existingTypesMap := make(map[string]string)
+	models := []definitions.TypeMetadata{}
+
 	for _, controller := range v.controllers {
 		for _, route := range controller.Routes {
 			v.insertRouteTypeList(&existingTypesMap, &models, &route)
 		}
 	}
 
-	typeVisitor := NewTypeVisitor()
+	typeVisitor := NewTypeVisitor(v.packages)
 	for _, model := range models {
 		pkg := FilterPackageByFullName(v.packages, model.FullyQualifiedPackage)
 		if pkg == nil {
@@ -387,9 +390,8 @@ func (v *ControllerVisitor) getFuncParams(funcDecl *ast.FuncDecl, comments []str
 			UniqueImportSerial: v.getNextImportId(),
 		}
 
-		paramAlias := paramAttrib.GetProperty(PropertyName)
-		if paramAlias != nil && len(*paramAlias) > 0 {
-			// Parameter has a schema alias
+		paramAlias := GetCastProperty[string](paramAttrib, PropertyName)
+		if paramAlias != nil {
 			finalParamMeta.NameInSchema = *paramAlias
 		} else {
 			finalParamMeta.NameInSchema = param.Name

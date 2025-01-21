@@ -2,6 +2,7 @@ package extractor
 
 import (
 	"regexp"
+	"strings"
 
 	"github.com/titanous/json5"
 )
@@ -27,7 +28,7 @@ const (
 type Attribute struct {
 	Name        string
 	Value       string
-	Properties  map[string]string
+	Properties  map[string]any
 	Description string
 }
 
@@ -35,7 +36,7 @@ func (attr Attribute) HasProperty(name string) bool {
 	return attr.GetProperty(name) != nil
 }
 
-func (attr Attribute) GetProperty(name string) *string {
+func (attr Attribute) GetProperty(name string) *any {
 	value, exists := attr.Properties[name]
 	if exists {
 		return &value
@@ -44,23 +45,28 @@ func (attr Attribute) GetProperty(name string) *string {
 }
 
 type AttributesHolder struct {
-	attributes []Attribute
+	attributes           []Attribute
+	nonAttributeComments map[int]string
 }
 
 func NewAttributeHolder(comments []string) (AttributesHolder, error) {
-	// Regular expression to capture the different parts of the input.
 	// Captures: 1. TEXT (after @), 2. TEXT (inside parentheses), 3. JSON5 Object, 4. Remaining TEXT
 	parsingRegex := regexp.MustCompile(`^// @(\w+)(?:(?:\(([\w-_/\\{}]+))(?:\s*,\s*(\{.*\}))?\))?(?:\s+(.+))?$`)
-	// TODO tomorrow: Regex doesn't handle all cases...
 
-	holder := AttributesHolder{}
-	for _, comment := range comments {
+	holder := AttributesHolder{
+		nonAttributeComments: make(map[int]string),
+	}
+
+	for lineIndex, comment := range comments {
 		attr, isAnAttribute, err := parseComment(parsingRegex, comment)
+		if err != nil {
+			return holder, err
+		}
+
 		if isAnAttribute {
-			if err != nil {
-				return holder, err
-			}
 			holder.attributes = append(holder.attributes, attr)
+		} else {
+			holder.nonAttributeComments[lineIndex] = strings.Trim(strings.TrimPrefix(comment, "//"), " ")
 		}
 	}
 
@@ -80,7 +86,7 @@ func parseComment(parsingRegex *regexp.Regexp, comment string) (Attribute, bool,
 	jsonConfig := matches[3]    // The JSON5 object (e.g., {someProp: v1})
 	description := matches[4]   // The remaining TEXT (e.g., some description)
 
-	var props map[string]string
+	var props map[string]any
 	if len(jsonConfig) > 0 {
 		err := json5.Unmarshal([]byte(jsonConfig), &props)
 		if err != nil {
@@ -155,4 +161,43 @@ func (holder AttributesHolder) GetFirstPropertyValueOrEmpty(property string) str
 		return prop.Value
 	}
 	return ""
+}
+
+func (holder AttributesHolder) GetDescriptionLines() []string {
+	freeComments := []string{}
+
+	lastFreeCommentIndex := -1
+	// Gather all non-attribute comments starting from position 0;
+	// Once there's a break in continuity, break.
+	// Example:
+	// We've a non-attribute comment on line #0, #1 and #3.
+	// We start at -1 so 0 is included. On the next iteration, #1 is included as well.
+	// Then, line #2 is ignored as it doesn't have a comment and #3 breaks as index is at #1.
+	for index, comment := range holder.nonAttributeComments {
+		if index > lastFreeCommentIndex+1 {
+			break
+		}
+		freeComments = append(freeComments, comment)
+		lastFreeCommentIndex++
+	}
+
+	return freeComments
+}
+
+func (holder AttributesHolder) GetDescriptionString() string {
+	return strings.Join(holder.GetDescriptionLines(), "\n")
+}
+
+func GetCastProperty[TPropertyType any](attrib *Attribute, property string) *TPropertyType {
+	value := attrib.GetProperty(PropertyName)
+	if value == nil {
+		return nil
+	}
+
+	castParam, castOk := (*value).(TPropertyType)
+	if castOk {
+		return &castParam
+	}
+
+	return nil
 }

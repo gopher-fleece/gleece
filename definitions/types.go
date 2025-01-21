@@ -5,6 +5,9 @@ import (
 	"github.com/gopher-fleece/gleece/external"
 )
 
+const Rfc7807ErrorName = "Rfc7807Error"
+const Rfc7807ErrorFullPackage = "github.com/gopher-fleece/gleece/external"
+
 // Enum of HTTP parma type (header, query, path, body)
 type ParamPassedIn string
 
@@ -221,7 +224,7 @@ type FieldMetadata struct {
 	Name        string
 	Type        string
 	Description string
-	Validator   string
+	Tag         string
 	Deprecation *DeprecationOptions
 }
 

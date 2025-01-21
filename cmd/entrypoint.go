@@ -14,6 +14,7 @@ import (
 	"github.com/gopher-fleece/gleece/generator/swagen"
 	Logger "github.com/gopher-fleece/gleece/infrastructure/logger"
 	"github.com/gopher-fleece/gleece/infrastructure/validation"
+	"github.com/titanous/json5"
 )
 
 func getConfig(configPath string) (*definitions.GleeceConfig, error) {
@@ -26,7 +27,7 @@ func getConfig(configPath string) (*definitions.GleeceConfig, error) {
 
 	// Unmarshal the JSON content into the struct
 	var config definitions.GleeceConfig
-	err = json.Unmarshal(fileContent, &config)
+	err = json5.Unmarshal(fileContent, &config)
 	if err != nil {
 		return nil, fmt.Errorf("error unmarshaling JSON: %v", err)
 	}
@@ -44,7 +45,7 @@ func getConfig(configPath string) (*definitions.GleeceConfig, error) {
 	return &config, nil
 }
 
-func getMetadata(codeFileGlobs ...string) ([]definitions.ControllerMetadata, []*extractor.StructInfo, error) {
+func getMetadata(codeFileGlobs ...string) ([]definitions.ControllerMetadata, []definitions.ModelMetadata, error) {
 	var globs []string
 	if len(codeFileGlobs) > 0 {
 		globs = codeFileGlobs
@@ -63,22 +64,25 @@ func getMetadata(codeFileGlobs ...string) ([]definitions.ControllerMetadata, []*
 		Logger.Error("Visitor encountered at-least one error. Last error:\n%v\n\t%s", *lastErr, visitor.GetFormattedDiagnosticStack())
 		return nil, nil, *lastErr
 	}
-	ctx, err := visitor.DumpContext()
-	if err != nil {
-		Logger.Error("Failed to dump context: %v", err)
-	} else {
-		Logger.Info("%v", ctx)
-	}
 
-	val, err := visitor.GetModelsMetadata()
+	flatModels, err := visitor.GetModelsFlat()
 	if err != nil {
 		Logger.Error("Failed to get models metadata: %v", err)
 		return nil, nil, err
 	}
-	return visitor.GetControllers(), val, nil
+
+	data, _ := json.MarshalIndent(flatModels, "", "\t")
+	Logger.Info("%s", string(data))
+
+	controllers := visitor.GetControllers()
+	return controllers, flatModels, nil
 }
 
-func getConfigAndMetadata(args arguments.CliArguments) (*definitions.GleeceConfig, []definitions.ControllerMetadata, []*extractor.StructInfo, error) {
+func getConfigAndMetadata(args arguments.CliArguments) (
+	*definitions.GleeceConfig,
+	[]definitions.ControllerMetadata,
+	[]definitions.ModelMetadata, error,
+) {
 	config, err := getConfig(args.ConfigPath)
 	if err != nil {
 		return nil, nil, nil, err
@@ -101,30 +105,7 @@ func GenerateSpec(args arguments.CliArguments) error {
 		return err
 	}
 
-	// TODO: Yuval, do it properly for all usage
-	specModels := []definitions.ModelMetadata{}
-	for _, model := range models {
-		// Build fields
-		finalFields := []definitions.FieldMetadata{}
-		for _, field := range model.Fields {
-			finalFields = append(finalFields, definitions.FieldMetadata{
-				Name:        field.Name,
-				Type:        field.Type,
-				Description: "TBD FIELD DESCRIPTION",
-				// Validator:   field.Validator,
-				// Deprecation: field.Deprecation,
-			})
-		}
-
-		specModels = append(specModels, definitions.ModelMetadata{
-			Name:        model.Name,
-			Description: "TBD MODEL DESCRIPTION",
-			Fields:      finalFields,
-			// Deprecation:           model.Deprecation,
-		})
-	}
-
-	specModels = append(specModels, definitions.ModelMetadata{
+	models = append(models, definitions.ModelMetadata{
 		Name:        "Rfc7807Error",
 		Description: "TBD ERROR DESCRIPTION",
 		Fields: []definitions.FieldMetadata{
@@ -137,7 +118,7 @@ func GenerateSpec(args arguments.CliArguments) error {
 	})
 
 	// Generate the spec
-	if err := swagen.GenerateAndOutputSpec(&config.OpenAPIGeneratorConfig, meta, specModels); err != nil {
+	if err := swagen.GenerateAndOutputSpec(&config.OpenAPIGeneratorConfig, meta, models); err != nil {
 		Logger.Fatal("Failed to generate OpenAPI spec - %v", err)
 		return err
 	}

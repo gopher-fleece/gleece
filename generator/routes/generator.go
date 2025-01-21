@@ -95,6 +95,20 @@ func registerPartials(engine definitions.RoutingEngineType) {
 	}
 }
 
+func getOutputFileMod(requestedPermissions string) os.FileMode {
+	defaultPermission := os.FileMode(0644)
+	if len(requestedPermissions) <= 0 {
+		return defaultPermission
+	}
+	parsed, err := definitions.PermissionStringToFileMod(requestedPermissions)
+	if err != nil {
+		Logger.Warn("Could not convert permission string '%s' to FileMod. Using 0644 instead", requestedPermissions)
+		return defaultPermission
+	}
+	return parsed
+
+}
+
 func GenerateRoutes(config *definitions.GleeceConfig, controllerMeta []definitions.ControllerMetadata) error {
 	args := (*config).RoutesConfig
 
@@ -134,15 +148,7 @@ func GenerateRoutes(config *definitions.GleeceConfig, controllerMeta []definitio
 		return err
 	}
 
-	var fileMode os.FileMode
-	parsed, err := definitions.PermissionStringToFileMod(args.OutputFilePerms)
-	if err != nil {
-		Logger.Warn("Could not convert permission string '%s' to FileMod. Using 0644 instead", args.OutputFilePerms)
-		fileMode = os.FileMode(0644)
-	} else {
-		fileMode = parsed
-	}
-	err = os.WriteFile(args.OutputPath, []byte(formattedOutput), fileMode)
+	err = os.WriteFile(args.OutputPath, []byte(formattedOutput), getOutputFileMod(args.OutputFilePerms))
 	if err != nil {
 		Logger.Fatal("Could not write output file at '%s' with permissions '%v' - %v", args.OutputPath, args.OutputFilePerms, err)
 		return err

@@ -28,13 +28,13 @@ var _ = Describe("Swagen", func() {
 						Name:        "field1",
 						Type:        "string",
 						Description: "A string field",
-						Validator:   "required",
+						Tag:         "required",
 					},
 					{
 						Name:        "field2",
 						Type:        "int",
 						Description: "An integer field",
-						Validator:   "",
+						Tag:         "",
 					},
 				},
 			}
@@ -59,7 +59,7 @@ var _ = Describe("Swagen", func() {
 				Name:        "ModelA",
 				Description: "Model A",
 				Fields: []definitions.FieldMetadata{
-					{Name: "id", Type: "string", Description: "ID of Model A", Validator: "required"},
+					{Name: "id", Type: "string", Description: "ID of Model A", Tag: "required"},
 				},
 			}
 
@@ -67,7 +67,7 @@ var _ = Describe("Swagen", func() {
 				Name:        "ModelB",
 				Description: "Model B",
 				Fields: []definitions.FieldMetadata{
-					{Name: "modelA", Type: "ModelA", Description: "Reference to Model A", Validator: "required"},
+					{Name: "modelA", Type: "ModelA", Description: "Reference to Model A", Tag: "required"},
 				},
 			}
 
@@ -97,7 +97,7 @@ var _ = Describe("Swagen", func() {
 							Name:        "field1",
 							Type:        "string",
 							Description: "A string field",
-							Validator:   "required",
+							Tag:         "required",
 						},
 					},
 				},
@@ -109,7 +109,7 @@ var _ = Describe("Swagen", func() {
 							Name:        "field2",
 							Type:        "int",
 							Description: "An integer field",
-							Validator:   "",
+							Tag:         "",
 						},
 					},
 				},
@@ -133,14 +133,14 @@ var _ = Describe("Swagen", func() {
 					Name:        "ModelC",
 					Description: "Model C",
 					Fields: []definitions.FieldMetadata{
-						{Name: "id", Type: "string", Description: "ID of Model C", Validator: "required"},
+						{Name: "id", Type: "string", Description: "ID of Model C", Tag: "required"},
 					},
 				},
 				{
 					Name:        "ModelD",
 					Description: "Model D",
 					Fields: []definitions.FieldMetadata{
-						{Name: "modelC", Type: "ModelC", Description: "Reference to Model C", Validator: "required"},
+						{Name: "modelC", Type: "ModelC", Description: "Reference to Model C", Tag: "required"},
 					},
 				},
 			}

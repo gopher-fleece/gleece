@@ -24,7 +24,7 @@ type DefinedInSameFile struct {
 
 // A test for returning embedded errors
 // @Method(POST)
-// @Route(/test/embedded/error)
+// @Route(/test/embedded/error, {"someContext": 53553})
 func (ec *ExtendedController) ReturnEmbedsAndError() (HoldsVeryNestedStructs, EmbedsAnError) {
 	return HoldsVeryNestedStructs{}, EmbedsAnError{}
 }

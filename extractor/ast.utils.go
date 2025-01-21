@@ -524,7 +524,43 @@ func FilterPackageByFullName(packages []*packages.Package, fullName string) *pac
 	return nil
 }
 
-func FindStruct(pkg *packages.Package, structName string) *ast.StructType {
+func FindGenDeclByName(pkg *packages.Package, typeSpecName string) *ast.GenDecl {
+	// Traverse all the syntax trees (ASTs) in the loaded package
+	for _, file := range pkg.Syntax {
+		// Traverse all declarations in the AST file
+		for _, decl := range file.Decls {
+			// Look for type declarations (ast.GenDecl)
+			if genDecl, ok := decl.(*ast.GenDecl); ok {
+				// Iterate over all the specs in the general declaration
+				for _, spec := range genDecl.Specs {
+					// Look for type specs (ast.TypeSpec)
+					typeSpec, ok := spec.(*ast.TypeSpec)
+					if ok && typeSpec.Name.Name == typeSpecName {
+						return genDecl
+					}
+				}
+			}
+		}
+	}
+	return nil // Struct not found
+}
+
+func GetStructFromGenDecl(decl *ast.GenDecl) *ast.StructType {
+	// Iterate over all the specs in the general declaration
+	for _, spec := range decl.Specs {
+		// Look for type specs (ast.TypeSpec)
+		if typeSpec, ok := spec.(*ast.TypeSpec); ok {
+			// Check if the type is a struct type
+			if structType, ok := typeSpec.Type.(*ast.StructType); ok {
+				return structType
+			}
+		}
+	}
+
+	return nil
+}
+
+func FindStructAst(pkg *packages.Package, structName string) *ast.StructType {
 	// Traverse all the syntax trees (ASTs) in the loaded package
 	for _, file := range pkg.Syntax {
 		// Traverse all declarations in the AST file
