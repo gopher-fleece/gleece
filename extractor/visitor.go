@@ -592,13 +592,13 @@ func (v *ControllerVisitor) visitMethod(funcDecl *ast.FuncDecl) (definitions.Rou
 	comments := MapDocListToStrings(funcDecl.Doc.List)
 	attributes, err := NewAttributeHolder(comments)
 	if err != nil {
-		return definitions.RouteMetadata{}, true, v.frozenError(err)
+		return definitions.RouteMetadata{}, false, v.frozenError(err)
 	}
 
 	methodAttr := attributes.GetFirst(AttributeMethod)
 	if methodAttr == nil {
 		Logger.Info("Method '%s' does not have a @Method attribute and will be ignored", funcDecl.Name.Name)
-		return definitions.RouteMetadata{}, true, nil
+		return definitions.RouteMetadata{}, false, nil
 	}
 
 	routePath := attributes.GetFirstPropertyValueOrEmpty(AttributeRoute)

@@ -39,14 +39,15 @@ import (
 	"github.com/gopher-fleece/gleece/ctrl" // Importing GleeceController
 )
 
-// @Tag My API
-// @Route(/base-route)
-// @Description This is a description of that "tag"
+// @Tag(User Management)
+// @Route(/users-management)
+// @Description The User Management API
 type UserController struct {
 	ctrl.GleeceController // Embedding the GleeceController
 }
 
-type Info struct {
+// @Description User's domicile
+type Domicile struct {
 	// @Description The address
 	Address string `json:"address" validate:"required"`
 	// @Description The number of the house (must be at least 1)
@@ -54,16 +55,18 @@ type Info struct {
 }
 
 
-// @Description This is a route under
+// @Description Create a new user
 // @Method(POST)
-// @Route(/user)
-// @Query(name) The name
-// @Body(info, { validate: required }) The info of the user
-// @Header(origin, { name: x-origin }) The origin of the user
+// @Route(/user/{user_name})
+// @Path(name, { name: "user_name", validate: "require" }) The user's name
+// @Query(email, { validate: "required,email" }) The user's email
+// @Body(domicile, { validate: "required" }) The user's domicile info
+// @Header(origin, { name: "x-origin" }) The request origin
+// @Header(trace) The trace info
 // @Response(200) The ID of the newly created user
 // @ErrorResponse(500) The error when process failed
 // @Security(ApiKeyAuth, { scopes: ["read:users", "write:users"] })
-func (ec *UserController) CreateNewUser(name string, info Info, origin string) (string, error) {
+func (ec *UserController) CreateNewUser(email string, name string, domicile Domicile, origin string, trace string) (string, error) {
 	// Do the logic....
 	userId := uuid.New()
 	return userId.String(), nil
@@ -97,7 +100,7 @@ func (ec *UserController) CreateNewUser(name string, info Info, origin string) (
    - Simply embed the `GleeceController` (imported from `github.com/gopher-fleece/gleece/ctrl`) into your own controllers to gain its functionality.  
 
 4. **Automation**:  
-   - No manual steps required—your OpenAPI spec is ready to go!  
+   - No manual steps required — your OpenAPI spec is ready to go!  
 
 ## 🌐 Integrating with Gin  
 
@@ -116,7 +119,7 @@ package main
 
 import (
     "github.com/gin-gonic/gin"
-    "github.com/gopher-fleece/gleece/generated_routes" // Import the generated routes file
+    "github.com/gopher-fleece/gleece/routes" // Import the generated routes file
 )
 
 func main() {
@@ -124,7 +127,7 @@ func main() {
     router := gin.Default()
 
     // Register Gleece routes
-    generated_routes.RegisterRoutes(router)
+    routes.RegisterRoutes(router)
 
     // Start the server
     router.Run(":8080")
@@ -133,7 +136,7 @@ func main() {
 ---
 
 ## 🚧 Disclaimer  
-⚠️ **Work in Progress** 🚨  
+⚠️⚠️⚠️ **Work in Progress**  
 Gleece is currently an under-development project.  We’re working hard to make it amazing.
 
 We’d love your feedback and contributions as we shape Gleece together!
@@ -143,7 +146,7 @@ Stay tuned for updates, and feel free to open issues or pull requests to help us
 ---
 
 ## 📜 License  
-Gleece is licensed under the **MIT License**. 📄 You are free to use, modify, and distribute it with attribution. See the `LICENSE` file for details.  
+Gleece is licensed under the **MIT License**. 📄 You are free to use, modify, and distribute it with attribution. See the [`LICENSE`](./LICENSE) file for details.  
 
 ---
 

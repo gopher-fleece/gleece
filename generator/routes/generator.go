@@ -29,7 +29,7 @@ func registerHelpers() {
 
 	raymond.RegisterHelper("LastTypeNameEquals", func(types []definitions.FuncReturnValue, value string, options *raymond.Options) string {
 		if len(types) <= 0 {
-			panic("GetLastTypeName received a 0-length array")
+			panic("LastTypeNameEquals received a 0-length array")
 		}
 
 		if types[len(types)-1].Name == value {
@@ -41,7 +41,7 @@ func registerHelpers() {
 
 	raymond.RegisterHelper("LastTypeIsByAddress", func(types []definitions.FuncReturnValue, options *raymond.Options) string {
 		if len(types) <= 0 {
-			panic("GetLastTypeName received a 0-length array")
+			panic("LastTypeIsByAddress received a 0-length array")
 		}
 
 		if types[len(types)-1].IsByAddress {
@@ -53,7 +53,7 @@ func registerHelpers() {
 
 	raymond.RegisterHelper("GetLastTyeFullyQualified", func(types []definitions.FuncReturnValue) string {
 		if len(types) <= 0 {
-			panic("GetLastTypeName received a 0-length array")
+			panic("GetLastTyeFullyQualified received a 0-length array")
 		}
 
 		last := types[len(types)-1]

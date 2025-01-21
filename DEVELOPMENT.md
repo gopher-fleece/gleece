@@ -25,3 +25,8 @@ Once you have ginkgo installed, you can run all the tests in your project using:
 ginkgo ./...
 ```
 This command will execute all the tests in your project directory and its subdirectories.
+
+### Step 4: Build CLI
+```bash
+go build
+```

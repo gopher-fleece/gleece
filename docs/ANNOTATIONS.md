@@ -3,6 +3,7 @@
 This document provides a comprehensive guide to all annotations and options supported by Gleece for controllers and schemas.
 
 ## Table of Contents
+- [Overview](#overview)
 - [Paths Annotations](#paths-annotations)
   - [Class-Level Annotations - Controller](#class-level-annotations---controller)
   - [Function-Level Annotations - Route](#function-level-annotations---route)
@@ -15,6 +16,20 @@ This document provides a comprehensive guide to all annotations and options supp
   - [Header Options](#header-options)
   - [Body Options](#body-options)
   - [Security Options](#security-options)
+
+# Overview
+
+- Gleece uses annotations to automatically generate routes & OpenAPI documentation. The format for the annotations is:
+
+   ```go
+   // {{ annotation }} {{ ( {{theBasicRequiredParam}}, { json5 attributes } ) }} {{ description }}
+   ```
+
+   - **Annotation**: This is always required and specifies the type of annotation, such as `@Tag`, `@Route`, `@Method`, etc.
+   - **theBasicRequiredParam**: This parameter is required depending on the type of annotation. For example, `@Route` requires a route path, `@Method` requires an HTTP method, etc.
+   - **json5 attributes**: These are optional attributes in JSON5 format that provide additional information for the annotation. For example, in `@Header(origin, { name: x-origin })`, `{ name: x-origin }` is a JSON5 attribute specifying the name of the header in the http request, while the `origin` is the name of the parameter in the given function.
+   - **Description**: This is an optional description that provides further details about the annotation. It helps in generating more descriptive documentation.
+
 
 # Paths Annotations
 
