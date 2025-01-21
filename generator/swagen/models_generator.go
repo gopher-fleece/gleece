@@ -24,12 +24,14 @@ func generateModelSpec(openapi *openapi3.T, model definitions.ModelMetadata) {
 
 		BuildSchemaValidation(fieldSchemaRef, field.Validator, field.Type)
 
-		fieldSchemaRef.Value.Description = field.Description
+		if fieldSchemaRef.Value != nil {
+			fieldSchemaRef.Value.Description = field.Description
 
-		// If the schema marked as deprecated, the field / property should be marked as deprecated as well
-		// Setting it as not deprecated (even if the field itself is not marked deprecated) will override the model deprecation
-		if !fieldSchemaRef.Value.Deprecated {
-			fieldSchemaRef.Value.Deprecated = IsDeprecated(field.Deprecation)
+			// If the schema marked as deprecated, the field / property should be marked as deprecated as well
+			// Setting it as not deprecated (even if the field itself is not marked deprecated) will override the model deprecation
+			if !fieldSchemaRef.Value.Deprecated {
+				fieldSchemaRef.Value.Deprecated = IsDeprecated(field.Deprecation)
+			}
 		}
 
 		// Add field to schema properties

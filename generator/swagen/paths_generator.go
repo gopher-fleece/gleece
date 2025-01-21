@@ -135,7 +135,7 @@ func createRouteParam(openapi *openapi3.T, param definitions.FuncParam) *openapi
 			Name:        param.Name,
 			In:          strings.ToLower(string(param.PassedIn)),
 			Description: param.Description,
-			Required:    IsFieldRequired(param.Validator),
+			Required:    true, // For now, EVERY param is mandatory due to the way Go works, in the future we will support nil for pointer params only // IsFieldRequired(param.Validator),
 			Schema:      schemaRef,
 		},
 	}
@@ -149,7 +149,7 @@ func createRequestBodyParam(openapi *openapi3.T, param definitions.FuncParam) *o
 		Value: &openapi3.RequestBody{
 			Description: param.Description,
 			Content:     content,
-			Required:    IsFieldRequired(param.Validator),
+			Required:    true, // See createRouteParam required comment
 		},
 	}
 }
