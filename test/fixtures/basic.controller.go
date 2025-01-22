@@ -9,7 +9,7 @@ import (
 
 // ExtendedController
 // @Tag(Something with a space)
-// @Route(/users)
+// @Route(/users/{userId})
 // @Description This is an extended controller
 type ExtendedController struct {
 	SomeRandomName.GleeceController // Embedding the GleeceController to inherit its methods

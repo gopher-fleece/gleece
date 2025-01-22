@@ -3,6 +3,7 @@ package {{{PackageName}}}
 {{> Imports}}
 
 var validatorInstance *validator.Validate
+var urlParamRegex = regexp.MustCompile(`\{([\w\d-_])+\}`)
 
 func getStatusCode(controller external.Controller, hasReturnValue bool, err error) int {
 	if controller.GetStatus() != nil {
@@ -49,12 +50,16 @@ func bindAndValidateBody[TOutput any](ctx *gin.Context, contentType string, outp
 	return nil
 }
 
+func toGinUrl(url string) string {
+	return urlParamRegex.ReplaceAllString(url, ":$1")
+}
+
 func RegisterRoutes(engine *gin.Engine) {
 	validatorInstance = validator.New()
 {{#each Controllers}}
 	// {{{Name}}}
 	{{#each Routes}}
-		engine.{{{HttpVerb}}}("{{{../RestMetadata.Path}}}{{{RestMetadata.Path}}}", func(ctx *gin.Context) {
+		engine.{{{HttpVerb}}}(toGinUrl("{{{../RestMetadata.Path}}}{{{RestMetadata.Path}}}"), func(ctx *gin.Context) {
 			controller := {{{Name}}}Import.{{../Name}}{}
 			controller.SetRequest(ctx)
 			{{#each FuncParams}}
