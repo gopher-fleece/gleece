@@ -1,14 +1,14 @@
 package temp
 
 import (
-	SomeRandomName "github.com/gopher-fleece/gleece/controller"
+	SomeRandomName "github.com/gopher-fleece/gleece/external"
 	"github.com/gopher-fleece/gleece/test/types"
 	. "github.com/gopher-fleece/gleece/test/types"
 	CustomAlias "github.com/gopher-fleece/gleece/test/types"
 )
 
 // ExtendedController
-// @Tag Users
+// @Tag(Something with a space)
 // @Route(/users)
 // @Description This is an extended controller
 type ExtendedController struct {
@@ -19,7 +19,10 @@ type EmbedsAnError struct {
 	error
 }
 
+// @Description Ahhhh
 type DefinedInSameFile struct {
+	// Some comment
+	SomeField string `json:"someField" validator:"required,email"`
 }
 
 // A test for returning embedded errors
@@ -31,7 +34,7 @@ func (ec *ExtendedController) ReturnEmbedsAndError() (HoldsVeryNestedStructs, Em
 }
 
 // A test for simple imports
-// @Query(definedElseWhere, {name:'someAlias', validate:'something'}) Testing simple type import
+// @Query(definedElseWhere, {name:'someAlias', validate:'required, email'}) Testing simple type import
 // @Method(POST)
 // @Route(/test)
 // @Response(204)
