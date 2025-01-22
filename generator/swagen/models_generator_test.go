@@ -18,23 +18,23 @@ var _ = Describe("Swagen", func() {
 		}
 	})
 
-	Describe("generateModelSpec", func() {
+	Describe("GenerateSchemaSpec", func() {
 		It("should generate a model specification correctly", func() {
 			model := definitions.ModelMetadata{
 				Name:        "TestModel",
 				Description: "A test model",
 				Fields: []definitions.FieldMetadata{
 					{
-						Name:        "field1",
+						Name:        "Field1",
 						Type:        "string",
 						Description: "A string field",
-						Tag:         "required",
+						Tag:         `json:"field1" validate:"required"`,
 					},
 					{
 						Name:        "field2",
 						Type:        "int",
 						Description: "An integer field",
-						Tag:         "",
+						Tag:         `validate:"gt=10"`,
 					},
 				},
 			}
@@ -52,6 +52,8 @@ var _ = Describe("Swagen", func() {
 			Expect(schemaRef.Value.Required).NotTo(ContainElement("field2"))
 			Expect(schemaRef.Value.Properties["field1"].Value.Description).To(Equal("A string field"))
 			Expect(schemaRef.Value.Properties["field2"].Value.Description).To(Equal("An integer field"))
+			Expect(*schemaRef.Value.Properties["field2"].Value.Min).To(Equal(10.0))
+			Expect(schemaRef.Value.Properties["field2"].Value.ExclusiveMin).To(Equal(true))
 		})
 
 		It("should generate a model with references to other models", func() {
@@ -157,6 +159,33 @@ var _ = Describe("Swagen", func() {
 			Expect(schemaRefD.Value.Title).To(Equal("ModelD"))
 			Expect(schemaRefD.Value.Properties).To(HaveKey("modelC"))
 			Expect(schemaRefD.Value.Properties["modelC"].Ref).To(Equal("#/components/schemas/ModelC"))
+		})
+
+		It("should load ref schema value from cache", func() {
+			models := []definitions.ModelMetadata{
+				{
+					Name:        "ModelC",
+					Description: "Model C",
+					Fields: []definitions.FieldMetadata{
+						{Name: "refD", Type: "ModelD", Description: "Ref to Model C", Tag: ""},
+					},
+				},
+				{
+					Name:        "ModelD",
+					Description: "Model D",
+					Fields: []definitions.FieldMetadata{
+						{Name: "fieldD", Type: "string", Description: "some field", Tag: ""},
+					},
+				},
+			}
+
+			err := GenerateModelsSpec(openapi, models)
+			Expect(err).To(BeNil())
+
+			schemaRefC := openapi.Components.Schemas["ModelC"]
+			Expect(schemaRefC.Value.Properties["refD"].Ref).To(Equal("#/components/schemas/ModelD"))
+			Expect(schemaRefC.Value.Properties["refD"].Value).ToNot(BeNil())
+			Expect(schemaRefC.Value.Properties["refD"].Value.Properties["fieldD"].Value.Description).To(Equal("some field"))
 		})
 	})
 })

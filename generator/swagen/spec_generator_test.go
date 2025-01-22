@@ -1,6 +1,7 @@
 package swagen
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -13,7 +14,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var fullyFeaturesSpec = []byte(`{"components":{"schemas":{"ExampleSchema":{"description":"Example schema","properties":{"ExampleArrField":{"description":"Example array field","items":{"$ref":"#/components/schemas/ExampleSchema222"},"type":"array"},"ExampleArrStringField":{"description":"Example int arr field","items":{"items":{"items":{"items":{"$ref":"#/components/schemas/ExampleSchema222"},"type":"array"},"type":"array"},"type":"array"},"type":"array"},"ExampleField":{"deprecated":true,"description":"Example field","type":"string"},"ExampleObjField":{"$ref":"#/components/schemas/ExampleSchema222"}},"required":["ExampleField","ExampleObjField","ExampleArrField"],"title":"ExampleSchema","type":"object"},"ExampleSchema222":{"deprecated":true,"description":"Example object ref field","properties":{"MaxValue":{"description":"MaxValue DESCRIPTION","maximum":100,"minimum":1,"type":"integer"},"TheName":{"description":"TheName DESCRIPTION","format":"email","type":"string"}},"required":["TheName"],"title":"ExampleSchema222","type":"object"}},"securitySchemes":{"ApiKeyAuth":{"description":"API Key","in":"header","name":"X-API-Key2","type":"apiKey"},"ApiKeyAuth2":{"description":"API Key","in":"header","name":"X-API-Key2","type":"apiKey"}}},"info":{"contact":{"name":"John Doe"},"description":"This is a simple API?","license":{"name":"Apache 2.0","url":"https://www.apache.org/licenses/LICENSE-2.0.html"},"title":"My API","version":"1.0.0"},"openapi":"3.0.0","paths":{"/example-base/example-route":{"delete":{"deprecated":true,"description":"Example route","operationId":"exampleRouteDel","responses":{"204":{"description":"Example response OK for 204"},"500":{"content":{"application/json":{"schema":{"type":"string"}}},"description":"Internal server error"},"default":{"description":""}},"security":[{"ApiKeyAuth":["read"]}],"summary":"Example route","tags":["Example"]},"post":{"description":"Example route","operationId":"exampleRoute45","responses":{"200":{"content":{"application/json":{"schema":{"type":"integer"}}},"description":"Example response OK"},"500":{"content":{"application/json":{"schema":{"type":"string"}}},"description":"Internal server error"},"default":{"description":""}},"security":[{"ApiKeyAuth":["read"]}],"summary":"Example route","tags":["Example"]}},"/example-base/example-route/{my_path}":{"get":{"description":"Example route","operationId":"exampleRoute","parameters":[{"deprecated":true,"description":"Example query param","in":"query","name":"my_name","required":true,"schema":{"format":"email","type":"string"}},{"description":"Example query ARR param","in":"query","name":"my_names","required": true,"schema":{"items":{"$ref":"#/components/schemas/ExampleSchema"},"type":"array"}},{"description":"Example Header param","in":"header","name":"my_header","required":true,"schema":{"type":"boolean"}},{"description":"Example Header num param","in":"header","name":"my_number","required": true,"schema":{"maximum":100,"minimum":1,"type":"number"}},{"description":"Example Path param","in":"path","name":"my_path","required":true,"schema":{"type":"integer"}}],"requestBody":{"content":{"application/json":{"schema":{"format":"email","type":"string"}}},"description":"Example Body param","required":true},"responses":{"200":{"content":{"application/json":{"schema":{"items":{"$ref":"#/components/schemas/ExampleSchema"},"type":"array"}}},"description":""},"500":{"content":{"application/json":{"schema":{"type":"string"}}},"description":"Internal server error"},"default":{"description":""}},"security":[{"ApiKeyAuth":["read","write"],"ApiKeyAuth2":["write"]},{"ApiKeyAuth":["read"]}],"summary":"Example route","tags":["Example"]}}},"servers":[{"url":"http://localhost:8080"}]}`)
+var fullyFeaturesSpec = []byte(`{"components":{"schemas":{"ExampleSchema":{"description":"Example schema","properties":{"ExampleArrField":{"description":"Example array field","items":{"$ref":"#/components/schemas/ExampleSchema222"},"type":"array"},"ExampleArrStringField":{"description":"Example int arr field","items":{"items":{"items":{"items":{"$ref":"#/components/schemas/ExampleSchema222"},"type":"array"},"type":"array"},"type":"array"},"type":"array"},"ExampleField":{"deprecated":true,"description":"Example field","type":"string"},"ExampleObjField":{"$ref":"#/components/schemas/ExampleSchema222"}},"required":["ExampleField","ExampleObjField","ExampleArrField"],"title":"ExampleSchema","type":"object"},"ExampleSchema222":{"deprecated":true,"description":"Example object ref field","properties":{"MaxValue":{"description":"MaxValue DESCRIPTION","maximum":100,"minimum":1,"type":"integer"},"TheName":{"description":"TheName DESCRIPTION","format":"email","type":"string"}},"required":["TheName"],"title":"ExampleSchema222","type":"object"}},"securitySchemes":{"ApiKeyAuth":{"description":"API Key","in":"header","name":"X-API-Key2","type":"apiKey"},"ApiKeyAuth2":{"description":"API Key","in":"header","name":"X-API-Key2","type":"apiKey"}}},"info":{"contact":{"name":"John Doe"},"description":"This is a simple API?","license":{"name":"Apache 2.0","url":"https://www.apache.org/licenses/LICENSE-2.0.html"},"title":"My API","version":"1.0.0"},"openapi":"3.0.0","paths":{"/example-base/example-route":{"delete":{"deprecated":true,"description":"Example route","operationId":"exampleRouteDel","responses":{"204":{"description":"Example response OK for 204"},"500":{"content":{"application/json":{"schema":{"type":"string"}}},"description":"Internal server error"},"default":{"description":""}},"security":[{"ApiKeyAuth":["read"]}],"summary":"Example route","tags":["Example"]},"post":{"description":"Example route","operationId":"exampleRoute45","responses":{"200":{"content":{"application/json":{"schema":{"type":"integer"}}},"description":"Example response OK"},"500":{"content":{"application/json":{"schema":{"type":"string"}}},"description":"Internal server error"},"default":{"description":""}},"security":[{"ApiKeyAuth":["read"]}],"summary":"Example route","tags":["Example"]}},"/example-base/example-route/{my_path}":{"get":{"description":"Example route","operationId":"exampleRoute","parameters":[{"deprecated":true,"description":"Example query param","in":"query","name":"my_name","required":true,"schema":{"format":"email","type":"string"}},{"description":"Example query ARR param","in":"query","name":"my_names","required": true,"schema":{"items":{"$ref":"#/components/schemas/ExampleSchema"},"type":"array"}},{"description":"Example Header param","in":"header","name":"my_header","required":true,"schema":{"type":"boolean"}},{"description":"Example Header num param","in":"header","name":"my_number","required": true,"schema":{"exclusiveMaximum": true,"maximum":100,"minimum":1,"type":"number"}},{"description":"Example Path param","in":"path","name":"my_path","required":true,"schema":{"type":"integer"}}],"requestBody":{"content":{"application/json":{"schema":{"format":"email","type":"string"}}},"description":"Example Body param","required":true},"responses":{"200":{"content":{"application/json":{"schema":{"items":{"$ref":"#/components/schemas/ExampleSchema"},"type":"array"}}},"description":""},"500":{"content":{"application/json":{"schema":{"type":"string"}}},"description":"Internal server error"},"default":{"description":""}},"security":[{"ApiKeyAuth":["read","write"],"ApiKeyAuth2":["write"]},{"ApiKeyAuth":["read"]}],"summary":"Example route","tags":["Example"]}}},"servers":[{"url":"http://localhost:8080"}]}`)
 
 var _ = Describe("Spec Generator", func() {
 
@@ -127,7 +128,7 @@ var _ = Describe("Spec Generator", func() {
 							},
 							PassedIn:    definitions.PassedInHeader,
 							Description: "Example Header num param",
-							Validator:   "gt=1,lt=100",
+							Validator:   "gte=1,lt=100",
 						},
 						{
 							ParamMeta: definitions.ParamMeta{
@@ -254,16 +255,16 @@ var _ = Describe("Spec Generator", func() {
 				Description: "Example schema 222",
 				Fields: []definitions.FieldMetadata{
 					{
-						Name:        "MaxValue",
+						Name:        "maxValue",
 						Type:        "int",
 						Description: "MaxValue DESCRIPTION",
-						Tag:         "gt=1,lt=100",
+						Tag:         `json:"MaxValue" validate:"gte=1,lte=100"`,
 					},
 					{
 						Name:        "TheName",
 						Type:        "string",
 						Description: "TheName DESCRIPTION",
-						Tag:         "required,email",
+						Tag:         `validate:"required,email"`,
 					},
 				},
 				Deprecation: definitions.DeprecationOptions{
@@ -280,7 +281,7 @@ var _ = Describe("Spec Generator", func() {
 						Name:        "ExampleField",
 						Type:        "string",
 						Description: "Example field",
-						Tag:         "required",
+						Tag:         `validate:"required"`,
 						Deprecation: &definitions.DeprecationOptions{
 							Description: "This query is deprecated example",
 							Deprecated:  true,
@@ -290,13 +291,13 @@ var _ = Describe("Spec Generator", func() {
 						Name:        "ExampleObjField",
 						Type:        "ExampleSchema222",
 						Description: "Example object ref field",
-						Tag:         "required",
+						Tag:         `validate:"required"`,
 					},
 					{
 						Name:        "ExampleArrField",
 						Type:        "[]ExampleSchema222",
 						Description: "Example array field",
-						Tag:         "required",
+						Tag:         `validate:"required"`,
 					},
 					{
 						Name:        "ExampleArrStringField",
@@ -369,9 +370,12 @@ var _ = Describe("Spec Generator", func() {
 			fmt.Println("Failed to create directory:", err)
 		}
 
+		var prettyJSON bytes.Buffer
+		json.Indent(&prettyJSON, fullyFeaturesSpec, "", "    ")
+
 		// Write the JSON to the file
 		filePath := "dist/org-spec.json"
-		if err := os.WriteFile(filePath, fullyFeaturesSpec, 0644); err != nil {
+		if err := os.WriteFile(filePath, prettyJSON.Bytes(), 0644); err != nil {
 			fmt.Println("Failed to write file:", err)
 		}
 
@@ -444,7 +448,46 @@ var _ = Describe("Spec Generator", func() {
 		Expect(err).NotTo(BeNil())
 		Expect(err.Error()).To(Equal("invalid paths: operation GET /example-base/example-route/{my_path} must define exactly all path parameters (missing: [my_path])"))
 	})
+
+	It("Should output spec file", func() {
+
+		defs := []definitions.ControllerMetadata{}
+
+		// Create an example controller and add it to the definitions
+		defs = append(defs, definitions.ControllerMetadata{})
+
+		models := []definitions.ModelMetadata{}
+
+		outputPath := "./dist/test-spec-out.json"
+		if fileExists(outputPath) {
+			os.Remove(outputPath)
+		}
+
+		GenerateAndOutputSpec(&definitions.OpenAPIGeneratorConfig{
+			Info: openapi3.Info{
+				Title:   "My API",
+				Version: "1.0.0",
+			},
+			BaseURL:              "http://localhost:8080",
+			DefaultRouteSecurity: []definitions.RouteSecurity{},
+			SpecGeneratorConfig: definitions.SpecGeneratorConfig{
+				OutputPath: outputPath,
+			},
+		}, defs, models)
+
+		Expect(fileExists(outputPath)).To(BeTrue())
+	})
 })
+
+func fileExists(filename string) bool {
+	_, err := os.Stat(filename)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return false
+		}
+	}
+	return true
+}
 
 func areJSONsIdentical(json1 []byte, json2 []byte) (bool, error) {
 	var obj1, obj2 map[string]interface{}

@@ -19,7 +19,8 @@ var schemaRefMap = []SchemaRefMap{} // Initialize as an empty slice
 func InterfaceToSchemaRef(openapi *openapi3.T, interfaceType string) *openapi3.SchemaRef {
 	openapiType := ToOpenApiType(interfaceType)
 	fieldSchemaRef := ToOpenApiSchemaRef(openapiType)
-	if openapiType == "object" {
+
+	if openapiType == "object" && !IsMapObject(interfaceType) { // For now, ignore map objects, they will be handled later
 		// Handle other types or complex types as references to other schemas
 		fieldSchemaRef = &openapi3.SchemaRef{
 			Ref: "#/components/schemas/" + interfaceType,
@@ -66,16 +67,40 @@ func BuildSchemaValidation(schema *openapi3.SchemaRef, validationString string, 
 		case "gt":
 			// Greater than (only makes sense for numeric fields)
 			if specType == "integer" || specType == "number" {
+				// For gt, we need to set ExclusiveMinimum to true and use the value as minimum
 				schema.Value.Min = ParseNumber(ruleValue)
+				schema.Value.ExclusiveMin = true
 			} else {
 				logger.Warn("Validation rule 'gt' is only applicable to numeric fields")
+			}
+		case "gte":
+			// Greater than or equal (only makes sense for numeric fields)
+			if specType == "integer" || specType == "number" {
+				// For gte, we just set the minimum value
+				schema.Value.Min = ParseNumber(ruleValue)
+				// ExclusiveMinimum should be false (default) or explicitly set to false
+				schema.Value.ExclusiveMin = false
+			} else {
+				logger.Warn("Validation rule 'gte' is only applicable to numeric fields")
 			}
 		case "lt":
 			// Less than (only makes sense for numeric fields)
 			if specType == "integer" || specType == "number" {
+				// For lt, we need to set ExclusiveMaximum to true and use the value as maximum
 				schema.Value.Max = ParseNumber(ruleValue)
+				schema.Value.ExclusiveMax = true
 			} else {
 				logger.Warn("Validation rule 'lt' is only applicable to numeric fields")
+			}
+		case "lte":
+			// Less than or equal (only makes sense for numeric fields)
+			if specType == "integer" || specType == "number" {
+				// For lte, we just set the maximum value
+				schema.Value.Max = ParseNumber(ruleValue)
+				// ExclusiveMaximum should be false (default) or explicitly set to false
+				schema.Value.ExclusiveMax = false
+			} else {
+				logger.Warn("Validation rule 'lte' is only applicable to numeric fields")
 			}
 		case "min":
 			// Minimum length for strings, minimum value for numbers
@@ -83,6 +108,7 @@ func BuildSchemaValidation(schema *openapi3.SchemaRef, validationString string, 
 				schema.Value.MinLength = *ParseInteger(ruleValue)
 			} else if specType == "integer" || specType == "number" {
 				schema.Value.Min = ParseNumber(ruleValue)
+				schema.Value.ExclusiveMin = false
 			} else {
 				logger.Warn("Validation rule 'min' is only applicable to string or numeric fields")
 			}
@@ -92,6 +118,7 @@ func BuildSchemaValidation(schema *openapi3.SchemaRef, validationString string, 
 				schema.Value.MaxLength = ParseInteger(ruleValue)
 			} else if specType == "integer" || specType == "number" {
 				schema.Value.Max = ParseNumber(ruleValue)
+				schema.Value.ExclusiveMax = false
 			} else {
 				logger.Warn("Validation rule 'max' is only applicable to string or numeric fields")
 			}
@@ -126,8 +153,13 @@ func BuildSchemaValidation(schema *openapi3.SchemaRef, validationString string, 
 		case "enum":
 			// Enum values for strings or numbers
 			enumValues := strings.Split(ruleValue, "|")
-			for _, v := range enumValues {
-				schema.Value.Enum = append(schema.Value.Enum, v)
+			if enumValues == nil || len(enumValues) == 0 || enumValues[0] == "" {
+				logger.Warn("Validation rule 'enum' must have at least one value")
+				schema.Value.Enum = nil
+			} else {
+				for _, v := range enumValues {
+					schema.Value.Enum = append(schema.Value.Enum, v)
+				}
 			}
 		}
 	}
@@ -214,4 +246,42 @@ func IsHiddenAsset(hideOptions *definitions.MethodHideOptions) bool {
 
 func IsDeprecated(deprecationOptions *definitions.DeprecationOptions) bool {
 	return deprecationOptions != nil && deprecationOptions.Deprecated
+}
+
+// GetTagValue extracts the value for a specific tag name from a struct tag string
+// If the tag or value is not found, returns the default value
+// Example usage:
+//
+//	tag := `json:"houseNumber" validate:"gte=1"`
+//	jsonValue := GetTagValue(tag, "json", "default") // returns "houseNumber"
+//	validateValue := GetTagValue(tag, "validate", "default") // returns "gte=1"
+func GetTagValue(tagStr string, tagName string, defaultValue string) string {
+	// Split the tag string into individual tag parts
+	tags := strings.Split(tagStr, " ")
+
+	// Look for the requested tag
+	prefix := tagName + ":"
+	for _, tag := range tags {
+		// Remove any quotes around the tag
+		tag = strings.Trim(tag, "`")
+
+		if strings.HasPrefix(tag, prefix) {
+			// Extract the value between the quotes if they exist
+			value := strings.TrimPrefix(tag, prefix)
+			value = strings.Trim(value, "\"")
+
+			// If empty value, return default
+			if value == "" {
+				return defaultValue
+			}
+			return value
+		}
+	}
+
+	// If tag not found, return default
+	return defaultValue
+}
+
+func IsMapObject(typeName string) bool {
+	return strings.HasPrefix(typeName, "map[")
 }

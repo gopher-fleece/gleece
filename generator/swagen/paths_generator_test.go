@@ -125,6 +125,18 @@ var _ = Describe("Swagen", func() {
 
 			Expect(err).To(HaveOccurred())
 		})
+
+		It("should return an error if security operation is not valid", func() {
+			route := definitions.RouteMetadata{
+				OperationId: "testOperation",
+				Security:    []definitions.RouteSecurity{{SecurityMethod: []definitions.SecurityMethod{{Name: "unknownAuth"}}}},
+			}
+			operation := &openapi3.Operation{}
+
+			err := generateOperationSecurity(operation, config, route)
+
+			Expect(err).To(HaveOccurred())
+		})
 	})
 
 	Describe("generateOperationSecurity", func() {
@@ -189,6 +201,44 @@ var _ = Describe("Swagen", func() {
 			pathItem := openapi.Paths.Value("/test")
 			Expect(pathItem).NotTo(BeNil())
 		})
+
+		It("should abort generate specifications due to error", func() {
+			def := definitions.ControllerMetadata{
+				Tag: "test",
+				Routes: []definitions.RouteMetadata{
+					{
+						HttpVerb:            "GET",
+						Description:         "Test route",
+						OperationId:         "testOperation",
+						RestMetadata:        definitions.RestMetadata{Path: "/test"},
+						ResponseSuccessCode: 200,
+						ResponseDescription: "Success",
+						Responses: []definitions.FuncReturnValue{
+							{
+								TypeMetadata: definitions.TypeMetadata{
+									Name: "string",
+								},
+							},
+							{
+								TypeMetadata: definitions.TypeMetadata{
+									Name: "error",
+								},
+							},
+						},
+						FuncParams: []definitions.FuncParam{},
+						Security: []definitions.RouteSecurity{
+							{
+								SecurityMethod: []definitions.SecurityMethod{
+									{Name: "unknownAuth"},
+								},
+							},
+						},
+					},
+				},
+			}
+			err := generateControllerSpec(openapi, config, def)
+			Expect(err).To(HaveOccurred())
+		})
 	})
 
 	Describe("generateControllersSpec", func() {
@@ -225,6 +275,45 @@ var _ = Describe("Swagen", func() {
 
 			pathItem := openapi.Paths.Value("/test")
 			Expect(pathItem.Get).NotTo(BeNil())
+		})
+
+		It("should abort generate specifications due to error", func() {
+			defs := []definitions.ControllerMetadata{
+				{
+					Tag: "test",
+					Routes: []definitions.RouteMetadata{
+						{
+							HttpVerb:            "GET",
+							Description:         "Test route",
+							OperationId:         "testOperation",
+							RestMetadata:        definitions.RestMetadata{Path: "/test"},
+							ResponseSuccessCode: 200,
+							ResponseDescription: "Success",
+							Responses: []definitions.FuncReturnValue{
+								{
+									TypeMetadata: definitions.TypeMetadata{
+										Name: "string",
+									},
+								},
+								{
+									TypeMetadata: definitions.TypeMetadata{
+										Name: "error",
+									},
+								},
+							},
+							Security: []definitions.RouteSecurity{
+								{
+									SecurityMethod: []definitions.SecurityMethod{
+										{Name: "unknownAuth"},
+									},
+								},
+							},
+						},
+					},
+				},
+			}
+			err := GenerateControllersSpec(openapi, config, defs)
+			Expect(err).To(HaveOccurred())
 		})
 	})
 })

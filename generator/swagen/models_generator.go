@@ -22,7 +22,8 @@ func generateModelSpec(openapi *openapi3.T, model definitions.ModelMetadata) {
 	for _, field := range model.Fields {
 		fieldSchemaRef := InterfaceToSchemaRef(openapi, field.Type)
 
-		BuildSchemaValidation(fieldSchemaRef, field.Tag, field.Type)
+		validationTag := GetTagValue(field.Tag, "validate", "")
+		BuildSchemaValidation(fieldSchemaRef, validationTag, field.Type)
 
 		if fieldSchemaRef.Value != nil {
 			fieldSchemaRef.Value.Description = field.Description
@@ -35,11 +36,12 @@ func generateModelSpec(openapi *openapi3.T, model definitions.ModelMetadata) {
 		}
 
 		// Add field to schema properties
-		schema.Properties[field.Name] = fieldSchemaRef
+		fName := GetTagValue(field.Tag, "json", field.Name)
+		schema.Properties[fName] = fieldSchemaRef
 
 		// If the field should be required, add its name to the requiredFields slice
-		if IsFieldRequired(field.Tag) {
-			requiredFields = append(requiredFields, field.Name)
+		if IsFieldRequired(validationTag) {
+			requiredFields = append(requiredFields, fName)
 		}
 	}
 

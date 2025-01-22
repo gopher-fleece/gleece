@@ -133,7 +133,18 @@ func main() {
     router.Run(":8080")
 }
 ```
----
+
+## 🎨 VSCode Extension
+
+[![VSCode Extension](https://img.shields.io/visual-studio-marketplace/v/haim-kastner.gleece-extension?label=VSCode%20Extension)](https://marketplace.visualstudio.com/items?itemName=haim-kastner.gleece-extension)
+
+
+To enhance your development experience with Gleece, we provide an official VSCode extension that highlights Gleece annotations and comments.
+
+For more information and capabilities see the [Gleece VSCode Extension](https://github.com/gopher-fleece/gleece-vscode-extension#readme).
+
+To install it search `Gleece` in the "Extension" tab or go to the [VSCode Marketplace](https://marketplace.visualstudio.com/items?itemName=haim-kastner.gleece-extension).
+
 
 ## 🚧 Disclaimer  
 ⚠️⚠️⚠️ **Work in Progress**  
