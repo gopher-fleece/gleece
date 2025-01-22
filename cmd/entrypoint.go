@@ -101,18 +101,6 @@ func GenerateSpec(args arguments.CliArguments) error {
 		return err
 	}
 
-	models = append(models, definitions.ModelMetadata{
-		Name:        "Rfc7807Error",
-		Description: "TBD ERROR DESCRIPTION",
-		Fields: []definitions.FieldMetadata{
-			{
-				Name:        "code",
-				Type:        "int",
-				Description: "TBD ERROR CODE DESCRIPTION",
-			},
-		},
-	})
-
 	// Generate the spec
 	if err := swagen.GenerateAndOutputSpec(&config.OpenAPIGeneratorConfig, meta, models); err != nil {
 		Logger.Fatal("Failed to generate OpenAPI spec - %v", err)
@@ -132,7 +120,7 @@ func GenerateRoutes(args arguments.CliArguments) error {
 }
 
 func GenerateSpecAndRoutes(args arguments.CliArguments) error {
-	config, meta, _, err := getConfigAndMetadata(args)
+	config, meta, models, err := getConfigAndMetadata(args)
 	if err != nil {
 		return err
 	}
@@ -144,7 +132,7 @@ func GenerateSpecAndRoutes(args arguments.CliArguments) error {
 	}
 
 	// Generate the spec
-	if err := swagen.GenerateAndOutputSpec(&config.OpenAPIGeneratorConfig, meta, []definitions.ModelMetadata{}); err != nil {
+	if err := swagen.GenerateAndOutputSpec(&config.OpenAPIGeneratorConfig, meta, models); err != nil {
 		Logger.Fatal("Failed to generate OpenAPI spec - %v", err)
 		return err
 	}

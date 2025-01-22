@@ -51,7 +51,7 @@ func main() {
 // CLI Main. Uncomment when ready
 func main() {
 	validation.InitValidator()
-	err := cmd.GenerateRoutes(arguments.CliArguments{ConfigPath: "./gleece.json"})
+	err := cmd.GenerateSpecAndRoutes(arguments.CliArguments{ConfigPath: "./gleece.json"})
 	if err != nil {
 		Logger.Fatal("Failed to generate routes: %v", err)
 	}

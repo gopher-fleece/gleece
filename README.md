@@ -4,6 +4,7 @@
 [![gleece](https://github.com/gopher-fleece/gleece/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/gopher-fleece/gleece/actions/workflows/build.yml)
 [![Latest Release](https://img.shields.io/github/v/release/gopher-fleece/gleece)](https://github.com/gopher-fleece/gleece/releases)
 [![Coverage Status](https://coveralls.io/repos/github/gopher-fleece/gleece/badge.svg?branch=main)](https://coveralls.io/github/gopher-fleece/gleece?branch=main)
+[![VSCode Extension](https://img.shields.io/visual-studio-marketplace/v/haim-kastner.gleece-extension?label=VSCode%20Extension)](https://marketplace.visualstudio.com/items?itemName=haim-kastner.gleece-extension)
 
 [![GitHub stars](https://img.shields.io/github/stars/gopher-fleece/gleece.svg?style=social&label=Stars)](https://github.com/gopher-fleece/gleece/stargazers) 
 [![License](https://img.shields.io/github/license/gopher-fleece/gleece.svg?style=social)](https://github.com/gopher-fleece/gleece/blob/master/LICENSE)
@@ -20,7 +21,7 @@ Gone are the days of manually writing repetitive boilerplate code or struggling 
 
 With Gleece, you can:  
 - 🔧 **Simplify** your API development process.  
-- 📜 Automatically **generate OpenAPI specs** directly from your code.  
+- 📜 Automatically **generate OpenAPI v3 specs** directly from your code.  
 - 🎯 Ensure your APIs are always **well-documented and consistent**.  
 - ✅ **Validate input data** effortlessly to keep your APIs robust and secure.  
 
@@ -136,9 +137,6 @@ func main() {
 
 ## 🎨 VSCode Extension
 
-[![VSCode Extension](https://img.shields.io/visual-studio-marketplace/v/haim-kastner.gleece-extension?label=VSCode%20Extension)](https://marketplace.visualstudio.com/items?itemName=haim-kastner.gleece-extension)
-
-
 To enhance your development experience with Gleece, we provide an official VSCode extension that highlights Gleece annotations and comments.
 
 For more information and capabilities see the [Gleece VSCode Extension](https://github.com/gopher-fleece/gleece-vscode-extension#readme).
@@ -157,7 +155,7 @@ Stay tuned for updates, and feel free to open issues or pull requests to help us
 ---
 
 ## 📜 License  
-Gleece is licensed under the **MIT License**. 📄 You are free to use, modify, and distribute it with attribution. See the [`LICENSE`](./LICENSE) file for details.  
+Gleece is licensed under the [MIT LICENSE](./LICENSE). 
 
 ---
 

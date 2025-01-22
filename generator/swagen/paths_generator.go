@@ -132,7 +132,7 @@ func createRouteParam(openapi *openapi3.T, param definitions.FuncParam) *openapi
 	BuildSchemaValidation(schemaRef, param.Validator, param.TypeMeta.Name)
 	specParam := &openapi3.ParameterRef{
 		Value: &openapi3.Parameter{
-			Name:        param.Name,
+			Name:        param.NameInSchema,
 			In:          strings.ToLower(string(param.PassedIn)),
 			Description: param.Description,
 			Required:    true, // For now, EVERY param is mandatory due to the way Go works, in the future we will support nil for pointer params only // IsFieldRequired(param.Validator),
