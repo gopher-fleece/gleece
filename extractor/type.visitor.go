@@ -53,7 +53,7 @@ func (v *TypeVisitor) VisitStruct(fullPackageName string, structName string, str
 	structInfo := definitions.ModelMetadata{
 		Name:                  structName,
 		FullyQualifiedPackage: fullPackageName,
-		Description:           attributeHolders.StructHolder.GetDescriptionString(),
+		Description:           attributeHolders.StructHolder.GetDescription(),
 		Deprecation:           getDeprecationOpts(attributeHolders.StructHolder),
 	}
 
@@ -98,7 +98,7 @@ func (v *TypeVisitor) VisitStruct(fullPackageName string, structName string, str
 
 		fieldAttr := attributeHolders.FieldHolders[field.Name()]
 		if fieldAttr != nil {
-			fieldMeta.Description = fieldAttr.GetDescriptionString()
+			fieldMeta.Description = fieldAttr.GetDescription()
 			deprecationOpts := getDeprecationOpts(*fieldAttr)
 			fieldMeta.Deprecation = &deprecationOpts
 		}

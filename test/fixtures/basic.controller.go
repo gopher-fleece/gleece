@@ -25,15 +25,17 @@ type DefinedInSameFile struct {
 // A test for returning embedded errors
 // @Method(POST)
 // @Route(/test/embedded/error, {"someContext": 53553})
+// @Security(SchemaX, { scopes: ["a", "b"]})
 func (ec *ExtendedController) ReturnEmbedsAndError() (HoldsVeryNestedStructs, EmbedsAnError) {
 	return HoldsVeryNestedStructs{}, EmbedsAnError{}
 }
 
 // A test for simple imports
-// @Query(definedElseWhere, {name:"someAlias", validator:'something'}) Testing simple type import
+// @Query(definedElseWhere, {name:'someAlias', validate:'something'}) Testing simple type import
 // @Method(POST)
 // @Route(/test)
 // @Response(204)
+// @Security(SchemaZ, { scopes: ["c"]})
 // @ErrorResponse(400) <p>Test Error 400</p>
 func (ec *ExtendedController) ImportedWithDefaultAliasRetType(definedElseWhere string) (types.ImportedWithDefaultAlias, error) {
 	return types.ImportedWithDefaultAlias{}, nil

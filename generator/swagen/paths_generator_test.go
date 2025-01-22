@@ -30,10 +30,10 @@ var _ = Describe("Swagen", func() {
 			},
 			DefaultRouteSecurity: []definitions.RouteSecurity{
 				{
-					SecurityMethod: []definitions.SecurityMethod{
+					SecurityAnnotation: []definitions.SecurityAnnotationComponent{
 						{
-							Name:        "apiKeyAuth",
-							Permissions: []string{},
+							SchemaName: "apiKeyAuth",
+							Scopes:     []string{},
 						},
 					},
 				},
@@ -108,8 +108,8 @@ var _ = Describe("Swagen", func() {
 
 	Describe("buildSecurityMethod", func() {
 		It("should build security requirement", func() {
-			securityMethods := []definitions.SecurityMethod{
-				{Name: "apiKeyAuth", Permissions: []string{}},
+			securityMethods := []definitions.SecurityAnnotationComponent{
+				{SchemaName: "apiKeyAuth", Scopes: []string{}},
 			}
 			securityRequirement, err := buildSecurityMethod(config.SecuritySchemes, securityMethods)
 
@@ -118,8 +118,8 @@ var _ = Describe("Swagen", func() {
 		})
 
 		It("should return an error if security method name is not found", func() {
-			securityMethods := []definitions.SecurityMethod{
-				{Name: "unknownAuth", Permissions: []string{}},
+			securityMethods := []definitions.SecurityAnnotationComponent{
+				{SchemaName: "unknownAuth", Scopes: []string{}},
 			}
 			_, err := buildSecurityMethod(config.SecuritySchemes, securityMethods)
 
@@ -129,7 +129,8 @@ var _ = Describe("Swagen", func() {
 		It("should return an error if security operation is not valid", func() {
 			route := definitions.RouteMetadata{
 				OperationId: "testOperation",
-				Security:    []definitions.RouteSecurity{{SecurityMethod: []definitions.SecurityMethod{{Name: "unknownAuth"}}}},
+				Security: []definitions.RouteSecurity{{
+					SecurityAnnotation: []definitions.SecurityAnnotationComponent{{SchemaName: "unknownAuth"}}}},
 			}
 			operation := &openapi3.Operation{}
 
@@ -143,7 +144,7 @@ var _ = Describe("Swagen", func() {
 		It("should add security requirements to the operation", func() {
 			route := definitions.RouteMetadata{
 				OperationId: "testOperation",
-				Security:    []definitions.RouteSecurity{{SecurityMethod: []definitions.SecurityMethod{{Name: "apiKeyAuth"}}}},
+				Security:    []definitions.RouteSecurity{{SecurityAnnotation: []definitions.SecurityAnnotationComponent{{SchemaName: "apiKeyAuth"}}}},
 			}
 			operation := &openapi3.Operation{}
 			err := generateOperationSecurity(operation, config, route)
@@ -228,8 +229,8 @@ var _ = Describe("Swagen", func() {
 						FuncParams: []definitions.FuncParam{},
 						Security: []definitions.RouteSecurity{
 							{
-								SecurityMethod: []definitions.SecurityMethod{
-									{Name: "unknownAuth"},
+								SecurityAnnotation: []definitions.SecurityAnnotationComponent{
+									{SchemaName: "unknownAuth"},
 								},
 							},
 						},
@@ -303,8 +304,8 @@ var _ = Describe("Swagen", func() {
 							},
 							Security: []definitions.RouteSecurity{
 								{
-									SecurityMethod: []definitions.SecurityMethod{
-										{Name: "unknownAuth"},
+									SecurityAnnotation: []definitions.SecurityAnnotationComponent{
+										{SchemaName: "unknownAuth"},
 									},
 								},
 							},

@@ -20,6 +20,7 @@ import (
 
 type ControllerVisitor struct {
 	// Data
+	config      *definitions.GleeceConfig
 	sourceFiles map[string]*ast.File
 	fileSet     *token.FileSet
 	packages    []*packages.Package
@@ -27,6 +28,7 @@ type ControllerVisitor struct {
 	// Context
 	currentSourceFile *ast.File
 	currentGenDecl    *ast.GenDecl
+	currentController *definitions.ControllerMetadata
 	importIdCounter   uint64
 
 	// Diagnostics
@@ -44,8 +46,18 @@ func (v *ControllerVisitor) GetFormattedDiagnosticStack() string {
 	return strings.Join(stack, "\n\t")
 }
 
-func (v *ControllerVisitor) Init(sourceFileGlobs []string) error {
-	return v.loadMappings(sourceFileGlobs)
+func NewControllerVisitor(config *definitions.GleeceConfig) (*ControllerVisitor, error) {
+	visitor := ControllerVisitor{}
+	visitor.config = config
+
+	var globs []string
+	if len(config.CommonConfig.ControllerGlobs) > 0 {
+		globs = config.CommonConfig.ControllerGlobs
+	} else {
+		globs = []string{"./*.go", "./**/*.go"}
+	}
+
+	return &visitor, visitor.loadMappings(globs)
 }
 
 func (v *ControllerVisitor) GetLastError() *error {
@@ -94,6 +106,10 @@ func (v *ControllerVisitor) Visit(node ast.Node) ast.Visitor {
 		}
 	}
 	return v
+}
+
+func (v ControllerVisitor) getDefaultSecurity() []definitions.RouteSecurity {
+	return v.config.OpenAPIGeneratorConfig.DefaultRouteSecurity
 }
 
 func (v *ControllerVisitor) enter(message string) {
@@ -292,6 +308,41 @@ func (v *ControllerVisitor) frozenError(err error) error {
 	return err
 }
 
+func (v *ControllerVisitor) getSecurityFromContext(holder AttributesHolder) ([]definitions.RouteSecurity, error) {
+	securities := []definitions.RouteSecurity{}
+
+	normalSec := holder.GetAll(AttributeSecurity)
+	if len(normalSec) > 0 {
+		for _, secAttrib := range normalSec {
+			schemaName := secAttrib.Value
+			if len(schemaName) <= 0 {
+				return securities, v.getFrozenError("a security schema's name cannot be empty")
+			}
+
+			definedScopes, err := GetCastProperty[[]string](secAttrib, PropertySecurityScopes)
+			if err != nil {
+				return securities, v.frozenError(err)
+			}
+
+			scopes := []string{}
+			if definedScopes != nil && len(*definedScopes) > 0 {
+				scopes = *definedScopes
+			}
+
+			securities = append(securities, definitions.RouteSecurity{
+				SecurityAnnotation: []definitions.SecurityAnnotationComponent{{
+					SchemaName: schemaName,
+					Scopes:     scopes,
+				}},
+			})
+		}
+	}
+
+	// AdvanceSecurity processing goes here
+
+	return securities, nil
+}
+
 func (v *ControllerVisitor) createControllerMetadata(controllerNode *ast.TypeSpec) (definitions.ControllerMetadata, error) {
 	fullPackageName, fullNameErr := GetFullPackageName(v.currentSourceFile, v.fileSet)
 	packageAlias, aliasErr := GetDefaultPackageAlias(v.currentSourceFile)
@@ -318,9 +369,25 @@ func (v *ControllerVisitor) createControllerMetadata(controllerNode *ast.TypeSpe
 
 	if commentSource != nil {
 		comments := MapDocListToStrings(commentSource.List)
-		meta.Tag = FindAndExtract(comments, "@Tag")
-		meta.Description = FindAndExtract(comments, "@Description")
-		meta.RestMetadata = BuildRestMetadata(comments)
+		holder, err := NewAttributeHolder(comments)
+		if err != nil {
+			return meta, v.frozenError(err)
+		}
+
+		security, err := v.getSecurityFromContext(holder)
+		if err != nil {
+			return meta, v.frozenError(err)
+		}
+
+		if len(security) <= 0 {
+			Logger.Debug("Controller %s does not have explicit security; Using user-defined defaults", meta.Name)
+			security = v.getDefaultSecurity()
+		}
+
+		meta.Tag = holder.GetFirstValueOrEmpty(AttributeTag)
+		meta.Description = holder.GetFirstDescriptionOrEmpty(AttributeDescription)
+		meta.RestMetadata = definitions.RestMetadata{Path: holder.GetFirstValueOrEmpty(AttributeRoute)}
+		meta.Security = security
 	}
 
 	return meta, nil
@@ -331,6 +398,7 @@ func (v *ControllerVisitor) visitController(controllerNode *ast.TypeSpec) (defin
 	defer v.exit()
 
 	controller, err := v.createControllerMetadata(controllerNode)
+	v.currentController = &controller
 
 	if err != nil {
 		return controller, err
@@ -390,7 +458,11 @@ func (v *ControllerVisitor) getFuncParams(funcDecl *ast.FuncDecl, comments []str
 			UniqueImportSerial: v.getNextImportId(),
 		}
 
-		paramAlias := GetCastProperty[string](paramAttrib, PropertyName)
+		paramAlias, err := GetCastProperty[string](paramAttrib, PropertyName)
+		if err != nil {
+			return funcParams, v.frozenError(err)
+		}
+
 		if paramAlias != nil {
 			finalParamMeta.NameInSchema = *paramAlias
 		} else {
@@ -581,6 +653,19 @@ func (v *ControllerVisitor) getResponseStatusCode(attributes *AttributesHolder, 
 	return external.StatusNoContent, nil
 }
 
+func (v *ControllerVisitor) getRouteSecurityWithInheritance(attributes AttributesHolder) ([]definitions.RouteSecurity, error) {
+	explicitSec, err := v.getSecurityFromContext(attributes)
+	if err != nil {
+		return []definitions.RouteSecurity{}, v.frozenError(err)
+	}
+
+	if len(explicitSec) > 0 {
+		return explicitSec, nil
+	}
+
+	return v.currentController.Security, nil
+}
+
 func (v *ControllerVisitor) visitMethod(funcDecl *ast.FuncDecl) (definitions.RouteMetadata, bool, error) {
 	v.enter(fmt.Sprintf("Method '%s'", funcDecl.Name.Name))
 	defer v.exit()
@@ -614,6 +699,11 @@ func (v *ControllerVisitor) visitMethod(funcDecl *ast.FuncDecl) (definitions.Rou
 		return definitions.RouteMetadata{}, true, v.frozenError(err)
 	}
 
+	security, err := v.getRouteSecurityWithInheritance(attributes)
+	if err != nil {
+		return definitions.RouteMetadata{}, true, v.frozenError(err)
+	}
+
 	meta := definitions.RouteMetadata{
 		OperationId:         funcDecl.Name.Name,
 		HttpVerb:            definitions.EnsureValidHttpVerb(methodAttr.Value),
@@ -624,6 +714,7 @@ func (v *ControllerVisitor) visitMethod(funcDecl *ast.FuncDecl) (definitions.Rou
 		ErrorResponses:      errorResponses,
 		RequestContentType:  definitions.ContentTypeJSON, // Hardcoded for now, should be supported via comments later
 		ResponseContentType: definitions.ContentTypeJSON, // Hardcoded for now, should be supported via comments later
+		Security:            security,
 	}
 
 	// Check whether the method is an API endpoint, i.e., has all the relevant metadata.

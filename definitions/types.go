@@ -193,12 +193,14 @@ func (m RouteMetadata) GetErrorReturnType() *TypeMetadata {
 }
 
 type RouteSecurity struct {
-	SecurityMethod []SecurityMethod `json:"securityMethod" validate:"not_nil_array"` // AND between security methods
+	SecurityAnnotation []SecurityAnnotationComponent `json:"securityMethod" validate:"not_nil_array"` // AND between security methods
 }
 
-type SecurityMethod struct {
-	Name        string   `json:"name" validate:"required,starts_with_letter"`
-	Permissions []string `json:"permissions" validate:"not_nil_array"`
+// SecurityAnnotationComponent is the schema-scopes parts of a security annotation;
+// i.e., @Security(AND, [{name: "schema1", scopes: ["read", "write"]}, {name: "schema2", scopes: ["delete"]}])
+type SecurityAnnotationComponent struct {
+	SchemaName string   `json:"name" validate:"required,starts_with_letter"`
+	Scopes     []string `json:"scopes" validate:"not_nil_array"`
 }
 
 type ControllerMetadata struct {
@@ -209,6 +211,10 @@ type ControllerMetadata struct {
 	Description           string
 	RestMetadata          RestMetadata
 	Routes                []RouteMetadata
+
+	// The default security schema/s used for the controller's operations.
+	// May be overridden at the route level
+	Security []RouteSecurity
 }
 
 type ModelMetadata struct {
@@ -286,7 +292,12 @@ type RoutesConfig struct {
 	PackageName       string                   `json:"packageName"`
 }
 
+type CommonConfig struct {
+	ControllerGlobs []string `json:"controllerGlobs" validate:"omitempty,min=1"`
+}
+
 type GleeceConfig struct {
 	OpenAPIGeneratorConfig OpenAPIGeneratorConfig `json:"openAPIGeneratorConfig" validate:"required"`
 	RoutesConfig           RoutesConfig           `json:"routesConfig" validate:"required"`
+	CommonConfig           CommonConfig           `json:"commonConfig" validate:"required"`
 }

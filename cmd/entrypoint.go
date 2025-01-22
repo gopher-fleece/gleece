@@ -45,16 +45,12 @@ func getConfig(configPath string) (*definitions.GleeceConfig, error) {
 	return &config, nil
 }
 
-func getMetadata(codeFileGlobs ...string) ([]definitions.ControllerMetadata, []definitions.ModelMetadata, error) {
-	var globs []string
-	if len(codeFileGlobs) > 0 {
-		globs = codeFileGlobs
-	} else {
-		globs = []string{"./*.go", "./**/*.go"}
+func getMetadata(config *definitions.GleeceConfig) ([]definitions.ControllerMetadata, []definitions.ModelMetadata, error) {
+	visitor, err := extractor.NewControllerVisitor(config)
+	if err != nil {
+		return []definitions.ControllerMetadata{}, []definitions.ModelMetadata{}, err
 	}
 
-	visitor := &extractor.ControllerVisitor{}
-	visitor.Init(globs)
 	for _, file := range visitor.GetFiles() {
 		ast.Walk(visitor, file)
 	}
@@ -90,7 +86,7 @@ func getConfigAndMetadata(args arguments.CliArguments) (
 
 	Logger.Info("Generating spec. Configuration file: %s", args.ConfigPath)
 
-	defs, models, err := getMetadata()
+	defs, models, err := getMetadata(config)
 	if err != nil {
 		Logger.Fatal("Could not collect metadata - %v", err)
 		return nil, nil, nil, err

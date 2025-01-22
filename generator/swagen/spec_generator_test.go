@@ -35,22 +35,22 @@ var _ = Describe("Spec Generator", func() {
 				{
 					Security: []definitions.RouteSecurity{
 						{
-							SecurityMethod: []definitions.SecurityMethod{
+							SecurityAnnotation: []definitions.SecurityAnnotationComponent{
 								{
-									Name:        "ApiKeyAuth",
-									Permissions: []string{"read", "write"},
+									SchemaName: "ApiKeyAuth",
+									Scopes:     []string{"read", "write"},
 								},
 								{
-									Name:        "ApiKeyAuth2",
-									Permissions: []string{"write"},
+									SchemaName: "ApiKeyAuth2",
+									Scopes:     []string{"write"},
 								},
 							},
 						},
 						{
-							SecurityMethod: []definitions.SecurityMethod{
+							SecurityAnnotation: []definitions.SecurityAnnotationComponent{
 								{
-									Name:        "ApiKeyAuth",
-									Permissions: []string{"read"},
+									SchemaName: "ApiKeyAuth",
+									Scopes:     []string{"read"},
 								},
 							},
 						},
@@ -342,10 +342,10 @@ var _ = Describe("Spec Generator", func() {
 			},
 			DefaultRouteSecurity: []definitions.RouteSecurity{
 				{
-					SecurityMethod: []definitions.SecurityMethod{
+					SecurityAnnotation: []definitions.SecurityAnnotationComponent{
 						{
-							Name:        "ApiKeyAuth",
-							Permissions: []string{"read"},
+							SchemaName: "ApiKeyAuth",
+							Scopes:     []string{"read"},
 						},
 					},
 				},

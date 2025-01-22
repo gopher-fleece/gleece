@@ -67,18 +67,18 @@ func createResponseSuccess(openapi *openapi3.T, route definitions.RouteMetadata)
 	}
 }
 
-func buildSecurityMethod(securitySchemes []definitions.SecuritySchemeConfig, securityMethods []definitions.SecurityMethod) (*openapi3.SecurityRequirement, error) {
+func buildSecurityMethod(securitySchemes []definitions.SecuritySchemeConfig, securityMethods []definitions.SecurityAnnotationComponent) (*openapi3.SecurityRequirement, error) {
 	securityRequirement := openapi3.SecurityRequirement{}
 
 	for _, securityMethod := range securityMethods {
 
 		// Make sure the name is exist in the openapi security schemes
-		if !IsSecurityNameInSecuritySchemes(securitySchemes, securityMethod.Name) {
-			errStr := fmt.Sprintf("Security method name %s is not exists in the defined security schemes %v", securityMethod.Name, securitySchemes)
+		if !IsSecurityNameInSecuritySchemes(securitySchemes, securityMethod.SchemaName) {
+			errStr := fmt.Sprintf("Security method name %s is not exists in the defined security schemes %v", securityMethod.SchemaName, securitySchemes)
 			// Create error object and return it, add the method name that is not exist in the security schemes
 			return nil, errors.New(errStr)
 		}
-		securityRequirement[securityMethod.Name] = securityMethod.Permissions
+		securityRequirement[securityMethod.SchemaName] = securityMethod.Scopes
 	}
 
 	return &securityRequirement, nil
@@ -94,10 +94,10 @@ func generateOperationSecurity(operation *openapi3.Operation, config *definition
 	}
 
 	for _, security := range routeSecurity {
-		securityRequirement, err := buildSecurityMethod(config.SecuritySchemes, security.SecurityMethod)
+		securityRequirement, err := buildSecurityMethod(config.SecuritySchemes, security.SecurityAnnotation)
 
 		if err != nil {
-			errStr := fmt.Sprintf("Building security %s for %s failed: %s", route.OperationId, security.SecurityMethod, err.Error())
+			errStr := fmt.Sprintf("Building security %s for %s failed: %s", route.OperationId, security.SecurityAnnotation, err.Error())
 			return errors.New(errStr)
 		}
 		securityRequirements = append(securityRequirements, *securityRequirement)
