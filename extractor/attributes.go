@@ -188,7 +188,7 @@ func (holder AttributesHolder) GetDescription() string {
 	descriptionAttr := holder.GetFirst(AttributeDescription)
 	if descriptionAttr != nil {
 		// If there's a description attribute, even an empty one, use that
-		return descriptionAttr.Value
+		return descriptionAttr.Description
 	}
 
 	freeComments := []string{}
