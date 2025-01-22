@@ -452,21 +452,32 @@ func (v *ControllerVisitor) getFuncParams(funcDecl *ast.FuncDecl, comments []str
 			return funcParams, v.getFrozenError("parameter '%s' does not have a matching documentation attribute", param.Name)
 		}
 
-		finalParamMeta := definitions.FuncParam{
-			ParamMeta:          param,
-			Description:        paramAttrib.Description,
-			UniqueImportSerial: v.getNextImportId(),
-		}
-
-		paramAlias, err := GetCastProperty[string](paramAttrib, PropertyName)
+		castValidator, err := GetCastProperty[string](paramAttrib, PropertyValidatorString)
 		if err != nil {
 			return funcParams, v.frozenError(err)
 		}
 
-		if paramAlias != nil {
-			finalParamMeta.NameInSchema = *paramAlias
-		} else {
-			finalParamMeta.NameInSchema = param.Name
+		validatorString := ""
+		if castValidator != nil && len(*castValidator) > 0 {
+			validatorString = *castValidator
+		}
+
+		castName, err := GetCastProperty[string](paramAttrib, PropertyName)
+		if err != nil {
+			return funcParams, v.frozenError(err)
+		}
+
+		nameString := param.Name
+		if castName != nil && len(*castName) > 0 {
+			nameString = *castName
+		}
+
+		finalParamMeta := definitions.FuncParam{
+			NameInSchema:       nameString,
+			ParamMeta:          param,
+			Description:        paramAttrib.Description,
+			Validator:          validatorString,
+			UniqueImportSerial: v.getNextImportId(),
 		}
 
 		// Currently, only body param can be an object type

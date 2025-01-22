@@ -10,8 +10,9 @@ import (
 )
 
 const (
-	PropertyName           = "name"
-	PropertySecurityScopes = "scopes"
+	PropertyName            = "name"
+	PropertySecurityScopes  = "scopes"
+	PropertyValidatorString = "validate"
 )
 
 const (
