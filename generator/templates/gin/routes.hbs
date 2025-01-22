@@ -14,10 +14,10 @@ func getStatusCode(controller external.Controller, hasReturnValue bool, err erro
 	}
 
 	if hasReturnValue {
-		return http.StatusNoContent
+		return http.StatusOK
 	}
 
-	return http.StatusOK
+	return http.StatusNoContent
 }
 
 func bindAndValidateBody[TOutput any](ctx *gin.Context, contentType string, output *TOutput) error {
