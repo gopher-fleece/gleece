@@ -646,22 +646,30 @@ func (v ControllerVisitor) getErrorResponseMetadata(attributes *AttributesHolder
 	return responses, nil
 }
 
-func (v *ControllerVisitor) getResponseStatusCode(attributes *AttributesHolder, hasReturnValue bool) (external.HttpStatusCode, error) {
-	// Set the success response code based on whether function returns a value or only error (200 vs 204)
-	response := attributes.GetFirst(AttributeResponse)
-	if response != nil && len(response.Value) > 0 {
-		code, err := definitions.ConvertToHttpStatus(response.Value)
-		if err != nil {
-			return 0, v.frozenError(err)
+func (v *ControllerVisitor) getResponseStatusCodeAndDescription(
+	attributes *AttributesHolder,
+	hasReturnValue bool,
+) (external.HttpStatusCode, string, error) {
+	// Set the success attrib code based on whether function returns a value or only error (200 vs 204)
+	attrib := attributes.GetFirst(AttributeResponse)
+	if attrib == nil {
+		if hasReturnValue {
+			return external.StatusOK, "", nil
 		}
-		return code, nil
+
+		return external.StatusNoContent, "", nil
 	}
 
-	if hasReturnValue {
-		return external.StatusOK, nil
+	var statusCode external.HttpStatusCode
+	if len(attrib.Value) > 0 {
+		code, err := definitions.ConvertToHttpStatus(attrib.Value)
+		if err != nil {
+			return 0, "", v.frozenError(err)
+		}
+		statusCode = code
 	}
 
-	return external.StatusNoContent, nil
+	return statusCode, attrib.Description, nil
 }
 
 func (v *ControllerVisitor) getRouteSecurityWithInheritance(attributes AttributesHolder) ([]definitions.RouteSecurity, error) {
@@ -750,11 +758,12 @@ func (v *ControllerVisitor) visitMethod(funcDecl *ast.FuncDecl) (definitions.Rou
 	meta.Responses = responses
 	meta.HasReturnValue = len(responses) > 1
 
-	successResponseCode, err := v.getResponseStatusCode(&attributes, meta.HasReturnValue)
+	successResponseCode, successDescription, err := v.getResponseStatusCodeAndDescription(&attributes, meta.HasReturnValue)
 	if err != nil {
 		return meta, true, v.frozenError(err)
 	}
 	meta.ResponseSuccessCode = successResponseCode
+	meta.ResponseDescription = successDescription
 
 	return meta, isApiEndpoint, nil
 }
