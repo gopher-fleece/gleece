@@ -55,7 +55,7 @@ type AttributesHolder struct {
 
 func NewAttributeHolder(comments []string) (AttributesHolder, error) {
 	// Captures: 1. TEXT (after @), 2. TEXT (inside parentheses), 3. JSON5 Object, 4. Remaining TEXT
-	parsingRegex := regexp.MustCompile(`^// @(\w+)(?:(?:\(([\w-_/\\{}]+))(?:\s*,\s*(\{.*\}))?\))?(?:\s+(.+))?$`)
+	parsingRegex := regexp.MustCompile(`^// @(\w+)(?:(?:\(([\w-_/\\{} ]+))(?:\s*,\s*(\{.*\}))?\))?(?:\s+(.+))?$`)
 
 	holder := AttributesHolder{
 		nonAttributeComments: make(map[int]string),
