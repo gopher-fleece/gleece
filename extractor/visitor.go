@@ -157,22 +157,6 @@ func (v *ControllerVisitor) addToTypeMap(
 	typeMeta definitions.TypeMetadata,
 ) error {
 	if typeMeta.IsUniverseType {
-		// When encountering a "plain" error for the first time, translate it into an RFC error and add it as a type.
-		if typeMeta.Name == "error" {
-			_, exists := (*existingTypesMap)[definitions.Rfc7807ErrorName]
-			if !exists {
-				(*existingTypesMap)[definitions.Rfc7807ErrorName] = definitions.Rfc7807ErrorFullPackage
-				(*existingModels) = append((*existingModels), definitions.TypeMetadata{
-					Name:                  definitions.Rfc7807ErrorName,
-					FullyQualifiedPackage: definitions.Rfc7807ErrorFullPackage,
-					DefaultPackageAlias:   "external",
-					Description:           "A standard RFC-7807 error",
-					Import:                definitions.ImportTypeAlias,
-					IsUniverseType:        false,
-					IsByAddress:           false,
-				})
-			}
-		}
 		return nil
 	}
 
@@ -200,36 +184,52 @@ func (v *ControllerVisitor) insertRouteTypeList(
 	existingTypesMap *map[string]string,
 	existingModels *[]definitions.TypeMetadata,
 	route *definitions.RouteMetadata,
-) error {
+) (bool, error) {
 
+	plainErrorEncountered := false
 	for _, param := range route.FuncParams {
+		if param.TypeMeta.IsUniverseType && param.TypeMeta.Name == "error" && param.TypeMeta.FullyQualifiedPackage == "" {
+			// Mark whether we've encountered any 'error' type
+			plainErrorEncountered = true
+		}
 		err := v.addToTypeMap(existingTypesMap, existingModels, param.TypeMeta)
 		if err != nil {
-			return v.frozenError(err)
+			return plainErrorEncountered, v.frozenError(err)
 		}
 	}
 
 	for _, param := range route.Responses {
+		if param.IsUniverseType && param.Name == "error" && param.FullyQualifiedPackage == "" {
+			// Mark whether we've encountered any 'error' type
+			plainErrorEncountered = true
+		}
 		err := v.addToTypeMap(existingTypesMap, existingModels, param.TypeMetadata)
 		if err != nil {
-			return v.frozenError(err)
+			return plainErrorEncountered, v.frozenError(err)
 		}
 	}
 
-	return nil
+	return plainErrorEncountered, nil
 }
 
-func (v *ControllerVisitor) GetModelsFlat() ([]definitions.ModelMetadata, error) {
+func (v *ControllerVisitor) GetModelsFlat() ([]definitions.ModelMetadata, bool, error) {
 	if len(v.controllers) <= 0 {
-		return []definitions.ModelMetadata{}, nil
+		return []definitions.ModelMetadata{}, false, nil
 	}
 
 	existingTypesMap := make(map[string]string)
 	models := []definitions.TypeMetadata{}
 
+	hasAnyErrorTypes := false
 	for _, controller := range v.controllers {
 		for _, route := range controller.Routes {
-			v.insertRouteTypeList(&existingTypesMap, &models, &route)
+			encounteredErrorType, err := v.insertRouteTypeList(&existingTypesMap, &models, &route)
+			if err != nil {
+				return []definitions.ModelMetadata{}, false, v.frozenError(err)
+			}
+			if encounteredErrorType {
+				hasAnyErrorTypes = true
+			}
 		}
 	}
 
@@ -237,25 +237,30 @@ func (v *ControllerVisitor) GetModelsFlat() ([]definitions.ModelMetadata, error)
 	for _, model := range models {
 		pkg := FilterPackageByFullName(v.packages, model.FullyQualifiedPackage)
 		if pkg == nil {
-			return nil, v.getFrozenError("could not get a packages.Package for '%s'", model.FullyQualifiedPackage)
+			return nil, hasAnyErrorTypes, v.getFrozenError(
+				"could locate packages.Package '%s' whilst looking for type '%s'.\n"+
+					"Please note that Gleece currently cannot use any structs from externally imported packages",
+				model.FullyQualifiedPackage,
+				model.Name,
+			)
 		}
 
 		structNode, err := FindTypesStructInPackage(pkg, model.Name)
 		if err != nil {
-			return nil, v.frozenError(err)
+			return nil, hasAnyErrorTypes, v.frozenError(err)
 		}
 
 		if structNode == nil {
-			return nil, v.getFrozenError("could not find struct '%s' in package '%s'", model.Name, model.FullyQualifiedPackage)
+			return nil, hasAnyErrorTypes, v.getFrozenError("could not find struct '%s' in package '%s'", model.Name, model.FullyQualifiedPackage)
 		}
 
 		err = typeVisitor.VisitStruct(model.FullyQualifiedPackage, model.Name, structNode)
 		if err != nil {
-			return nil, v.frozenError(err)
+			return nil, hasAnyErrorTypes, v.frozenError(err)
 		}
 	}
 
-	return typeVisitor.GetStructs(), nil
+	return typeVisitor.GetStructs(), hasAnyErrorTypes, nil
 }
 
 func (v *ControllerVisitor) loadMappings(sourceFileGlobs []string) error {

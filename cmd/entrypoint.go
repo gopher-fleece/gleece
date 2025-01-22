@@ -61,7 +61,7 @@ func getMetadata(config *definitions.GleeceConfig) ([]definitions.ControllerMeta
 		return nil, nil, *lastErr
 	}
 
-	flatModels, err := visitor.GetModelsFlat()
+	flatModels, _, err := visitor.GetModelsFlat()
 	if err != nil {
 		Logger.Error("Failed to get models metadata: %v", err)
 		return nil, nil, err
