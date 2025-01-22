@@ -707,7 +707,7 @@ func (v *ControllerVisitor) visitMethod(funcDecl *ast.FuncDecl) (definitions.Rou
 	meta := definitions.RouteMetadata{
 		OperationId:         funcDecl.Name.Name,
 		HttpVerb:            definitions.EnsureValidHttpVerb(methodAttr.Value),
-		Description:         attributes.GetFirstPropertyValueOrEmpty(AttributeDescription),
+		Description:         attributes.GetDescription(),
 		Hiding:              v.getMethodHideOpts(&attributes),
 		Deprecation:         v.getDeprecationOpts(&attributes),
 		RestMetadata:        definitions.RestMetadata{Path: routePath},
