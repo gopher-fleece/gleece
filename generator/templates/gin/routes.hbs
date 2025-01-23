@@ -3,7 +3,7 @@ package {{{PackageName}}}
 {{> Imports}}
 
 var validatorInstance *validator.Validate
-var urlParamRegex = regexp.MustCompile(`\{([\w\d-_])+\}`)
+var urlParamRegex = regexp.MustCompile(`\{([\w\d-_]+)\}`)
 
 func getStatusCode(controller external.Controller, hasReturnValue bool, err error) int {
 	if controller.GetStatus() != nil {

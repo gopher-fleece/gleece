@@ -45,5 +45,7 @@
 		"specGeneratorConfig": {
 			"outputPath": "./dist/swagger.json"
 		}
+	},
+	"commonConfig": {
 	}
 }
