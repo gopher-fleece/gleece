@@ -129,7 +129,7 @@ type SecurityCheck struct {
 }
 
 type CustomError struct {
-	Payload *any
+	Payload any
 }
 
 type SecurityError struct {

@@ -39,7 +39,11 @@ func RegisterRoutes(engine *gin.Engine) {
 	// {{{Name}}}
 	{{#each Routes}}
 		engine.{{{HttpVerb}}}(toGinUrl("{{{../RestMetadata.Path}}}{{{RestMetadata.Path}}}"), func(ctx *gin.Context) {
-			{{> AuthorizationCall}}
+			authErr := {{> AuthorizationCall}}
+			if authErr != nil {
+				handleAuthorizationError(ctx, authErr, "{{{OperationId}}}")
+				return
+			}
 			controller := {{{Name}}}Import.{{../Name}}{}
 			controller.SetRequest(ctx)
 			{{#each FuncParams}}
