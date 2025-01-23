@@ -44,7 +44,17 @@ func bindAndValidateBody[TOutput any](ctx *gin.Context, contentType string, outp
 }
 
 func toGinUrl(url string) string {
-	return urlParamRegex.ReplaceAllString(url, ":$1")
+	processedUrl := urlParamRegex.ReplaceAllString(url, ":$1")
+	processedUrl = strings.ReplaceAll(processedUrl, "//", "/")
+	if processedUrl == "" {
+		return "/"
+	}
+
+	if !strings.HasPrefix(processedUrl, "/") {
+		processedUrl = "/" + processedUrl
+	}
+
+	return processedUrl
 }
 
 func authorize(ctx *gin.Context, checksLists []SecurityCheckList) *external.SecurityError {
