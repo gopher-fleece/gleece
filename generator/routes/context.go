@@ -1,6 +1,8 @@
 package routes
 
 import (
+	"time"
+
 	"github.com/gopher-fleece/gleece/definitions"
 )
 
@@ -24,10 +26,10 @@ type PackageImport struct {
 }
 
 type RoutesContext struct {
-	PackageName string
-	Controllers []definitions.ControllerMetadata
-	//Imports     []PackageImport
-	//Routes      []RouteCtx
+	PackageName      string
+	Controllers      []definitions.ControllerMetadata
+	CustomValidators []definitions.CustomValidators
+	GenerationDate   string
 }
 
 func GetTemplateContext(
@@ -40,6 +42,13 @@ func GetTemplateContext(
 	} else {
 		ctx.PackageName = "routes"
 	}
+
+	if config.CustomValidators != nil {
+		ctx.CustomValidators = config.CustomValidators
+	} else {
+		ctx.CustomValidators = []definitions.CustomValidators{}
+	}
+	ctx.GenerationDate = time.Now().Format(time.RFC822)
 
 	/*
 		imports := MapSet.NewSet[string]()

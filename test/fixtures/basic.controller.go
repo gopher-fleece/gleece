@@ -1,4 +1,4 @@
-package temp
+package fixtures
 
 import (
 	"github.com/google/uuid"
@@ -149,9 +149,9 @@ func (ec *UsersController) CreateNewUser(email string, name string, origin strin
 }
 
 // @Description Get user's domicile
-// @Method(GET)
+// @Method(GET) This text is not part of the OpenAPI spec
 // @Route(/user/{id}/domicile)
-// @Path(id, { name: "id" })
+// @Path(id)
 // @Response(200) The user's domicile
 // @ErrorResponse(404) The user not found
 // @ErrorResponse(500) The error when process failed

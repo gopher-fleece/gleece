@@ -23,5 +23,10 @@ import (
 			{{/if}}
 		{{/each}}
 	{{/each}}
+
+	{{#each CustomValidators}}
+		CustomValidatorPkg{{@index}} "{{{FullPackageName}}}"
+	{{/each}}
+
 {{/each}}
 )
