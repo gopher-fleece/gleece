@@ -9,7 +9,6 @@
 	{{> JsonValidationErrorResponse }}
   }
   {{ToLowerCamel Name}} := int({{ToLowerCamel Name}}Uint64)
-  // Pass to validator
 {{/equal}}
 
 {{#equal TypeMeta.Name "int8"}}
@@ -18,7 +17,6 @@
 	{{> JsonValidationErrorResponse }}
   }
   {{ToLowerCamel Name}} := int8({{ToLowerCamel Name}}Uint64)
-  // Pass to validator
 {{/equal}}
 
 {{#equal TypeMeta.Name "int16"}}
@@ -27,7 +25,6 @@
 	{{> JsonValidationErrorResponse }}
   }
   {{ToLowerCamel Name}} := int16({{ToLowerCamel Name}}Uint64)
-  // Pass to validator
 {{/equal}}
 
 {{#equal TypeMeta.Name "int32"}}
@@ -36,7 +33,6 @@
 	{{> JsonValidationErrorResponse }}
   }
   {{ToLowerCamel Name}} := int32({{ToLowerCamel Name}}Uint64)
-  // Pass to validator
 {{/equal}}
 
 {{#equal TypeMeta.Name "int64"}}
@@ -45,7 +41,6 @@
 	{{> JsonValidationErrorResponse }}
   }
   {{ToLowerCamel Name}} := int64({{ToLowerCamel Name}}Uint64)
-  // Pass to validator
 {{/equal}}
 
 {{#equal TypeMeta.Name "uint"}}
@@ -54,7 +49,6 @@
 	{{> JsonValidationErrorResponse }}
   }
   {{ToLowerCamel Name}} := uint({{ToLowerCamel Name}}Uint64)
-  // Pass to validator
 {{/equal}}
 
 {{#equal TypeMeta.Name "uint8"}}
@@ -63,7 +57,6 @@
 	{{> JsonValidationErrorResponse }}
   }
   {{ToLowerCamel Name}} := uint8({{ToLowerCamel Name}}Uint64)
-  // Pass to validator
 {{/equal}}
 
 {{#equal TypeMeta.Name "uint16"}}
@@ -72,7 +65,6 @@
 	{{> JsonValidationErrorResponse }}
   }
   {{ToLowerCamel Name}} := uint16({{ToLowerCamel Name}}Uint64)
-  // Pass to validator
 {{/equal}}
 
 {{#equal TypeMeta.Name "uint32"}}
@@ -81,7 +73,6 @@
 	{{> JsonValidationErrorResponse }}
   }
   {{ToLowerCamel Name}} := uint32({{ToLowerCamel Name}}Uint64)
-  // Pass to validator
 {{/equal}}
 
 {{#equal TypeMeta.Name "uint64"}}
@@ -89,7 +80,6 @@
   if conversionErr != nil {
 	{{> JsonValidationErrorResponse }}
   }
-  // Pass to validator
 {{/equal}}
 
 {{#equal TypeMeta.Name "bool"}}
@@ -97,7 +87,6 @@
   if conversionErr != nil {
 	{{> JsonValidationErrorResponse }}
   }
-  // Pass to validator
 {{/equal}}
 
 {{#equal TypeMeta.Name "float32"}}
@@ -105,7 +94,6 @@
   if conversionErr != nil {
 	{{> JsonValidationErrorResponse }}
   }
-  // Pass to validator
   {{ToLowerCamel Name}} := float32({{ToLowerCamel Name}}Float64)
 {{/equal}}
 
@@ -114,5 +102,22 @@
   if conversionErr != nil {
 	{{> JsonValidationErrorResponse }}
   }
-  // Pass to validator
 {{/equal}}
+
+{{#if Validator}}
+    if validatorErr := validatorInstance.Var({{ToLowerCamel Name}}, "{{Validator}}"); validatorErr != nil {
+        validationError := external.Rfc7807Error{
+        	Type:       http.StatusText(http.StatusUnprocessableEntity),
+        	Detail:     fmt.Sprintf(
+        		"A request was made to operation '{{{OperationId}}}' but body parameter %s did not pass validation - expected %s",
+        		"{{ToLowerCamel Name}}",
+        		"{{{TypeMeta.Name}}}",
+        	),
+        	Status:     http.StatusUnprocessableEntity,
+        	Instance:   "/gleece/validation/{{{../../Tag}}}/{{{OperationId}}}",
+	        Extensions: map[string]string{"error": validatorErr.Error()},
+        }
+        ctx.JSON(http.StatusUnprocessableEntity, validationError)
+        return
+    }
+{{/if}}
