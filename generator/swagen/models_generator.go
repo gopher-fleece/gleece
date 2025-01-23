@@ -61,9 +61,12 @@ func fillSchemaRef(openapi *openapi3.T) {
 	// Iterate over all EmptyRefSchemas
 	for _, schemaRefMap := range schemaRefMap {
 		// Get the schema from the components
-		schema := openapi.Components.Schemas[schemaRefMap.InterfaceType].Value
-		// Set the schema reference to the schema
-		schemaRefMap.SchemaRef.Value = schema
+		schema := openapi.Components.Schemas[schemaRefMap.InterfaceType]
+		// Check if the schema is not null
+		if schema != nil && schema.Value != nil {
+			// Set the schema reference to the schema
+			schemaRefMap.SchemaRef.Value = schema.Value
+		}
 	}
 }
 

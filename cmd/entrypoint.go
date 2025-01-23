@@ -45,10 +45,10 @@ func getConfig(configPath string) (*definitions.GleeceConfig, error) {
 	return &config, nil
 }
 
-func getMetadata(config *definitions.GleeceConfig) ([]definitions.ControllerMetadata, []definitions.ModelMetadata, error) {
+func getMetadata(config *definitions.GleeceConfig) ([]definitions.ControllerMetadata, []definitions.ModelMetadata, bool, error) {
 	visitor, err := extractor.NewControllerVisitor(config)
 	if err != nil {
-		return []definitions.ControllerMetadata{}, []definitions.ModelMetadata{}, err
+		return []definitions.ControllerMetadata{}, []definitions.ModelMetadata{}, false, err
 	}
 
 	for _, file := range visitor.GetFiles() {
@@ -58,51 +58,53 @@ func getMetadata(config *definitions.GleeceConfig) ([]definitions.ControllerMeta
 	lastErr := visitor.GetLastError()
 	if lastErr != nil {
 		Logger.Error("Visitor encountered at-least one error. Last error:\n%v\n\t%s", *lastErr, visitor.GetFormattedDiagnosticStack())
-		return nil, nil, *lastErr
+		return nil, nil, false, *lastErr
 	}
 
-	flatModels, _, err := visitor.GetModelsFlat()
+	flatModels, hasAnyErrorTypes, err := visitor.GetModelsFlat()
 	if err != nil {
 		Logger.Error("Failed to get models metadata: %v", err)
-		return nil, nil, err
+		return nil, nil, false, err
 	}
 
 	data, _ := json.MarshalIndent(flatModels, "", "\t")
 	Logger.Info("%s", string(data))
 
 	controllers := visitor.GetControllers()
-	return controllers, flatModels, nil
+	return controllers, flatModels, hasAnyErrorTypes, nil
 }
 
 func getConfigAndMetadata(args arguments.CliArguments) (
 	*definitions.GleeceConfig,
 	[]definitions.ControllerMetadata,
-	[]definitions.ModelMetadata, error,
+	[]definitions.ModelMetadata,
+	bool,
+	error,
 ) {
 	config, err := getConfig(args.ConfigPath)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, false, err
 	}
 
 	Logger.Info("Generating spec. Configuration file: %s", args.ConfigPath)
 
-	defs, models, err := getMetadata(config)
+	defs, models, hasAnyErrorTypes, err := getMetadata(config)
 	if err != nil {
 		Logger.Fatal("Could not collect metadata - %v", err)
-		return nil, nil, nil, err
+		return nil, nil, nil, false, err
 	}
 
-	return config, defs, models, nil
+	return config, defs, models, hasAnyErrorTypes, nil
 }
 
 func GenerateSpec(args arguments.CliArguments) error {
-	config, meta, models, err := getConfigAndMetadata(args)
+	config, meta, models, hasAnyErrorTypes, err := getConfigAndMetadata(args)
 	if err != nil {
 		return err
 	}
 
 	// Generate the spec
-	if err := swagen.GenerateAndOutputSpec(&config.OpenAPIGeneratorConfig, meta, models); err != nil {
+	if err := swagen.GenerateAndOutputSpec(&config.OpenAPIGeneratorConfig, meta, models, hasAnyErrorTypes); err != nil {
 		Logger.Fatal("Failed to generate OpenAPI spec - %v", err)
 		return err
 	}
@@ -111,7 +113,7 @@ func GenerateSpec(args arguments.CliArguments) error {
 }
 
 func GenerateRoutes(args arguments.CliArguments) error {
-	config, meta, _, err := getConfigAndMetadata(args)
+	config, meta, _, _, err := getConfigAndMetadata(args)
 	if err != nil {
 		return err
 	}
@@ -120,7 +122,7 @@ func GenerateRoutes(args arguments.CliArguments) error {
 }
 
 func GenerateSpecAndRoutes(args arguments.CliArguments) error {
-	config, meta, models, err := getConfigAndMetadata(args)
+	config, meta, models, hasAnyErrorTypes, err := getConfigAndMetadata(args)
 	if err != nil {
 		return err
 	}
@@ -132,7 +134,7 @@ func GenerateSpecAndRoutes(args arguments.CliArguments) error {
 	}
 
 	// Generate the spec
-	if err := swagen.GenerateAndOutputSpec(&config.OpenAPIGeneratorConfig, meta, models); err != nil {
+	if err := swagen.GenerateAndOutputSpec(&config.OpenAPIGeneratorConfig, meta, models, hasAnyErrorTypes); err != nil {
 		Logger.Fatal("Failed to generate OpenAPI spec - %v", err)
 		return err
 	}

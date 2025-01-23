@@ -28,7 +28,7 @@ func createErrorResponse(openapi *openapi3.T, route definitions.RouteMetadata, e
 	// Every vanilla error should be RFC7807
 	// User can override it by inheriting from error and add it's own error schema (as any other schema)
 	if errorReturnType.Name == "error" {
-		errorReturnType.Name = "Rfc7807Error"
+		errorReturnType.Name = definitions.Rfc7807ErrorName
 	}
 
 	content := createContentWithSchemaRef(openapi, "", errorReturnType.Name)
