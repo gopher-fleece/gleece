@@ -48,13 +48,21 @@ func registerHelpers() {
 		return options.Inverse()
 	})
 
-	raymond.RegisterHelper("ifLongerThan", func(array any, length int, options *raymond.Options) string {
-		slice, ok := toSlice(array)
-		if !ok {
-			panic("ifLongerThan helper was called with a non-array first value")
+	raymond.RegisterHelper("ifLongerThan", func(value any, length int, options *raymond.Options) string {
+		var valueLength int
+
+		slice, ok := toSlice(value)
+		if ok {
+			valueLength = len(slice)
+		} else {
+			str, ok := toString(value)
+			if !ok {
+				panic("ifLongerThan helper was called with a non-array/string first value")
+			}
+			valueLength = len(str)
 		}
 
-		if len(slice) > length {
+		if valueLength > length {
 			return options.Fn()
 		}
 
@@ -107,6 +115,17 @@ func toSlice(input any) ([]any, bool) {
 		return slice, true
 	default:
 		return nil, false
+	}
+}
+
+func toString(input any) (string, bool) {
+	val := reflect.ValueOf(input)
+
+	switch val.Kind() {
+	case reflect.String:
+		return input.(string), true
+	default:
+		return "", false
 	}
 }
 

@@ -4,7 +4,7 @@ stdError := external.Rfc7807Error{
 	Type:       http.StatusText(statusCode),
 	Detail:     "Encountered an error during operation '{{{OperationId}}}'",
 	Status:     statusCode,
-	Instance:   "/gleece/{{{../../Name}}}/{{{OperationId}}}",
+	Instance:   "/gleece/controller/error/{{{OperationId}}}",
 	Extensions: map[string]string{"error": opError.Error()},
 }
 ctx.JSON(statusCode, stdError)

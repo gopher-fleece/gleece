@@ -6,7 +6,7 @@ validationError := external.Rfc7807Error{
 		"{{{TypeMeta.Name}}}",
 	),
 	Status:     http.StatusUnprocessableEntity,
-	Instance:   "/gleece/validation/{{{../../Tag}}}/{{{OperationId}}}",
+	Instance:   "/gleece/validation//{{{OperationId}}}",
 	Extensions: map[string]string{"error": conversionErr.Error()},
 }
 ctx.JSON(http.StatusUnprocessableEntity, validationError)

@@ -7,7 +7,7 @@ validationError := external.Rfc7807Error{
 		reflect.TypeOf({{ToLowerCamel Name}}{{#ifEqual PassedIn "Body"}}{{else}}Raw{{/ifEqual}}).String(),
 	),
 	Status:     http.StatusUnprocessableEntity,
-	Instance:   "/gleece/validation/{{{../../Tag}}}/{{{OperationId}}}",
+	Instance:   "/gleece/validation/{{{OperationId}}}",
 	Extensions: map[string]string{"error": conversionErr.Error()},
 }
 ctx.JSON(http.StatusUnprocessableEntity, validationError)
