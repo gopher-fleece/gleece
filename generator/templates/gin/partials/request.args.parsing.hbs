@@ -1,16 +1,16 @@
 
 {{#equal PassedIn "Path"}}
-	{{ToLowerCamel Name}}Raw := ctx.Param("{{{Name}}}")
+	{{ToLowerCamel Name}}Raw := ctx.Param("{{{NameInSchema}}}")
 	{{> RequestSwitchParamType}}
 {{/equal}}
 
 {{#equal PassedIn "Query"}}
-	{{ToLowerCamel Name}}Raw := ctx.Query("{{{Name}}}")
+	{{ToLowerCamel Name}}Raw := ctx.Query("{{{NameInSchema}}}")
 	{{> RequestSwitchParamType}}
 {{/equal}}
 
 {{#equal PassedIn "Header"}}
-	{{ToLowerCamel Name}}Raw := ctx.GetHeader("{{{Name}}}")
+	{{ToLowerCamel Name}}Raw := ctx.GetHeader("{{{NameInSchema}}}")
 	{{> RequestSwitchParamType}}
 {{/equal}}
 
