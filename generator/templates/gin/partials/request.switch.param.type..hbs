@@ -4,8 +4,8 @@
 {{/equal}}
 
 {{#equal TypeMeta.Name "int"}}
-  {{ToLowerCamel Name}}Uint64, err := strconv.Atoi({{ToLowerCamel Name}}Raw)
-  if err != nil {
+  {{ToLowerCamel Name}}Uint64, conversionErr := strconv.Atoi({{ToLowerCamel Name}}Raw)
+  if conversionErr != nil {
 	{{> JsonValidationErrorResponse }}
   }
   {{ToLowerCamel Name}} := int({{ToLowerCamel Name}}Uint64)
@@ -13,8 +13,8 @@
 {{/equal}}
 
 {{#equal TypeMeta.Name "int8"}}
-  {{ToLowerCamel Name}}Uint64, err := strconv.ParseInt({{ToLowerCamel Name}}Raw, 10, 8)
-  if err != nil {
+  {{ToLowerCamel Name}}Uint64, conversionErr := strconv.ParseInt({{ToLowerCamel Name}}Raw, 10, 8)
+  if conversionErr != nil {
 	{{> JsonValidationErrorResponse }}
   }
   {{ToLowerCamel Name}} := int8({{ToLowerCamel Name}}Uint64)
@@ -22,8 +22,8 @@
 {{/equal}}
 
 {{#equal TypeMeta.Name "int16"}}
-  {{ToLowerCamel Name}}Uint64, err := strconv.ParseInt({{ToLowerCamel Name}}Raw, 10, 16)
-  if err != nil {
+  {{ToLowerCamel Name}}Uint64, conversionErr := strconv.ParseInt({{ToLowerCamel Name}}Raw, 10, 16)
+  if conversionErr != nil {
 	{{> JsonValidationErrorResponse }}
   }
   {{ToLowerCamel Name}} := int16({{ToLowerCamel Name}}Uint64)
@@ -31,8 +31,8 @@
 {{/equal}}
 
 {{#equal TypeMeta.Name "int32"}}
-  {{ToLowerCamel Name}}Uint64, err := strconv.ParseInt({{ToLowerCamel Name}}Raw, 10, 32)
-  if err != nil {
+  {{ToLowerCamel Name}}Uint64, conversionErr := strconv.ParseInt({{ToLowerCamel Name}}Raw, 10, 32)
+  if conversionErr != nil {
 	{{> JsonValidationErrorResponse }}
   }
   {{ToLowerCamel Name}} := int32({{ToLowerCamel Name}}Uint64)
@@ -40,8 +40,8 @@
 {{/equal}}
 
 {{#equal TypeMeta.Name "int64"}}
-  {{ToLowerCamel Name}}Uint64, err := strconv.ParseInt({{ToLowerCamel Name}}Raw, 10, 64)
-  if err != nil {
+  {{ToLowerCamel Name}}Uint64, conversionErr := strconv.ParseInt({{ToLowerCamel Name}}Raw, 10, 64)
+  if conversionErr != nil {
 	{{> JsonValidationErrorResponse }}
   }
   {{ToLowerCamel Name}} := int64({{ToLowerCamel Name}}Uint64)
@@ -49,8 +49,8 @@
 {{/equal}}
 
 {{#equal TypeMeta.Name "uint"}}
-  {{ToLowerCamel Name}}Uint64, err := strconv.ParseUint({{ToLowerCamel Name}}Raw, 10, 32)
-  if err != nil {
+  {{ToLowerCamel Name}}Uint64, conversionErr := strconv.ParseUint({{ToLowerCamel Name}}Raw, 10, 32)
+  if conversionErr != nil {
 	{{> JsonValidationErrorResponse }}
   }
   {{ToLowerCamel Name}} := uint({{ToLowerCamel Name}}Uint64)
@@ -58,8 +58,8 @@
 {{/equal}}
 
 {{#equal TypeMeta.Name "uint8"}}
-  {{ToLowerCamel Name}}Uint64, err := strconv.ParseUint({{ToLowerCamel Name}}Raw, 10, 8)
-  if err != nil {
+  {{ToLowerCamel Name}}Uint64, conversionErr := strconv.ParseUint({{ToLowerCamel Name}}Raw, 10, 8)
+  if conversionErr != nil {
 	{{> JsonValidationErrorResponse }}
   }
   {{ToLowerCamel Name}} := uint8({{ToLowerCamel Name}}Uint64)
@@ -67,8 +67,8 @@
 {{/equal}}
 
 {{#equal TypeMeta.Name "uint16"}}
-  {{ToLowerCamel Name}}Uint64, err := strconv.ParseUint({{ToLowerCamel Name}}Raw, 10, 16)
-  if err != nil {
+  {{ToLowerCamel Name}}Uint64, conversionErr := strconv.ParseUint({{ToLowerCamel Name}}Raw, 10, 16)
+  if conversionErr != nil {
 	{{> JsonValidationErrorResponse }}
   }
   {{ToLowerCamel Name}} := uint16({{ToLowerCamel Name}}Uint64)
@@ -76,8 +76,8 @@
 {{/equal}}
 
 {{#equal TypeMeta.Name "uint32"}}
-  {{ToLowerCamel Name}}Uint64, err := strconv.ParseUint({{ToLowerCamel Name}}Raw, 10, 32)
-  if err != nil {
+  {{ToLowerCamel Name}}Uint64, conversionErr := strconv.ParseUint({{ToLowerCamel Name}}Raw, 10, 32)
+  if conversionErr != nil {
 	{{> JsonValidationErrorResponse }}
   }
   {{ToLowerCamel Name}} := uint32({{ToLowerCamel Name}}Uint64)
@@ -85,24 +85,24 @@
 {{/equal}}
 
 {{#equal TypeMeta.Name "uint64"}}
-  {{ToLowerCamel Name}}, err := strconv.ParseUint({{ToLowerCamel Name}}Raw, 10, 64)
-  if err != nil {
+  {{ToLowerCamel Name}}, conversionErr := strconv.ParseUint({{ToLowerCamel Name}}Raw, 10, 64)
+  if conversionErr != nil {
 	{{> JsonValidationErrorResponse }}
   }
   // Pass to validator
 {{/equal}}
 
 {{#equal TypeMeta.Name "bool"}}
-  {{ToLowerCamel Name}}, err := strconv.ParseBool({{ToLowerCamel Name}}Raw)
-  if err != nil {
+  {{ToLowerCamel Name}}, conversionErr := strconv.ParseBool({{ToLowerCamel Name}}Raw)
+  if conversionErr != nil {
 	{{> JsonValidationErrorResponse }}
   }
   // Pass to validator
 {{/equal}}
 
 {{#equal TypeMeta.Name "float32"}}
-  {{ToLowerCamel Name}}Float64, err := strconv.ParseFloat({{ToLowerCamel Name}}Raw, 32)
-  if err != nil {
+  {{ToLowerCamel Name}}Float64, conversionErr := strconv.ParseFloat({{ToLowerCamel Name}}Raw, 32)
+  if conversionErr != nil {
 	{{> JsonValidationErrorResponse }}
   }
   // Pass to validator
@@ -110,8 +110,8 @@
 {{/equal}}
 
 {{#equal TypeMeta.Name "float64"}}
-  {{ToLowerCamel Name}}, err := strconv.ParseFloat({{ToLowerCamel Name}}Raw, 64)
-  if err != nil {
+  {{ToLowerCamel Name}}, conversionErr := strconv.ParseFloat({{ToLowerCamel Name}}Raw, 64)
+  if conversionErr != nil {
 	{{> JsonValidationErrorResponse }}
   }
   // Pass to validator

@@ -15,9 +15,10 @@
 {{/equal}}
 
 {{#equal PassedIn "Body"}}
-	var {{ToLowerCamel Name}} {{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}}
-	err := bindAndValidateBody(ctx, "{{{ResponseContentType}}}", &{{ToLowerCamel Name}})
-	if err != nil {
-		{{> JsonValidationErrorResponse }}
+	var {{ToLowerCamel Name}}Ref *{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}}
+	conversionErr := bindAndValidateBody(ctx, "{{{ResponseContentType}}}", &{{ToLowerCamel Name}}Ref)
+	if conversionErr != nil {
+		{{> JsonBodyValidationErrorResponse }}
 	}
+	{{ToLowerCamel Name}} := *{{ToLowerCamel Name}}Ref
 {{/equal}}

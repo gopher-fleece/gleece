@@ -42,20 +42,24 @@ var JsonResponse string
 //go:embed partials/json.validation.error.response.hbs
 var JsonValidationErrorResponse string
 
+//go:embed partials/json.body.validation.error.response.hbs
+var JsonBodyValidationErrorResponse string
+
 //go:embed partials/json.error.response.hbs
 var JsonErrorResponse string
 
 var Partials = map[string]string{
-	"Imports":                     Imports,
-	"TypeDeclarations":            TypeDeclarations,
-	"FunctionDeclarations":        FunctionDeclarations,
-	"AuthorizationCall":           AuthorizationCall,
-	"RequestArgsParsing":          RequestArgsParsing,
-	"JsonResponse":                JsonResponse,
-	"JsonValidationErrorResponse": JsonValidationErrorResponse,
-	"JsonErrorResponse":           JsonErrorResponse,
-	"ReplyResponse":               ReplyResponse,
-	"RequestSwitchParamType":      RequestSwitchParamType,
+	"Imports":                         Imports,
+	"TypeDeclarations":                TypeDeclarations,
+	"FunctionDeclarations":            FunctionDeclarations,
+	"AuthorizationCall":               AuthorizationCall,
+	"RequestArgsParsing":              RequestArgsParsing,
+	"JsonResponse":                    JsonResponse,
+	"JsonValidationErrorResponse":     JsonValidationErrorResponse,
+	"JsonBodyValidationErrorResponse": JsonBodyValidationErrorResponse,
+	"JsonErrorResponse":               JsonErrorResponse,
+	"ReplyResponse":                   ReplyResponse,
+	"RequestSwitchParamType":          RequestSwitchParamType,
 }
 
 func RegisterPartials() {

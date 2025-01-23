@@ -14,7 +14,7 @@ func getStatusCode(controller external.Controller, hasReturnValue bool, err erro
 	return http.StatusNoContent
 }
 
-func bindAndValidateBody[TOutput any](ctx *gin.Context, contentType string, output *TOutput) error {
+func bindAndValidateBody[TOutput any](ctx *gin.Context, contentType string, output **TOutput) error {
 	var err error
 
 	bodyBytes, err := io.ReadAll(ctx.Request.Body)
@@ -39,7 +39,7 @@ func bindAndValidateBody[TOutput any](ctx *gin.Context, contentType string, outp
 		return err
 	}
 
-	output = &deserializedOutput
+	*output = &deserializedOutput
 	return nil
 }
 
