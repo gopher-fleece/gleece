@@ -291,12 +291,17 @@ type CustomValidators struct {
 }
 
 type RoutesConfig struct {
-	Engine            RoutingEngineType        `json:"engine" validate:"required,oneof=gin"`
-	TemplateOverrides map[KnownTemplate]string `json:"templateOverrides"`
-	OutputPath        string                   `json:"outputPath" validate:"required,filepath"`
-	OutputFilePerms   string                   `json:"outputFilePerms" validate:"regex=^(0?[0-7]{3})?$"`
-	PackageName       string                   `json:"packageName"`
-	CustomValidators  []CustomValidators       `json:"customValidators" validate:"dive"`
+	Engine                      RoutingEngineType           `json:"engine" validate:"required,oneof=gin"`
+	TemplateOverrides           map[KnownTemplate]string    `json:"templateOverrides"`
+	OutputPath                  string                      `json:"outputPath" validate:"required,filepath"`
+	OutputFilePerms             string                      `json:"outputFilePerms" validate:"regex=^(0?[0-7]{3})?$"`
+	PackageName                 string                      `json:"packageName"`
+	CustomValidators            []CustomValidators          `json:"customValidators" validate:"dive"`
+	AuthorizationFunctionConfig AuthorizationFunctionConfig `json:"authorizationFunctionConfig" validate:"required"`
+}
+
+type AuthorizationFunctionConfig struct {
+	FullPackageName string `json:"fullPackageName" validate:"required,filepath"`
 }
 
 type CommonConfig struct {

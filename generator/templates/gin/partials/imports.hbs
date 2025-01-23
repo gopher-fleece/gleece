@@ -9,6 +9,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gin-gonic/gin"
 	"github.com/gopher-fleece/gleece/external"
+	RequestAuth "{{{AuthConfig.FullPackageName}}}"
 {{#each Controllers}}
 	{{{Name}}}Import "{{{FullyQualifiedPackage}}}"
 	{{#each Routes}}

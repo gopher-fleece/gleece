@@ -1,7 +1,17 @@
 {
+	"commonConfig": {
+		"controllerGlobs": [
+			"./*.go",
+			"./**/*.go"
+		]
+	},
 	"routesConfig": {
 		"engine": "gin",
-		"outputPath": "./dist/gleece.go"
+		"outputPath": "./dist/gleece.go",
+		"outputFilePerms": "0644",
+		"authorizationFunctionConfig": {
+			"fullPackageName": "github.com/gopher-fleece/gleece/test/fixtures"
+		}
 	},
 	"openAPIGeneratorConfig": {
 		"info": {
@@ -45,7 +55,5 @@
 		"specGeneratorConfig": {
 			"outputPath": "./dist/swagger.json"
 		}
-	},
-	"commonConfig": {
 	}
 }

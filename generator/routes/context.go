@@ -30,13 +30,14 @@ type RoutesContext struct {
 	Controllers      []definitions.ControllerMetadata
 	CustomValidators []definitions.CustomValidators
 	GenerationDate   string
+	AuthConfig       definitions.AuthorizationFunctionConfig
 }
 
 func GetTemplateContext(
 	config definitions.RoutesConfig,
 	controllers []definitions.ControllerMetadata,
 ) (RoutesContext, error) {
-	ctx := RoutesContext{Controllers: controllers}
+	ctx := RoutesContext{Controllers: controllers, AuthConfig: config.AuthorizationFunctionConfig}
 	if len(config.PackageName) > 0 {
 		ctx.PackageName = config.PackageName
 	} else {

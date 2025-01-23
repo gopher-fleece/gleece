@@ -19,59 +19,15 @@ package {{{PackageName}}}
 {{> Imports}}
 
 var validatorInstance *validator.Validate
-var urlParamRegex = regexp.MustCompile(`\{([\w\d-_]+)\}`)
+var urlParamRegex *regexp.Regexp
 
-func getStatusCode(controller external.Controller, hasReturnValue bool, err error) int {
-	if controller.GetStatus() != nil {
-		return int(*controller.GetStatus())
-	} 
+{{> TypeDeclarations}}
 
-	if err != nil {
-		return http.StatusInternalServerError
-	}
-
-	if hasReturnValue {
-		return http.StatusOK
-	}
-
-	return http.StatusNoContent
-}
-
-func bindAndValidateBody[TOutput any](ctx *gin.Context, contentType string, output *TOutput) error {
-	var err error
-
-	bodyBytes, err := io.ReadAll(ctx.Request.Body)
-	if err != nil {
-		return err
-	}
-
-	var deserializedOutput TOutput
-
-	switch contentType {
-	case "application/json":
-		err = json.Unmarshal(bodyBytes, &deserializedOutput)
-	default:
-		return fmt.Errorf("content-type %s is not currently supported by the validation subsystem", contentType)
-	}
-
-	if err != nil {
-		return err
-	}
-
-	if err = validatorInstance.Struct(&deserializedOutput); err != nil {
-		return err
-	}
-
-	output = &deserializedOutput
-	return nil
-}
-
-func toGinUrl(url string) string {
-	return urlParamRegex.ReplaceAllString(url, ":$1")
-}
+{{> FunctionDeclarations}}
 
 func RegisterRoutes(engine *gin.Engine) {
 	validatorInstance = validator.New()
+	urlParamRegex = regexp.MustCompile(`\{([\w\d-_]+)\}`)
 
 {{#each CustomValidators}}
 	validatorInstance.RegisterValidation("{{{ValidateTagName}}}", func(fl validator.FieldLevel) bool {
@@ -83,6 +39,7 @@ func RegisterRoutes(engine *gin.Engine) {
 	// {{{Name}}}
 	{{#each Routes}}
 		engine.{{{HttpVerb}}}(toGinUrl("{{{../RestMetadata.Path}}}{{{RestMetadata.Path}}}"), func(ctx *gin.Context) {
+			{{> AuthorizationCall}}
 			controller := {{{Name}}}Import.{{../Name}}{}
 			controller.SetRequest(ctx)
 			{{#each FuncParams}}

@@ -122,3 +122,18 @@ type Controller interface {
 	// SetHeader sets a header for the GleeceController.
 	SetHeader(name string, value interface{})
 }
+
+type SecurityCheck struct {
+	SchemaName string   `json:"name" validate:"required,starts_with_letter"`
+	Scopes     []string `json:"scopes" validate:"not_nil_array"`
+}
+
+type CustomError struct {
+	Payload *any
+}
+
+type SecurityError struct {
+	Message     string
+	StatusCode  HttpStatusCode
+	CustomError *CustomError
+}

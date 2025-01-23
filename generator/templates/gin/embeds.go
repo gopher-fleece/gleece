@@ -18,6 +18,15 @@ var RoutesTemplate string
 //go:embed partials/imports.hbs
 var Imports string
 
+//go:embed partials/type.declarations.hbs
+var TypeDeclarations string
+
+//go:embed partials/function.declarations.hbs
+var FunctionDeclarations string
+
+//go:embed partials/authorization.call.hbs
+var AuthorizationCall string
+
 //go:embed partials/request.args.parsing.hbs
 var RequestArgsParsing string
 
@@ -38,6 +47,9 @@ var JsonErrorResponse string
 
 var Partials = map[string]string{
 	"Imports":                     Imports,
+	"TypeDeclarations":            TypeDeclarations,
+	"FunctionDeclarations":        FunctionDeclarations,
+	"AuthorizationCall":           AuthorizationCall,
 	"RequestArgsParsing":          RequestArgsParsing,
 	"JsonResponse":                JsonResponse,
 	"JsonValidationErrorResponse": JsonValidationErrorResponse,

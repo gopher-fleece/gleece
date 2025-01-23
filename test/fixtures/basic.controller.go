@@ -30,6 +30,7 @@ type DefinedInSameFile struct {
 // @Method(POST)
 // @Route(/test/embedded/error, {"someContext": 53553})
 // @Security(securitySchemaName, { scopes: ["a", "b"]})
+// @Security(securitySchemaName, { scopes: ["c"]})
 func (ec *ExtendedController) ReturnEmbedsAndError() (HoldsVeryNestedStructs, EmbedsAnError) {
 	return HoldsVeryNestedStructs{}, EmbedsAnError{}
 }
