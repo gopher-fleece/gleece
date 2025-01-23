@@ -134,21 +134,6 @@ type Domicile struct {
 	HouseNumber int `json:"houseNumber" validate:"gte=1"`
 }
 
-// @Description Create a new user
-// @Method(POST) This text is not part of the OpenAPI spec
-// @Route(/user/{user_name}) Same here
-// @Query(email, { validate: "required,email" }) The user's email
-// @Path(name, { name: "user_name" }) The user's name
-// @Header(origin, { name: "x-origin" }) The request origin
-// @Header(trace) The trace info
-// @Response(200) The ID of the newly created user
-// @ErrorResponse(500) The error when process failed
-// @Security(securitySchemaName, { scopes: ["read:users", "write:users"] })
-func (ec *UsersController) CreateNewUser(email string, name string, origin string, trace string) (string, error) {
-	userId := uuid.New()
-	return userId.String(), nil
-}
-
 // @Method(POST) This text is not part of the OpenAPI spec
 // @Route(/user/{id}/domicile)
 // @Path(id)
@@ -174,4 +159,22 @@ func (ec *UsersController) GetUserDomicile(id string) (Domicile, error) {
 		Address:     "Jl. Jend. Sudirman",
 		HouseNumber: 1,
 	}, nil
+}
+
+// @Description Create a new user
+// @Method(POST) This text is not part of the OpenAPI spec
+// @Route(/user/{user_name}/{user_id}) Same here
+// @Query(email, { validate: "required,email" }) The user's email
+// @Path(id, { name: "user_id", validate:"gt=1" }) The user's ID
+// @Path(id2, { name: "user_id_2", validate:"gt=10" }) The user's ID 2
+// @Path(name, { name: "user_name" }) The user's name
+// @Body(domicile) The user's domicile
+// @Header(origin, { name: "x-origin" }) The request origin
+// @Header(trace) The trace info
+// @Response(200) The ID of the newly created user
+// @ErrorResponse(500) The error when process failed
+// @Security(securitySchemaName, { scopes: ["read:users", "write:users"] })
+func (ec *UsersController) CreateNewUser(id int, id2 int, email string, name string, origin string, trace string, domicile Domicile) (string, error) {
+	userId := uuid.New()
+	return domicile.Address + " " + userId.String(), nil
 }

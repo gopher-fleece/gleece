@@ -46,6 +46,9 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 			controller := {{{Name}}}Import.{{../Name}}{}
 			controller.SetRequest(ctx)
+			{{#ifAnyParamRequiresConversion FuncParams}}
+			var conversionErr error
+			{{/ifAnyParamRequiresConversion}}
 			{{#each FuncParams}}
 				{{> RequestArgsParsing}}
 			{{/each}}

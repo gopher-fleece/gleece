@@ -16,7 +16,7 @@
 
 {{#equal PassedIn "Body"}}
 	var {{ToLowerCamel Name}}Ref *{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}}
-	conversionErr := bindAndValidateBody(ctx, "{{{ResponseContentType}}}", &{{ToLowerCamel Name}}Ref)
+	conversionErr = bindAndValidateBody(ctx, "{{{ResponseContentType}}}", &{{ToLowerCamel Name}}Ref)
 	if conversionErr != nil {
 		{{> JsonBodyValidationErrorResponse }}
 	}

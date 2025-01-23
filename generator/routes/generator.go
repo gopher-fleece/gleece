@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 
 	"github.com/aymerick/raymond"
 	"github.com/iancoleman/strcase"
@@ -47,6 +48,30 @@ func registerHelpers() {
 		return options.Inverse()
 	})
 
+	raymond.RegisterHelper("ifLongerThan", func(array any, length int, options *raymond.Options) string {
+		slice, ok := toSlice(array)
+		if !ok {
+			panic("ifLongerThan helper was called with a non-array first value")
+		}
+
+		if len(slice) > length {
+			return options.Fn()
+		}
+
+		return options.Inverse()
+	})
+
+	raymond.RegisterHelper("ifAnyParamRequiresConversion", func(params []definitions.FuncParam, options *raymond.Options) string {
+		for _, param := range params {
+			if param.TypeMeta.Name != "string" && param.TypeMeta.FullyQualifiedPackage != "" {
+				// Currently, only 'string' parameters don't undergo any validation
+				return options.Fn()
+			}
+		}
+
+		return options.Inverse()
+	})
+
 	raymond.RegisterHelper("LastTypeIsByAddress", func(types []definitions.FuncReturnValue, options *raymond.Options) string {
 		if len(types) <= 0 {
 			panic("LastTypeIsByAddress received a 0-length array")
@@ -67,6 +92,22 @@ func registerHelpers() {
 		last := types[len(types)-1]
 		return fmt.Sprintf("Response%d%s.%s", last.UniqueImportSerial, last.Name, last.Name)
 	})
+}
+
+func toSlice(input any) ([]any, bool) {
+	val := reflect.ValueOf(input)
+
+	switch val.Kind() {
+	case reflect.Slice, reflect.Array:
+		// Create a generic slice of `any`
+		slice := make([]any, val.Len())
+		for i := 0; i < val.Len(); i++ {
+			slice[i] = val.Index(i).Interface()
+		}
+		return slice, true
+	default:
+		return nil, false
+	}
 }
 
 func getDefaultTemplate(engine definitions.RoutingEngineType) string {
