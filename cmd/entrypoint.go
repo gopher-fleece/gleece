@@ -33,7 +33,7 @@ func getConfig(configPath string) (*definitions.GleeceConfig, error) {
 	}
 
 	// Validate the struct
-	err = validation.ValidatorInstance.Struct(config)
+	err = validation.ValidateStruct(config)
 	if err != nil {
 		// Validation failed
 		for _, err := range err.(validator.ValidationErrors) {

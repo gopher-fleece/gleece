@@ -10,8 +10,7 @@ import (
 	"github.com/gopher-fleece/gleece/definitions"
 )
 
-// Global validator instance
-var ValidatorInstance *validator.Validate
+var validatorInstance *validator.Validate
 
 // Custom validation function to check if the slice is not nil
 func validateNotNilSlice(fl validator.FieldLevel) bool {
@@ -66,19 +65,19 @@ func validateRegex(fl validator.FieldLevel) bool {
 	return re.MatchString(value)
 }
 
-func InitValidator() {
+func initValidator() {
 	// Initialize the validator instance
-	ValidatorInstance = validator.New()
+	validatorInstance = validator.New()
 
 	// Register custom validation functions globally
-	ValidatorInstance.RegisterValidation("not_nil_array", validateNotNilSlice)
-	ValidatorInstance.RegisterValidation("starts_with_letter", validateStartsWithLetter)
-	ValidatorInstance.RegisterValidation("regex", validateRegex)
+	validatorInstance.RegisterValidation("not_nil_array", validateNotNilSlice)
+	validatorInstance.RegisterValidation("starts_with_letter", validateStartsWithLetter)
+	validatorInstance.RegisterValidation("regex", validateRegex)
 
 	// Register enum validation functions
 
 	// SecuritySchemeIn
-	ValidatorInstance.RegisterValidation(
+	validatorInstance.RegisterValidation(
 		"security_schema_in",
 		registerEnumValidator(
 			[]definitions.SecuritySchemeIn{
@@ -90,7 +89,7 @@ func InitValidator() {
 	)
 
 	// SecuritySchemeType
-	ValidatorInstance.RegisterValidation(
+	validatorInstance.RegisterValidation(
 		"security_schema_type",
 		registerEnumValidator(
 			[]definitions.SecuritySchemeType{
@@ -101,4 +100,11 @@ func InitValidator() {
 			},
 		),
 	)
+}
+
+func ValidateStruct(s interface{}) error {
+	if validatorInstance == nil {
+		initValidator()
+	}
+	return validatorInstance.Struct(s)
 }
