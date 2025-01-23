@@ -149,6 +149,18 @@ func (ec *UsersController) CreateNewUser(email string, name string, origin strin
 	return userId.String(), nil
 }
 
+// @Method(POST) This text is not part of the OpenAPI spec
+// @Route(/user/{id}/domicile)
+// @Path(id)
+// @Body(domicile)
+// @Response(200) The user's domicile
+// @ErrorResponse(404) The user not found
+// @ErrorResponse(500) The error when process failed
+// @Security(securitySchemaName, { scopes: ["read:users"] })
+func (ec *UsersController) SetUserDomicile(id string, domicile Domicile) error {
+	return nil
+}
+
 // @Description Get user's domicile
 // @Method(GET) This text is not part of the OpenAPI spec
 // @Route(/user/{id}/domicile)

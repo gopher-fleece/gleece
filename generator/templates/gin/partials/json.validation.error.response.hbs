@@ -4,7 +4,7 @@ validationError := external.Rfc7807Error{
 		"A request was made to operation '{{{OperationId}}}' but parameter %s did not pass validation - Expected %s but got %s",
 		"{{ToLowerCamel Name}}",
 		"{{{TypeMeta.Name}}}",
-		reflect.TypeOf({{ToLowerCamel Name}}Raw).String(),
+		reflect.TypeOf({{ToLowerCamel Name}}{{#ifEqual PassedIn "Body"}}{{else}}Raw{{/ifEqual}}).String(),
 	),
 	Status:     http.StatusUnprocessableEntity,
 	Instance:   "/gleece/validation/{{{../../Name}}}/{{{OperationId}}}",

@@ -39,6 +39,14 @@ func registerHelpers() {
 		return options.Inverse()
 	})
 
+	raymond.RegisterHelper("ifEqual", func(a interface{}, b interface{}, options *raymond.Options) string {
+		if raymond.Str(a) == raymond.Str(b) {
+			return options.Fn()
+		}
+
+		return options.Inverse()
+	})
+
 	raymond.RegisterHelper("LastTypeIsByAddress", func(types []definitions.FuncReturnValue, options *raymond.Options) string {
 		if len(types) <= 0 {
 			panic("LastTypeIsByAddress received a 0-length array")

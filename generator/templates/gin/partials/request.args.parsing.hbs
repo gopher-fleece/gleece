@@ -15,8 +15,8 @@
 {{/equal}}
 
 {{#equal PassedIn "Body"}}
-	var {{ToLowerCamel Name}} {{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}.{{/if}}{{{TypeMeta.Name}}}
-	err := bindAndValidateBody[{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}.{{/if}}{{{TypeMeta.Name}}}](ctx, "{{{ResponseContentType}}}", &{{ToLowerCamel Name}})
+	var {{ToLowerCamel Name}} {{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}}
+	err := bindAndValidateBody(ctx, "{{{ResponseContentType}}}", &{{ToLowerCamel Name}})
 	if err != nil {
 		{{> JsonValidationErrorResponse }}
 	}
