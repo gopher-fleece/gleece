@@ -1,0 +1,28 @@
+name: 🚀 On Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  notify-pkg-go-dev:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 📥 Checkout repository
+      uses: actions/checkout@v2
+
+    - name: 🔧 Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: '1.20'
+
+    - name: 🏷️ Get version from release tag
+      id: update_version
+      run: |
+        VERSION=$(echo "${GITHUB_REF}" | sed 's/refs\/tags\///')
+        echo "VERSION=${VERSION}" >> $GITHUB_ENV
+
+    - name: 🔔 Notify pkg.go.dev 
+      run: |
+        curl -sSf https://proxy.golang.org/github.com/gopher-fleece/gleece/@v/${{ env.VERSION }}.info || echo "Failed to notify pkg.go.dev"
