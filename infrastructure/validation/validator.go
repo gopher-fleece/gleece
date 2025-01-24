@@ -110,7 +110,7 @@ func ValidateStruct(s interface{}) error {
 	return validatorInstance.Struct(s)
 }
 
-func ExtractValidationErrorMessage(err error) string {
+func ExtractValidationErrorMessage(err error, fieldName *string) string {
 	if err == nil {
 		return ""
 	}
@@ -122,7 +122,11 @@ func ExtractValidationErrorMessage(err error) string {
 
 	var errStr string
 	for _, validationErr := range validationErrors {
-		errStr += fmt.Sprintf("Field '%s' failed validation with tag '%s'. ", validationErr.Field(), validationErr.Tag())
+		fName := validationErr.Field()
+		if fieldName != nil {
+			fName = *fieldName
+		}
+		errStr += fmt.Sprintf("Field '%s' failed validation with tag '%s'. ", fName, validationErr.Tag())
 	}
 
 	return errStr

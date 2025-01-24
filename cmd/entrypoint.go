@@ -34,7 +34,7 @@ func getConfig(configPath string) (*definitions.GleeceConfig, error) {
 	// Validate the struct
 	err = validation.ValidateStruct(config)
 	if err != nil {
-		return nil, fmt.Errorf("Invalid config %s", validation.ExtractValidationErrorMessage(err))
+		return nil, fmt.Errorf("Invalid config %s", validation.ExtractValidationErrorMessage(err, nil))
 	}
 
 	return &config, nil

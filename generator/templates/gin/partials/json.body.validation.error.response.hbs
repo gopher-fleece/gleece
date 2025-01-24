@@ -4,7 +4,7 @@ validationError := external.Rfc7807Error{
 		"A request was made to operation '{{{OperationId}}}' but body parameter '%s' did not pass validation of '%s' - %s",
 		"{{ToLowerCamel Name}}",
 		"{{{TypeMeta.Name}}}",
-		validation.ExtractValidationErrorMessage(conversionErr),
+		validation.ExtractValidationErrorMessage(conversionErr, nil),
 	),
 	Status:     http.StatusUnprocessableEntity,
 	Instance:   "/gleece/validation/{{{../../Tag}}}/{{{OperationId}}}",
