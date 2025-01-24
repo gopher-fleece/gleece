@@ -223,7 +223,6 @@ func GetTypeMetaByIdent(
 	meta := definitions.TypeMetadata{
 		Name:        ident.Name,
 		Description: FindAndExtract(comments, "@Description"),
-		// IdentifierNode: ident,
 	}
 
 	if IsUniverseType(ident.Name) {
@@ -277,7 +276,6 @@ func GetTypeMetaBySelectorExpr(
 		Name:        typeOrInterfaceName,
 		Description: FindAndExtract(comments, "@Description"),
 		Import:      definitions.ImportTypeAlias,
-		// IdentifierNode: selector.Sel,
 	}
 
 	// Resolve the importAlias part to a full package

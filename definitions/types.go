@@ -109,7 +109,6 @@ type TypeMetadata struct {
 	Import                ImportType
 	IsUniverseType        bool
 	IsByAddress           bool
-	// IdentifierNode        *ast.Ident
 }
 
 type ErrorResponse struct {

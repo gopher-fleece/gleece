@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gopher-fleece/gleece/definitions"
+	"github.com/gopher-fleece/gleece/infrastructure/logger"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -124,6 +125,8 @@ var _ = Describe("Validation Utilities", func() {
 })
 
 func TestValidation(t *testing.T) {
+	// Disable logging to reduce clutter.
+	logger.SetLogLevel(logger.LogLevelNone)
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Validation Suite")
 }

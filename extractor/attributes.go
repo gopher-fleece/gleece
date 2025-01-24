@@ -18,6 +18,9 @@ const (
 const (
 	AttributeTag              = "Tag"
 	AttributeQuery            = "Query"
+	AttributePath             = "Path"
+	AttributeBody             = "Body"
+	AttributeHeader           = "Header"
 	AttributeDeprecated       = "Deprecated"
 	AttributeHidden           = "Hidden"
 	AttributeSecurity         = "Security"

@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/gopher-fleece/gleece/cmd/arguments"
-	Logger "github.com/gopher-fleece/gleece/infrastructure/logger"
+	"github.com/gopher-fleece/gleece/infrastructure/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -68,25 +68,25 @@ Whether you're building a simple service or a complex application, Gleece ensure
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		// Handle the verbosity flag here if you want it executed for every subcommand
 		if cmd.Flag("verbosity") == nil {
-			Logger.SetLogLevel(Logger.LogLevelInfo)
+			logger.SetLogLevel(logger.LogLevelInfo)
 			return
 		}
 
 		verbosityInt, err := cmd.Flags().GetUint8("verbosity")
 		if err != nil {
-			Logger.SetLogLevel(Logger.LogLevelAll)
-			Logger.Warn("Could not obtain verbosity level from arguments. Fell back to 'all'. Error - %v", err)
+			logger.SetLogLevel(logger.LogLevelAll)
+			logger.Warn("Could not obtain verbosity level from arguments. Fell back to 'all'. Error - %v", err)
 			return
 		}
 
-		verbosity := Logger.LogLevel(verbosityInt)
-		Logger.SetLogLevel(verbosity)
+		verbosity := logger.LogLevel(verbosityInt)
+		logger.SetLogLevel(verbosity)
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		Logger.Info(`Gleece called with no parameters. Assuming 'generate spec-and-routes -c "./gleece.config.json"'`)
+		logger.Info(`Gleece called with no parameters. Assuming 'generate spec-and-routes -c "./gleece.config.json"'`)
 		err := GenerateSpecAndRoutes(arguments.CliArguments{ConfigPath: "./gleece.config.json"})
 		if err != nil {
-			Logger.Fatal("Failed to generate spec and routes: %v", err)
+			logger.Fatal("Failed to generate spec and routes: %v", err)
 			os.Exit(1)
 		}
 	},

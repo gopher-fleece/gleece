@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	Logger "github.com/gopher-fleece/gleece/infrastructure/logger"
+	"github.com/gopher-fleece/gleece/infrastructure/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -20,7 +20,7 @@ var specCommand = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		err := GenerateSpec(cliArgs)
 		if err != nil {
-			Logger.Fatal("Failed to generate spec: %v", err)
+			logger.Fatal("Failed to generate spec: %v", err)
 			os.Exit(1)
 		}
 	},
@@ -32,7 +32,7 @@ var routesCommand = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		err := GenerateRoutes(cliArgs)
 		if err != nil {
-			Logger.Fatal("Failed to generate routes: %v", err)
+			logger.Fatal("Failed to generate routes: %v", err)
 			os.Exit(1)
 		}
 	},
@@ -44,7 +44,7 @@ var specAndRoutesCommand = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		err := GenerateSpecAndRoutes(cliArgs)
 		if err != nil {
-			Logger.Fatal("Failed to generate spec and routes: %v", err)
+			logger.Fatal("Failed to generate spec and routes: %v", err)
 			os.Exit(1)
 		}
 	},
