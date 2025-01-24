@@ -22,6 +22,8 @@ func bindAndValidateBody[TOutput any](ctx *gin.Context, contentType string, outp
 		return err
 	}
 
+	// TODO: Do we need support primitive body????
+
 	var deserializedOutput TOutput
 
 	switch contentType {

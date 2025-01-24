@@ -6,7 +6,6 @@ import (
 	"go/ast"
 	"os"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/gopher-fleece/gleece/cmd/arguments"
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/extractor"
@@ -35,11 +34,7 @@ func getConfig(configPath string) (*definitions.GleeceConfig, error) {
 	// Validate the struct
 	err = validation.ValidateStruct(config)
 	if err != nil {
-		// Validation failed
-		for _, err := range err.(validator.ValidationErrors) {
-			Logger.Error("Field '%s' failed validation: %s", err.StructField(), err.Tag())
-		}
-		return nil, fmt.Errorf("validation failed")
+		return nil, fmt.Errorf("Invalid config %s", validation.ExtractValidationErrorMessage(err))
 	}
 
 	return &config, nil

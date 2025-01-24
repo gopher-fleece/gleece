@@ -1,6 +1,7 @@
 package validation
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/go-playground/validator/v10"
@@ -57,6 +58,43 @@ var _ = Describe("Validation Utilities", func() {
 			Expect(validationErrors[2].Field()).To(Equal("RegexField"))
 			Expect(validationErrors[3].Field()).To(Equal("SecurityIn"))
 			Expect(validationErrors[4].Field()).To(Equal("SecurityType"))
+		})
+	})
+
+	Describe("ExtractValidationErrorMessage", func() {
+		It("should return an empty string for no error", func() {
+			err := error(nil)
+			message := ExtractValidationErrorMessage(err)
+			Expect(message).To(Equal(""))
+		})
+
+		It("should return the error message for a non-validation error", func() {
+			err := fmt.Errorf("some non-validation error")
+			message := ExtractValidationErrorMessage(err)
+			Expect(message).To(Equal("some non-validation error"))
+		})
+
+		It("should return a readable message for validation errors", func() {
+			// Create an invalid test struct
+			invalidStruct := TestStruct{
+				SliceField:   nil,
+				StringField:  "123abc",
+				RegexField:   "123abc",
+				SecurityIn:   "invalid",
+				SecurityType: "invalid",
+			}
+
+			// Validate the struct
+			err := ValidateStruct(invalidStruct)
+			Expect(err).To(HaveOccurred())
+
+			// Extract readable validation error messages
+			message := ExtractValidationErrorMessage(err)
+			Expect(message).To(ContainSubstring("Field 'SliceField' failed validation with tag 'not_nil_array'."))
+			Expect(message).To(ContainSubstring("Field 'StringField' failed validation with tag 'starts_with_letter'."))
+			Expect(message).To(ContainSubstring("Field 'RegexField' failed validation with tag 'regex'."))
+			Expect(message).To(ContainSubstring("Field 'SecurityIn' failed validation with tag 'security_schema_in'."))
+			Expect(message).To(ContainSubstring("Field 'SecurityType' failed validation with tag 'security_schema_type'."))
 		})
 	})
 })

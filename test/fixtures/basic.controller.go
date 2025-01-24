@@ -163,7 +163,7 @@ func (ec *UsersController) GetUserDomicile(id string) (Domicile, error) {
 
 // @Description Create a new user
 // @Method(POST) This text is not part of the OpenAPI spec
-// @Route(/user/{user_name}/{user_id}) Same here
+// @Route(/user/{user_name}/{user_id}/{user_id_2}) Same here
 // @Query(email, { validate: "required,email" }) The user's email
 // @Path(id, { name: "user_id", validate:"gt=1" }) The user's ID
 // @Path(id2, { name: "user_id_2", validate:"gt=10" }) The user's ID 2
