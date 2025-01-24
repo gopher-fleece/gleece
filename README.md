@@ -23,7 +23,8 @@ With Gleece, you can:
 - 🔧 **Simplify** your API development process.  
 - 📜 Automatically **generate OpenAPI v3 specs** directly from your code.  
 - 🎯 Ensure your APIs are always **well-documented and consistent**.  
-- ✅ **Validate input data** effortlessly to keep your APIs robust and secure.  
+- ✅ **Validate input data** effortlessly to keep your APIs robust and secure.
+- 🔐 **Security first** approach, easy authorization with supplied check function.
 
 Gleece aims to make Go developers’ lives easier by seamlessly integrating API routes, validation, and documentation into a single cohesive workflow.
 
