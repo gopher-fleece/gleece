@@ -134,6 +134,9 @@ func main() {
     router.Run(":8080")
 }
 ```
+## 📚 Example Project
+
+For a complete example project using Gleece, check out the [Gleece Example Project](https://github.com/gopher-fleece/gleecexample#readme). This project demonstrates how to set up and use Gleece in a real-world scenario, providing you with a practical reference to get started quickly.
 
 ## 🎨 VSCode Extension
 
