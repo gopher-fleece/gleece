@@ -117,7 +117,12 @@ func GenerateRoutes(args arguments.CliArguments) error {
 	if err != nil {
 		return err
 	}
-	routes.GenerateRoutes(config, meta)
+
+	if err := routes.GenerateRoutes(config, meta); err != nil {
+		Logger.Fatal("Failed to generate routing file - %v", err)
+		return err
+	}
+
 	return nil
 }
 

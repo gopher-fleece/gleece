@@ -3,12 +3,9 @@ package cmd
 import (
 	"os"
 
-	"github.com/gopher-fleece/gleece/cmd/arguments"
 	Logger "github.com/gopher-fleece/gleece/infrastructure/logger"
 	"github.com/spf13/cobra"
 )
-
-var cliArgs = arguments.CliArguments{}
 
 var generateCmd = &cobra.Command{
 	Use:   "generate spec-and-routes --config \"/path/to/gleece.config.json\"",

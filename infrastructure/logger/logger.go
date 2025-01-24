@@ -59,7 +59,8 @@ func SetLogLevel(level LogLevel) {
 // Prints a message, if level is greater to or equal to the currently set verbosity level
 func logger(level LogLevel, format string, v ...interface{}) {
 	if level >= verbosityLevel {
-		message := fmt.Sprintf("[%s] %s", getPrintPrefix(level), format)
+		prefix := fmt.Sprintf("[%s]", getPrintPrefix(level))
+		message := fmt.Sprintf("%-8s %s", prefix, format)
 		log.Printf(message, v...)
 	}
 }
@@ -87,4 +88,9 @@ func Error(format string, v ...interface{}) {
 // Prints a fatal message
 func Fatal(format string, v ...interface{}) {
 	logger(LogLevelFatal, format, v...)
+}
+
+func System(format string, v ...interface{}) {
+	message := fmt.Sprintf("[SYSTEM] %s", format)
+	log.Printf(message, v...)
 }
