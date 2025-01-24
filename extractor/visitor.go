@@ -481,7 +481,7 @@ func (v *ControllerVisitor) getFuncParams(funcDecl *ast.FuncDecl, comments []str
 			NameInSchema:       nameString,
 			ParamMeta:          param,
 			Description:        paramAttrib.Description,
-			Validator:          validatorString,
+			Validator:          appendParamRequiredValidation(&validatorString),
 			UniqueImportSerial: v.getNextImportId(),
 		}
 
@@ -788,4 +788,24 @@ func createInvalidParamUsageError(param definitions.FuncParam) error {
 		param.TypeMeta.Name,
 		param.PassedIn,
 	)
+}
+
+// For now, all params are required, later we will support nil for pointers and slices params
+func appendParamRequiredValidation(validation *string) string {
+	if validation == nil || *validation == "" {
+		return "required"
+	}
+
+	// Split the validation string into individual tags
+	tags := strings.Split(*validation, ",")
+
+	// Check if "required" is already present
+	for _, tag := range tags {
+		if tag == "required" {
+			return *validation
+		}
+	}
+
+	// Append "required" to the validation string
+	return *validation + ",required"
 }

@@ -36,7 +36,7 @@ func (ec *ExtendedController) ReturnEmbedsAndError() (HoldsVeryNestedStructs, Em
 }
 
 // A test for simple imports
-// @Query(definedElseWhere, {name:'someAlias', validate:'required, email'}) Testing simple type import
+// @Query(definedElseWhere, {name:'someAlias', validate:'required,email'}) Testing simple type import
 // @Method(POST)
 // @Route(/test)
 // @Response(204)
