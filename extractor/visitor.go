@@ -728,6 +728,15 @@ func (v *ControllerVisitor) visitMethod(funcDecl *ast.FuncDecl) (definitions.Rou
 		return definitions.RouteMetadata{}, true, v.frozenError(err)
 	}
 
+	if v.config.RoutesConfig.AuthorizationConfig.EnforceSecurityOnAllRoutes && len(security) <= 0 {
+		return definitions.RouteMetadata{}, true, v.getFrozenError(
+			"'enforceSecurityOnAllRoutes' setting is 'true'' but method '%s' on controller '%s'"+
+				"does not have any explicit or implicit (inherited) security attributes",
+			funcDecl.Name.Name,
+			v.currentController.Name,
+		)
+	}
+
 	meta := definitions.RouteMetadata{
 		OperationId:         funcDecl.Name.Name,
 		HttpVerb:            definitions.EnsureValidHttpVerb(methodAttr.Value),

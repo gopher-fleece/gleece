@@ -9,8 +9,9 @@
 		"engine": "gin",
 		"outputPath": "./dist/gleece.go",
 		"outputFilePerms": "0644",
-		"authorizationFunctionConfig": {
-			"fullPackageName": "github.com/gopher-fleece/gleece/test/fixtures"
+		"authorizationConfig": {
+			"authFileFullPackageName": "github.com/gopher-fleece/gleece/test/fixtures",
+			"enforceSecurityOnAllRoutes": true
 		}
 	},
 	"openAPIGeneratorConfig": {
@@ -29,7 +30,7 @@
 			},
 			"version": "1.0.0"
 		},
-		"base_url": "https://api.example.com",
+		"baseUrl": "https://api.example.com",
 		"securitySchemes": [
 			{
 				"description": "API Key for accessing the API",

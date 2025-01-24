@@ -67,19 +67,23 @@ By enforcing consistency between your contracts and implementation, Gleece helps
 Whether you're building a simple service or a complex application, Gleece ensures consistency, scalability, and developer productivity`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		// Handle the verbosity flag here if you want it executed for every subcommand
-		if cmd.Flag("verbosity") != nil {
-			verbosityInt, err := cmd.Flags().GetUint8("verbosity")
-			if err == nil {
-				verbosity := Logger.LogLevel(verbosityInt)
-				Logger.SetLogLevel(verbosity)
-				Logger.System("Verbosity level set to %d\n", verbosity)
-			} else {
-				Logger.SetLogLevel(Logger.LogLevelAll)
-				Logger.Warn("Could not obtain verbosity level from arguments. Fell back to 'all'. Error - %v", err)
-			}
+		if cmd.Flag("verbosity") == nil {
+			Logger.SetLogLevel(Logger.LogLevelInfo)
+			return
 		}
+
+		verbosityInt, err := cmd.Flags().GetUint8("verbosity")
+		if err != nil {
+			Logger.SetLogLevel(Logger.LogLevelAll)
+			Logger.Warn("Could not obtain verbosity level from arguments. Fell back to 'all'. Error - %v", err)
+			return
+		}
+
+		verbosity := Logger.LogLevel(verbosityInt)
+		Logger.SetLogLevel(verbosity)
 	},
 	Run: func(cmd *cobra.Command, args []string) {
+		Logger.Info(`Gleece called with no parameters. Assuming 'generate spec-and-routes -c "./gleece.config.json"'`)
 		err := GenerateSpecAndRoutes(arguments.CliArguments{ConfigPath: "./gleece.config.json"})
 		if err != nil {
 			Logger.Fatal("Failed to generate spec and routes: %v", err)
@@ -101,7 +105,7 @@ func init() {
 		&cliArgs.Verbosity,
 		"verbosity",
 		"v",
-		4,
+		2,
 		"Determines the verbosity of Gleece's traces. 0 = Output everything, 5 = Output fatal errors only",
 	)
 

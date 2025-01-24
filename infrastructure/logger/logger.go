@@ -54,6 +54,7 @@ func getPrintPrefix(level LogLevel) string {
 // SetLogLevel Sets the logger's verbosity level
 func SetLogLevel(level LogLevel) {
 	verbosityLevel = level
+	System("Verbosity level set to %s\n", getPrintPrefix(level))
 }
 
 // Prints a message, if level is greater to or equal to the currently set verbosity level

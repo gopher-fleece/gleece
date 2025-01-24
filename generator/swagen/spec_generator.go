@@ -83,19 +83,19 @@ func GenerateSpec(config *definitions.OpenAPIGeneratorConfig, defs []definitions
 	appendErrorSchema(&models, hasAnyErrorTypes)
 
 	if err := GenerateSecuritySpec(openapi, &config.SecuritySchemes); err != nil {
-		logger.Error("Failed to generate security spec:", err)
+		logger.Error("Failed to generate security spec - %v", err)
 		return nil, err
 	}
 	logger.Info("Security spec generated successfully")
 
 	if err := GenerateModelsSpec(openapi, models); err != nil {
-		logger.Error("Failed to generate models spec:", err)
+		logger.Error("Failed to generate models spec - %v", err)
 		return nil, err
 	}
 	logger.Info("Models spec generated successfully")
 
 	if err := GenerateControllersSpec(openapi, config, defs); err != nil {
-		logger.Error("Failed to generate controllers spec:", err)
+		logger.Error("Failed to generate controllers spec - %v", err)
 		return nil, err
 	}
 	logger.Info("Controllers spec generated successfully")
@@ -114,7 +114,7 @@ func GenerateSpec(config *definitions.OpenAPIGeneratorConfig, defs []definitions
 		return nil, err
 	}
 
-	logger.Info("OpenAPI specification generated successfully")
+	logger.Info("OpenAPI specification generation completed successfully")
 	return jsonBytes, nil
 
 }
@@ -131,18 +131,18 @@ func GenerateAndOutputSpec(config *definitions.OpenAPIGeneratorConfig, defs []de
 	dirPath := filepath.Dir(config.SpecGeneratorConfig.OutputPath)
 	// Create the output directory if it doesn't exist
 	if err := os.MkdirAll(dirPath, os.ModePerm); err != nil {
-		logger.Error("Failed to create directory:", err)
+		logger.Error("Failed to create directory - %v", err)
 		return err
 	}
 
 	// Write the JSON to the file
 	if err := os.WriteFile(config.SpecGeneratorConfig.OutputPath, jsonBytes, 0644); err != nil {
-		logger.Error("Failed to write file:", err)
+		logger.Error("Failed to write file - %v", err)
 		return err
 	}
 
 	// Print the path to the generated JSON file
-	logger.Info("OpenAPI specification written to:", config.SpecGeneratorConfig.OutputPath)
+	logger.Info("OpenAPI specification written to '%s'", config.SpecGeneratorConfig.OutputPath)
 	return nil
 
 }

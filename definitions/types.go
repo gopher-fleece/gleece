@@ -265,7 +265,7 @@ type SecuritySchemeConfig struct {
 
 type OpenAPIGeneratorConfig struct {
 	Info                 openapi3.Info          `json:"info" validate:"required"`
-	BaseURL              string                 `json:"base_url" validate:"required,url"`
+	BaseURL              string                 `json:"baseUrl" validate:"required,url"`
 	SecuritySchemes      []SecuritySchemeConfig `json:"securitySchemes" validate:"not_nil_array"`
 	DefaultRouteSecurity []RouteSecurity        `json:"defaultSecurity" validate:"not_nil_array"`
 	SpecGeneratorConfig  SpecGeneratorConfig    `json:"specGeneratorConfig" validate:"required"`
@@ -291,17 +291,18 @@ type CustomValidators struct {
 }
 
 type RoutesConfig struct {
-	Engine                      RoutingEngineType           `json:"engine" validate:"required,oneof=gin"`
-	TemplateOverrides           map[KnownTemplate]string    `json:"templateOverrides"`
-	OutputPath                  string                      `json:"outputPath" validate:"required,filepath"`
-	OutputFilePerms             string                      `json:"outputFilePerms" validate:"regex=^(0?[0-7]{3})?$"`
-	PackageName                 string                      `json:"packageName"`
-	CustomValidators            []CustomValidators          `json:"customValidators" validate:"dive"`
-	AuthorizationFunctionConfig AuthorizationFunctionConfig `json:"authorizationFunctionConfig" validate:"required"`
+	Engine              RoutingEngineType        `json:"engine" validate:"required,oneof=gin"`
+	TemplateOverrides   map[KnownTemplate]string `json:"templateOverrides"`
+	OutputPath          string                   `json:"outputPath" validate:"required,filepath"`
+	OutputFilePerms     string                   `json:"outputFilePerms" validate:"regex=^(0?[0-7]{3})?$"`
+	PackageName         string                   `json:"packageName"`
+	CustomValidators    []CustomValidators       `json:"customValidators" validate:"dive"`
+	AuthorizationConfig AuthorizationConfig      `json:"authorizationConfig" validate:"required"`
 }
 
-type AuthorizationFunctionConfig struct {
-	FullPackageName string `json:"fullPackageName" validate:"required,filepath"`
+type AuthorizationConfig struct {
+	AuthFileFullPackageName    string `json:"authFileFullPackageName" validate:"required,filepath"`
+	EnforceSecurityOnAllRoutes bool   `json:"enforceSecurityOnAllRoutes"`
 }
 
 type CommonConfig struct {

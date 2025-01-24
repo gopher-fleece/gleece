@@ -63,7 +63,7 @@ func getMetadata(config *definitions.GleeceConfig) ([]definitions.ControllerMeta
 	}
 
 	data, _ := json.MarshalIndent(flatModels, "", "\t")
-	Logger.Info("%s", string(data))
+	Logger.Debug("Flat models list:\n%s", string(data))
 
 	controllers := visitor.GetControllers()
 	return controllers, flatModels, hasAnyErrorTypes, nil

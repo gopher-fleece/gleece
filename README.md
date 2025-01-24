@@ -38,14 +38,14 @@ package api
 
 import (
 	"github.com/google/uuid"
-	"github.com/gopher-fleece/gleece/ctrl" // Importing GleeceController
+	"github.com/gopher-fleece/gleece/external" // Importing GleeceController
 )
 
 // @Tag(User Management)
 // @Route(/users-management)
 // @Description The User Management API
 type UserController struct {
-	ctrl.GleeceController // Embedding the GleeceController
+	external.GleeceController // Embedding the GleeceController
 }
 
 // @Description User's domicile
@@ -99,7 +99,7 @@ func (ec *UserController) CreateNewUser(email string, name string, domicile Domi
    - Gleece processes these validation rules automatically during request handling and returns 422 in case of not passing validation.  
 
 3. **Controllers**:  
-   - Simply embed the `GleeceController` (imported from `github.com/gopher-fleece/gleece/ctrl`) into your own controllers to gain its functionality.  
+   - Simply embed the `GleeceController` (imported from `github.com/gopher-fleece/gleece/external`) into your own controllers to gain its functionality.  
 
 4. **Automation**:  
    - No manual steps required — your OpenAPI spec is ready to go!  
