@@ -33,7 +33,7 @@ func (v *ControllerVisitor) visitMethod(funcDecl *ast.FuncDecl) (definitions.Rou
 		return definitions.RouteMetadata{}, false, nil
 	}
 
-	routePath := attributes.GetFirstPropertyValueOrEmpty(annotations.AttributeRoute)
+	routePath := attributes.GetFirstValueOrEmpty(annotations.AttributeRoute)
 	if len(routePath) <= 0 {
 		logger.Info("Method '%s' does not have an @Route attribute and will be ignored", funcDecl.Name.Name)
 		return definitions.RouteMetadata{}, true, nil

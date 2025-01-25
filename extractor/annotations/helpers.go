@@ -53,5 +53,5 @@ func GetCastProperty[TPropertyType any](attrib *Attribute, property string) (*TP
 		return &castParam, nil
 	}
 
-	return nil, nil
+	return nil, fmt.Errorf("property '%s' exists but cannot be cast to %s", property, targetType.Name())
 }

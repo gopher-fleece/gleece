@@ -51,8 +51,13 @@ var specAndRoutesCommand = &cobra.Command{
 }
 
 func initGenerateCommandHierarchy() {
-	generateCmd.PersistentFlags().StringVarP(&cliArgs.ConfigPath, "config", "c", "", "/project-directory/gleece.config.json")
-	generateCmd.MarkFlagRequired("config")
+	generateCmd.PersistentFlags().StringVarP(
+		&cliArgs.ConfigPath,
+		"config",
+		"c",
+		"./gleece.config.json",
+		"/project-directory/gleece.config.json",
+	)
 
 	generateCmd.AddCommand(specCommand)
 	generateCmd.AddCommand(routesCommand)

@@ -21,20 +21,20 @@ func getConfig(configPath string) (*definitions.GleeceConfig, error) {
 	// Read the JSON file
 	fileContent, err := os.ReadFile(configPath)
 	if err != nil {
-		return nil, fmt.Errorf("error reading file: %v", err.Error())
+		return nil, fmt.Errorf(`could not read config file from "%s" - "%v"`, configPath, err.Error())
 	}
 
 	// Unmarshal the JSON content into the struct
 	var config definitions.GleeceConfig
 	err = json5.Unmarshal(fileContent, &config)
 	if err != nil {
-		return nil, fmt.Errorf("error unmarshaling JSON: %v", err)
+		return nil, fmt.Errorf(`could not unmarshal config file "%s" to JSON5 - "%v"`, configPath, err)
 	}
 
 	// Validate the struct
 	err = validation.ValidateStruct(config)
 	if err != nil {
-		return nil, fmt.Errorf("invalid config %s", validation.ExtractValidationErrorMessage(err, nil))
+		return nil, fmt.Errorf(`configuration file "%s" is invalid - "%s"`, configPath, validation.ExtractValidationErrorMessage(err, nil))
 	}
 
 	return &config, nil

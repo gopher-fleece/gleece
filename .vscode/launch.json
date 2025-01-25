@@ -9,11 +9,23 @@
 			"type": "go",
 			"request": "launch",
 			"mode": "debug",
-			"program": "${workspaceFolder}/main.go", // Path to your main package or entry point
-			"args": [], // Add command-line arguments if needed
-			"buildFlags": "", // Add build flags if required
-			"env": {}, // Add environment variables if needed
-			// "envFile": "${workspaceFolder}/.env" // Optional: Path to environment variable file
+			"program": "${workspaceFolder}/main.go",
+			"args": [],
+			"buildFlags": "",
+			"env": {},
+		},
+		{
+			"name": "Debug Ginkgo",
+			"type": "go",
+			"request": "launch",
+			"mode": "test",
+			"program": "${file}",
+			"args": [],
+			"env": {
+				"GINKGO_DEBUG": "true",
+				"GOMAXPROCS": "1"
+			},
+			"showLog": true
 		}
 	]
 }

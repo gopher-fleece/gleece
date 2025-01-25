@@ -49,9 +49,14 @@ func (attr Attribute) GetProperty(name string) *any {
 	return nil
 }
 
+type NonAttributeComment struct {
+	Index int
+	Value string
+}
+
 type AnnotationHolder struct {
 	attributes           []Attribute
-	nonAttributeComments map[int]string
+	nonAttributeComments []NonAttributeComment
 }
 
 func NewAnnotationHolder(comments []string) (AnnotationHolder, error) {
@@ -59,7 +64,7 @@ func NewAnnotationHolder(comments []string) (AnnotationHolder, error) {
 	parsingRegex := regexp.MustCompile(`^// @(\w+)(?:(?:\(([\w-_/\\{} ]+))(?:\s*,\s*(\{.*\}))?\))?(?:\s+(.+))?$`)
 
 	holder := AnnotationHolder{
-		nonAttributeComments: make(map[int]string),
+		nonAttributeComments: make([]NonAttributeComment, 0),
 	}
 
 	for lineIndex, comment := range comments {
@@ -71,7 +76,13 @@ func NewAnnotationHolder(comments []string) (AnnotationHolder, error) {
 		if isAnAttribute {
 			holder.attributes = append(holder.attributes, attr)
 		} else {
-			holder.nonAttributeComments[lineIndex] = strings.Trim(strings.TrimPrefix(comment, "//"), " ")
+			holder.nonAttributeComments = append(
+				holder.nonAttributeComments,
+				NonAttributeComment{
+					Index: lineIndex,
+					Value: strings.Trim(strings.TrimPrefix(comment, "//"), " "),
+				},
+			)
 		}
 	}
 
@@ -169,23 +180,6 @@ func (holder AnnotationHolder) FindFirstByProperty(key string, value string) *At
 	return nil
 }
 
-func (holder AnnotationHolder) FindByValueOrProperty(key string, value string) *Attribute {
-	for _, attrib := range holder.attributes {
-		if attrib.Value == value || attrib.Properties[key] == value {
-			return &attrib
-		}
-	}
-	return nil
-}
-
-func (holder AnnotationHolder) GetFirstPropertyValueOrEmpty(property string) string {
-	prop := holder.GetFirst(property)
-	if prop != nil {
-		return prop.Value
-	}
-	return ""
-}
-
 func (holder AnnotationHolder) GetDescription() string {
 	descriptionAttr := holder.GetFirst(AttributeDescription)
 	if descriptionAttr != nil {
@@ -202,13 +196,21 @@ func (holder AnnotationHolder) GetDescription() string {
 	// We've a non-attribute comment on line #0, #1 and #3.
 	// We start at -1 so 0 is included. On the next iteration, #1 is included as well.
 	// Then, line #2 is ignored as it doesn't have a comment and #3 breaks as index is at #1.
-	for index, comment := range holder.nonAttributeComments {
-		if index > lastFreeCommentIndex+1 {
+	for _, comment := range holder.nonAttributeComments {
+		if comment.Index > lastFreeCommentIndex+1 {
 			break
 		}
-		freeComments = append(freeComments, comment)
+		freeComments = append(freeComments, comment.Value)
 		lastFreeCommentIndex++
 	}
 
-	return strings.Join(freeComments, "\n")
+	takeUntil := len(freeComments)
+	// Trim all empty comments at the end
+	for i := len(freeComments); i > 0; i-- {
+		if freeComments[i-1] != "" {
+			break
+		}
+		takeUntil--
+	}
+	return strings.Join(freeComments[:takeUntil], "\n")
 }

@@ -7,9 +7,10 @@ import (
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/titanous/json5"
 )
 
-var _ = Describe("Attributes Holder", func() {
+var _ = Describe("Annotation Holder", func() {
 
 	Context("Given a single comment", func() {
 
@@ -38,6 +39,18 @@ var _ = Describe("Attributes Holder", func() {
 				comments := []string{"// @Description Abcd"}
 				holder, _ := annotations.NewAnnotationHolder(comments)
 				Expect(holder.GetDescription()).To(Equal("Abcd"))
+			})
+
+			It("GetFirstValueOrEmpty returns correct value when a single instance of the attribute exists", func() {
+				comments := []string{"// @Method(POST)"}
+				holder, _ := annotations.NewAnnotationHolder(comments)
+				Expect(holder.GetFirstValueOrEmpty(annotations.AttributeMethod)).To(Equal("POST"))
+			})
+
+			It("GetFirstValueOrEmpty returns empty string when attribute does not exist", func() {
+				comments := []string{"// @Route(/route)"}
+				holder, _ := annotations.NewAnnotationHolder(comments)
+				Expect(holder.GetFirstValueOrEmpty(annotations.AttributeMethod)).To(BeEmpty())
 			})
 		})
 
@@ -81,6 +94,53 @@ var _ = Describe("Attributes Holder", func() {
 				value, err := annotations.GetCastProperty[[]string](attrib, annotations.PropertySecurityScopes)
 				Expect(err).To(BeNil())
 				Expect(*value).To(HaveExactElements("read:users", "write:users"))
+			})
+
+			It("Returns nil if property does not exist", func() {
+				comments := []string{`// @Security(securitySchemaName, { scopes: ["read:users", "write:users"] }) Abcd`}
+				holder, _ := annotations.NewAnnotationHolder(comments)
+				attrib := holder.GetFirst(annotations.AttributeSecurity)
+
+				value, err := annotations.GetCastProperty[[]string](attrib, "DoesNotExist")
+				Expect(err).To(BeNil())
+				Expect(value).To(BeNil())
+			})
+
+			It("Returns an error if a slice property exists but cannot be cast to the requested non-slice type", func() {
+				comments := []string{`// @Security(securitySchemaName, { scopes: ["read:users", "write:users"] }) Abcd`}
+				holder, _ := annotations.NewAnnotationHolder(comments)
+				attrib := holder.GetFirst(annotations.AttributeSecurity)
+
+				value, err := annotations.GetCastProperty[int](attrib, annotations.PropertySecurityScopes)
+				Expect(err).To(MatchError(ContainSubstring("exists but cannot be cast")))
+				Expect(value).To(BeNil())
+			})
+
+			It("Returns an error if a slice property exists but cannot be cast to the requested slice type", func() {
+				comments := []string{`// @Security(securitySchemaName, { scopes: ["read:users", "write:users"] }) Abcd`}
+				holder, _ := annotations.NewAnnotationHolder(comments)
+				attrib := holder.GetFirst(annotations.AttributeSecurity)
+
+				value, err := annotations.GetCastProperty[[]int](attrib, annotations.PropertySecurityScopes)
+				Expect(err).To(MatchError(ContainSubstring("cannot be converted to type")))
+				Expect(value).To(BeNil())
+			})
+
+			It("Returns an error if attempting to convert a non-slice property to a slice", func() {
+				comments := []string{`// @Security(securitySchemaName, { scopes: "V" }) Abcd`}
+				holder, _ := annotations.NewAnnotationHolder(comments)
+				attrib := holder.GetFirst(annotations.AttributeSecurity)
+
+				value, err := annotations.GetCastProperty[[]string](attrib, annotations.PropertySecurityScopes)
+				Expect(err).To(MatchError(ContainSubstring("cannot be converted to type")))
+				Expect(value).To(BeNil())
+			})
+
+			It("Returns an error an annotation's JSON5 part is malformed", func() {
+				comments := []string{`// @Security(securitySchemaName, { scopes: ThisIsMalformed }) Abcd`}
+				_, err := annotations.NewAnnotationHolder(comments)
+				Expect(err).To(HaveOccurred())
+				Expect(err).To(BeAssignableToTypeOf(&json5.SyntaxError{}))
 			})
 		})
 	})
@@ -161,11 +221,137 @@ var _ = Describe("Attributes Holder", func() {
 			Expect(*value2).To(Equal("gt=10"))
 			Expect(value3).To(BeNil())
 		})
+
+		It("Considers non-attribute comments at the start as description, in the absence of a @Description attribute", func() {
+			comments := []string{
+				"// First comment",
+				"// Second comment line",
+				"// Third comment line",
+				"//",
+				`// @Method(POST) This text is not part of the OpenAPI spec`,
+				`// @Route(/user/{user_name}/{user_id}/{user_id_2}) Same here`,
+				"//",
+				"//",
+				`// @Query(email, { validate: "required,email" }) The user's email`,
+				`// @Path(id, { name: "user_id", validate:"gt=1" }) The user's ID`,
+				`// @Security(schema1, { scopes: ["read:users", "write:users"] })`,
+			}
+
+			holder, err := annotations.NewAnnotationHolder(comments)
+			Expect(err).To(BeNil())
+
+			description := holder.GetDescription()
+			expectedStr := "First comment\nSecond comment line\nThird comment line"
+			logger.System("DESC: %s | Exp: %s", description, expectedStr)
+			Expect(description).To(Equal(expectedStr))
+		})
+
+		It("Considers @Description a priority over comments at the start", func() {
+			comments := []string{
+				"// First comment",
+				"// Second comment line",
+				"// Third comment line",
+				"//",
+				`// @Method(POST) This text is not part of the OpenAPI spec`,
+				`// @Route(/user/{user_name}/{user_id}/{user_id_2}) Same here`,
+				`// @Query(email, { validate: "required,email" }) The user's email`,
+				`// @Path(id, { name: "user_id", validate:"gt=1" }) The user's ID`,
+				`// @Description Some description`,
+				`// @Security(schema1, { scopes: ["read:users", "write:users"] })`,
+			}
+
+			holder, err := annotations.NewAnnotationHolder(comments)
+			Expect(err).To(BeNil())
+
+			description := holder.GetDescription()
+			Expect(description).To(Equal("Some description"))
+		})
+
+		It("GetFirstDescriptionOrEmpty returns an attribute list's first item's Description if not empty", func() {
+			comments := []string{
+				"// First comment",
+				"// Second comment line",
+				"// Third comment line",
+				"//",
+				`// @Method(POST) This text is not part of the OpenAPI spec`,
+				`// @Route(/user1) Some description1`,
+				`// @Query(email, { validate: "required,email" }) The user's email`,
+				`// @Path(id, { name: "user_id", validate:"gt=1" }) The user's ID`,
+				`// @Route(/user2) Some description2`,
+				`// @Route(/user3) Some description3`,
+				`// @Route(/user4) Some description4`,
+				`// @Security(schema1, { scopes: ["read:users", "write:users"] })`,
+			}
+
+			holder, _ := annotations.NewAnnotationHolder(comments)
+			Expect(holder.GetFirstDescriptionOrEmpty(annotations.AttributeRoute)).To(Equal("Some description1"))
+		})
+
+		It("GetFirstDescriptionOrEmpty returns empty string if attribute is not present", func() {
+			comments := []string{
+				"// First comment",
+				"// Second comment line",
+				"// Third comment line",
+				"//",
+				`// @Method(POST) This text is not part of the OpenAPI spec`,
+				`// @Path(id, { name: "user_id", validate:"gt=1" }) The user's ID`,
+				`// @Security(schema1, { scopes: ["read:users", "write:users"] })`,
+			}
+
+			holder, _ := annotations.NewAnnotationHolder(comments)
+			Expect(holder.GetFirstDescriptionOrEmpty(annotations.AttributeRoute)).To(BeEmpty())
+		})
+
+		It("FindFirstByValue returns the first attribute who's value matches the search parameter", func() {
+			comments := []string{
+				`// @Security(schema1, { scopes: ["read:devices", "write:devices"] }) Match1`,
+				`// @Security(schema2, { scopes: ["read:users", "write:users"] }) Match2`,
+			}
+
+			holder, _ := annotations.NewAnnotationHolder(comments)
+			match := holder.FindFirstByValue("schema2")
+			Expect(match).ToNot(BeNil())
+			Expect(match.Description).To(Equal("Match2"))
+		})
+
+		It("FindFirstByValue returns nil if no value matches the search parameter", func() {
+			comments := []string{
+				`// @Security(schema1, { scopes: ["read:devices", "write:devices"] }) Match1`,
+				`// @Security(schema2, { scopes: ["read:users", "write:users"] }) Match2`,
+			}
+
+			holder, _ := annotations.NewAnnotationHolder(comments)
+			match := holder.FindFirstByValue("does not exists")
+			Expect(match).To(BeNil())
+		})
+
+		It("FindFirstByProperty returns the first attribute that has a property who's name and value match the search parameters", func() {
+			comments := []string{
+				`// @Security(schema1, { scopes: ["read:devices", "write:devices"] }) Match1`,
+				`// @Security(schema2, { scopes: ["read:users", "write:users"], extraProp: "" }) Match2`,
+			}
+
+			holder, _ := annotations.NewAnnotationHolder(comments)
+			match := holder.FindFirstByProperty("extraProp", "")
+			Expect(match).ToNot(BeNil())
+			Expect(match.Description).To(Equal("Match2"))
+		})
+
+		It("FindFirstByProperty returns nil if no attribute has a property who's name and value match the search parameters", func() {
+			comments := []string{
+				`// @Security(schema1, { scopes: ["read:devices", "write:devices"] }) Match1`,
+				`// @Security(schema2, { scopes: ["read:users", "write:users"], extraProp: "" }) Match2`,
+			}
+
+			holder, _ := annotations.NewAnnotationHolder(comments)
+			match := holder.FindFirstByProperty("extraProp", "this value doesn't exist")
+			Expect(match).To(BeNil())
+		})
 	})
 })
 
 func TestAnnotationHolder(t *testing.T) {
 	logger.SetLogLevel(logger.LogLevelNone)
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Attributes Holder")
+	RunSpecs(t, "Annotation Holder")
 }
