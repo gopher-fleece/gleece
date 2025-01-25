@@ -104,37 +104,7 @@ func (ec *UserController) CreateNewUser(email string, name string, domicile Domi
 4. **Automation**:  
    - No manual steps required — your OpenAPI spec is ready to go!  
 
-## 🌐 Integrating with Gin  
 
-If you are using the Gin framework for your HTTP routes, you can easily integrate Gleece by following these steps:
-
-1. **Generate Routes File**:  
-   - Gleece will generate a routes file from your annotated controllers. For example, it might generate `generated_routes.go`.
-
-2. **Import and Register Routes**:  
-   - In your `main.go` file, import the generated routes file and call the `RegisterRoutes` function to register the routes with Gin.
-
-Here's an example:
-
-```go
-package main
-
-import (
-    "github.com/gin-gonic/gin"
-    "github.com/gopher-fleece/gleece/routes" // Import the generated routes file
-)
-
-func main() {
-    // Create a Gin router
-    router := gin.Default()
-
-    // Register Gleece routes
-    routes.RegisterRoutes(router)
-
-    // Start the server
-    router.Run(":8080")
-}
-```
 ## 📚 Documentation
 
 - [Step By Step Guide](./docs/STEPBYSTEP.md)
@@ -142,6 +112,10 @@ func main() {
 - [Custom Validations](./docs/CUSTOM_VALIDATION.md) 
 - [Error handling](./docs/ERROR_HANDLING.md)
 - [Security](./docs/ERROR_HANDLING.md)
+
+## 🌐 Integrating with Rest Routers 
+
+- [Gin](./docs/GIN_INTEGRATION.md)
 
 For a complete example project using Gleece, check out the [Gleece Example Project](https://github.com/gopher-fleece/gleecexample#readme). This project demonstrates how to set up and use Gleece in a real-world scenario, providing you with a practical reference to get started quickly.
 
