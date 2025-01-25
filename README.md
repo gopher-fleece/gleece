@@ -135,7 +135,13 @@ func main() {
     router.Run(":8080")
 }
 ```
-## 📚 Example Project
+## 📚 Documentation
+
+- [Step By Step Guide](./docs/STEPBYSTEP.md)
+- [Annotations & Options](./docs/ANNOTATIONS.md)
+- [Custom Validations](./docs/CUSTOM_VALIDATION.md) 
+- [Error handling](./docs/ERROR_HANDLING.md)
+- [Security](./docs/ERROR_HANDLING.md)
 
 For a complete example project using Gleece, check out the [Gleece Example Project](https://github.com/gopher-fleece/gleecexample#readme). This project demonstrates how to set up and use Gleece in a real-world scenario, providing you with a practical reference to get started quickly.
 
