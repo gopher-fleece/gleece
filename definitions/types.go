@@ -109,7 +109,7 @@ type TypeMetadata struct {
 	Import                ImportType
 	IsUniverseType        bool
 	IsByAddress           bool
-	// IdentifierNode        *ast.Ident
+	EntityKind            AstNodeKind
 }
 
 type ErrorResponse struct {
@@ -314,3 +314,21 @@ type GleeceConfig struct {
 	RoutesConfig           RoutesConfig           `json:"routesConfig" validate:"required"`
 	CommonConfig           CommonConfig           `json:"commonConfig" validate:"required"`
 }
+
+type AstNodeKind string
+
+const (
+	AstNodeKindNone        AstNodeKind = "None"
+	AstNodeKindUnknown     AstNodeKind = "Unknown"
+	AstNodeKindInterface   AstNodeKind = "Interface"
+	AstNodeKindStruct      AstNodeKind = "Struct"
+	AstNodeKindIdent       AstNodeKind = "Identifier"
+	AstNodeKindSelector    AstNodeKind = "SelectorExpr"
+	AstNodeKindPointer     AstNodeKind = "Pointer"
+	AstNodeKindArray       AstNodeKind = "Array"
+	AstNodeKindMap         AstNodeKind = "Map"
+	AstNodeKindChannel     AstNodeKind = "Channel"
+	AstNodeKindFunction    AstNodeKind = "Function"
+	AstNodeKindVariadic    AstNodeKind = "Variadic"
+	AstNodeKindParenthesis AstNodeKind = "Parenthesis"
+)

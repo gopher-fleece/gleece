@@ -47,7 +47,7 @@ func (ec *ExtendedController) ImportedWithDefaultAliasRetType(definedElseWhere s
 }
 
 // A test for simple imports
-// @Query definedElseWhere Testing simple type import
+// @Query(definedElseWhere) Testing simple type import
 // @Method(POST)
 // @Route(/test2)
 // @Response(204)
@@ -67,9 +67,9 @@ func (ec *ExtendedController) ImportedWithDotRetType() (ImportedWithDot, error) 
 
 // A test for simple imports
 // @Method(POST)
+// @ErrorResponse(400) <p>Test Error 400</p>
 // @Route(/test4)
 // @Response(204)
-// @ErrorResponse(400) <p>Test Error 400</p>
 func (ec *ExtendedController) DefinedInSameFileRetType() (DefinedInSameFile, error) {
 	return DefinedInSameFile{}, nil
 }

@@ -13,14 +13,14 @@ import (
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/generator/compilation"
 	"github.com/gopher-fleece/gleece/generator/templates/gin"
-	Logger "github.com/gopher-fleece/gleece/infrastructure/logger"
+	"github.com/gopher-fleece/gleece/infrastructure/logger"
 )
 
 // dumpContext Dumps the routes context to the log for debugging purposes
 func dumpContext(ctx any) {
 	// It's basically impossible to break the marshaller without some pretty crazy, and very intentional hacks
 	contextJson, _ := json.MarshalIndent(ctx, "\t", "\t")
-	Logger.Debug("Routes Context:\n%s", contextJson)
+	logger.Debug("Routes Context:\n%s", contextJson)
 }
 
 func registerHelpers() {
@@ -147,7 +147,7 @@ func getTemplateString(engine definitions.RoutingEngineType, templateFilePath st
 
 	data, err := os.ReadFile(templateFilePath)
 	if err != nil {
-		Logger.Fatal("Could not read given template override from '%s' - %v", templateFilePath, err)
+		logger.Fatal("Could not read given template override from '%s' - %v", templateFilePath, err)
 		return "", err
 	}
 
@@ -170,7 +170,7 @@ func getOutputFileMod(requestedPermissions string) os.FileMode {
 	}
 	parsed, err := definitions.PermissionStringToFileMod(requestedPermissions)
 	if err != nil {
-		Logger.Warn("Could not convert permission string '%s' to FileMod. Using 0644 instead", requestedPermissions)
+		logger.Warn("Could not convert permission string '%s' to FileMod. Using 0644 instead", requestedPermissions)
 		return defaultPermission
 	}
 	return parsed
@@ -186,7 +186,7 @@ func GenerateRoutes(config *definitions.GleeceConfig, controllerMeta []definitio
 	ctx, err := GetTemplateContext(args, controllerMeta)
 
 	if err != nil {
-		Logger.Fatal("Could not create a context for the template rendering process")
+		logger.Fatal("Could not create a context for the template rendering process")
 		return err
 	}
 
@@ -194,20 +194,20 @@ func GenerateRoutes(config *definitions.GleeceConfig, controllerMeta []definitio
 
 	template, err := getTemplateString(args.Engine, args.TemplateOverrides[definitions.TemplateRoutes])
 	if err != nil {
-		Logger.Fatal("Could not obtain the template file's contents")
+		logger.Fatal("Could not obtain the template file's contents")
 		return err
 	}
 
 	result, err := raymond.Render(template, ctx)
 	if err != nil {
-		Logger.Fatal("Could not render routes template - %v", err)
+		logger.Fatal("Could not render routes template - %v", err)
 		return err
 	}
 
-	Logger.Debug("Formatting %d bytes of output code", len(result))
+	logger.Debug("Formatting %d bytes of output code", len(result))
 	formattedOutput, err := compilation.OptimizeImportsAndFormat(result)
 	if err != nil {
-		Logger.Warn("Could not format output - %v", err)
+		logger.Warn("Could not format output - %v", err)
 		formattedOutput = result
 	}
 
@@ -218,7 +218,7 @@ func GenerateRoutes(config *definitions.GleeceConfig, controllerMeta []definitio
 
 	err = os.WriteFile(args.OutputPath, []byte(formattedOutput), getOutputFileMod(args.OutputFilePerms))
 	if err != nil {
-		Logger.Fatal("Could not write output file at '%s' with permissions '%v' - %v", args.OutputPath, args.OutputFilePerms, err)
+		logger.Fatal("Could not write output file at '%s' with permissions '%v' - %v", args.OutputPath, args.OutputFilePerms, err)
 		return err
 	}
 

@@ -8,10 +8,10 @@ import (
 
 	"github.com/gopher-fleece/gleece/cmd/arguments"
 	"github.com/gopher-fleece/gleece/definitions"
-	"github.com/gopher-fleece/gleece/extractor"
+	"github.com/gopher-fleece/gleece/extractor/visitors/controller"
 	"github.com/gopher-fleece/gleece/generator/routes"
 	"github.com/gopher-fleece/gleece/generator/swagen"
-	Logger "github.com/gopher-fleece/gleece/infrastructure/logger"
+	"github.com/gopher-fleece/gleece/infrastructure/logger"
 	"github.com/gopher-fleece/gleece/infrastructure/validation"
 	"github.com/titanous/json5"
 )
@@ -21,27 +21,27 @@ func getConfig(configPath string) (*definitions.GleeceConfig, error) {
 	// Read the JSON file
 	fileContent, err := os.ReadFile(configPath)
 	if err != nil {
-		return nil, fmt.Errorf("error reading file: %v", err.Error())
+		return nil, fmt.Errorf(`could not read config file from "%s" - "%v"`, configPath, err.Error())
 	}
 
 	// Unmarshal the JSON content into the struct
 	var config definitions.GleeceConfig
 	err = json5.Unmarshal(fileContent, &config)
 	if err != nil {
-		return nil, fmt.Errorf("error unmarshaling JSON: %v", err)
+		return nil, fmt.Errorf(`could not unmarshal config file "%s" to JSON5 - "%v"`, configPath, err)
 	}
 
 	// Validate the struct
 	err = validation.ValidateStruct(config)
 	if err != nil {
-		return nil, fmt.Errorf("Invalid config %s", validation.ExtractValidationErrorMessage(err, nil))
+		return nil, fmt.Errorf(`configuration file "%s" is invalid - "%s"`, configPath, validation.ExtractValidationErrorMessage(err, nil))
 	}
 
 	return &config, nil
 }
 
 func getMetadata(config *definitions.GleeceConfig) ([]definitions.ControllerMetadata, []definitions.ModelMetadata, bool, error) {
-	visitor, err := extractor.NewControllerVisitor(config)
+	visitor, err := controller.NewControllerVisitor(config)
 	if err != nil {
 		return []definitions.ControllerMetadata{}, []definitions.ModelMetadata{}, false, err
 	}
@@ -52,18 +52,18 @@ func getMetadata(config *definitions.GleeceConfig) ([]definitions.ControllerMeta
 
 	lastErr := visitor.GetLastError()
 	if lastErr != nil {
-		Logger.Error("Visitor encountered at-least one error. Last error:\n%v\n\t%s", *lastErr, visitor.GetFormattedDiagnosticStack())
+		logger.Error("Visitor encountered at-least one error. Last error:\n%v\n\t%s", *lastErr, visitor.GetFormattedDiagnosticStack())
 		return nil, nil, false, *lastErr
 	}
 
 	flatModels, hasAnyErrorTypes, err := visitor.GetModelsFlat()
 	if err != nil {
-		Logger.Error("Failed to get models metadata: %v", err)
+		logger.Error("Failed to get models metadata: %v", err)
 		return nil, nil, false, err
 	}
 
 	data, _ := json.MarshalIndent(flatModels, "", "\t")
-	Logger.Debug("Flat models list:\n%s", string(data))
+	logger.Debug("Flat models list:\n%s", string(data))
 
 	controllers := visitor.GetControllers()
 	return controllers, flatModels, hasAnyErrorTypes, nil
@@ -81,11 +81,11 @@ func getConfigAndMetadata(args arguments.CliArguments) (
 		return nil, nil, nil, false, err
 	}
 
-	Logger.Info("Generating spec. Configuration file: %s", args.ConfigPath)
+	logger.Info("Generating spec. Configuration file: %s", args.ConfigPath)
 
 	defs, models, hasAnyErrorTypes, err := getMetadata(config)
 	if err != nil {
-		Logger.Fatal("Could not collect metadata - %v", err)
+		logger.Fatal("Could not collect metadata - %v", err)
 		return nil, nil, nil, false, err
 	}
 
@@ -100,7 +100,7 @@ func GenerateSpec(args arguments.CliArguments) error {
 
 	// Generate the spec
 	if err := swagen.GenerateAndOutputSpec(&config.OpenAPIGeneratorConfig, meta, models, hasAnyErrorTypes); err != nil {
-		Logger.Fatal("Failed to generate OpenAPI spec - %v", err)
+		logger.Fatal("Failed to generate OpenAPI spec - %v", err)
 		return err
 	}
 
@@ -114,7 +114,7 @@ func GenerateRoutes(args arguments.CliArguments) error {
 	}
 
 	if err := routes.GenerateRoutes(config, meta); err != nil {
-		Logger.Fatal("Failed to generate routing file - %v", err)
+		logger.Fatal("Failed to generate routing file - %v", err)
 		return err
 	}
 
@@ -129,13 +129,13 @@ func GenerateSpecAndRoutes(args arguments.CliArguments) error {
 
 	// Generate the routes first
 	if err := routes.GenerateRoutes(config, meta); err != nil {
-		Logger.Fatal("Failed to generate routes - %v", err)
+		logger.Fatal("Failed to generate routes - %v", err)
 		return err
 	}
 
 	// Generate the spec
 	if err := swagen.GenerateAndOutputSpec(&config.OpenAPIGeneratorConfig, meta, models, hasAnyErrorTypes); err != nil {
-		Logger.Fatal("Failed to generate OpenAPI spec - %v", err)
+		logger.Fatal("Failed to generate OpenAPI spec - %v", err)
 		return err
 	}
 

@@ -87,8 +87,7 @@ type Rfc7807Error struct {
 type GleeceController struct {
 	statusCode *HttpStatusCode
 	headers    map[string]interface{}
-	// Request is the HTTP request from the underlying routing engine (gin, echo etc.)
-	request any
+	request    any // Request is the HTTP request from the underlying routing engine (gin, echo etc.)
 }
 
 func (gc *GleeceController) SetRequest(request any) {
