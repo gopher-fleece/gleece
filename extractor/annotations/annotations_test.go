@@ -242,7 +242,6 @@ var _ = Describe("Annotation Holder", func() {
 
 			description := holder.GetDescription()
 			expectedStr := "First comment\nSecond comment line\nThird comment line"
-			logger.System("DESC: %s | Exp: %s", description, expectedStr)
 			Expect(description).To(Equal(expectedStr))
 		})
 
