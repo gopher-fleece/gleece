@@ -230,6 +230,7 @@ func GetTypeMetaByIdent(
 		// Nothing to do here. Leave the package empty so the downstream generator knows no import/alias is needed
 		meta.IsUniverseType = true
 		meta.Import = definitions.ImportTypeNone
+		meta.EntityKind = definitions.AstEntityUniverse
 		return meta, nil
 	}
 
@@ -239,6 +240,11 @@ func GetTypeMetaByIdent(
 		meta.Import = definitions.ImportTypeDot
 		meta.FullyQualifiedPackage = relevantPkg.PkgPath
 		meta.DefaultPackageAlias = relevantPkg.Name
+		kind, err := TryGetStructOrInterfaceKind(relevantPkg, ident.Name)
+		if err != nil {
+			return meta, err
+		}
+		meta.EntityKind = kind
 	} else {
 		// The identifier is locally defined
 		currentPackageName, err := GetFullPackageName(file, fileSet)
@@ -248,7 +254,11 @@ func GetTypeMetaByIdent(
 
 		// Verify the identifier does in fact exist in the current package.
 		// Not strictly needed but helps with safety.
-		exists, _ := DoesTypeOrInterfaceExistInPackage(packages, currentPackageName, ident)
+		exists, entityKind, err := DoesTypeOrInterfaceExistInPackage(packages, currentPackageName, ident)
+		if err != nil {
+			return meta, err
+		}
+
 		if !exists {
 			return meta, fmt.Errorf("identifier %s does not correlate to a type or interface in package %s", ident.Name, currentPackageName)
 		}
@@ -256,6 +266,7 @@ func GetTypeMetaByIdent(
 		meta.Import = definitions.ImportTypeAlias
 		meta.FullyQualifiedPackage = currentPackageName
 		meta.DefaultPackageAlias = GetDefaultAlias(currentPackageName)
+		meta.EntityKind = entityKind
 	}
 
 	return meta, nil
@@ -284,6 +295,8 @@ func GetTypeMetaBySelectorExpr(
 		return meta, fmt.Errorf("could not convert a selector expression's 'X' to an identifier. Sel name: %s", typeOrInterfaceName)
 	}
 
+	var realFullPackageName string
+
 	aliasedFullName := aliasedImports[importAlias.Name]
 	if len(aliasedFullName) == 0 { // If there's no alias, the string will be empty
 		for maybeFullPackageName, fullPackageName := range aliasedImports {
@@ -293,17 +306,29 @@ func GetTypeMetaBySelectorExpr(
 				// If it does, it's a match.
 				// The secondary 'maybeFullPackageName == fullPackageName' check is mostly just-in-case - for default aliases
 				// we expect the the mapped key to equal the mapped value.
-				meta.FullyQualifiedPackage = fullPackageName
-				meta.DefaultPackageAlias = GetDefaultAlias(fullPackageName)
+				realFullPackageName = fullPackageName
 				break
 			}
 		}
 	} else {
 		// Imported with a custom alias
-		meta.FullyQualifiedPackage = aliasedFullName
-		meta.DefaultPackageAlias = GetDefaultAlias(aliasedFullName)
+		realFullPackageName = aliasedFullName
 	}
 
+	meta.FullyQualifiedPackage = realFullPackageName
+	meta.DefaultPackageAlias = GetDefaultAlias(realFullPackageName)
+
+	pkg := FilterPackageByFullName(packages, realFullPackageName)
+	if pkg == nil {
+		return meta, fmt.Errorf("could not get *packages.Package for '%s' whilst processing '%s'", realFullPackageName, typeOrInterfaceName)
+	}
+
+	kind, err := TryGetStructOrInterfaceKind(pkg, typeOrInterfaceName)
+	if err != nil {
+		return meta, fmt.Errorf("could not determine entity type whilst processing '%s'", typeOrInterfaceName)
+	}
+
+	meta.EntityKind = kind
 	return meta, nil
 }
 
@@ -325,7 +350,8 @@ func GetFieldMetadata(
 		}
 		return meta, err
 	default:
-		return definitions.TypeMetadata{}, fmt.Errorf("cannot get field usage type - fieldType %v is invalid", fieldType)
+		fieldTypeString := GetFieldTypeString(fieldType)
+		return definitions.TypeMetadata{}, fmt.Errorf("field type '%s' is not currently supported", fieldTypeString)
 	}
 }
 
@@ -476,31 +502,27 @@ func DoesTypeOrInterfaceExistInPackage(
 	packages []*packages.Package,
 	packageFullName string,
 	ident *ast.Ident,
-) (bool, bool) {
+) (bool, definitions.AstEntityKind, error) {
 	pkg := FilterPackageByFullName(packages, packageFullName)
 	if pkg == nil {
-		return false, false
+		return false, definitions.AstEntityNone, fmt.Errorf("could not find package '%s' in the given list of packages", packageFullName)
 	}
 
-	if pkg.Types == nil || pkg.Types.Scope() == nil {
-		return false, false
+	typeName, err := LookupTypeName(pkg, ident.Name)
+	if err != nil {
+		return false, definitions.AstEntityNone, err
 	}
 
-	// Lookup the identifier in the package's scope.
-	obj := pkg.Types.Scope().Lookup(ident.Name)
-	if obj == nil {
-		return false, false
-	}
-
-	// Check if the object is a type name.
-	typeName, ok := obj.(*types.TypeName)
-	if !ok {
-		return false, false
+	if _, isStruct := typeName.Type().Underlying().(*types.Struct); isStruct {
+		return true, definitions.AstEntityStruct, nil
 	}
 
 	// Get the underlying type and check if it's an interface.
-	_, isInterface := typeName.Type().Underlying().(*types.Interface)
-	return true, isInterface
+	if _, isInterface := typeName.Type().Underlying().(*types.Interface); isInterface {
+		return true, definitions.AstEntityInterface, nil
+	}
+
+	return true, definitions.AstEntityUnknown, nil
 }
 
 func IsUniverseType(typeName string) bool {
@@ -585,21 +607,9 @@ func FindStructAst(pkg *packages.Package, structName string) *ast.StructType {
 }
 
 func FindTypesStructInPackage(pkg *packages.Package, structName string) (*types.Struct, error) {
-	// Ensure the package has type information.
-	if pkg.Types == nil || pkg.Types.Scope() == nil {
-		return nil, fmt.Errorf("package does not contain type information")
-	}
-
-	// Look for the struct name in the package scope.
-	obj := pkg.Types.Scope().Lookup(structName)
-	if obj == nil {
-		return nil, fmt.Errorf("struct %q not found in package %q", structName, pkg.PkgPath)
-	}
-
-	// Ensure the object is a named type.
-	typeName, ok := obj.(*types.TypeName)
-	if !ok {
-		return nil, fmt.Errorf("%q is not a named type", structName)
+	typeName, err := LookupTypeName(pkg, structName)
+	if err != nil {
+		return nil, err
 	}
 
 	// Ensure the named type is a struct.
@@ -609,4 +619,90 @@ func FindTypesStructInPackage(pkg *packages.Package, structName string) (*types.
 	}
 
 	return structType, nil
+}
+
+func LookupTypeName(pkg *packages.Package, name string) (*types.TypeName, error) {
+	if pkg.Types == nil || pkg.Types.Scope() == nil {
+		return nil, fmt.Errorf("package %s does not have types or types scope", pkg.Name)
+	}
+
+	// Lookup the identifier in the package's scope.
+	obj := pkg.Types.Scope().Lookup(name)
+	if obj == nil {
+		return nil, nil
+	}
+
+	// Check if the object is a type name.
+	typeName, ok := obj.(*types.TypeName)
+	if !ok {
+		return nil, nil
+	}
+
+	return typeName, nil
+}
+
+func TryGetStructOrInterfaceKind(pkg *packages.Package, name string) (definitions.AstEntityKind, error) {
+	typeName, err := LookupTypeName(pkg, name)
+	if err != nil {
+		return definitions.AstEntityNone, err
+	}
+
+	if _, isStruct := typeName.Type().Underlying().(*types.Struct); isStruct {
+		return definitions.AstEntityStruct, nil
+	}
+
+	// Get the underlying type and check if it's an interface.
+	if _, isInterface := typeName.Type().Underlying().(*types.Interface); isInterface {
+		return definitions.AstEntityInterface, nil
+	}
+
+	return definitions.AstEntityUnknown, nil
+}
+
+func GetFieldTypeString(fieldType ast.Expr) string {
+	switch t := fieldType.(type) {
+	case *ast.Ident:
+		return t.Name
+
+	case *ast.SelectorExpr:
+		return fmt.Sprintf("%s.%s", GetFieldTypeString(t.X), t.Sel.Name)
+
+	case *ast.StarExpr:
+		return fmt.Sprintf("*%s", GetFieldTypeString(t.X))
+
+	case *ast.ArrayType:
+		return fmt.Sprintf("[]%s", GetFieldTypeString(t.Elt))
+
+	case *ast.MapType:
+		return fmt.Sprintf("map[%s]%s", GetFieldTypeString(t.Key), GetFieldTypeString(t.Value))
+
+	case *ast.ChanType:
+		dir := ""
+		if t.Dir == ast.SEND {
+			dir = "send-only"
+		} else if t.Dir == ast.RECV {
+			dir = "receive-only"
+		} else {
+			dir = "bidirectional"
+		}
+		return fmt.Sprintf("Channel (%s, type: %s)", dir, GetFieldTypeString(t.Value))
+
+	case *ast.FuncType:
+		return "Function"
+
+	case *ast.InterfaceType:
+		return "Interface"
+
+	case *ast.StructType:
+		return "Struct"
+
+	case *ast.Ellipsis:
+		return fmt.Sprintf("Variadic (...%s)", GetFieldTypeString(t.Elt))
+
+	case *ast.ParenExpr:
+		return fmt.Sprintf("Parenthesized (%s)", GetFieldTypeString(t.X))
+
+	default:
+		return fmt.Sprintf("Unknown type (%T)", fieldType)
+	}
 }

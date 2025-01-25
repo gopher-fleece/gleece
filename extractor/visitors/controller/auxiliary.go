@@ -26,15 +26,6 @@ func (v *ControllerVisitor) getAllSourceFiles() []*ast.File {
 	return result
 }
 
-func createInvalidParamUsageError(param definitions.FuncParam) error {
-	return fmt.Errorf(
-		"parameter %s (type %s) is passed in '%s' but is not a 'universe' type (i.e., a primitive). This is not currently supported",
-		param.Name,
-		param.TypeMeta.Name,
-		param.PassedIn,
-	)
-}
-
 func (v ControllerVisitor) isAnErrorEmbeddingType(meta definitions.TypeMetadata) (bool, error) {
 	v.enter(fmt.Sprintf("Type %s (%s)", meta.Name, meta.FullyQualifiedPackage))
 	defer v.exit()

@@ -78,7 +78,7 @@ func (v *ControllerVisitor) visitMethod(funcDecl *ast.FuncDecl) (definitions.Rou
 	}
 
 	// Retrieve parameter information
-	funcParams, err := v.getFuncParams(funcDecl, comments)
+	funcParams, err := v.getValidatedFuncParams(funcDecl, comments)
 	if err != nil {
 		return meta, true, v.frozenError(err)
 	}
@@ -100,6 +100,63 @@ func (v *ControllerVisitor) visitMethod(funcDecl *ast.FuncDecl) (definitions.Rou
 	meta.ResponseDescription = successDescription
 
 	return meta, isApiEndpoint, nil
+}
+
+func (v *ControllerVisitor) getValidatedFuncParams(funcDecl *ast.FuncDecl, comments []string) ([]definitions.FuncParam, error) {
+	funcParams, err := v.getFuncParams(funcDecl, comments)
+	if err != nil {
+		return funcParams, v.frozenError(err)
+	}
+
+	for _, param := range funcParams {
+		var validationErr error
+
+		switch param.PassedIn {
+		case definitions.PassedInBody:
+			validationErr = v.validateBodyParam(param)
+		default:
+			validationErr = v.validatePrimitiveParam(param)
+		}
+
+		if validationErr != nil {
+			return funcParams, v.frozenError(validationErr)
+		}
+	}
+
+	return funcParams, nil
+}
+
+func (v *ControllerVisitor) validateBodyParam(param definitions.FuncParam) error {
+	// Verify the body is a struct
+	if param.ParamMeta.TypeMeta.EntityKind != definitions.AstEntityStruct {
+		return v.getFrozenError(
+			"body parameters must be structs but '%s' (schema name '%s', type '%s') is of kind '%s'",
+			param.Name,
+			param.NameInSchema,
+			param.TypeMeta.Name,
+			param.TypeMeta.EntityKind,
+		)
+	}
+
+	return nil
+}
+
+func (v *ControllerVisitor) validatePrimitiveParam(param definitions.FuncParam) error {
+	// Currently, we're limited to primitive header, path and query parameters.
+	// This is a simple and silly check for those.
+	if param.ParamMeta.TypeMeta.EntityKind != definitions.AstEntityUniverse || strings.HasPrefix(param.TypeMeta.Name, "map[") {
+		return v.getFrozenError(
+			"header, path and query parameters are currently limited to primitives only but "+
+				"%s parameter '%s' (schema name '%s', type '%s') is of kind '%s'",
+			param.PassedIn,
+			param.Name,
+			param.NameInSchema,
+			param.TypeMeta.Name,
+			param.TypeMeta.EntityKind,
+		)
+	}
+
+	return nil
 }
 
 func (v *ControllerVisitor) getFuncParams(funcDecl *ast.FuncDecl, comments []string) ([]definitions.FuncParam, error) {
@@ -156,19 +213,10 @@ func (v *ControllerVisitor) getFuncParams(funcDecl *ast.FuncDecl, comments []str
 		switch strings.ToLower(paramAttrib.Name) {
 		case "query":
 			finalParamMeta.PassedIn = definitions.PassedInQuery
-			if !finalParamMeta.TypeMeta.IsUniverseType {
-				return funcParams, v.frozenError(createInvalidParamUsageError(finalParamMeta))
-			}
 		case "header":
 			finalParamMeta.PassedIn = definitions.PassedInHeader
-			if !finalParamMeta.TypeMeta.IsUniverseType {
-				return funcParams, v.frozenError(createInvalidParamUsageError(finalParamMeta))
-			}
 		case "path":
 			finalParamMeta.PassedIn = definitions.PassedInPath
-			if !finalParamMeta.TypeMeta.IsUniverseType {
-				return funcParams, v.frozenError(createInvalidParamUsageError(finalParamMeta))
-			}
 		case "body":
 			finalParamMeta.PassedIn = definitions.PassedInBody
 		}

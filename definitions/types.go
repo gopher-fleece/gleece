@@ -109,6 +109,7 @@ type TypeMetadata struct {
 	Import                ImportType
 	IsUniverseType        bool
 	IsByAddress           bool
+	EntityKind            AstEntityKind
 }
 
 type ErrorResponse struct {
@@ -313,3 +314,13 @@ type GleeceConfig struct {
 	RoutesConfig           RoutesConfig           `json:"routesConfig" validate:"required"`
 	CommonConfig           CommonConfig           `json:"commonConfig" validate:"required"`
 }
+
+type AstEntityKind string
+
+const (
+	AstEntityNone      AstEntityKind = "None"
+	AstEntityUnknown   AstEntityKind = "Unknown"
+	AstEntityInterface AstEntityKind = "Interface"
+	AstEntityStruct    AstEntityKind = "Struct"
+	AstEntityUniverse  AstEntityKind = "Universe"
+)
