@@ -6,6 +6,7 @@ import (
 
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/extractor"
+	"github.com/gopher-fleece/gleece/extractor/annotations"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
 )
 
@@ -81,7 +82,7 @@ func (v *ControllerVisitor) createControllerMetadata(controllerNode *ast.TypeSpe
 	// Do we want to fail if there are no attributes on the controller?
 	if commentSource != nil {
 		comments := extractor.MapDocListToStrings(commentSource.List)
-		holder, err := extractor.NewAttributeHolder(comments)
+		holder, err := annotations.NewAnnotationHolder(comments)
 		if err != nil {
 			return meta, v.frozenError(err)
 		}
@@ -96,9 +97,9 @@ func (v *ControllerVisitor) createControllerMetadata(controllerNode *ast.TypeSpe
 			security = v.getDefaultSecurity()
 		}
 
-		meta.Tag = holder.GetFirstValueOrEmpty(extractor.AttributeTag)
-		meta.Description = holder.GetFirstDescriptionOrEmpty(extractor.AttributeDescription)
-		meta.RestMetadata = definitions.RestMetadata{Path: holder.GetFirstValueOrEmpty(extractor.AttributeRoute)}
+		meta.Tag = holder.GetFirstValueOrEmpty(annotations.AttributeTag)
+		meta.Description = holder.GetFirstDescriptionOrEmpty(annotations.AttributeDescription)
+		meta.RestMetadata = definitions.RestMetadata{Path: holder.GetFirstValueOrEmpty(annotations.AttributeRoute)}
 		meta.Security = security
 	}
 

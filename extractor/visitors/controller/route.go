@@ -7,6 +7,7 @@ import (
 
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/extractor"
+	"github.com/gopher-fleece/gleece/extractor/annotations"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
 )
 
@@ -21,18 +22,18 @@ func (v *ControllerVisitor) visitMethod(funcDecl *ast.FuncDecl) (definitions.Rou
 	}
 
 	comments := extractor.MapDocListToStrings(funcDecl.Doc.List)
-	attributes, err := extractor.NewAttributeHolder(comments)
+	attributes, err := annotations.NewAnnotationHolder(comments)
 	if err != nil {
 		return definitions.RouteMetadata{}, false, v.frozenError(err)
 	}
 
-	methodAttr := attributes.GetFirst(extractor.AttributeMethod)
+	methodAttr := attributes.GetFirst(annotations.AttributeMethod)
 	if methodAttr == nil {
 		logger.Info("Method '%s' does not have a @Method attribute and will be ignored", funcDecl.Name.Name)
 		return definitions.RouteMetadata{}, false, nil
 	}
 
-	routePath := attributes.GetFirstPropertyValueOrEmpty(extractor.AttributeRoute)
+	routePath := attributes.GetFirstPropertyValueOrEmpty(annotations.AttributeRoute)
 	if len(routePath) <= 0 {
 		logger.Info("Method '%s' does not have an @Route attribute and will be ignored", funcDecl.Name.Name)
 		return definitions.RouteMetadata{}, true, nil
@@ -128,7 +129,7 @@ func (v *ControllerVisitor) getValidatedFuncParams(funcDecl *ast.FuncDecl, comme
 
 func (v *ControllerVisitor) validateBodyParam(param definitions.FuncParam) error {
 	// Verify the body is a struct
-	if param.ParamMeta.TypeMeta.EntityKind != definitions.AstEntityStruct {
+	if param.ParamMeta.TypeMeta.EntityKind != definitions.AstNodeKindStruct {
 		return v.getFrozenError(
 			"body parameters must be structs but '%s' (schema name '%s', type '%s') is of kind '%s'",
 			param.Name,
@@ -144,7 +145,10 @@ func (v *ControllerVisitor) validateBodyParam(param definitions.FuncParam) error
 func (v *ControllerVisitor) validatePrimitiveParam(param definitions.FuncParam) error {
 	// Currently, we're limited to primitive header, path and query parameters.
 	// This is a simple and silly check for those.
-	if param.ParamMeta.TypeMeta.EntityKind != definitions.AstEntityUniverse || strings.HasPrefix(param.TypeMeta.Name, "map[") {
+	// need to fully integrate the EntityKind field..
+	isErrType := param.TypeMeta.FullyQualifiedPackage == "" && param.TypeMeta.Name == "error"
+	isMapType := param.TypeMeta.FullyQualifiedPackage == "" && strings.HasPrefix(param.TypeMeta.Name, "map[")
+	if !param.TypeMeta.IsUniverseType || isErrType || isMapType {
 		return v.getFrozenError(
 			"header, path and query parameters are currently limited to primitives only but "+
 				"%s parameter '%s' (schema name '%s', type '%s') is of kind '%s'",
@@ -175,13 +179,13 @@ func (v *ControllerVisitor) getFuncParams(funcDecl *ast.FuncDecl, comments []str
 		v.enter(fmt.Sprintf("Param %s", param.Name))
 		defer v.exit()
 
-		holder, _ := extractor.NewAttributeHolder(comments)
+		holder, _ := annotations.NewAnnotationHolder(comments)
 		paramAttrib := holder.FindFirstByValue(param.Name)
 		if paramAttrib == nil {
 			return funcParams, v.getFrozenError("parameter '%s' does not have a matching documentation attribute", param.Name)
 		}
 
-		castValidator, err := extractor.GetCastProperty[string](paramAttrib, extractor.PropertyValidatorString)
+		castValidator, err := annotations.GetCastProperty[string](paramAttrib, annotations.PropertyValidatorString)
 		if err != nil {
 			return funcParams, v.frozenError(err)
 		}
@@ -191,7 +195,7 @@ func (v *ControllerVisitor) getFuncParams(funcDecl *ast.FuncDecl, comments []str
 			validatorString = *castValidator
 		}
 
-		castName, err := extractor.GetCastProperty[string](paramAttrib, extractor.PropertyName)
+		castName, err := annotations.GetCastProperty[string](paramAttrib, annotations.PropertyName)
 		if err != nil {
 			return funcParams, v.frozenError(err)
 		}

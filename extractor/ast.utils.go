@@ -230,7 +230,7 @@ func GetTypeMetaByIdent(
 		// Nothing to do here. Leave the package empty so the downstream generator knows no import/alias is needed
 		meta.IsUniverseType = true
 		meta.Import = definitions.ImportTypeNone
-		meta.EntityKind = definitions.AstEntityUniverse
+		meta.EntityKind = definitions.AstNodeKindUnknown
 		return meta, nil
 	}
 
@@ -502,27 +502,27 @@ func DoesTypeOrInterfaceExistInPackage(
 	packages []*packages.Package,
 	packageFullName string,
 	ident *ast.Ident,
-) (bool, definitions.AstEntityKind, error) {
+) (bool, definitions.AstNodeKind, error) {
 	pkg := FilterPackageByFullName(packages, packageFullName)
 	if pkg == nil {
-		return false, definitions.AstEntityNone, fmt.Errorf("could not find package '%s' in the given list of packages", packageFullName)
+		return false, definitions.AstNodeKindNone, fmt.Errorf("could not find package '%s' in the given list of packages", packageFullName)
 	}
 
 	typeName, err := LookupTypeName(pkg, ident.Name)
 	if err != nil {
-		return false, definitions.AstEntityNone, err
+		return false, definitions.AstNodeKindNone, err
 	}
 
 	if _, isStruct := typeName.Type().Underlying().(*types.Struct); isStruct {
-		return true, definitions.AstEntityStruct, nil
+		return true, definitions.AstNodeKindStruct, nil
 	}
 
 	// Get the underlying type and check if it's an interface.
 	if _, isInterface := typeName.Type().Underlying().(*types.Interface); isInterface {
-		return true, definitions.AstEntityInterface, nil
+		return true, definitions.AstNodeKindInterface, nil
 	}
 
-	return true, definitions.AstEntityUnknown, nil
+	return true, definitions.AstNodeKindUnknown, nil
 }
 
 func IsUniverseType(typeName string) bool {
@@ -641,22 +641,22 @@ func LookupTypeName(pkg *packages.Package, name string) (*types.TypeName, error)
 	return typeName, nil
 }
 
-func TryGetStructOrInterfaceKind(pkg *packages.Package, name string) (definitions.AstEntityKind, error) {
+func TryGetStructOrInterfaceKind(pkg *packages.Package, name string) (definitions.AstNodeKind, error) {
 	typeName, err := LookupTypeName(pkg, name)
 	if err != nil {
-		return definitions.AstEntityNone, err
+		return definitions.AstNodeKindNone, err
 	}
 
 	if _, isStruct := typeName.Type().Underlying().(*types.Struct); isStruct {
-		return definitions.AstEntityStruct, nil
+		return definitions.AstNodeKindStruct, nil
 	}
 
 	// Get the underlying type and check if it's an interface.
 	if _, isInterface := typeName.Type().Underlying().(*types.Interface); isInterface {
-		return definitions.AstEntityInterface, nil
+		return definitions.AstNodeKindInterface, nil
 	}
 
-	return definitions.AstEntityUnknown, nil
+	return definitions.AstNodeKindUnknown, nil
 }
 
 func GetFieldTypeString(fieldType ast.Expr) string {
@@ -704,5 +704,34 @@ func GetFieldTypeString(fieldType ast.Expr) string {
 
 	default:
 		return fmt.Sprintf("Unknown type (%T)", fieldType)
+	}
+}
+
+func GetNodeKind(fieldType ast.Expr) definitions.AstNodeKind {
+	switch fieldType.(type) {
+	case *ast.Ident:
+		return definitions.AstNodeKindIdent
+	case *ast.SelectorExpr:
+		return definitions.AstNodeKindSelector
+	case *ast.StarExpr:
+		return definitions.AstNodeKindPointer
+	case *ast.ArrayType:
+		return definitions.AstNodeKindArray
+	case *ast.MapType:
+		return definitions.AstNodeKindMap
+	case *ast.ChanType:
+		return definitions.AstNodeKindChannel
+	case *ast.FuncType:
+		return definitions.AstNodeKindFunction
+	case *ast.InterfaceType:
+		return definitions.AstNodeKindInterface
+	case *ast.StructType:
+		return definitions.AstNodeKindStruct
+	case *ast.Ellipsis:
+		return definitions.AstNodeKindVariadic
+	case *ast.ParenExpr:
+		return definitions.AstNodeKindParenthesis
+	default:
+		return definitions.AstNodeKindUnknown
 	}
 }

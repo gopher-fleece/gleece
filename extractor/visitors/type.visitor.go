@@ -7,6 +7,7 @@ import (
 
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/extractor"
+	"github.com/gopher-fleece/gleece/extractor/annotations"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
 	"golang.org/x/tools/go/packages"
 )
@@ -29,8 +30,8 @@ type TypeVisitor struct {
 }
 
 type StructAttributeHolders struct {
-	StructHolder extractor.AttributesHolder
-	FieldHolders map[string]*extractor.AttributesHolder
+	StructHolder annotations.AnnotationHolder
+	FieldHolders map[string]*annotations.AnnotationHolder
 }
 
 func NewTypeVisitor(packages []*packages.Package) *TypeVisitor {
@@ -112,7 +113,7 @@ func (v *TypeVisitor) VisitStruct(fullPackageName string, structName string, str
 }
 
 func (v *TypeVisitor) getAttributeHolders(fullPackageName string, structName string) (StructAttributeHolders, error) {
-	holders := StructAttributeHolders{FieldHolders: make(map[string]*extractor.AttributesHolder)}
+	holders := StructAttributeHolders{FieldHolders: make(map[string]*annotations.AnnotationHolder)}
 
 	relevantPackage := extractor.FilterPackageByFullName(v.packages, fullPackageName)
 	if relevantPackage == nil {
@@ -138,7 +139,7 @@ func (v *TypeVisitor) getAttributeHolders(fullPackageName string, structName str
 	}
 
 	if genDecl.Doc != nil && genDecl.Doc.List != nil && len(genDecl.Doc.List) > 0 {
-		structAttributes, err := extractor.NewAttributeHolder(extractor.MapDocListToStrings(genDecl.Doc.List))
+		structAttributes, err := annotations.NewAnnotationHolder(extractor.MapDocListToStrings(genDecl.Doc.List))
 		if err != nil {
 			logger.Error("Could not create an attribute holder for struct '%s' - %v", structName, err)
 			return holders, err
@@ -162,7 +163,7 @@ func (v *TypeVisitor) getAttributeHolders(fullPackageName string, structName str
 			}
 
 			fieldName := field.Names[0].Name
-			fieldHolder, err := extractor.NewAttributeHolder(extractor.MapDocListToStrings(field.Doc.List))
+			fieldHolder, err := annotations.NewAnnotationHolder(extractor.MapDocListToStrings(field.Doc.List))
 			if err != nil {
 				logger.Error("Could not create an attribute holder for field %s on struct '%s' - %v", fieldName, structName, err)
 				return holders, err
@@ -184,8 +185,8 @@ func (v *TypeVisitor) GetStructs() []definitions.ModelMetadata {
 	return models
 }
 
-func getDeprecationOpts(attributes extractor.AttributesHolder) definitions.DeprecationOptions {
-	deprecationAttr := attributes.GetFirst(extractor.AttributeDeprecated)
+func getDeprecationOpts(attributes annotations.AnnotationHolder) definitions.DeprecationOptions {
+	deprecationAttr := attributes.GetFirst(annotations.AttributeDeprecated)
 	if deprecationAttr == nil {
 		return definitions.DeprecationOptions{}
 	}

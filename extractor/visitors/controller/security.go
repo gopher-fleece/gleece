@@ -2,17 +2,17 @@ package controller
 
 import (
 	"github.com/gopher-fleece/gleece/definitions"
-	"github.com/gopher-fleece/gleece/extractor"
+	"github.com/gopher-fleece/gleece/extractor/annotations"
 )
 
 func (v ControllerVisitor) getDefaultSecurity() []definitions.RouteSecurity {
 	return v.config.OpenAPIGeneratorConfig.DefaultRouteSecurity
 }
 
-func (v *ControllerVisitor) getSecurityFromContext(holder extractor.AttributesHolder) ([]definitions.RouteSecurity, error) {
+func (v *ControllerVisitor) getSecurityFromContext(holder annotations.AnnotationHolder) ([]definitions.RouteSecurity, error) {
 	securities := []definitions.RouteSecurity{}
 
-	normalSec := holder.GetAll(extractor.AttributeSecurity)
+	normalSec := holder.GetAll(annotations.AttributeSecurity)
 	if len(normalSec) > 0 {
 		for _, secAttrib := range normalSec {
 			schemaName := secAttrib.Value
@@ -20,7 +20,7 @@ func (v *ControllerVisitor) getSecurityFromContext(holder extractor.AttributesHo
 				return securities, v.getFrozenError("a security schema's name cannot be empty")
 			}
 
-			definedScopes, err := extractor.GetCastProperty[[]string](secAttrib, extractor.PropertySecurityScopes)
+			definedScopes, err := annotations.GetCastProperty[[]string](secAttrib, annotations.PropertySecurityScopes)
 			if err != nil {
 				return securities, v.frozenError(err)
 			}
@@ -44,7 +44,7 @@ func (v *ControllerVisitor) getSecurityFromContext(holder extractor.AttributesHo
 	return securities, nil
 }
 
-func (v *ControllerVisitor) getRouteSecurityWithInheritance(attributes extractor.AttributesHolder) ([]definitions.RouteSecurity, error) {
+func (v *ControllerVisitor) getRouteSecurityWithInheritance(attributes annotations.AnnotationHolder) ([]definitions.RouteSecurity, error) {
 	explicitSec, err := v.getSecurityFromContext(attributes)
 	if err != nil {
 		return []definitions.RouteSecurity{}, v.frozenError(err)

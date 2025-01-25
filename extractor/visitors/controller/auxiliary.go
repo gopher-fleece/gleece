@@ -9,6 +9,7 @@ import (
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/external"
 	"github.com/gopher-fleece/gleece/extractor"
+	"github.com/gopher-fleece/gleece/extractor/annotations"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
 )
 
@@ -43,8 +44,8 @@ func (v ControllerVisitor) isAnErrorEmbeddingType(meta definitions.TypeMetadata)
 	return embeds, nil
 }
 
-func (v ControllerVisitor) getMethodHideOpts(attributes *extractor.AttributesHolder) definitions.MethodHideOptions {
-	attr := attributes.GetFirst(extractor.AttributeHidden)
+func (v ControllerVisitor) getMethodHideOpts(attributes *annotations.AnnotationHolder) definitions.MethodHideOptions {
+	attr := attributes.GetFirst(annotations.AttributeHidden)
 	if attr == nil {
 		// No '@Hidden' attribute
 		return definitions.MethodHideOptions{Type: definitions.HideMethodNever}
@@ -65,8 +66,8 @@ func (v ControllerVisitor) getMethodHideOpts(attributes *extractor.AttributesHol
 	return definitions.MethodHideOptions{Type: definitions.HideMethodCondition, Condition: attr.Value}
 }
 
-func (v ControllerVisitor) getDeprecationOpts(attributes *extractor.AttributesHolder) definitions.DeprecationOptions {
-	attr := attributes.GetFirst(extractor.AttributeDeprecated)
+func (v ControllerVisitor) getDeprecationOpts(attributes *annotations.AnnotationHolder) definitions.DeprecationOptions {
+	attr := attributes.GetFirst(annotations.AttributeDeprecated)
 	if attr == nil {
 		return definitions.DeprecationOptions{Deprecated: false}
 	}
@@ -80,8 +81,8 @@ func (v ControllerVisitor) getDeprecationOpts(attributes *extractor.AttributesHo
 	return definitions.DeprecationOptions{Deprecated: true, Description: attr.Description}
 }
 
-func (v ControllerVisitor) getErrorResponseMetadata(attributes *extractor.AttributesHolder) ([]definitions.ErrorResponse, error) {
-	responseAttributes := attributes.GetAll(extractor.AttributeErrorResponse)
+func (v ControllerVisitor) getErrorResponseMetadata(attributes *annotations.AnnotationHolder) ([]definitions.ErrorResponse, error) {
+	responseAttributes := attributes.GetAll(annotations.AttributeErrorResponse)
 
 	responses := []definitions.ErrorResponse{}
 	encounteredCodes := MapSet.NewSet[external.HttpStatusCode]()
@@ -108,11 +109,11 @@ func (v ControllerVisitor) getErrorResponseMetadata(attributes *extractor.Attrib
 }
 
 func (v *ControllerVisitor) getResponseStatusCodeAndDescription(
-	attributes *extractor.AttributesHolder,
+	attributes *annotations.AnnotationHolder,
 	hasReturnValue bool,
 ) (external.HttpStatusCode, string, error) {
 	// Set the success attrib code based on whether function returns a value or only error (200 vs 204)
-	attrib := attributes.GetFirst(extractor.AttributeResponse)
+	attrib := attributes.GetFirst(annotations.AttributeResponse)
 	if attrib == nil {
 		if hasReturnValue {
 			return external.StatusOK, "", nil
