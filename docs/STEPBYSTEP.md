@@ -1,4 +1,4 @@
-## Simple Gin REST Server Example
+## Step by Step Gin REST Server Example
 
 Assuming you already have a REST server using Gin, a simple server might look like this:
 ```go
