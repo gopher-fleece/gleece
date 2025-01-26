@@ -48,123 +48,6 @@ func InterfaceToSchemaRef(openapi *openapi3.T, interfaceType string) *openapi3.S
 	return fieldSchemaRef
 }
 
-func BuildSchemaValidation(schema *openapi3.SchemaRef, validationString string, fieldInterface string) {
-
-	// Parse and apply validation rules from the Validator field
-	validationRules := strings.Split(validationString, ",")
-	for _, rule := range validationRules {
-		parts := strings.SplitN(rule, "=", 2)
-		ruleName := parts[0]
-		var ruleValue string
-		if len(parts) > 1 {
-			ruleValue = parts[1]
-		}
-
-		specType := ToOpenApiType(fieldInterface)
-		switch ruleName {
-		case "email":
-			schema.Value.Format = "email"
-		case "gt":
-			// Greater than (only makes sense for numeric fields)
-			if specType == "integer" || specType == "number" {
-				// For gt, we need to set ExclusiveMinimum to true and use the value as minimum
-				schema.Value.Min = ParseNumber(ruleValue)
-				schema.Value.ExclusiveMin = true
-			} else {
-				logger.Warn("Validation rule 'gt' is only applicable to numeric fields")
-			}
-		case "gte":
-			// Greater than or equal (only makes sense for numeric fields)
-			if specType == "integer" || specType == "number" {
-				// For gte, we just set the minimum value
-				schema.Value.Min = ParseNumber(ruleValue)
-				// ExclusiveMinimum should be false (default) or explicitly set to false
-				schema.Value.ExclusiveMin = false
-			} else {
-				logger.Warn("Validation rule 'gte' is only applicable to numeric fields")
-			}
-		case "lt":
-			// Less than (only makes sense for numeric fields)
-			if specType == "integer" || specType == "number" {
-				// For lt, we need to set ExclusiveMaximum to true and use the value as maximum
-				schema.Value.Max = ParseNumber(ruleValue)
-				schema.Value.ExclusiveMax = true
-			} else {
-				logger.Warn("Validation rule 'lt' is only applicable to numeric fields")
-			}
-		case "lte":
-			// Less than or equal (only makes sense for numeric fields)
-			if specType == "integer" || specType == "number" {
-				// For lte, we just set the maximum value
-				schema.Value.Max = ParseNumber(ruleValue)
-				// ExclusiveMaximum should be false (default) or explicitly set to false
-				schema.Value.ExclusiveMax = false
-			} else {
-				logger.Warn("Validation rule 'lte' is only applicable to numeric fields")
-			}
-		case "min":
-			// Minimum length for strings, minimum value for numbers
-			if specType == "string" {
-				schema.Value.MinLength = *ParseInteger(ruleValue)
-			} else if specType == "integer" || specType == "number" {
-				schema.Value.Min = ParseNumber(ruleValue)
-				schema.Value.ExclusiveMin = false
-			} else {
-				logger.Warn("Validation rule 'min' is only applicable to string or numeric fields")
-			}
-		case "max":
-			// Maximum length for strings, maximum value for numbers
-			if specType == "string" {
-				schema.Value.MaxLength = ParseInteger(ruleValue)
-			} else if specType == "integer" || specType == "number" {
-				schema.Value.Max = ParseNumber(ruleValue)
-				schema.Value.ExclusiveMax = false
-			} else {
-				logger.Warn("Validation rule 'max' is only applicable to string or numeric fields")
-			}
-		case "pattern":
-			// Regular expression pattern for strings
-			if specType == "string" {
-				schema.Value.Pattern = ruleValue
-			} else {
-				logger.Warn("Validation rule 'pattern' is only applicable to string fields")
-			}
-		case "minItems":
-			// Minimum number of items for arrays
-			if specType == "array" {
-				schema.Value.MinItems = *ParseInteger(ruleValue)
-			} else {
-				logger.Warn("Validation rule 'minItems' is only applicable to array fields")
-			}
-		case "maxItems":
-			// Maximum number of items for arrays
-			if specType == "array" {
-				schema.Value.MaxItems = ParseInteger(ruleValue)
-			} else {
-				logger.Warn("Validation rule 'maxItems' is only applicable to array fields")
-			}
-		case "uniqueItems":
-			// Ensure all items in the array are unique
-			if specType == "array" {
-				schema.Value.UniqueItems = *ParseBool(ruleValue)
-			} else {
-				logger.Warn("Validation rule 'uniqueItems' is only applicable to array fields")
-			}
-		case "enum":
-			// Enum values for strings or numbers
-			enumValues := strings.Split(ruleValue, "|")
-			if enumValues == nil || len(enumValues) == 0 || enumValues[0] == "" {
-				logger.Warn("Validation rule 'enum' must have at least one value")
-				schema.Value.Enum = nil
-			} else {
-				for _, v := range enumValues {
-					schema.Value.Enum = append(schema.Value.Enum, v)
-				}
-			}
-		}
-	}
-}
-
 func IsPrimitiveType(typeName string) bool {
 	switch typeName {
 	case "string", "int", "int8", "int16", "int32", "int64", "uint", "uint8", "uint16", "uint32", "uint64", "bool", "float32", "float64":
@@ -256,29 +139,28 @@ func IsDeprecated(deprecationOptions *definitions.DeprecationOptions) bool {
 //	jsonValue := GetTagValue(tag, "json", "default") // returns "houseNumber"
 //	validateValue := GetTagValue(tag, "validate", "default") // returns "gte=1"
 func GetTagValue(tagStr string, tagName string, defaultValue string) string {
-	// Split the tag string into individual tag parts
-	tags := strings.Split(tagStr, " ")
-
 	// Look for the requested tag
-	prefix := tagName + ":"
-	for _, tag := range tags {
-		// Remove any quotes around the tag
-		tag = strings.Trim(tag, "`")
+	prefix := tagName + ":\""
 
-		if strings.HasPrefix(tag, prefix) {
-			// Extract the value between the quotes if they exist
-			value := strings.TrimPrefix(tag, prefix)
-			value = strings.Trim(value, "\"")
+	// Find the start of the tag value
+	start := strings.Index(tagStr, prefix)
+	if start == -1 {
+		return defaultValue
+	}
+	start += len(prefix)
 
-			// If empty value, return default
-			if value == "" {
-				return defaultValue
-			}
-			return value
-		}
+	// Find the end of the tag value
+	end := start
+	for end < len(tagStr) && tagStr[end] != '"' {
+		end++
 	}
 
-	// If tag not found, return default
+	// Extract and return the tag value
+	if start < end {
+		return tagStr[start:end]
+	}
+
+	// If tag value is empty, return default
 	return defaultValue
 }
 

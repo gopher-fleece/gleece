@@ -218,7 +218,7 @@ Now you can run your app and see that everything works like a charm :)
 
 ## Further Reading:
 - [Annotations & Options](./ANNOTATIONS.md)
-- [Controllers](./ANNOTATIONS.md)
+- [Controllers](./CONTROLLERS.md)
 - [Authentication](./AUTHENTICATION.md)
 - [Validations](./VALIDATION.md) 
 - [Error handling](./SECURITY.md)

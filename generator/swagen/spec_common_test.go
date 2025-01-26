@@ -52,139 +52,6 @@ var _ = Describe("Spec Common", func() {
 		})
 	})
 
-	Describe("BuildSchemaValidation", func() {
-		var schema *openapi3.SchemaRef
-
-		BeforeEach(func() {
-			schema = &openapi3.SchemaRef{
-				Value: openapi3.NewSchema(),
-			}
-		})
-
-		It("should apply email format validation", func() {
-			BuildSchemaValidation(schema, "email", "string")
-			Expect(schema.Value.Format).To(Equal("email"))
-		})
-
-		It("should apply email format validation while other irrelevant exists", func() {
-			BuildSchemaValidation(schema, "email,required,other=5", "string")
-			Expect(schema.Value.Format).To(Equal("email"))
-		})
-
-		Context("Numeric validations", func() {
-			It("should apply greater than validation", func() {
-				BuildSchemaValidation(schema, "gt=10", "int")
-				Expect(*schema.Value.Min).To(BeEquivalentTo(10))
-				Expect(schema.Value.ExclusiveMin).To(BeTrue())
-			})
-
-			It("should apply greater than or equal validation", func() {
-				BuildSchemaValidation(schema, "gte=10", "int")
-				Expect(*schema.Value.Min).To(BeEquivalentTo(10))
-				Expect(schema.Value.ExclusiveMin).To(BeFalse())
-			})
-
-			It("should apply less than validation", func() {
-				BuildSchemaValidation(schema, "lt=20", "int")
-				Expect(*schema.Value.Max).To(BeEquivalentTo(20))
-				Expect(schema.Value.ExclusiveMax).To(BeTrue())
-			})
-
-			It("should apply less than or equal validation", func() {
-				BuildSchemaValidation(schema, "lte=20", "int")
-				Expect(*schema.Value.Max).To(BeEquivalentTo(20))
-				Expect(schema.Value.ExclusiveMax).To(BeFalse())
-			})
-
-			It("should apply min value validation for numbers", func() {
-				BuildSchemaValidation(schema, "min=5", "int")
-				Expect(*schema.Value.Min).To(BeEquivalentTo(5))
-				Expect(schema.Value.ExclusiveMin).To(BeFalse())
-			})
-
-			It("should apply max value validation for numbers", func() {
-				BuildSchemaValidation(schema, "max=10", "int")
-				Expect(*schema.Value.Max).To(BeEquivalentTo(10))
-				Expect(schema.Value.ExclusiveMax).To(BeFalse())
-			})
-
-			It("should handle multiple numeric validations", func() {
-				BuildSchemaValidation(schema, "gt=5,lt=10", "int")
-				Expect(*schema.Value.Min).To(BeEquivalentTo(5))
-				Expect(*schema.Value.Max).To(BeEquivalentTo(10))
-				Expect(schema.Value.ExclusiveMin).To(BeTrue())
-				Expect(schema.Value.ExclusiveMax).To(BeTrue())
-			})
-		})
-
-		Context("String validations", func() {
-			It("should apply min length validation for strings", func() {
-				BuildSchemaValidation(schema, "min=5", "string")
-				Expect(schema.Value.MinLength).To(BeEquivalentTo(5))
-			})
-
-			It("should apply max length validation for strings", func() {
-				BuildSchemaValidation(schema, "max=10", "string")
-				Expect(*schema.Value.MaxLength).To(BeEquivalentTo(10))
-			})
-
-			It("should apply pattern validation for strings", func() {
-				BuildSchemaValidation(schema, "pattern=^[a-z]+$", "string")
-				Expect(schema.Value.Pattern).To(Equal("^[a-z]+$"))
-			})
-
-			It("should not apply numeric validations to strings", func() {
-				BuildSchemaValidation(schema, "gt=10", "string")
-				Expect(schema.Value.Min).To(BeNil())
-				Expect(schema.Value.ExclusiveMin).To(BeFalse())
-			})
-		})
-
-		Context("Array validations", func() {
-			It("should apply min items validation for arrays", func() {
-				BuildSchemaValidation(schema, "minItems=2", "[]string")
-				Expect(schema.Value.MinItems).To(BeEquivalentTo(2))
-			})
-
-			It("should apply max items validation for arrays", func() {
-				BuildSchemaValidation(schema, "maxItems=5", "[]int")
-				Expect(*schema.Value.MaxItems).To(BeEquivalentTo(5))
-			})
-
-			It("should apply unique items validation for arrays", func() {
-				BuildSchemaValidation(schema, "uniqueItems=true", "[]something")
-				Expect(schema.Value.UniqueItems).To(BeTrue())
-			})
-
-			It("should not apply numeric validations to arrays", func() {
-				BuildSchemaValidation(schema, "gt=10", "[]int")
-				Expect(schema.Value.Min).To(BeNil())
-				Expect(schema.Value.ExclusiveMin).To(BeFalse())
-			})
-		})
-
-		Context("Enum validations", func() {
-			It("should apply enum validation for strings", func() {
-				BuildSchemaValidation(schema, "enum=a|b|c", "string")
-				Expect(schema.Value.Enum).To(ConsistOf("a", "b", "c"))
-			})
-
-			It("should handle empty enum values", func() {
-				BuildSchemaValidation(schema, "enum=", "string")
-				Expect(schema.Value.Enum).To(BeEmpty())
-			})
-		})
-
-		Context("Multiple validations", func() {
-			It("should handle multiple validation rules correctly", func() {
-				BuildSchemaValidation(schema, "min=5,max=10,pattern=^[a-z]+$", "string")
-				Expect(schema.Value.MinLength).To(BeEquivalentTo(5))
-				Expect(*schema.Value.MaxLength).To(BeEquivalentTo(10))
-				Expect(schema.Value.Pattern).To(Equal("^[a-z]+$"))
-			})
-		})
-	})
-
 	Describe("IsPrimitiveType", func() {
 		It("should return true for primitive types", func() {
 			Expect(IsPrimitiveType("string")).To(BeTrue())
@@ -334,12 +201,6 @@ var _ = Describe("Spec Common", func() {
 			Expect(value).To(Equal("default"))
 		})
 
-		It("should handle tag without quotes", func() {
-			tag := `json:houseNumber validate:gte=1`
-			value := GetTagValue(tag, "json", "default")
-			Expect(value).To(Equal("houseNumber"))
-		})
-
 		It("should handle empty tag string", func() {
 			value := GetTagValue("", "json", "default")
 			Expect(value).To(Equal("default"))
@@ -349,6 +210,12 @@ var _ = Describe("Spec Common", func() {
 			tag := `json:"house,omitempty" validate:"required"`
 			value := GetTagValue(tag, "json", "default")
 			Expect(value).To(Equal("house,omitempty"))
+		})
+
+		It("should handle tag value containing spaces", func() {
+			tag := `json:"houseNumber" validate:"onefo=1 2 3"`
+			value := GetTagValue(tag, "validate", "default")
+			Expect(value).To(Equal("onefo=1 2 3"))
 		})
 	})
 
