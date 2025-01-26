@@ -29,10 +29,9 @@ With Gleece, you can:
 
 Gleece aims to make Go developers’ lives easier by seamlessly integrating API routes, validation, and documentation into a single cohesive workflow.
 
-## 🚀 Usage Example  
+## 💫 Look & Feel  
 
-Here’s a practical example of how Gleece simplifies your API development:  
-
+Here’s a practical snippet of how Gleece simplifies your API development:  
 
 ```go
 package api
@@ -75,44 +74,16 @@ func (ec *UserController) CreateNewUser(email string, name string, domicile Domi
 	return userId.String(), nil
 }
 ```
-### What’s Happening Here?  
 
-1. **Annotations**:  
-   - Gleece uses annotations to automatically generate routes & OpenAPI documentation. The format for the annotations is:
-
-   ```go
-   // {{ annotation }} {{ ( {{theBasicRequiredParam}}, { json5 attributes } ) }} {{ description }}
-   ```
-
-   - **Annotation**: This is always required and specifies the type of annotation, such as `@Tag`, `@Route`, `@Method`, etc.
-   - **theBasicRequiredParam**: This parameter is required depending on the type of annotation. For example, `@Route` requires a route path, `@Method` requires an HTTP method, etc.
-   - **json5 attributes**: These are optional attributes in JSON5 format that provide additional information for the annotation. For example, in `@Header(origin, { name: x-origin })`, `{ name: x-origin }` is a JSON5 attribute specifying the name of the header in the http request, while the `origin` is the name of the parameter in the given function.
-   - **Description**: This is an optional description that provides further details about the annotation. It helps in generating more descriptive documentation.
-
-   See full supported [annotations](./docs/ANNOTATIONS.md) documentation
-
-
-2. **Validation Handled by Gleece**:  
-   - Input validation is simplified by Gleece using [go-playground/validator](https://github.com/go-playground/validator) format.  
-   - You define validation rules directly on your struct fields:  
-     - `validate:"required"` ensures the `Address` field is mandatory.  
-     - `validate:"gte=1"` ensures the `HouseNumber` field has a value of at least 1.  
-   - Gleece processes these validation rules automatically during request handling and returns 422 in case of not passing validation.  
-
-3. **Controllers**:  
-   - Simply embed the `GleeceController` (imported from `github.com/gopher-fleece/gleece/external`) into your own controllers to gain its functionality.  
-
-4. **Automation**:  
-   - No manual steps required — your OpenAPI spec is ready to go!  
-
+All other aspects, including HTTP routing generation, authorization enforcement, payload validation, error handling, and OpenAPI v3 specification generation, are handled by Gleece CLI.
 
 ## 📚 Documentation
 
 - [Step By Step Guide](./docs/STEPBYSTEP.md)
 - [Annotations & Options](./docs/ANNOTATIONS.md)
-- [Custom Validations](./docs/CUSTOM_VALIDATION.md) 
-- [Error handling](./docs/SECURITY.md)
-- [Security](./docs/ERROR_HANDLING.md)
+- [Validations](./docs/VALIDATION.md) 
+- [Error handling](./docs/ERROR_HANDLING.md)
+- [Authentication](./docs/AUTHENTICATION.md)
 
 ## 🌐 Integrating with Golang Rest Routers 
 

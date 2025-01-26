@@ -218,9 +218,9 @@ Now you can run your app and see that everything works like a charm :)
 
 ## Further Reading:
 - [Annotations & Options](./ANNOTATIONS.md)
-- [Custom Validations](./CUSTOM_VALIDATION.md) 
+- [Validations](./VALIDATION.md) 
 - [Error handling](./SECURITY.md)
-- [Security](./ERROR_HANDLING.md)
+- [Authentication](./AUTHENTICATION.md)
 
 ## Integrating with Golang Rest Routers 
 

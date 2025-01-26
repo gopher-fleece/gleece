@@ -1,11 +1,11 @@
 # ECHO & Gleece Integration
 If you are using the echo v4 framework for your HTTP routes, you can easily integrate Gleece by following these steps:
 
-1. **Configure Echo as the engin**
-   - In the Gleece configuration (usually `gleece.config.json`) set the `routesConfig->engin` to `echo`.
+1. **Configure Echo as the engine**
+   - In the Gleece configuration (usually `gleece.config.json`) set the `routesConfig->engine` to `echo`.
 
 2. **Configure security function**
-   - In the Gleece configuration set the full package path `routesConfig->authorizationConfig->authFileFullPackageName` (e.g `github.com/gopher-fleece/gleece/security`).
+   - In the Gleece configuration set the full package path `routesConfig->authorizationConfig->authFileFullPackageName` (e.g. `github.com/gopher-fleece/gleece/security`).
 
 3. **Generate Routes File**:  
    - Gleece will generate a routes file from your annotated controllers. For example, it might generate `generated_routes.go`.

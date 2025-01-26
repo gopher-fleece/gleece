@@ -1,11 +1,11 @@
 # Gin & Gleece Integration
 If you are using the Gin framework for your HTTP routes, you can easily integrate Gleece by following these steps:
 
-1. **Configure Gin as the engin**
-   - In the Gleece configuration (usually `gleece.config.json`) make sure the `routesConfig->engin` is `gin`.
+1. **Configure Gin as the engine**
+   - In the Gleece configuration (usually `gleece.config.json`) make sure the `routesConfig->engine` is `gin`.
 
 2. **Configure security function**
-   - In the Gleece configuration set the full package path `routesConfig->authorizationConfig->authFileFullPackageName` (e.g `github.com/gopher-fleece/gleece/security`).
+   - In the Gleece configuration set the full package path `routesConfig->authorizationConfig->authFileFullPackageName` (e.g. `github.com/gopher-fleece/gleece/security`).
 
 3. **Generate Routes File**:  
    - Gleece will generate a routes file from your annotated controllers. For example, it might generate `generated_routes.go`.
