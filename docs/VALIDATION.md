@@ -28,7 +28,7 @@ The validation is read from the annotation `validate` option.
 
 
 ```go
-/ @Description Create a new user
+// @Description Create a new user
 // @Method(POST)
 // @Route(/user/{user_name})
 // @Path(name, { name: "user_name", validate: "require" }) The user's name

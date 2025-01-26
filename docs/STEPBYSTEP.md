@@ -218,9 +218,10 @@ Now you can run your app and see that everything works like a charm :)
 
 ## Further Reading:
 - [Annotations & Options](./ANNOTATIONS.md)
+- [Controllers](./ANNOTATIONS.md)
+- [Authentication](./AUTHENTICATION.md)
 - [Validations](./VALIDATION.md) 
 - [Error handling](./SECURITY.md)
-- [Authentication](./AUTHENTICATION.md)
 
 ## Integrating with Golang Rest Routers 
 

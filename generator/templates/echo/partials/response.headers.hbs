@@ -1,0 +1,3 @@
+for key, value := range controller.GetHeaders() {
+	ctx.Response().Header().Set(key, value)
+}

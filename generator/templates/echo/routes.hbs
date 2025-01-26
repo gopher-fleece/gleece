@@ -44,7 +44,7 @@ func RegisterRoutes(engine *echo.Echo) {
 				return handleAuthorizationError(ctx, authErr, "{{{OperationId}}}")
 			}
 			controller := {{{Name}}}Import.{{../Name}}{}
-			controller.SetRequest(ctx)
+			controller.InitController(ctx)
 			{{#ifAnyParamRequiresConversion FuncParams}}
 			var conversionErr error
 			{{/ifAnyParamRequiresConversion}}
@@ -53,6 +53,7 @@ func RegisterRoutes(engine *echo.Echo) {
 			{{/each}}
 
 		{{#equal HasReturnValue true}}value, {{/equal}}opError := controller.{{{OperationId}}}({{#each FuncParams}}{{ToLowerCamel Name}}{{#unless @last}}, {{/unless}}{{/each}})
+		{{> ResponseHeaders }}
 
 		{{> ReplyResponse}}
 	})

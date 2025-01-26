@@ -45,7 +45,7 @@ func RegisterRoutes(engine *gin.Engine) {
 				return
 			}
 			controller := {{{Name}}}Import.{{../Name}}{}
-			controller.SetRequest(ctx)
+			controller.InitController(ctx)
 			{{#ifAnyParamRequiresConversion FuncParams}}
 			var conversionErr error
 			{{/ifAnyParamRequiresConversion}}
@@ -54,6 +54,7 @@ func RegisterRoutes(engine *gin.Engine) {
 			{{/each}}
 
 		{{#equal HasReturnValue true}}value, {{/equal}}opError := controller.{{{OperationId}}}({{#each FuncParams}}{{ToLowerCamel Name}}{{#unless @last}}, {{/unless}}{{/each}})
+		{{> ResponseHeaders }}
 
 		{{> ReplyResponse}}
 	})

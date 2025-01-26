@@ -86,12 +86,13 @@ type Rfc7807Error struct {
 // GleeceController provides common functionality for controllers.
 type GleeceController struct {
 	statusCode *HttpStatusCode
-	headers    map[string]interface{}
+	headers    map[string]string
 	request    any // Request is the HTTP request from the underlying routing engine (gin, echo etc.)
 }
 
-func (gc *GleeceController) SetRequest(request any) {
+func (gc *GleeceController) InitController(request any) {
 	gc.request = request
+	gc.headers = make(map[string]string)
 }
 
 // SetStatus sets the status code for the GleeceController.
@@ -105,12 +106,17 @@ func (gc *GleeceController) GetStatus() *HttpStatusCode {
 }
 
 // SetHeader sets a header for the GleeceController.
-func (gc *GleeceController) SetHeader(name string, value interface{}) {
+func (gc *GleeceController) SetHeader(name string, value string) {
 	gc.headers[name] = value
 }
 
+// GetHeaders get headers set (defined using the `SetHeader` API).
+func (gc *GleeceController) GetHeaders() map[string]string {
+	return gc.headers
+}
+
 type Controller interface {
-	SetRequest(request any)
+	InitController(request any)
 
 	// SetStatus sets the status code for the GleeceController.
 	SetStatus(statusCode HttpStatusCode)
@@ -119,7 +125,10 @@ type Controller interface {
 	GetStatus() *HttpStatusCode
 
 	// SetHeader sets a header for the GleeceController.
-	SetHeader(name string, value interface{})
+	SetHeader(name string, value string)
+
+	// GetHeaders get headers set (defined using the `SetHeader` API).
+	GetHeaders() map[string]string
 }
 
 type SecurityCheck struct {

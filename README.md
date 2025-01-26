@@ -81,9 +81,10 @@ All other aspects, including HTTP routing generation, authorization enforcement,
 
 - [Step By Step Guide](./docs/STEPBYSTEP.md)
 - [Annotations & Options](./docs/ANNOTATIONS.md)
+- [Controllers](./docs/ANNOTATIONS.md)
+- [Authentication](./docs/AUTHENTICATION.md)
 - [Validations](./docs/VALIDATION.md) 
 - [Error handling](./docs/ERROR_HANDLING.md)
-- [Authentication](./docs/AUTHENTICATION.md)
 
 ## 🌐 Integrating with Golang Rest Routers 
 

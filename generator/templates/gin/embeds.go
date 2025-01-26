@@ -45,6 +45,9 @@ var JsonValidationErrorResponse string
 //go:embed partials/json.body.validation.error.response.hbs
 var JsonBodyValidationErrorResponse string
 
+//go:embed partials/response.headers.hbs
+var ResponseHeaders string
+
 //go:embed partials/json.error.response.hbs
 var JsonErrorResponse string
 
@@ -59,6 +62,7 @@ var Partials = map[string]string{
 	"JsonBodyValidationErrorResponse": JsonBodyValidationErrorResponse,
 	"JsonErrorResponse":               JsonErrorResponse,
 	"ReplyResponse":                   ReplyResponse,
+	"ResponseHeaders":                 ResponseHeaders,
 	"RequestSwitchParamType":          RequestSwitchParamType,
 }
 
