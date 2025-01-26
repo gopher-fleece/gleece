@@ -12,6 +12,7 @@ import (
 
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/generator/compilation"
+	"github.com/gopher-fleece/gleece/generator/templates/echo"
 	"github.com/gopher-fleece/gleece/generator/templates/gin"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
 )
@@ -133,6 +134,8 @@ func getDefaultTemplate(engine definitions.RoutingEngineType) string {
 	switch engine {
 	case definitions.RoutingEngineGin:
 		return gin.RoutesTemplate
+	case definitions.RoutingEngineEcho:
+		return echo.RoutesTemplate
 	}
 	// This should not happen. It indicates a breakage in the build itself.
 	panic(fmt.Sprintf("Could not find an embedded template for routing engine %v", engine))
@@ -158,6 +161,8 @@ func registerPartials(engine definitions.RoutingEngineType) {
 	switch engine {
 	case definitions.RoutingEngineGin:
 		gin.RegisterPartials()
+	case definitions.RoutingEngineEcho:
+		echo.RegisterPartials()
 	default:
 		panic(fmt.Sprintf("Unknown routing engine type '%v'", engine))
 	}

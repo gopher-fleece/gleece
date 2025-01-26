@@ -281,7 +281,8 @@ const (
 type RoutingEngineType string
 
 const (
-	RoutingEngineGin RoutingEngineType = "gin"
+	RoutingEngineGin  RoutingEngineType = "gin"
+	RoutingEngineEcho RoutingEngineType = "echo"
 )
 
 type CustomValidators struct {
@@ -291,7 +292,7 @@ type CustomValidators struct {
 }
 
 type RoutesConfig struct {
-	Engine              RoutingEngineType        `json:"engine" validate:"required,oneof=gin"`
+	Engine              RoutingEngineType        `json:"engine" validate:"required,oneof=gin echo"`
 	TemplateOverrides   map[KnownTemplate]string `json:"templateOverrides"`
 	OutputPath          string                   `json:"outputPath" validate:"required,filepath"`
 	OutputFilePerms     string                   `json:"outputFilePerms" validate:"regex=^(0?[0-7]{3})?$"`

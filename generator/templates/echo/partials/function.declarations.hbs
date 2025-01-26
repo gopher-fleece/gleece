@@ -14,10 +14,10 @@ func getStatusCode(controller external.Controller, hasReturnValue bool, err erro
 	return http.StatusNoContent
 }
 
-func bindAndValidateBody[TOutput any](ctx *gin.Context, contentType string, output **TOutput) error {
+func bindAndValidateBody[TOutput any](ctx echo.Context, contentType string, output **TOutput) error {
 	var err error
 
-	bodyBytes, err := io.ReadAll(ctx.Request.Body)
+	bodyBytes, err := io.ReadAll(ctx.Request().Body)
 	if err != nil {
 		return err
 	}
@@ -59,7 +59,7 @@ func toGinUrl(url string) string {
 	return processedUrl
 }
 
-func authorize(ctx *gin.Context, checksLists []SecurityCheckList) *external.SecurityError {
+func authorize(ctx echo.Context, checksLists []SecurityCheckList) *external.SecurityError {
 	var lastError *external.SecurityError
 
 	for _, list := range checksLists {
@@ -92,12 +92,12 @@ func authorize(ctx *gin.Context, checksLists []SecurityCheckList) *external.Secu
 	return lastError
 }
 
-func handleAuthorizationError(ctx *gin.Context, authErr *external.SecurityError, operationId string) {
+func handleAuthorizationError(ctx echo.Context, authErr *external.SecurityError, operationId string) error {
 	statusCode := int(authErr.StatusCode)
 	if authErr.CustomError != nil {
 		// For now, we support JSON only
-		ctx.JSON(statusCode, authErr.CustomError.Payload)
-		return
+		return ctx.JSON(statusCode, authErr.CustomError.Payload)
+		
 	} 
 	stdError := external.Rfc7807Error{
 		Type:     http.StatusText(statusCode),
@@ -105,5 +105,5 @@ func handleAuthorizationError(ctx *gin.Context, authErr *external.SecurityError,
 		Status:   statusCode,
 		Instance: "/gleece/authorization/error/" + operationId,
 	}
-	ctx.JSON(statusCode, stdError)
+	return ctx.JSON(statusCode, stdError)
 }

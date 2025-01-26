@@ -1,0 +1,18 @@
+statusCode := getStatusCode(&controller, {{{HasReturnValue}}}, opError)
+{{#LastTypeNameEquals Responses "error"}}
+	if opError != nil {
+{{else}}
+	{{#LastTypeIsByAddress Responses}}
+		if opError != nil {
+	{{else}}
+		emptyErr := {{GetLastTyeFullyQualified Responses}}{}
+		if opError != emptyErr {
+	{{/LastTypeIsByAddress}}
+{{/LastTypeNameEquals}}
+	{{#equal ResponseContentType "application/json"}}
+		{{> JsonErrorResponse}}
+	{{/equal}}
+}
+{{#equal ResponseContentType "application/json"}}
+	{{> JsonResponse}}
+{{/equal}}

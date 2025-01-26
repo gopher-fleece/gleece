@@ -10,5 +10,4 @@ validationError := external.Rfc7807Error{
 	Instance:   "/gleece/validation/error/{{{OperationId}}}",
 	Extensions: map[string]string{"error": conversionErr.Error()},
 }
-ctx.JSON(http.StatusUnprocessableEntity, validationError)
-return
+return ctx.JSON(http.StatusUnprocessableEntity, validationError)

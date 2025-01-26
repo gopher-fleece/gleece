@@ -1,8 +1,8 @@
-# Gin & Gleece Integration
-If you are using the Gin framework for your HTTP routes, you can easily integrate Gleece by following these steps:
+# ECHO & Gleece Integration
+If you are using the echo v4 framework for your HTTP routes, you can easily integrate Gleece by following these steps:
 
-1. **Configure Gin as the engin**
-   - In the Gleece configuration (usually `gleece.config.json`) make sure the `routesConfig->engin` is `gin`.
+1. **Configure Echo as the engin**
+   - In the Gleece configuration (usually `gleece.config.json`) set the `routesConfig->engin` to `echo`.
 
 2. **Configure security function**
    - In the Gleece configuration set the full package path `routesConfig->authorizationConfig->authFileFullPackageName` (e.g `github.com/gopher-fleece/gleece/security`).
@@ -11,28 +11,29 @@ If you are using the Gin framework for your HTTP routes, you can easily integrat
    - Gleece will generate a routes file from your annotated controllers. For example, it might generate `generated_routes.go`.
 
 4. **Import and Register Routes**:  
-   - In your `main.go` file, import the generated routes file and call the `RegisterRoutes` function to register the routes with Gin.
+   - In your `main.go` file, import the generated routes file and call the `RegisterRoutes` function to register the routes with Echo.
+
 
 Here's an example:
 
-### Server
+#### Server
 ```go
 package main
 
 import (
-    "github.com/gin-gonic/gin"
+    "github.com/labstack/echo/v4"
     "github.com/gopher-fleece/gleece/routes" // Import the generated routes file
 )
 
 func main() {
-    // Create a Gin router
-    router := gin.Default()
+    // Create a Echo router
+    e := echo.New()
 
     // Register Gleece routes
-    routes.RegisterRoutes(router)
+    routes.RegisterRoutes(e)
 
     // Start the server
-    router.Run(":8080")
+    e.Start(":8080")
 }
 ```
 
@@ -41,11 +42,11 @@ func main() {
 package security
 
 import (
-	"github.com/gin-gonic/gin"
 	"github.com/gopher-fleece/gleece/external"
+   "github.com/labstack/echo/v4"
 )
 
-func GleeceRequestAuthorization(ctx *gin.Context, check external.SecurityCheck) *external.SecurityError {
+func GleeceRequestAuthorization(ctx echo.Context, check external.SecurityCheck) *external.SecurityError {
 	return nil
 }
 ```

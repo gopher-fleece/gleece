@@ -1,0 +1,24 @@
+
+{{#equal PassedIn "Path"}}
+	{{ToLowerCamel Name}}Raw := ctx.Param("{{{NameInSchema}}}")
+	{{> RequestSwitchParamType}}
+{{/equal}}
+
+{{#equal PassedIn "Query"}}
+	{{ToLowerCamel Name}}Raw := ctx.QueryParam("{{{NameInSchema}}}")
+	{{> RequestSwitchParamType}}
+{{/equal}}
+
+{{#equal PassedIn "Header"}}
+	{{ToLowerCamel Name}}Raw := ctx.Request().Header.Get("{{{NameInSchema}}}")
+	{{> RequestSwitchParamType}}
+{{/equal}}
+
+{{#equal PassedIn "Body"}}
+	var {{ToLowerCamel Name}}Ref *{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}}
+	conversionErr = bindAndValidateBody(ctx, "{{{ResponseContentType}}}", &{{ToLowerCamel Name}}Ref)
+	if conversionErr != nil {
+		{{> JsonBodyValidationErrorResponse }}
+	}
+	{{ToLowerCamel Name}} := *{{ToLowerCamel Name}}Ref
+{{/equal}}

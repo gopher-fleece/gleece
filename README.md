@@ -25,6 +25,7 @@ With Gleece, you can:
 - 🎯 Ensure your APIs are always **well-documented and consistent**.  
 - ✅ **Validate input data** effortlessly to keep your APIs robust and secure.
 - 🔐 **Security first** approach, easy authorization with supplied check function.
+- ⚡️ Choose Your Framework - seamlessly works with both **Gin & Echo** Rest frameworks
 
 Gleece aims to make Go developers’ lives easier by seamlessly integrating API routes, validation, and documentation into a single cohesive workflow.
 
@@ -110,12 +111,13 @@ func (ec *UserController) CreateNewUser(email string, name string, domicile Domi
 - [Step By Step Guide](./docs/STEPBYSTEP.md)
 - [Annotations & Options](./docs/ANNOTATIONS.md)
 - [Custom Validations](./docs/CUSTOM_VALIDATION.md) 
-- [Error handling](./docs/ERROR_HANDLING.md)
+- [Error handling](./docs/SECURITY.md)
 - [Security](./docs/ERROR_HANDLING.md)
 
-## 🌐 Integrating with Rest Routers 
+## 🌐 Integrating with Golang Rest Routers 
 
 - [Gin](./docs/GIN_INTEGRATION.md)
+- [Echo](./docs/ECHO_INTEGRATION.md)
 
 For a complete example project using Gleece, check out the [Gleece Example Project](https://github.com/gopher-fleece/gleecexample#readme). This project demonstrates how to set up and use Gleece in a real-world scenario, providing you with a practical reference to get started quickly.
 
