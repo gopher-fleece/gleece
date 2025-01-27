@@ -61,6 +61,7 @@ Create a basic `Gleece` configuration file named `gleece.config.json`:
 		}
 	},
 	"openAPIGeneratorConfig": {
+		"openapi" : "3.0.0",
 		"info": {
 			"title": "Sample API",
 			"description": "This is a sample API",

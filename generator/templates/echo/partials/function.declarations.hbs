@@ -45,7 +45,7 @@ func bindAndValidateBody[TOutput any](ctx echo.Context, contentType string, outp
 	return nil
 }
 
-func toGinUrl(url string) string {
+func toEchoUrl(url string) string {
 	processedUrl := urlParamRegex.ReplaceAllString(url, ":$1")
 	processedUrl = strings.ReplaceAll(processedUrl, "//", "/")
 	if processedUrl == "" {

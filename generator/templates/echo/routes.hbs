@@ -38,7 +38,7 @@ func RegisterRoutes(engine *echo.Echo) {
 {{#each Controllers}}
 	// {{{Name}}}
 	{{#each Routes}}
-		engine.{{{HttpVerb}}}(toGinUrl("{{{../RestMetadata.Path}}}{{{RestMetadata.Path}}}"), func(ctx echo.Context) error  {
+		engine.{{{HttpVerb}}}(toEchoUrl("{{{../RestMetadata.Path}}}{{{RestMetadata.Path}}}"), func(ctx echo.Context) error  {
 			authErr := {{> AuthorizationCall}}
 			if authErr != nil {
 				return handleAuthorizationError(ctx, authErr, "{{{OperationId}}}")
