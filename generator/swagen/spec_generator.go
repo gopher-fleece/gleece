@@ -8,6 +8,7 @@ import (
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/gopher-fleece/gleece/definitions"
+	"github.com/gopher-fleece/gleece/generator/swagen/swagten31"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
 )
 
@@ -64,6 +65,13 @@ func appendErrorSchema(models *[]definitions.ModelMetadata, hasAnyErrorTypes boo
 // GenerateSpec generates the OpenAPI specification
 func GenerateSpec(config *definitions.OpenAPIGeneratorConfig, defs []definitions.ControllerMetadata, models []definitions.ModelMetadata, hasAnyErrorTypes bool) ([]byte, error) {
 
+	// In case of a default error in use, add the RFC-7807, otherwise skip and assume the user define it using structs by themselves
+	appendErrorSchema(&models, hasAnyErrorTypes)
+
+	if config.OpenAPI == "3.1.0" {
+		return swagten31.GenerateSpec(config, defs, models)
+	}
+
 	// Create a new OpenAPI specification using 3.0.0
 	openapi := &openapi3.T{
 		OpenAPI: "3.0.0",
@@ -78,9 +86,6 @@ func GenerateSpec(config *definitions.OpenAPIGeneratorConfig, defs []definitions
 			Schemas: openapi3.Schemas{},
 		},
 	}
-
-	// In case of a default error in use, add the RFC-7807, otherwise skip and assume the user define it using structs by themselves
-	appendErrorSchema(&models, hasAnyErrorTypes)
 
 	if err := GenerateSecuritySpec(openapi, &config.SecuritySchemes); err != nil {
 		logger.Error("Failed to generate security spec - %v", err)

@@ -264,6 +264,7 @@ type SecuritySchemeConfig struct {
 }
 
 type OpenAPIGeneratorConfig struct {
+	OpenAPI              string                 `json:"openAPI" validate:"required,oneof=3.0.0 3.1.0"` // only 3.0.0 is fully supported
 	Info                 openapi3.Info          `json:"info" validate:"required"`
 	BaseURL              string                 `json:"baseUrl" validate:"required,url"`
 	SecuritySchemes      []SecuritySchemeConfig `json:"securitySchemes" validate:"not_nil_array"`

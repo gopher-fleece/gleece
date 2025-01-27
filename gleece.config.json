@@ -15,6 +15,7 @@
 		}
 	},
 	"openAPIGeneratorConfig": {
+		"openapi" : "3.1.0",
 		"info": {
 			"title": "Sample API",
 			"description": "This is a sample API",
