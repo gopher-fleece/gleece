@@ -1,4 +1,4 @@
-package swagen
+package swagen30
 
 import (
 	"github.com/getkin/kin-openapi/openapi3"
@@ -28,7 +28,7 @@ var _ = Describe("Swagen", func() {
 						Name:        "Field1",
 						Type:        "string",
 						Description: "A string field",
-						Tag:         `json:"field1" validate:"required"`,
+						Tag:         `json:"field1,omitempty" validate:"required"`,
 					},
 					{
 						Name:        "field2",

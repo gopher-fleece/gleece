@@ -1,7 +1,6 @@
 package definitions
 
 import (
-	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/gopher-fleece/gleece/external"
 )
 
@@ -263,8 +262,29 @@ type SecuritySchemeConfig struct {
 	In           SecuritySchemeIn   `json:"in" validate:"required,security_schema_in"`     // see SecuritySchemeIn
 }
 
+type OpenAPIContact struct {
+	Name  string `json:"name"`
+	URL   string `json:"url"`
+	Email string `json:"email" validate:"email"`
+}
+
+type OpenAPILicense struct {
+	Name string `json:"name" validate:"required"`
+	URL  string `json:"url"`
+}
+
+type OpenAPIInfo struct {
+	Title          string          `json:"title" validate:"required"`
+	Description    string          `json:"description"`
+	TermsOfService string          `json:"termsOfService"`
+	Contact        *OpenAPIContact `json:"contact"`
+	License        *OpenAPILicense `json:"license"`
+	Version        string          `json:"version" validate:"required"`
+}
+
 type OpenAPIGeneratorConfig struct {
-	Info                 openapi3.Info          `json:"info" validate:"required"`
+	OpenAPI              string                 `json:"openAPI" validate:"required,oneof=3.0.0 3.1.0"` // only 3.0.0 is fully supported
+	Info                 OpenAPIInfo            `json:"info" validate:"required"`
 	BaseURL              string                 `json:"baseUrl" validate:"required,url"`
 	SecuritySchemes      []SecuritySchemeConfig `json:"securitySchemes" validate:"not_nil_array"`
 	DefaultRouteSecurity []RouteSecurity        `json:"defaultSecurity" validate:"not_nil_array"`

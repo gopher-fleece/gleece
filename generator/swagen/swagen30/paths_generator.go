@@ -1,4 +1,4 @@
-package swagen
+package swagen30
 
 import (
 	"errors"
@@ -7,6 +7,7 @@ import (
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/gopher-fleece/gleece/definitions"
+	"github.com/gopher-fleece/gleece/generator/swagen/swagtool"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
 )
 
@@ -18,7 +19,7 @@ func createOperation(def definitions.ControllerMetadata, route definitions.Route
 		OperationID: route.OperationId,
 		Tags:        []string{def.Tag},
 		Parameters:  []*openapi3.ParameterRef{},
-		Deprecated:  IsDeprecated(&route.Deprecation),
+		Deprecated:  swagtool.IsDeprecated(&route.Deprecation),
 	}
 }
 
@@ -73,7 +74,7 @@ func buildSecurityMethod(securitySchemes []definitions.SecuritySchemeConfig, sec
 	for _, securityMethod := range securityMethods {
 
 		// Make sure the name is exist in the openapi security schemes
-		if !IsSecurityNameInSecuritySchemes(securitySchemes, securityMethod.SchemaName) {
+		if !swagtool.IsSecurityNameInSecuritySchemes(securitySchemes, securityMethod.SchemaName) {
 			errStr := fmt.Sprintf("Security method name %s is not exists in the defined security schemes %v", securityMethod.SchemaName, securitySchemes)
 			// Create error object and return it, add the method name that is not exist in the security schemes
 			return nil, errors.New(errStr)
@@ -135,7 +136,7 @@ func createRouteParam(openapi *openapi3.T, param definitions.FuncParam) *openapi
 			Name:        param.NameInSchema,
 			In:          strings.ToLower(string(param.PassedIn)),
 			Description: param.Description,
-			Required:    true, // For now, EVERY param is mandatory due to the way Go works, in the future we will support nil for pointer params only // IsFieldRequired(param.Validator),
+			Required:    swagtool.IsFieldRequired(param.Validator),
 			Schema:      schemaRef,
 		},
 	}
@@ -149,7 +150,7 @@ func createRequestBodyParam(openapi *openapi3.T, param definitions.FuncParam) *o
 		Value: &openapi3.RequestBody{
 			Description: param.Description,
 			Content:     content,
-			Required:    true, // See createRouteParam required comment
+			Required:    swagtool.IsFieldRequired(param.Validator),
 		},
 	}
 }
@@ -170,7 +171,7 @@ func generateControllerSpec(openapi *openapi3.T, config *definitions.OpenAPIGene
 	// Iterate over the routes in the controller
 	for _, route := range def.Routes {
 
-		if IsHiddenAsset(&route.Hiding) {
+		if swagtool.IsHiddenAsset(&route.Hiding) {
 			logger.Info(fmt.Sprintf("Skipping hidden route: %v %s (%s)", route.HttpVerb, route.RestMetadata.Path, route.OperationId))
 			continue
 		}
@@ -181,10 +182,10 @@ func generateControllerSpec(openapi *openapi3.T, config *definitions.OpenAPIGene
 		// Iterate over the error responses
 		for _, errResp := range route.ErrorResponses {
 			// Set the response using the Set method
-			operation.Responses.Set(HttpStatusCodeToString(errResp.HttpStatusCode), createErrorResponse(openapi, route, errResp))
+			operation.Responses.Set(swagtool.HttpStatusCodeToString(errResp.HttpStatusCode), createErrorResponse(openapi, route, errResp))
 		}
 
-		operation.Responses.Set(HttpStatusCodeToString(route.ResponseSuccessCode), createResponseSuccess(openapi, route))
+		operation.Responses.Set(swagtool.HttpStatusCodeToString(route.ResponseSuccessCode), createResponseSuccess(openapi, route))
 
 		generateParams(openapi, route, operation)
 

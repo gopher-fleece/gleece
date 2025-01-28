@@ -39,10 +39,10 @@ These annotations are used at the controller class level.
 
 | Annotation    | Purpose                                          | Parameter          | JSON5 Options Ref                          | Required | comment |
 |---------------|--------------------------------------------------|--------------------|--------------------------------------------|----------|---------|
-| `@Tag`        | Defines the OpenAPI tag for grouping routes      | tagName            | -                                          | Yes      |         |
+| `@Tag`        | Defines the OpenAPI tag for grouping routes      | tagName            | -                                          | No       |         |
 | `@Route`      | Defines the base route path for all methods      | path               | -                                          | Yes      |         |
 | `@Security`   | Set the default security for controller's routes | securitySchemeName | [Security Options](#security-options)      | No       | Supports multiple annotation and will be count as logical OR between them |
-| `@Description`| Provides a detailed description of the controller| -                  | -                                          | Yes      |         | 
+| `@Description`| Provides a detailed description of the controller| -                  | -                                          | No       |         | 
 | `@Deprecated` | Marks the entire controller as deprecated        | -                  | -                                          | No       |         |
 
 ## Function-Level Annotations - Route

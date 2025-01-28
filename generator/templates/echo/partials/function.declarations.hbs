@@ -22,8 +22,6 @@ func bindAndValidateBody[TOutput any](ctx echo.Context, contentType string, outp
 		return err
 	}
 
-	// TODO: Do we need support primitive body????
-
 	var deserializedOutput TOutput
 
 	switch contentType {
@@ -45,7 +43,7 @@ func bindAndValidateBody[TOutput any](ctx echo.Context, contentType string, outp
 	return nil
 }
 
-func toGinUrl(url string) string {
+func toEchoUrl(url string) string {
 	processedUrl := urlParamRegex.ReplaceAllString(url, ":$1")
 	processedUrl = strings.ReplaceAll(processedUrl, "//", "/")
 	if processedUrl == "" {

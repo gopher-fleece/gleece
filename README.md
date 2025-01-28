@@ -3,6 +3,7 @@
 
 [![gleece](https://github.com/gopher-fleece/gleece/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/gopher-fleece/gleece/actions/workflows/build.yml)
 [![Latest Release](https://img.shields.io/github/v/release/gopher-fleece/gleece)](https://github.com/gopher-fleece/gleece/releases)
+[![Go Report Card](https://goreportcard.com/badge/github.com/gopher-fleece/gleece)](https://goreportcard.com/report/gopher-fleece/gleece)
 [![Coverage Status](https://coveralls.io/repos/github/gopher-fleece/gleece/badge.svg?branch=main)](https://coveralls.io/github/gopher-fleece/gleece?branch=main)
 [![VSCode Extension](https://img.shields.io/visual-studio-marketplace/v/haim-kastner.gleece-extension?label=VSCode%20Extension)](https://marketplace.visualstudio.com/items?itemName=haim-kastner.gleece-extension)
 
@@ -21,7 +22,7 @@ Gone are the days of manually writing repetitive boilerplate code or struggling 
 
 With Gleece, you can:  
 - 🔧 **Simplify** your API development process.  
-- 📜 Automatically **generate OpenAPI v3 specs** directly from your code.  
+- 📜 Automatically **generate OpenAPI v3.0.0 / v3.1.0** specification directly from your code.  
 - 🎯 Ensure your APIs are always **well-documented and consistent**.  
 - ✅ **Validate input data** effortlessly to keep your APIs robust and secure.
 - 🔐 **Security first** approach, easy authorization with supplied check function.

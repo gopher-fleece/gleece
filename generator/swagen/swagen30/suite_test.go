@@ -1,4 +1,4 @@
-package swagen
+package swagen30
 
 import (
 	"testing"
@@ -8,12 +8,14 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestSwagenManagerModule(t *testing.T) {
+func TestSwagen30Module(t *testing.T) {
 	// Disable logging to reduce clutter.
 	logger.SetLogLevel(logger.LogLevelNone)
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Swagen Manager Suite")
+	RunSpecs(t, "Swagen v3.0 Module Suite")
 }
 
 var _ = BeforeEach(func() {
+	// Clear the schemaRefMap before each test
+	schemaRefMap = []SchemaRefMap{}
 })

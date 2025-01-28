@@ -1,10 +1,11 @@
-package swagen
+package swagen30
 
 import (
 	"strconv"
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/gopher-fleece/gleece/generator/swagen/swagtool"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
 )
 
@@ -19,7 +20,7 @@ func BuildSchemaValidation(schema *openapi3.SchemaRef, validationString string, 
 			ruleValue = parts[1]
 		}
 
-		specType := ToOpenApiType(fieldInterface)
+		specType := swagtool.ToOpenApiType(fieldInterface)
 		switch ruleName {
 		case "email":
 			if specType == "string" {
@@ -71,53 +72,53 @@ func BuildSchemaValidation(schema *openapi3.SchemaRef, validationString string, 
 			}
 		case "gt":
 			if specType == "integer" || specType == "number" {
-				schema.Value.Min = ParseNumber(ruleValue)
+				schema.Value.Min = swagtool.ParseNumber(ruleValue)
 				schema.Value.ExclusiveMin = true
 			} else {
 				logger.Warn("Validation rule 'gt' is only applicable to numeric fields, got %s", specType)
 			}
 		case "gte":
 			if specType == "integer" || specType == "number" {
-				schema.Value.Min = ParseNumber(ruleValue)
+				schema.Value.Min = swagtool.ParseNumber(ruleValue)
 				schema.Value.ExclusiveMin = false
 			} else {
 				logger.Warn("Validation rule 'gte' is only applicable to numeric fields, got %s", specType)
 			}
 		case "lt":
 			if specType == "integer" || specType == "number" {
-				schema.Value.Max = ParseNumber(ruleValue)
+				schema.Value.Max = swagtool.ParseNumber(ruleValue)
 				schema.Value.ExclusiveMax = true
 			} else {
 				logger.Warn("Validation rule 'lt' is only applicable to numeric fields, got %s", specType)
 			}
 		case "lte":
 			if specType == "integer" || specType == "number" {
-				schema.Value.Max = ParseNumber(ruleValue)
+				schema.Value.Max = swagtool.ParseNumber(ruleValue)
 				schema.Value.ExclusiveMax = false
 			} else {
 				logger.Warn("Validation rule 'lte' is only applicable to numeric fields, got %s", specType)
 			}
 		case "min":
 			if specType == "string" {
-				schema.Value.MinLength = *ParseInteger(ruleValue)
+				schema.Value.MinLength = *swagtool.ParseUInteger(ruleValue)
 			} else if specType == "integer" || specType == "number" {
-				schema.Value.Min = ParseNumber(ruleValue)
+				schema.Value.Min = swagtool.ParseNumber(ruleValue)
 				schema.Value.ExclusiveMin = false
 			} else {
 				logger.Warn("Validation rule 'min' is only applicable to string or numeric fields, got %s", specType)
 			}
 		case "max":
 			if specType == "string" {
-				schema.Value.MaxLength = ParseInteger(ruleValue)
+				schema.Value.MaxLength = swagtool.ParseUInteger(ruleValue)
 			} else if specType == "integer" || specType == "number" {
-				schema.Value.Max = ParseNumber(ruleValue)
+				schema.Value.Max = swagtool.ParseNumber(ruleValue)
 				schema.Value.ExclusiveMax = false
 			} else {
 				logger.Warn("Validation rule 'max' is only applicable to string or numeric fields, got %s", specType)
 			}
 		case "len":
 			if specType == "string" {
-				length := ParseInteger(ruleValue)
+				length := swagtool.ParseUInteger(ruleValue)
 				schema.Value.MinLength = *length
 				schema.Value.MaxLength = length
 			} else {
@@ -131,19 +132,19 @@ func BuildSchemaValidation(schema *openapi3.SchemaRef, validationString string, 
 			}
 		case "minItems":
 			if specType == "array" {
-				schema.Value.MinItems = *ParseInteger(ruleValue)
+				schema.Value.MinItems = *swagtool.ParseUInteger(ruleValue)
 			} else {
 				logger.Warn("Validation rule 'minItems' is only applicable to array fields, got %s", specType)
 			}
 		case "maxItems":
 			if specType == "array" {
-				schema.Value.MaxItems = ParseInteger(ruleValue)
+				schema.Value.MaxItems = swagtool.ParseUInteger(ruleValue)
 			} else {
 				logger.Warn("Validation rule 'maxItems' is only applicable to array fields, got %s", specType)
 			}
 		case "uniqueItems":
 			if specType == "array" {
-				schema.Value.UniqueItems = *ParseBool(ruleValue)
+				schema.Value.UniqueItems = *swagtool.ParseBool(ruleValue)
 			} else {
 				logger.Warn("Validation rule 'uniqueItems' is only applicable to array fields, got %s", specType)
 			}
