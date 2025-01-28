@@ -51,6 +51,9 @@ var ResponseHeaders string
 //go:embed partials/json.error.response.hbs
 var JsonErrorResponse string
 
+//go:embed partials/run.validator.hbs
+var RunValidator string
+
 var Partials = map[string]string{
 	"Imports":                         Imports,
 	"TypeDeclarations":                TypeDeclarations,
@@ -64,6 +67,7 @@ var Partials = map[string]string{
 	"ReplyResponse":                   ReplyResponse,
 	"ResponseHeaders":                 ResponseHeaders,
 	"RequestSwitchParamType":          RequestSwitchParamType,
+	"RunValidator":                    RunValidator,
 }
 
 func RegisterPartials() {
