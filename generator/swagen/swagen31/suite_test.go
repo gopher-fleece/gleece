@@ -1,4 +1,4 @@
-package swagen
+package swagen31
 
 import (
 	"testing"
@@ -8,11 +8,11 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestSwagenManagerModule(t *testing.T) {
+func TestSwagen31Module(t *testing.T) {
 	// Disable logging to reduce clutter.
 	logger.SetLogLevel(logger.LogLevelNone)
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Swagen Manager Suite")
+	RunSpecs(t, "Swagen v3.1 Module Suite")
 }
 
 var _ = BeforeEach(func() {

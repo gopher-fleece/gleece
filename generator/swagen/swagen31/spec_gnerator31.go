@@ -1,10 +1,12 @@
-package swagten31
+package swagen31
 
 import (
 	"fmt"
 
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
+	"github.com/pb33f/libopenapi"
+	validator "github.com/pb33f/libopenapi-validator"
 	"github.com/pb33f/libopenapi/datamodel/high/base"
 	v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
 	"github.com/pb33f/libopenapi/orderedmap"
@@ -17,16 +19,13 @@ func GenerateSpec(config *definitions.OpenAPIGeneratorConfig, defs []definitions
 		Servers: []*v3.Server{
 			{
 				URL: config.BaseURL,
-				// Description: , TODO: sully support it
 			},
 		},
 		Info: &base.Info{
-			// Summary:        config.Info.Title,
+			Title:          config.Info.Title,
 			Description:    config.Info.Description,
 			TermsOfService: config.Info.TermsOfService,
-			Title:          config.Info.Title,
 			Version:        config.Info.Version,
-			// TODO: support extensions
 		},
 		Paths: &v3.Paths{
 			PathItems: orderedmap.New[string, *v3.PathItem](),
@@ -53,21 +52,47 @@ func GenerateSpec(config *definitions.OpenAPIGeneratorConfig, defs []definitions
 	}
 
 	if err := GenerateSecuritySpec(doc, &config.SecuritySchemes); err != nil {
-		logger.Error("Failed to generate security spec - %v", err)
+		logger.Error("Failed to generate security v3.1 spec - %v", err)
 		return nil, err
 	}
-	logger.Info("Security spec generated successfully")
+	logger.Info("Security spec v3.1 generated successfully")
 
 	if err := GenerateModelsSpec(doc, models); err != nil {
-		logger.Error("Failed to generate models spec - %v", err)
+		logger.Error("Failed to generate models v3.1 spec - %v", err)
 		return nil, err
 	}
-	logger.Info("Models spec generated successfully")
+	logger.Info("Models spec v3.1 generated successfully")
+
+	if err := GenerateControllersSpec(doc, config, defs); err != nil {
+		logger.Error("Failed to generate controllers v3.1 spec - %v", err)
+		return nil, err
+	}
+	logger.Info("Controllers spec v3.1 generated successfully")
 
 	jsonData, err := doc.RenderJSON("    ")
 	if err != nil {
-		fmt.Println("Error marshaling JSON:", err)
+		fmt.Println("Error marshaling v3.1 JSON:", err)
 	}
+
+	libopenapiDoc, docErr := libopenapi.NewDocument(jsonData)
+
+	if docErr != nil {
+		return nil, fmt.Errorf("Failed to build a valid libopenapi document %v", docErr.Error())
+	}
+
+	specValidator, validatorErrs := validator.NewValidator(libopenapiDoc)
+	if validatorErrs != nil {
+		validationText := FormatErrors(validatorErrs)
+		return nil, fmt.Errorf("Failed to build a valid v3.1 specification %v", validationText)
+	}
+
+	succeeded, docValidatorErrs := specValidator.ValidateDocument()
+
+	if !succeeded {
+		docValidationText := FormatValidationErrors(docValidatorErrs)
+		return nil, fmt.Errorf("Failed to build a valid v3.1 documentation specification %v", docValidationText)
+	}
+	logger.Info("OpenAPI specification validated successfully")
 
 	return jsonData, err
 }

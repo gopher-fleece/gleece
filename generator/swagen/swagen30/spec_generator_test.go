@@ -1,14 +1,13 @@
-package swagen
+package swagen30
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
-	"reflect"
 
-	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/gopher-fleece/gleece/definitions"
+	"github.com/gopher-fleece/gleece/generator/swagen/swagtool"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -108,7 +107,7 @@ var _ = Describe("Spec Generator", func() {
 							NameInSchema: "my_names",
 							PassedIn:     definitions.PassedInQuery,
 							Description:  "Example query ARR param",
-							Validator:    "",
+							Validator:    "required",
 						},
 						{
 							ParamMeta: definitions.ParamMeta{
@@ -132,7 +131,7 @@ var _ = Describe("Spec Generator", func() {
 							NameInSchema: "my_number",
 							PassedIn:     definitions.PassedInHeader,
 							Description:  "Example Header num param",
-							Validator:    "gte=1,lt=100",
+							Validator:    "required,gte=1,lt=100",
 						},
 						{
 							ParamMeta: definitions.ParamMeta{
@@ -315,16 +314,20 @@ var _ = Describe("Spec Generator", func() {
 			},
 		}
 
+		swagtool.AppendErrorSchema(&models, true)
+
 		jsonBytes, err := GenerateSpec(&definitions.OpenAPIGeneratorConfig{
-			Info: openapi3.Info{
-				Title:       "My API",
-				Version:     "1.0.0",
-				Description: "This is a simple API?",
-				Contact: &openapi3.Contact{
+			Info: definitions.OpenAPIInfo{
+				Title:          "My API",
+				Version:        "1.0.0",
+				Description:    "This is a simple API?",
+				TermsOfService: "",
+				Contact: &definitions.OpenAPIContact{
 					Name:  "John Doe",
 					Email: "",
+					URL:   "",
 				},
-				License: &openapi3.License{
+				License: &definitions.OpenAPILicense{
 					Name: "Apache 2.0",
 					URL:  "https://www.apache.org/licenses/LICENSE-2.0.html",
 				},
@@ -356,7 +359,7 @@ var _ = Describe("Spec Generator", func() {
 					},
 				},
 			},
-		}, defs, models, true)
+		}, defs, models)
 
 		// If it fails, throw an error
 		if err != nil {
@@ -365,7 +368,7 @@ var _ = Describe("Spec Generator", func() {
 		}
 
 		// Compare the generated spec with the expected spec
-		areEqual, err := areJSONsIdentical(jsonBytes, fullyFeaturesSpec)
+		areEqual, err := swagtool.AreJSONsIdentical(jsonBytes, fullyFeaturesSpec)
 		if err != nil {
 			Fail("Failed to compare JSONs: " + err.Error())
 		}
@@ -442,82 +445,17 @@ var _ = Describe("Spec Generator", func() {
 		models := []definitions.ModelMetadata{}
 
 		_, err := GenerateSpec(&definitions.OpenAPIGeneratorConfig{
-			Info: openapi3.Info{
+			Info: definitions.OpenAPIInfo{
 				Title:   "My API",
 				Version: "1.0.0",
 			},
 			BaseURL:              "http://localhost:8080",
 			DefaultRouteSecurity: []definitions.RouteSecurity{},
-		}, defs, models, false)
+		}, defs, models)
 
 		// Expect error not to be nil
 		Expect(err).NotTo(BeNil())
 		Expect(err.Error()).To(Equal("invalid paths: operation GET /example-base/example-route/{my_path} must define exactly all path parameters (missing: [my_path])"))
 	})
 
-	It("Should output spec file", func() {
-
-		defs := []definitions.ControllerMetadata{}
-
-		// Create an example controller and add it to the definitions
-		defs = append(defs, definitions.ControllerMetadata{})
-
-		models := []definitions.ModelMetadata{}
-
-		outputPath := "./dist/test-spec-out.json"
-		if fileExists(outputPath) {
-			os.Remove(outputPath)
-		}
-
-		GenerateAndOutputSpec(&definitions.OpenAPIGeneratorConfig{
-			Info: openapi3.Info{
-				Title:   "My API",
-				Version: "1.0.0",
-			},
-			BaseURL:              "http://localhost:8080",
-			DefaultRouteSecurity: []definitions.RouteSecurity{},
-			SpecGeneratorConfig: definitions.SpecGeneratorConfig{
-				OutputPath: outputPath,
-			},
-		}, defs, models, false)
-
-		Expect(fileExists(outputPath)).To(BeTrue())
-	})
-
-	It("Should add Rfc7807Error when default error in use", func() {
-		models := []definitions.ModelMetadata{}
-		appendErrorSchema(&models, true)
-		Expect(len(models)).To(Equal(1))
-	})
-	It("Should not add error when default error not in use", func() {
-		models := []definitions.ModelMetadata{}
-		appendErrorSchema(&models, false)
-		Expect(len(models)).To(Equal(0))
-	})
 })
-
-func fileExists(filename string) bool {
-	_, err := os.Stat(filename)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return false
-		}
-	}
-	return true
-}
-
-func areJSONsIdentical(json1 []byte, json2 []byte) (bool, error) {
-	var obj1, obj2 map[string]interface{}
-
-	err := json.Unmarshal(json1, &obj1)
-	if err != nil {
-		return false, fmt.Errorf("invalid JSON 1: %v", err)
-	}
-
-	err = json.Unmarshal(json2, &obj2)
-	if err != nil {
-		return false, fmt.Errorf("invalid JSON 2: %v", err)
-	}
-
-	return reflect.DeepEqual(obj1, obj2), nil
-}

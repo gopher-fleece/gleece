@@ -1,4 +1,4 @@
-package swagen
+package swagen30
 
 import (
 	"github.com/getkin/kin-openapi/openapi3"

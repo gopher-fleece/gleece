@@ -1,4 +1,4 @@
-package swagten31
+package swagen31
 
 import (
 	"github.com/gopher-fleece/gleece/definitions"
@@ -9,7 +9,7 @@ import (
 	"github.com/pb33f/libopenapi/orderedmap"
 )
 
-var _ = Describe("Swagten31", func() {
+var _ = Describe("swagen31", func() {
 	var doc *v3.Document
 
 	BeforeEach(func() {
@@ -30,7 +30,7 @@ var _ = Describe("Swagten31", func() {
 						Name:        "Field1",
 						Type:        "string",
 						Description: "A string field",
-						Tag:         `json:"field1" validate:"required"`,
+						Tag:         `json:"field1,omitempty" validate:"required"`,
 					},
 					{
 						Name:        "field2",
@@ -48,7 +48,7 @@ var _ = Describe("Swagten31", func() {
 			schema := schemaRef.Schema()
 			Expect(schema.Title).To(Equal("TestModel"))
 			Expect(schema.Description).To(Equal("A test model"))
-			Expect(schema.Type).To(Equal(objectType))
+			Expect(schema.Type).To(Equal([]string{"object"}))
 
 			field1Schema, found := schema.Properties.Get("field1")
 			Expect(found).To(BeTrue())

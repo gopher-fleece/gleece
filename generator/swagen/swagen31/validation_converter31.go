@@ -1,10 +1,11 @@
-package swagten31
+package swagen31
 
 import (
 	"log"
 	"strconv"
 	"strings"
 
+	"github.com/gopher-fleece/gleece/generator/swagen/swagtool"
 	"github.com/pb33f/libopenapi/datamodel/high/base"
 	"gopkg.in/yaml.v3"
 )
@@ -20,7 +21,7 @@ func BuildSchemaValidationV31(schema *base.Schema, validationString string, fiel
 			ruleValue = parts[1]
 		}
 
-		specType := ToOpenApiType(fieldInterface)
+		specType := swagtool.ToOpenApiType(fieldInterface)
 		switch ruleName {
 		case "email", "uuid", "ip", "ipv4", "ipv6", "hostname", "date", "datetime":
 			if specType == "string" {
@@ -37,57 +38,59 @@ func BuildSchemaValidationV31(schema *base.Schema, validationString string, fiel
 			}
 		case "gt":
 			if specType == "integer" || specType == "number" {
-				val := ParseNumber(ruleValue)
+				val := swagtool.ParseNumber(ruleValue)
 				schema.ExclusiveMinimum = &base.DynamicValue[bool, float64]{
 					B: *val,
+					N: 1,
 				}
 			} else {
 				log.Printf("Validation rule '%s' is only applicable to numeric fields, got %s", ruleName, specType)
 			}
 		case "gte":
 			if specType == "integer" || specType == "number" {
-				val := ParseNumber(ruleValue)
+				val := swagtool.ParseNumber(ruleValue)
 				schema.Minimum = val
 			} else {
 				log.Printf("Validation rule '%s' is only applicable to numeric fields, got %s", ruleName, specType)
 			}
 		case "lt":
 			if specType == "integer" || specType == "number" {
-				val := ParseNumber(ruleValue)
+				val := swagtool.ParseNumber(ruleValue)
 				schema.ExclusiveMaximum = &base.DynamicValue[bool, float64]{
 					B: *val,
+					N: 1,
 				}
 			} else {
 				log.Printf("Validation rule '%s' is only applicable to numeric fields, got %s", ruleName, specType)
 			}
 		case "lte":
 			if specType == "integer" || specType == "number" {
-				val := ParseNumber(ruleValue)
+				val := swagtool.ParseNumber(ruleValue)
 				schema.Maximum = val
 			} else {
 				log.Printf("Validation rule '%s' is only applicable to numeric fields, got %s", ruleName, specType)
 			}
 		case "min":
 			if specType == "string" {
-				val := ParseInteger(ruleValue)
+				val := swagtool.ParseInteger(ruleValue)
 				schema.MinLength = val
 			} else if specType == "integer" || specType == "number" {
-				schema.Minimum = ParseNumber(ruleValue)
+				schema.Minimum = swagtool.ParseNumber(ruleValue)
 			} else {
 				log.Printf("Validation rule 'min' is only applicable to string or numeric fields, got %s", specType)
 			}
 		case "max":
 			if specType == "string" {
-				val := ParseInteger(ruleValue)
+				val := swagtool.ParseInteger(ruleValue)
 				schema.MaxLength = val
 			} else if specType == "integer" || specType == "number" {
-				schema.Maximum = ParseNumber(ruleValue)
+				schema.Maximum = swagtool.ParseNumber(ruleValue)
 			} else {
 				log.Printf("Validation rule 'max' is only applicable to string or numeric fields, got %s", specType)
 			}
 		case "len":
 			if specType == "string" {
-				length := ParseInteger(ruleValue)
+				length := swagtool.ParseInteger(ruleValue)
 				schema.MinLength = length
 				schema.MaxLength = length
 			} else {
@@ -101,21 +104,21 @@ func BuildSchemaValidationV31(schema *base.Schema, validationString string, fiel
 			}
 		case "minItems":
 			if specType == "array" {
-				val := ParseInteger(ruleValue)
+				val := swagtool.ParseInteger(ruleValue)
 				schema.MinItems = val
 			} else {
 				log.Printf("Validation rule 'minItems' is only applicable to array fields, got %s", specType)
 			}
 		case "maxItems":
 			if specType == "array" {
-				val := ParseInteger(ruleValue)
+				val := swagtool.ParseInteger(ruleValue)
 				schema.MaxItems = val
 			} else {
 				log.Printf("Validation rule 'maxItems' is only applicable to array fields, got %s", specType)
 			}
 		case "uniqueItems":
 			if specType == "array" {
-				val := ParseBool(ruleValue)
+				val := swagtool.ParseBool(ruleValue)
 				schema.UniqueItems = val
 			} else {
 				log.Printf("Validation rule 'uniqueItems' is only applicable to array fields, got %s", specType)

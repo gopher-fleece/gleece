@@ -1,4 +1,4 @@
-package swagten31
+package swagen31
 
 import (
 	"github.com/gopher-fleece/gleece/definitions"

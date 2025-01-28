@@ -1,4 +1,4 @@
-package swagten31
+package swagen31
 
 import (
 	. "github.com/onsi/ginkgo/v2"
@@ -68,6 +68,7 @@ var _ = Describe("Validation Converter Spec", func() {
 				BuildSchemaValidationV31(schema, "gt=10", "int")
 				val := float64(10)
 				Expect(schema.ExclusiveMinimum.B).To(Equal(val))
+				Expect(schema.ExclusiveMinimum.N).To(Equal(1))
 			})
 
 			It("should apply greater than or equal validation", func() {

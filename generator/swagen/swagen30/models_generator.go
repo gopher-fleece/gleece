@@ -1,8 +1,9 @@
-package swagen
+package swagen30
 
 import (
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/gopher-fleece/gleece/definitions"
+	"github.com/gopher-fleece/gleece/generator/swagen/swagtool"
 )
 
 var objectType = &openapi3.Types{"object"}
@@ -14,7 +15,7 @@ func generateModelSpec(openapi *openapi3.T, model definitions.ModelMetadata) {
 		Description: model.Description,
 		Type:        objectType,
 		Properties:  openapi3.Schemas{},
-		Deprecated:  IsDeprecated(&model.Deprecation),
+		Deprecated:  swagtool.IsDeprecated(&model.Deprecation),
 	}
 
 	requiredFields := []string{}
@@ -22,7 +23,7 @@ func generateModelSpec(openapi *openapi3.T, model definitions.ModelMetadata) {
 	for _, field := range model.Fields {
 		fieldSchemaRef := InterfaceToSchemaRef(openapi, field.Type)
 
-		validationTag := GetTagValue(field.Tag, "validate", "")
+		validationTag := swagtool.GetTagValue(field.Tag, "validate", "")
 		BuildSchemaValidation(fieldSchemaRef, validationTag, field.Type)
 
 		if fieldSchemaRef.Value != nil {
@@ -31,16 +32,16 @@ func generateModelSpec(openapi *openapi3.T, model definitions.ModelMetadata) {
 			// If the schema marked as deprecated, the field / property should be marked as deprecated as well
 			// Setting it as not deprecated (even if the field itself is not marked deprecated) will override the model deprecation
 			if !fieldSchemaRef.Value.Deprecated {
-				fieldSchemaRef.Value.Deprecated = IsDeprecated(field.Deprecation)
+				fieldSchemaRef.Value.Deprecated = swagtool.IsDeprecated(field.Deprecation)
 			}
 		}
 
 		// Add field to schema properties
-		fName := GetTagValue(field.Tag, "json", field.Name)
+		fName := swagtool.GetJsonNameFromTag(field.Tag, field.Name)
 		schema.Properties[fName] = fieldSchemaRef
 
 		// If the field should be required, add its name to the requiredFields slice
-		if IsFieldRequired(validationTag) {
+		if swagtool.IsFieldRequired(validationTag) {
 			requiredFields = append(requiredFields, fName)
 		}
 	}
