@@ -28,24 +28,6 @@ func IsFuncDeclReceiverForStruct(structName string, funcDecl *ast.FuncDecl) bool
 	}
 }
 
-// DoesStructEmbedStructByName Checks whether `structNode` embeds a struct who's name equals embeddedStructName.
-// Note this function does NOT take into account
-func DoesStructEmbedStructByName(structNode *ast.StructType, embeddedStructName string) bool {
-	for _, field := range structNode.Fields.List {
-		switch fieldType := field.Type.(type) {
-		case *ast.Ident:
-			if fieldType.Name == embeddedStructName {
-				return true
-			}
-		case *ast.SelectorExpr:
-			if fieldType.Sel.Name == embeddedStructName {
-				return true
-			}
-		}
-	}
-	return false
-}
-
 func DoesStructEmbedStruct(
 	sourceFile *ast.File,
 	structFullPackageName string,
@@ -136,16 +118,6 @@ func IsPackageDotImported(file *ast.File, packageName string) (bool, string) {
 		}
 	}
 	return false, ""
-}
-
-func IsAliasDefaultImport(file *ast.File, alias string) bool {
-	for _, imp := range file.Imports {
-		fullImport := strings.Trim(imp.Path.Value, `"`)
-		if GetDefaultAlias(fullImport) == alias {
-			return true
-		}
-	}
-	return false
 }
 
 func IsAliasDefault(fullPackageName string, alias string) bool {
@@ -416,34 +388,6 @@ func GetFuncReturnTypeList(
 	return returnTypes, nil
 }
 
-// IsIdentFromDotImport resolves whether an `*ast.Ident` refers to a type from a dot-imported package.
-func IsIdentFromDotImport(file *ast.File, ident *ast.Ident, typeInfo *types.Info) (bool, error) {
-	// Get the object corresponding to the identifier
-	obj, ok := typeInfo.Uses[ident]
-	if !ok {
-		return false, nil // Identifier is not resolved
-	}
-
-	// Get the package where the object is defined
-	pkg := obj.Pkg()
-	if pkg == nil {
-		return false, nil // Not a package-level object
-	}
-
-	// Check if the package was dot-imported
-	for _, imp := range file.Imports {
-		if imp.Name != nil && imp.Name.Name == "." {
-			// Trim the quotes around the import path
-			importPath := strings.Trim(imp.Path.Value, "\"")
-			if pkg.Path() == importPath {
-				return true, nil
-			}
-		}
-	}
-
-	return false, nil
-}
-
 func GetAllPackageFiles(codeFiles []*ast.File, fileSet *token.FileSet, fullPackageNameToFind string) ([]*ast.File, error) {
 	packageFiles := []*ast.File{}
 	for _, file := range codeFiles {
@@ -616,32 +560,6 @@ func GetStructFromGenDecl(decl *ast.GenDecl) *ast.StructType {
 	}
 
 	return nil
-}
-
-func FindStructAst(pkg *packages.Package, structName string) *ast.StructType {
-	// Traverse all the syntax trees (ASTs) in the loaded package
-	for _, file := range pkg.Syntax {
-		// Traverse all declarations in the AST file
-		for _, decl := range file.Decls {
-			// Look for type declarations (ast.GenDecl)
-			if genDecl, ok := decl.(*ast.GenDecl); ok {
-				// Iterate over all the specs in the general declaration
-				for _, spec := range genDecl.Specs {
-					// Look for type specs (ast.TypeSpec)
-					if typeSpec, ok := spec.(*ast.TypeSpec); ok {
-						// Check if the type is a struct type
-						if structType, ok := typeSpec.Type.(*ast.StructType); ok {
-							// Match the struct's name with the input name
-							if typeSpec.Name.Name == structName {
-								return structType
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-	return nil // Struct not found
 }
 
 func FindTypesStructInPackage(pkg *packages.Package, structName string) (*types.Struct, error) {
