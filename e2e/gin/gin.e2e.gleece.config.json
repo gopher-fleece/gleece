@@ -7,7 +7,7 @@
 	},
 	"routesConfig": {
 		"engine": "gin",
-		"outputPath": "./dist/gin.e2e.gleece.go",
+		"outputPath": "./routes/gin.e2e.gleece.go",
 		"outputFilePerms": "0644",
 		"authorizationConfig": {
 			"authFileFullPackageName": "github.com/gopher-fleece/gleece/e2e/gin/auth",

@@ -14,7 +14,7 @@ import (
 	"github.com/gopher-fleece/gleece/cmd"
 	"github.com/gopher-fleece/gleece/cmd/arguments"
 	"github.com/gopher-fleece/gleece/e2e/assets"
-	gleeceRoutes "github.com/gopher-fleece/gleece/e2e/echo/dist"
+	gleeceRoutes "github.com/gopher-fleece/gleece/e2e/echo/routes"
 )
 
 var e *echo.Echo

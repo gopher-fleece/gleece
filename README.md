@@ -67,11 +67,10 @@ type Domicile struct {
 	HouseNumber int `json:"houseNumber" validate:"gte=1"`
 }
 
-
 // @Description Create a new user
 // @Method(POST)
 // @Route(/user/{user_name})
-// @Path(name, { name: "user_name", validate: "require" }) The user's name
+// @Path(name, { name: "user_name", validate: "required" }) The user's name
 // @Query(email, { validate: "required,email" }) The user's email
 // @Body(domicile, { validate: "required" }) The user's domicile info
 // @Header(origin, { name: "x-origin" }) The request origin

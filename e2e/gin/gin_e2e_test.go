@@ -11,7 +11,7 @@ import (
 	"github.com/gopher-fleece/gleece/cmd/arguments"
 
 	"github.com/gopher-fleece/gleece/e2e/assets"
-	gleeceRoutes "github.com/gopher-fleece/gleece/e2e/gin/dist"
+	gleeceRoutes "github.com/gopher-fleece/gleece/e2e/gin/routes"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
