@@ -12,6 +12,7 @@ type E2EController struct {
 // @Method(GET) This text is not part of the OpenAPI spec
 // @Route(/simple-get)
 func (ec *E2EController) SimpleGet() (string, error) {
+	ec.SetHeader("X-Test-Header", "test")
 	return "works", nil
 }
 
@@ -21,6 +22,9 @@ func (ec *E2EController) SimpleGet() (string, error) {
 // @Path(pathParam)
 // @Header(headerParam)
 func (ec *E2EController) GetWithAllParams(queryParam string, pathParam string, headerParam string) (string, error) {
+	if queryParam == "204" {
+		ec.SetStatus(external.StatusNoContent)
+	}
 	return pathParam + queryParam + headerParam, nil
 }
 

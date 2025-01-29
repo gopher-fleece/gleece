@@ -47,6 +47,28 @@ var _ = Describe("Echo E2E Spec", func() {
 		Expect(w.Body.String()).To(ContainSubstring("\"works\""))
 	})
 
+	It("Should set custom header", func() {
+		// Create a response recorder
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("GET", "/e2e/simple-get", nil)
+		e.ServeHTTP(w, req)
+		Expect(w.Code).To(Equal(200))
+		Expect(w.Body.String()).To(ContainSubstring("\"works\""))
+		Expect(w.Header().Get("X-Test-Header")).To(Equal("test"))
+	})
+
+	It("Should return status code 204 for explicit set status", func() {
+		// Create a response recorder
+		w := httptest.NewRecorder()
+		params := url.Values{}
+		params.Add("queryParam", "204")
+		req := httptest.NewRequest("GET", "/e2e/get-with-all-params/pathParam"+"?"+params.Encode(), nil)
+		req.Header.Add("headerParam", "headerParam")
+		e.ServeHTTP(w, req)
+		Expect(w.Code).To(Equal(204))
+		Expect(w.Body.String()).To(ContainSubstring("\"pathParam204headerParam\""))
+	})
+
 	It("Should return status code 200 for get with all params in use", func() {
 		// Create a response recorder
 		w := httptest.NewRecorder()
