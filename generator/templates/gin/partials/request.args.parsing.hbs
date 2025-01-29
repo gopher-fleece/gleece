@@ -1,24 +1,30 @@
 
 {{#equal PassedIn "Path"}}
-	{{ToLowerCamel Name}}Raw := ctx.Param("{{{NameInSchema}}}")
+	var {{ToLowerCamel Name}}RawPtr *{{{TypeMeta.Name}}} = nil
+	{{ToLowerCamel Name}}Raw, is{{Name}}Exists := ctx.Params.Get("{{{NameInSchema}}}")
 	{{> RequestSwitchParamType}}
+	{{> RunValidator}}
 {{/equal}}
 
 {{#equal PassedIn "Query"}}
-	{{ToLowerCamel Name}}Raw := ctx.Query("{{{NameInSchema}}}")
+	var {{ToLowerCamel Name}}RawPtr *{{{TypeMeta.Name}}} = nil
+	{{ToLowerCamel Name}}Raw, is{{Name}}Exists := ctx.GetQuery("{{{NameInSchema}}}")
 	{{> RequestSwitchParamType}}
+	{{> RunValidator}}
 {{/equal}}
 
 {{#equal PassedIn "Header"}}
+	var {{ToLowerCamel Name}}RawPtr *{{{TypeMeta.Name}}} = nil
 	{{ToLowerCamel Name}}Raw := ctx.GetHeader("{{{NameInSchema}}}")
+	_, is{{Name}}Exists := ctx.Request.Header[textproto.CanonicalMIMEHeaderKey("{{{NameInSchema}}}")]
 	{{> RequestSwitchParamType}}
+	{{> RunValidator}}
 {{/equal}}
 
 {{#equal PassedIn "Body"}}
-	var {{ToLowerCamel Name}}Ref *{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}}
-	conversionErr = bindAndValidateBody(ctx, "{{{ResponseContentType}}}", &{{ToLowerCamel Name}}Ref)
+	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
+	conversionErr = bindAndValidateBody(ctx, "{{{ResponseContentType}}}", "{{Validator}}",&{{ToLowerCamel Name}}RawPtr)
 	if conversionErr != nil {
 		{{> JsonBodyValidationErrorResponse }}
 	}
-	{{ToLowerCamel Name}} := *{{ToLowerCamel Name}}Ref
 {{/equal}}

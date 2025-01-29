@@ -1,24 +1,37 @@
 
 {{#equal PassedIn "Path"}}
+	var {{ToLowerCamel Name}}RawPtr *{{{TypeMeta.Name}}} = nil
 	{{ToLowerCamel Name}}Raw := ctx.Param("{{{NameInSchema}}}")
+	is{{Name}}Exists := true // if parameter is in route but not provided, it won't reach this handler
 	{{> RequestSwitchParamType}}
+	{{> RunValidator}}
 {{/equal}}
 
 {{#equal PassedIn "Query"}}
+	var {{ToLowerCamel Name}}RawPtr *{{{TypeMeta.Name}}} = nil
 	{{ToLowerCamel Name}}Raw := ctx.QueryParam("{{{NameInSchema}}}")
+	is{{Name}}Exists := ctx.Request().URL.Query().Has("{{{NameInSchema}}}")
 	{{> RequestSwitchParamType}}
+	{{> RunValidator}}
 {{/equal}}
 
 {{#equal PassedIn "Header"}}
+	var {{ToLowerCamel Name}}RawPtr *{{{TypeMeta.Name}}} = nil
 	{{ToLowerCamel Name}}Raw := ctx.Request().Header.Get("{{{NameInSchema}}}")
+	_, is{{Name}}Exists := ctx.Request().Header["{{{NameInSchema}}}"]
+	if !is{{Name}}Exists {
+		// In echo, the ctx.Request().Header["key"] is not 100% reliable, so we need other check, but only if is was not found in the first method
+		headerValues := ctx.Request().Header.Values("{{{NameInSchema}}}")
+		is{{Name}}Exists = len(headerValues) > 0
+	}
 	{{> RequestSwitchParamType}}
+	{{> RunValidator}}
 {{/equal}}
 
 {{#equal PassedIn "Body"}}
-	var {{ToLowerCamel Name}}Ref *{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}}
-	conversionErr = bindAndValidateBody(ctx, "{{{ResponseContentType}}}", &{{ToLowerCamel Name}}Ref)
+	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
+	conversionErr = bindAndValidateBody(ctx, "{{{ResponseContentType}}}", "{{Validator}}",&{{ToLowerCamel Name}}RawPtr)
 	if conversionErr != nil {
 		{{> JsonBodyValidationErrorResponse }}
 	}
-	{{ToLowerCamel Name}} := *{{ToLowerCamel Name}}Ref
 {{/equal}}

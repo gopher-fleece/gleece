@@ -30,7 +30,7 @@ var AuthorizationCall string
 //go:embed partials/request.args.parsing.hbs
 var RequestArgsParsing string
 
-//go:embed partials/request.switch.param.type..hbs
+//go:embed partials/request.switch.param.type.hbs
 var RequestSwitchParamType string
 
 //go:embed partials/reply.response.hbs

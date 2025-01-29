@@ -14,31 +14,33 @@ func getStatusCode(controller external.Controller, hasReturnValue bool, err erro
 	return http.StatusNoContent
 }
 
-func bindAndValidateBody[TOutput any](ctx *gin.Context, contentType string, output **TOutput) error {
+func bindAndValidateBody[TOutput any](ctx *gin.Context, contentType string, validation string, output **TOutput) error {
 	var err error
-
 	bodyBytes, err := io.ReadAll(ctx.Request.Body)
-	if err != nil {
-		return err
+
+	if err != nil || len(bodyBytes) == 0 {
+		if strings.Contains(validation, "required") {
+			return fmt.Errorf("body is required but was not provided")
+		}
+		return nil
 	}
 
 	var deserializedOutput TOutput
 
-	switch contentType {
-	case "application/json":
-		err = json.Unmarshal(bodyBytes, &deserializedOutput)
-	default:
-		return fmt.Errorf("content-type %s is not currently supported by the validation subsystem", contentType)
-	}
+			switch contentType {
+		case "application/json":
+			err = json.Unmarshal(bodyBytes, &deserializedOutput)
+		default:
+			return fmt.Errorf("content-type %s is not currently supported by the validation subsystem", contentType)
+		}
+		
+		if err != nil {
+			return err
+			}
 
-	if err != nil {
+		if err = validatorInstance.Struct(&deserializedOutput); err != nil {
 		return err
 	}
-
-	if err = validatorInstance.Struct(&deserializedOutput); err != nil {
-		return err
-	}
-
 	*output = &deserializedOutput
 	return nil
 }
