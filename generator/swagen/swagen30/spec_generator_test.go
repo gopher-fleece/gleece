@@ -256,7 +256,6 @@ var _ = Describe("Spec Generator", func() {
 		models := []definitions.ModelMetadata{
 			{
 				Name:        "ExampleSchema222",
-				Package:     "example2",
 				Description: "Example schema 222",
 				Fields: []definitions.FieldMetadata{
 					{
@@ -279,7 +278,6 @@ var _ = Describe("Spec Generator", func() {
 			},
 			{
 				Name:        "ExampleSchema",
-				Package:     "example",
 				Description: "Example schema",
 				Fields: []definitions.FieldMetadata{
 					{

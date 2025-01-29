@@ -197,15 +197,31 @@ func isIdentFromDotImportedPackage(file *ast.File, packages []*packages.Package,
 	return nil
 }
 
-func GetCommentsFromIdent(ident *ast.Ident) []string {
+func GetCommentsFromIdent(files *token.FileSet, file *ast.File, ident *ast.Ident) []string {
 	if ident.Obj == nil || ident.Obj.Decl == nil {
 		return []string{}
 	}
+
+	var docs *ast.CommentGroup
 	switch expr := ident.Obj.Decl.(type) {
 	case *ast.TypeSpec:
+		if expr.Doc != nil && expr.Doc.List != nil && len(expr.Doc.List) > 0 {
+			docs = expr.Doc
+		} else {
+			// Look for the parent GenDecl and grab the comments of it. Go works in mysterious ways.
+			decl := FindGenDeclByIdent(files, file, ident)
+			if decl != nil && decl.Doc != nil && decl.Doc.List != nil && len(decl.Doc.List) > 0 {
+				docs = decl.Doc
+			}
+		}
 	case *ast.FuncDecl:
+		docs = expr.Doc
 	case *ast.Field:
-		return MapDocListToStrings(expr.Doc.List)
+		docs = expr.Doc
+	}
+
+	if docs != nil && docs.List != nil && len(docs.List) > 0 {
+		return MapDocListToStrings(docs.List)
 	}
 
 	// A bit hacky but we don't currently need parse everything
@@ -218,7 +234,7 @@ func GetTypeMetaByIdent(
 	packages []*packages.Package,
 	ident *ast.Ident,
 ) (definitions.TypeMetadata, error) {
-	comments := GetCommentsFromIdent(ident)
+	comments := GetCommentsFromIdent(fileSet, file, ident)
 
 	meta := definitions.TypeMetadata{
 		Name:        ident.Name,
@@ -282,7 +298,7 @@ func GetTypeMetaBySelectorExpr(
 
 	typeOrInterfaceName := selector.Sel.Name
 
-	comments := GetCommentsFromIdent(selector.Sel)
+	comments := GetCommentsFromIdent(fileSet, file, selector.Sel)
 	meta := definitions.TypeMetadata{
 		Name:        typeOrInterfaceName,
 		Description: FindAndExtract(comments, "@Description"),
@@ -563,6 +579,28 @@ func FindGenDeclByName(pkg *packages.Package, typeSpecName string) *ast.GenDecl 
 		}
 	}
 	return nil // Struct not found
+}
+
+func FindGenDeclByIdent(fileSet *token.FileSet, file *ast.File, ident *ast.Ident) *ast.GenDecl {
+	var decl *ast.GenDecl
+
+	// Walk the AST to locate the struct declaration
+	ast.Inspect(file, func(n ast.Node) bool {
+		// Look for a general declaration (const, var, type, etc.)
+		if gd, ok := n.(*ast.GenDecl); ok && gd.Tok == token.TYPE {
+			for _, spec := range gd.Specs {
+				if ts, ok := spec.(*ast.TypeSpec); ok {
+					if ts.Name.Name == ident.Name {
+						decl = gd
+						return false // Stop traversal once found
+					}
+				}
+			}
+		}
+		return true
+	})
+
+	return decl
 }
 
 func GetStructFromGenDecl(decl *ast.GenDecl) *ast.StructType {
