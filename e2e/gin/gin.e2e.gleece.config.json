@@ -1,0 +1,61 @@
+{
+	"commonConfig": {
+		"controllerGlobs": [
+			"../*.go",
+			"../**/*.go"
+		]
+	},
+	"routesConfig": {
+		"engine": "gin",
+		"outputPath": "./routes/gin.e2e.gleece.go",
+		"outputFilePerms": "0644",
+		"authorizationConfig": {
+			"authFileFullPackageName": "github.com/gopher-fleece/gleece/e2e/gin/auth",
+			"enforceSecurityOnAllRoutes": true
+		}
+	},
+	"openAPIGeneratorConfig": {
+		"openapi" : "3.0.0",
+		"info": {
+			"title": "Sample API",
+			"description": "This is a sample API",
+			"termsOfService": "http://example.com/terms/",
+			"contact": {
+				"name": "API Support",
+				"url": "http://www.example.com/support",
+				"email": "support@example.com"
+			},
+			"license": {
+				"name": "Apache 2.0",
+				"url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+			},
+			"version": "1.0.0"
+		},
+		"baseUrl": "https://api.example.com",
+		"securitySchemes": [
+			{
+				"description": "API Key for accessing the API",
+				"name": "securitySchemaName",
+				"fieldName": "x-header-name",
+				"type": "apiKey",
+				"in": "header"
+			}
+		],
+		"defaultSecurity": [
+			{
+				"securityMethod": [
+					{
+						"name": "securitySchemaName",
+						"scopes": [
+							"read",
+							"write"
+						]
+					}
+				]
+			}
+		],
+		"specGeneratorConfig": {
+			"outputPath": "./dist/swagger.json"
+		}
+	}
+}

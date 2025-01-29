@@ -1,16 +1,26 @@
 **Gleece** - Bringing joy and ease to API development in Go! 🚀   
 
-
+<!-- Source code health & info -->
 [![gleece](https://github.com/gopher-fleece/gleece/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/gopher-fleece/gleece/actions/workflows/build.yml)
-[![Latest Release](https://img.shields.io/github/v/release/gopher-fleece/gleece)](https://github.com/gopher-fleece/gleece/releases)
 [![Go Report Card](https://goreportcard.com/badge/github.com/gopher-fleece/gleece)](https://goreportcard.com/report/gopher-fleece/gleece)
 [![Coverage Status](https://coveralls.io/repos/github/gopher-fleece/gleece/badge.svg?branch=main)](https://coveralls.io/github/gopher-fleece/gleece?branch=main)
-[![VSCode Extension](https://img.shields.io/visual-studio-marketplace/v/haim-kastner.gleece-extension?label=VSCode%20Extension)](https://marketplace.visualstudio.com/items?itemName=haim-kastner.gleece-extension)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/gopher-fleece/gleece)](https://github.com/gopher-fleece/gleece/blob/main/go.mod)
 
+<!-- Packages, Releases etc -->
+[![VSCode Extension](https://img.shields.io/visual-studio-marketplace/v/haim-kastner.gleece-extension?label=VSCode%20Extension)](https://marketplace.visualstudio.com/items?itemName=haim-kastner.gleece-extension)
+[![Documentation](https://img.shields.io/badge/docs-available-brightgreen.svg)](./docs/STEPBYSTEP.md)
+[![Latest Release](https://img.shields.io/github/v/release/gopher-fleece/gleece)](https://github.com/gopher-fleece/gleece/releases)
+[![Go Reference](https://pkg.go.dev/badge/github.com/gopher-fleece/gleece.svg)](https://pkg.go.dev/github.com/gopher-fleece/gleece)
+
+<!-- Supported standards/frameworks -->
+[![OpenAPI 3.0](https://img.shields.io/badge/OpenAPI-3.0.0-green.svg)](https://spec.openapis.org/oas/v3.0.0)
+[![OpenAPI 3.1](https://img.shields.io/badge/OpenAPI-3.1.0-green.svg)](https://spec.openapis.org/oas/v3.1.0)
+[![Gin Support](https://img.shields.io/badge/Gin-Supported-blue)](https://gin-gonic.com/)
+[![Echo Support](https://img.shields.io/badge/Echo-Supported-blue)](https://echo.labstack.com/)
+
+<!-- Social -->
 [![GitHub stars](https://img.shields.io/github/stars/gopher-fleece/gleece.svg?style=social&label=Stars)](https://github.com/gopher-fleece/gleece/stargazers) 
 [![License](https://img.shields.io/github/license/gopher-fleece/gleece.svg?style=social)](https://github.com/gopher-fleece/gleece/blob/master/LICENSE)
-
-[![Go Reference](https://pkg.go.dev/badge/github.com/gopher-fleece/gleece.svg)](https://pkg.go.dev/github.com/gopher-fleece/gleece)
 
 
 ---
@@ -57,11 +67,10 @@ type Domicile struct {
 	HouseNumber int `json:"houseNumber" validate:"gte=1"`
 }
 
-
 // @Description Create a new user
 // @Method(POST)
 // @Route(/user/{user_name})
-// @Path(name, { name: "user_name", validate: "require" }) The user's name
+// @Path(name, { name: "user_name", validate: "required" }) The user's name
 // @Query(email, { validate: "required,email" }) The user's email
 // @Body(domicile, { validate: "required" }) The user's domicile info
 // @Header(origin, { name: "x-origin" }) The request origin
@@ -96,18 +105,17 @@ For a complete example project using Gleece, check out the [Gleece Example Proje
 
 ## 🎨 VSCode Extension
 
-To enhance your development experience with Gleece, we provide an official VSCode extension that highlights Gleece annotations and comments.
+To enhance your development experience with Gleece, we provide an official VSCode extension that provides intelligent annotation highlighting and improved code visibility.
 
 For more information and capabilities see the [Gleece VSCode Extension](https://github.com/gopher-fleece/gleece-vscode-extension#readme).
 
 To install it search `Gleece` in the "Extension" tab or go to the [VSCode Marketplace](https://marketplace.visualstudio.com/items?itemName=haim-kastner.gleece-extension).
 
 
-## 🚧 Disclaimer  
-⚠️⚠️⚠️ **Work in Progress**  
+## ⚠️ Disclaimer
 Gleece is currently an under-development project.  We’re working hard to make it amazing.
 
-We’d love your feedback and contributions as we shape Gleece together!
+We’d love your feedback and contributions as we shape Gleece!
 
 Stay tuned for updates, and feel free to open issues or pull requests to help us improve!  
 

@@ -53,7 +53,7 @@ func RegisterRoutes(engine *gin.Engine) {
 				{{> RequestArgsParsing}}
 			{{/each}}
 
-		{{#equal HasReturnValue true}}value, {{/equal}}opError := controller.{{{OperationId}}}({{#each FuncParams}}{{ToLowerCamel Name}}{{#unless @last}}, {{/unless}}{{/each}})
+		{{#equal HasReturnValue true}}value, {{/equal}}opError := controller.{{{OperationId}}}({{#each FuncParams}}{{#if TypeMeta.IsByAddress}}{{else}}*{{/if}}{{ToLowerCamel Name}}RawPtr{{#unless @last}}, {{/unless}}{{/each}})
 		{{> ResponseHeaders }}
 
 		{{> ReplyResponse}}

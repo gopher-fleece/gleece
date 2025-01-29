@@ -135,7 +135,12 @@ func (v *ControllerVisitor) getResponseStatusCodeAndDescription(
 }
 
 // For now, all params are required, later we will support nil for pointers and slices params
-func appendParamRequiredValidation(validation *string) string {
+func appendParamRequiredValidation(validation *string, isPointer bool, paramPassedIn definitions.ParamPassedIn) string {
+	// For a pointer, we do allow to be optional and it's pending user decision via validate tag
+	// BUT, as openapi specification, path params are always required
+	if isPointer && paramPassedIn != definitions.PassedInPath {
+		return *validation
+	}
 	if validation == nil || *validation == "" {
 		return "required"
 	}

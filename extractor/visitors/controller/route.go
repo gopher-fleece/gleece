@@ -205,24 +205,27 @@ func (v *ControllerVisitor) getFuncParams(funcDecl *ast.FuncDecl, comments []str
 			nameString = *castName
 		}
 
-		finalParamMeta := definitions.FuncParam{
-			NameInSchema:       nameString,
-			ParamMeta:          param,
-			Description:        paramAttrib.Description,
-			Validator:          appendParamRequiredValidation(&validatorString),
-			UniqueImportSerial: v.getNextImportId(),
-		}
+		var paramPassedIn definitions.ParamPassedIn
 
 		// Currently, only body param can be an object type
 		switch strings.ToLower(paramAttrib.Name) {
 		case "query":
-			finalParamMeta.PassedIn = definitions.PassedInQuery
+			paramPassedIn = definitions.PassedInQuery
 		case "header":
-			finalParamMeta.PassedIn = definitions.PassedInHeader
+			paramPassedIn = definitions.PassedInHeader
 		case "path":
-			finalParamMeta.PassedIn = definitions.PassedInPath
+			paramPassedIn = definitions.PassedInPath
 		case "body":
-			finalParamMeta.PassedIn = definitions.PassedInBody
+			paramPassedIn = definitions.PassedInBody
+		}
+
+		finalParamMeta := definitions.FuncParam{
+			NameInSchema:       nameString,
+			ParamMeta:          param,
+			PassedIn:           paramPassedIn,
+			Description:        paramAttrib.Description,
+			Validator:          appendParamRequiredValidation(&validatorString, param.TypeMeta.IsByAddress, paramPassedIn),
+			UniqueImportSerial: v.getNextImportId(),
 		}
 
 		funcParams = append(funcParams, finalParamMeta)
