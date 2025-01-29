@@ -3,11 +3,11 @@ package swagen30
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"os"
 
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/generator/swagen/swagtool"
+	"github.com/gopher-fleece/gleece/infrastructure/logger"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -374,7 +374,7 @@ var _ = Describe("Spec Generator", func() {
 		// Output the generated JSON and the expected JSON to files to easy testing troubleshooting
 		// Create the output directory if it doesn't exist
 		if err := os.MkdirAll("dist", os.ModePerm); err != nil {
-			fmt.Println("Failed to create directory:", err)
+			logger.Error("Failed to create directory - %v", err)
 		}
 
 		var prettyJSON bytes.Buffer
@@ -383,13 +383,13 @@ var _ = Describe("Spec Generator", func() {
 		// Write the JSON to the file
 		filePath := "dist/org-spec.json"
 		if err := os.WriteFile(filePath, prettyJSON.Bytes(), 0644); err != nil {
-			fmt.Println("Failed to write file:", err)
+			logger.Error("Failed to write file - %v", err)
 		}
 
 		// Write the JSON to the file
 		filePath2 := "dist/test-spec.json"
 		if err := os.WriteFile(filePath2, jsonBytes, 0644); err != nil {
-			fmt.Println("Failed to write file:", err)
+			logger.Error("Failed to write file - %v", err)
 		}
 		Expect(areEqual).To(BeTrue())
 	})
