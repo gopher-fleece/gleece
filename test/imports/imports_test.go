@@ -1,15 +1,11 @@
 package imports_test
 
 import (
-	"fmt"
-	"os"
-	"path/filepath"
 	"testing"
 
-	"github.com/gopher-fleece/gleece/cmd"
-	"github.com/gopher-fleece/gleece/cmd/arguments"
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
+	"github.com/gopher-fleece/gleece/test/utils"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -18,17 +14,7 @@ var metadata []definitions.ControllerMetadata
 var models []definitions.ModelMetadata
 
 var _ = BeforeSuite(func() {
-	cwd, err := os.Getwd()
-	if err != nil {
-		Fail(fmt.Sprintf("Could not determine process working directory - %v", err))
-	}
-
-	configPath := filepath.Join(cwd, "imports.config.json")
-	_, controllers, flatModels, _, err := cmd.GetConfigAndMetadata(arguments.CliArguments{ConfigPath: configPath})
-	if err != nil {
-		Fail(fmt.Sprintf("Could not generate routes - %v", err))
-	}
-
+	controllers, flatModels, _ := utils.GetControllersAndModels()
 	metadata = controllers
 	models = flatModels
 })
@@ -101,7 +87,7 @@ var _ = Describe("Imports Controller", func() {
 	})
 })
 
-func TestSanityController(t *testing.T) {
+func TestImportsController(t *testing.T) {
 	logger.SetLogLevel(logger.LogLevelNone)
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Imports Controller")

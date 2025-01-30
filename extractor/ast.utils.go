@@ -234,7 +234,10 @@ func GetTypeMetaByIdent(
 		}
 		meta.EntityKind = kind
 	} else {
-		// The identifier is locally defined
+		// If we've gotten here, the ident is a locally defined entity;
+		//
+		// Were it a an aliased import, it've been resolved by GetTypeMetaBySelectorExpr.
+		// For dot-imports, we'd have flowed to the above 'if'.
 		currentPackageName, err := GetFullPackageName(file, fileSet)
 		if err != nil {
 			return meta, err
@@ -251,7 +254,7 @@ func GetTypeMetaByIdent(
 			return meta, fmt.Errorf("identifier %s does not correlate to a type or interface in package %s", ident.Name, currentPackageName)
 		}
 
-		meta.Import = definitions.ImportTypeAlias
+		meta.Import = definitions.ImportTypeNone
 		meta.FullyQualifiedPackage = currentPackageName
 		meta.DefaultPackageAlias = GetDefaultAlias(currentPackageName)
 		meta.EntityKind = entityKind

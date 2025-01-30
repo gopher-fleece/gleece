@@ -1,52 +1,38 @@
 package sanity_test
 
 import (
-	"fmt"
-	"os"
-	"path/filepath"
 	"testing"
 
-	"github.com/gopher-fleece/gleece/cmd"
-	"github.com/gopher-fleece/gleece/cmd/arguments"
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/external"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
+	"github.com/gopher-fleece/gleece/test/utils"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
-var metadataSanity []definitions.ControllerMetadata
-var modelsSanity []definitions.ModelMetadata
+var metadata []definitions.ControllerMetadata
+var models []definitions.ModelMetadata
 var schemaShouldHaveStdErrorSanity bool
 
 var _ = BeforeSuite(func() {
-	cwd, err := os.Getwd()
-	if err != nil {
-		Fail(fmt.Sprintf("Could not determine process working directory - %v", err))
-	}
-
-	configPath := filepath.Join(cwd, "sanity.config.json")
-	_, controllers, flatModels, hasStdError, err := cmd.GetConfigAndMetadata(arguments.CliArguments{ConfigPath: configPath})
-	if err != nil {
-		Fail(fmt.Sprintf("Could not generate routes - %v", err))
-	}
-
-	metadataSanity = controllers
-	modelsSanity = flatModels
+	controllers, flatModels, hasStdError := utils.GetControllersAndModels()
+	metadata = controllers
+	models = flatModels
 	schemaShouldHaveStdErrorSanity = hasStdError
 })
 
 var _ = Describe("Sanity Controller", func() {
 	It("Created metadata and model lists have length of 1 and RFC7807 should be present", func() {
-		Expect(metadataSanity).ToNot(BeNil())
-		Expect(metadataSanity).To(HaveLen(1))
-		Expect(modelsSanity).ToNot(BeNil())
-		Expect(modelsSanity).To(HaveLen(1))
+		Expect(metadata).ToNot(BeNil())
+		Expect(metadata).To(HaveLen(1))
+		Expect(models).ToNot(BeNil())
+		Expect(models).To(HaveLen(1))
 		Expect(schemaShouldHaveStdErrorSanity).To(BeTrue())
 	})
 
 	It("Produces correct controller level metadata", func() {
-		controllerMeta := metadataSanity[0]
+		controllerMeta := metadata[0]
 		Expect(controllerMeta.Name).To(Equal("SanityController"))
 		Expect(controllerMeta.Package).To(Equal("sanity_test"))
 		Expect(controllerMeta.FullyQualifiedPackage).To(Equal("github.com/gopher-fleece/gleece/test/sanity"))
@@ -63,7 +49,7 @@ var _ = Describe("Sanity Controller", func() {
 	})
 
 	It("Produces correct route level metadata", func() {
-		route := metadataSanity[0].Routes[0]
+		route := metadata[0].Routes[0]
 
 		Expect(route.OperationId).To(Equal("ValidMethodWithSimpleRouteQueryAndHeaderParameters"))
 		Expect(route.HttpVerb).To(Equal(definitions.HttpPost))
@@ -94,7 +80,7 @@ var _ = Describe("Sanity Controller", func() {
 	})
 
 	It("Produces correct method level metadata", func() {
-		route := metadataSanity[0].Routes[0]
+		route := metadata[0].Routes[0]
 		Expect(route.FuncParams).To(HaveLen(3))
 		Expect(route.Responses).To(HaveLen(2))
 
@@ -151,7 +137,7 @@ var _ = Describe("Sanity Controller", func() {
 		Expect(route.Responses[0].TypeMetadata.FullyQualifiedPackage).To(Equal("github.com/gopher-fleece/gleece/test/sanity"))
 		Expect(route.Responses[0].TypeMetadata.DefaultPackageAlias).To(Equal("sanity"))
 		Expect(route.Responses[0].TypeMetadata.Description).To(Equal("This should be the actual description"))
-		Expect(route.Responses[0].TypeMetadata.Import).To(Equal(definitions.ImportTypeAlias))
+		Expect(route.Responses[0].TypeMetadata.Import).To(Equal(definitions.ImportTypeNone))
 		Expect(route.Responses[0].TypeMetadata.IsUniverseType).To(BeFalse())
 		Expect(route.Responses[0].TypeMetadata.IsByAddress).To(BeFalse())
 		Expect(route.Responses[0].TypeMetadata.EntityKind).To(Equal(definitions.AstNodeKindStruct))
@@ -168,18 +154,18 @@ var _ = Describe("Sanity Controller", func() {
 	})
 
 	It("Produces correct models list", func() {
-		Expect(modelsSanity[0].Name).To(Equal("SimpleResponseModel"))
-		Expect(modelsSanity[0].FullyQualifiedPackage).To(Equal("github.com/gopher-fleece/gleece/test/sanity"))
-		Expect(modelsSanity[0].Description).To(Equal("This should be the actual description"))
-		Expect(modelsSanity[0].Fields).To(HaveLen(1))
-		Expect(modelsSanity[0].Fields[0].Name).To(Equal("SomeValue"))
-		Expect(modelsSanity[0].Fields[0].Type).To(Equal("int"))
-		Expect(modelsSanity[0].Fields[0].Description).To(Equal("A description for the value"))
-		Expect(modelsSanity[0].Fields[0].Tag).To(Equal("validate:\"required,min=0,max=10\""))
-		Expect(modelsSanity[0].Fields[0].Deprecation.Deprecated).To(BeFalse())
-		Expect(modelsSanity[0].Fields[0].Deprecation.Description).To(Equal(""))
-		Expect(modelsSanity[0].Deprecation.Deprecated).To(BeFalse())
-		Expect(modelsSanity[0].Deprecation.Description).To(Equal(""))
+		Expect(models[0].Name).To(Equal("SimpleResponseModel"))
+		Expect(models[0].FullyQualifiedPackage).To(Equal("github.com/gopher-fleece/gleece/test/sanity"))
+		Expect(models[0].Description).To(Equal("This should be the actual description"))
+		Expect(models[0].Fields).To(HaveLen(1))
+		Expect(models[0].Fields[0].Name).To(Equal("SomeValue"))
+		Expect(models[0].Fields[0].Type).To(Equal("int"))
+		Expect(models[0].Fields[0].Description).To(Equal("A description for the value"))
+		Expect(models[0].Fields[0].Tag).To(Equal("validate:\"required,min=0,max=10\""))
+		Expect(models[0].Fields[0].Deprecation.Deprecated).To(BeFalse())
+		Expect(models[0].Fields[0].Deprecation.Description).To(Equal(""))
+		Expect(models[0].Deprecation.Deprecated).To(BeFalse())
+		Expect(models[0].Deprecation.Description).To(Equal(""))
 	})
 })
 

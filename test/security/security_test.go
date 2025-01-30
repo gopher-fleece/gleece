@@ -1,15 +1,11 @@
 package security_test
 
 import (
-	"fmt"
-	"os"
-	"path/filepath"
 	"testing"
 
-	"github.com/gopher-fleece/gleece/cmd"
-	"github.com/gopher-fleece/gleece/cmd/arguments"
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
+	"github.com/gopher-fleece/gleece/test/utils"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -17,17 +13,7 @@ import (
 var metadata []definitions.ControllerMetadata
 
 var _ = BeforeSuite(func() {
-	cwd, err := os.Getwd()
-	if err != nil {
-		Fail(fmt.Sprintf("Could not determine process working directory - %v", err))
-	}
-
-	configPath := filepath.Join(cwd, "security.config.json")
-	_, controllers, _, _, err := cmd.GetConfigAndMetadata(arguments.CliArguments{ConfigPath: configPath})
-	if err != nil {
-		Fail(fmt.Sprintf("Could not generate routes - %v", err))
-	}
-
+	controllers, _, _ := utils.GetControllersAndModels()
 	metadata = controllers
 })
 
