@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"bytes"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/gopher-fleece/gleece/cmd/arguments"
@@ -59,6 +61,42 @@ func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
 		os.Exit(1)
+	}
+}
+
+// ExecuteWithArgs runs the root command with provided arguments and captures stdout, stderr, and logs.
+func ExecuteWithArgs(args []string, redirectLogs bool) arguments.ExecuteWithArgsResult {
+	// Capture the original log output
+	originalLogOutput := log.Writer()
+
+	// Create buffers to capture the command output and logs
+	var out bytes.Buffer
+	var errBuf bytes.Buffer
+	var logBuf bytes.Buffer
+
+	// Redirect log output to the logBuf temporarily
+	log.SetOutput(&logBuf)
+
+	// Set the command's output streams
+	rootCmd.SetOut(&out)
+	rootCmd.SetErr(&errBuf)
+	rootCmd.SetArgs(args)
+
+	// Defer restoring the log output and capture result
+	defer func() {
+		// Restore original log output
+		log.SetOutput(originalLogOutput)
+	}()
+
+	// Execute the root command
+	err := rootCmd.Execute()
+
+	// Return the captured result
+	return arguments.ExecuteWithArgsResult{
+		Error:  err,
+		StdOut: out.String(),
+		StdErr: errBuf.String(),
+		Logs:   logBuf.String(), // Include the captured logs
 	}
 }
 

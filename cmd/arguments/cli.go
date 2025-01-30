@@ -8,3 +8,10 @@ type CliArguments struct {
 
 	NoBanner bool
 }
+
+type ExecuteWithArgsResult struct {
+	Error  error
+	StdOut string
+	StdErr string
+	Logs   string
+}

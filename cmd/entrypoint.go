@@ -93,6 +93,7 @@ func GetConfigAndMetadata(args arguments.CliArguments) (
 }
 
 func GenerateSpec(args arguments.CliArguments) error {
+	logger.Info("Generating spec")
 	config, meta, models, hasAnyErrorTypes, err := GetConfigAndMetadata(args)
 	if err != nil {
 		return err
@@ -104,10 +105,12 @@ func GenerateSpec(args arguments.CliArguments) error {
 		return err
 	}
 
+	logger.Info("Spec successfully generated")
 	return nil
 }
 
 func GenerateRoutes(args arguments.CliArguments) error {
+	logger.Info("Generating routes")
 	config, meta, _, _, err := GetConfigAndMetadata(args)
 	if err != nil {
 		return err
@@ -118,10 +121,12 @@ func GenerateRoutes(args arguments.CliArguments) error {
 		return err
 	}
 
+	logger.Info("Routes successfully generated")
 	return nil
 }
 
 func GenerateSpecAndRoutes(args arguments.CliArguments) error {
+	logger.Info("Generating spec and routes")
 	config, meta, models, hasAnyErrorTypes, err := GetConfigAndMetadata(args)
 	if err != nil {
 		return err
@@ -139,5 +144,6 @@ func GenerateSpecAndRoutes(args arguments.CliArguments) error {
 		return err
 	}
 
+	logger.Info("Spec and routes successfully generated")
 	return nil
 }

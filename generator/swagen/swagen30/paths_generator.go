@@ -75,7 +75,7 @@ func buildSecurityMethod(securitySchemes []definitions.SecuritySchemeConfig, sec
 
 		// Make sure the name is exist in the openapi security schemes
 		if !swagtool.IsSecurityNameInSecuritySchemes(securitySchemes, securityMethod.SchemaName) {
-			errStr := fmt.Sprintf("Security method name %s is not exists in the defined security schemes %v", securityMethod.SchemaName, securitySchemes)
+			errStr := fmt.Sprintf("Security method name %s does not exist in the defined security schemes %v", securityMethod.SchemaName, securitySchemes)
 			// Create error object and return it, add the method name that is not exist in the security schemes
 			return nil, errors.New(errStr)
 		}
