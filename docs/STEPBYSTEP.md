@@ -223,6 +223,7 @@ Now you can run your app and see that everything works like a charm :)
 - [Authentication](./AUTHENTICATION.md)
 - [Validations](./VALIDATION.md) 
 - [Error handling](./SECURITY.md)
+- [Advanced](./ADVANCED.md)
 
 ## Integrating with Golang Rest Routers 
 

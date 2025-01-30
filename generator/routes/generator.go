@@ -17,7 +17,7 @@ import (
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
 )
 
-var RoutesTemplateName = "routes"
+var RoutesTemplateName = "Routes"
 
 // dumpContext Dumps the routes context to the log for debugging purposes
 func dumpContext(ctx any) {
@@ -192,10 +192,8 @@ func registerPartials(config *definitions.GleeceConfig) error {
 		panic(fmt.Sprintf("Unknown routing engine type '%v'", engine))
 	}
 
-	if config.RoutesConfig.TemplateOverrides != nil {
-		if err := overrideTemplates(config, partials); err != nil {
-			return err
-		}
+	if err := overrideTemplates(config, partials); err != nil {
+		return err
 	}
 
 	raymond.RegisterPartials(partials)
