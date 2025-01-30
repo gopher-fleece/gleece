@@ -112,6 +112,11 @@ For more information and capabilities see the [Gleece VSCode Extension](https://
 
 To install it search `Gleece` in the "Extension" tab or go to the [VSCode Marketplace](https://marketplace.visualstudio.com/items?itemName=haim-kastner.gleece-extension).
 
+## 💡 Our Initiative
+
+We believe that API development should be code-first, focusing on the developer experience while maintaining industry standards. Our journey began when we noticed a gap in the Go ecosystem for a comprehensive, [TSOA](https://github.com/lukeautry/tsoa)-like framework that would handle everything from routing and validating to OpenAPI generation - all from a single source of truth: your code.
+
+Read more about our initiative and development philosophy in my [Gleece Project](https://blog.castnet.club/en/blog/gleece-project) blog post.
 
 ## ⚠️ Disclaimer
 Gleece is currently an under-development project.  We’re working hard to make it amazing.
