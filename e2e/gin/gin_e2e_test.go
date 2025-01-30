@@ -58,6 +58,17 @@ var _ = Describe("Gin E2E Spec", func() {
 		Expect(w.Header().Get("X-Test-Header")).To(Equal("test"))
 	})
 
+	It("Should set custom template header", func() {
+		// Create a response recorder
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("GET", "/e2e/simple-get", nil)
+		r.ServeHTTP(w, req)
+		Expect(w.Code).To(Equal(200))
+		Expect(w.Body.String()).To(Equal("\"works\""))
+		Expect(w.Header().Get("X-Test-Header")).To(Equal("test"))
+		Expect(w.Header().Get("x-inject")).To(Equal("true"))
+	})
+
 	It("Should return status code 204 for explicit set status", func() {
 		// Create a response recorder
 		w := httptest.NewRecorder()

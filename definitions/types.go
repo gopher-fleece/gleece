@@ -290,13 +290,6 @@ type OpenAPIGeneratorConfig struct {
 	SpecGeneratorConfig  SpecGeneratorConfig    `json:"specGeneratorConfig" validate:"required"`
 }
 
-type KnownTemplate string
-
-const (
-	TemplateRoutes                    KnownTemplate = "routes"
-	TemplateControllerResponsePartial KnownTemplate = "controller.response.partial"
-)
-
 type RoutingEngineType string
 
 const (
@@ -311,13 +304,13 @@ type CustomValidators struct {
 }
 
 type RoutesConfig struct {
-	Engine              RoutingEngineType        `json:"engine" validate:"required,oneof=gin echo"`
-	TemplateOverrides   map[KnownTemplate]string `json:"templateOverrides"`
-	OutputPath          string                   `json:"outputPath" validate:"required,filepath"`
-	OutputFilePerms     string                   `json:"outputFilePerms" validate:"regex=^(0?[0-7]{3})?$"`
-	PackageName         string                   `json:"packageName"`
-	CustomValidators    []CustomValidators       `json:"customValidators" validate:"dive"`
-	AuthorizationConfig AuthorizationConfig      `json:"authorizationConfig" validate:"required"`
+	Engine              RoutingEngineType   `json:"engine" validate:"required,oneof=gin echo"`
+	TemplateOverrides   map[string]string   `json:"templateOverrides"`
+	OutputPath          string              `json:"outputPath" validate:"required,filepath"`
+	OutputFilePerms     string              `json:"outputFilePerms" validate:"regex=^(0?[0-7]{3})?$"`
+	PackageName         string              `json:"packageName"`
+	CustomValidators    []CustomValidators  `json:"customValidators" validate:"dive"`
+	AuthorizationConfig AuthorizationConfig `json:"authorizationConfig" validate:"required"`
 }
 
 type AuthorizationConfig struct {

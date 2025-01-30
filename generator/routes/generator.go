@@ -17,6 +17,8 @@ import (
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
 )
 
+var RoutesTemplateName = "Routes"
+
 // dumpContext Dumps the routes context to the log for debugging purposes
 func dumpContext(ctx any) {
 	// It's basically impossible to break the marshaller without some pretty crazy, and very intentional hacks
@@ -141,31 +143,61 @@ func getDefaultTemplate(engine definitions.RoutingEngineType) string {
 	panic(fmt.Sprintf("Could not find an embedded template for routing engine %v", engine))
 }
 
-// getTemplateString Gets the contents of the HandleBars template to use.
+// getRoutesTemplateString Gets the contents of the HandleBars template to use.
 // If `templateFilePath` is empty, returns the default, built-in template, otherwise, the content of the provided template
-func getTemplateString(engine definitions.RoutingEngineType, templateFilePath string) (string, error) {
+func getRoutesTemplateString(engine definitions.RoutingEngineType, templateFilePath string) (string, error) {
 	if len(templateFilePath) == 0 {
 		return getDefaultTemplate(engine), nil
 	}
 
-	data, err := os.ReadFile(templateFilePath)
-	if err != nil {
-		logger.Fatal("Could not read given template override from '%s' - %v", templateFilePath, err)
-		return "", err
-	}
+	return getTemplateData(RoutesTemplateName, templateFilePath)
+}
 
+func getTemplateData(name string, path string) (string, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return "", fmt.Errorf("Could not read given template %s override at '%s' - %s", name, path, err.Error())
+	}
 	return string(data), nil
 }
 
-func registerPartials(engine definitions.RoutingEngineType) {
+func overrideTemplates(config *definitions.GleeceConfig, templatePartials map[string]string) error {
+	for name, path := range config.RoutesConfig.TemplateOverrides {
+		if name == RoutesTemplateName {
+			// Do not handle the routes template here, as it is handled separately see getRoutesTemplateString
+			continue
+		}
+		_, exists := templatePartials[name]
+		if !exists {
+			return fmt.Errorf("Partial '%s' is not a valid %s partials", name, config.RoutesConfig.Engine)
+		}
+		data, err := getTemplateData(name, path)
+		if err != nil {
+			return err
+		}
+		templatePartials[name] = data
+	}
+	return nil
+}
+
+func registerPartials(config *definitions.GleeceConfig) error {
+	partials := make(map[string]string)
+	engine := config.RoutesConfig.Engine
 	switch engine {
 	case definitions.RoutingEngineGin:
-		gin.RegisterPartials()
+		partials = gin.Partials
 	case definitions.RoutingEngineEcho:
-		echo.RegisterPartials()
+		partials = echo.Partials
 	default:
 		panic(fmt.Sprintf("Unknown routing engine type '%v'", engine))
 	}
+
+	if err := overrideTemplates(config, partials); err != nil {
+		return err
+	}
+
+	raymond.RegisterPartials(partials)
+	return nil
 }
 
 func getOutputFileMod(requestedPermissions string) os.FileMode {
@@ -185,7 +217,9 @@ func getOutputFileMod(requestedPermissions string) os.FileMode {
 func GenerateRoutes(config *definitions.GleeceConfig, controllerMeta []definitions.ControllerMetadata) error {
 	args := (*config).RoutesConfig
 
-	registerPartials(args.Engine)
+	if err := registerPartials(config); err != nil {
+		return err
+	}
 	registerHelpers()
 
 	ctx, err := GetTemplateContext(args, controllerMeta)
@@ -197,7 +231,7 @@ func GenerateRoutes(config *definitions.GleeceConfig, controllerMeta []definitio
 
 	dumpContext(ctx)
 
-	template, err := getTemplateString(args.Engine, args.TemplateOverrides[definitions.TemplateRoutes])
+	template, err := getRoutesTemplateString(args.Engine, args.TemplateOverrides[RoutesTemplateName])
 	if err != nil {
 		logger.Fatal("Could not obtain the template file's contents")
 		return err

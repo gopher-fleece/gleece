@@ -12,6 +12,9 @@
 		"authorizationConfig": {
 			"authFileFullPackageName": "github.com/gopher-fleece/gleece/e2e/gin/auth",
 			"enforceSecurityOnAllRoutes": true
+		},
+		"templateOverrides": {
+			"ResponseHeaders" : "./assets/gin.custom.response.headers.hbs"
 		}
 	},
 	"openAPIGeneratorConfig": {
