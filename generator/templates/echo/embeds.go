@@ -4,8 +4,6 @@ package echo
 
 import (
 	_ "embed"
-
-	"github.com/aymerick/raymond"
 )
 
 //go:embed routes.hbs
@@ -68,8 +66,4 @@ var Partials = map[string]string{
 	"ResponseHeaders":                 ResponseHeaders,
 	"RequestSwitchParamType":          RequestSwitchParamType,
 	"RunValidator":                    RunValidator,
-}
-
-func RegisterPartials() {
-	raymond.RegisterPartials(Partials)
 }
