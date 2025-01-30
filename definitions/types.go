@@ -218,7 +218,6 @@ type ControllerMetadata struct {
 
 type ModelMetadata struct {
 	Name                  string
-	Package               string
 	FullyQualifiedPackage string
 	Description           string
 	Fields                []FieldMetadata

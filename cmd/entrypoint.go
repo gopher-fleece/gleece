@@ -69,7 +69,7 @@ func getMetadata(config *definitions.GleeceConfig) ([]definitions.ControllerMeta
 	return controllers, flatModels, hasAnyErrorTypes, nil
 }
 
-func getConfigAndMetadata(args arguments.CliArguments) (
+func GetConfigAndMetadata(args arguments.CliArguments) (
 	*definitions.GleeceConfig,
 	[]definitions.ControllerMetadata,
 	[]definitions.ModelMetadata,
@@ -93,7 +93,7 @@ func getConfigAndMetadata(args arguments.CliArguments) (
 }
 
 func GenerateSpec(args arguments.CliArguments) error {
-	config, meta, models, hasAnyErrorTypes, err := getConfigAndMetadata(args)
+	config, meta, models, hasAnyErrorTypes, err := GetConfigAndMetadata(args)
 	if err != nil {
 		return err
 	}
@@ -108,7 +108,7 @@ func GenerateSpec(args arguments.CliArguments) error {
 }
 
 func GenerateRoutes(args arguments.CliArguments) error {
-	config, meta, _, _, err := getConfigAndMetadata(args)
+	config, meta, _, _, err := GetConfigAndMetadata(args)
 	if err != nil {
 		return err
 	}
@@ -122,7 +122,7 @@ func GenerateRoutes(args arguments.CliArguments) error {
 }
 
 func GenerateSpecAndRoutes(args arguments.CliArguments) error {
-	config, meta, models, hasAnyErrorTypes, err := getConfigAndMetadata(args)
+	config, meta, models, hasAnyErrorTypes, err := GetConfigAndMetadata(args)
 	if err != nil {
 		return err
 	}
