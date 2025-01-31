@@ -57,6 +57,24 @@ var _ = Describe("Echo E2E Spec", func() {
 		Expect(w.Header().Get("X-Test-Header")).To(Equal("test"))
 	})
 
+	It("Should use custom validator", func() {
+		// Create a response recorder
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("GET", "/e2e/get-header-start-with-letter", nil)
+		req.Header.Add("headerParam", "headerParam")
+		e.ServeHTTP(w, req)
+		Expect(w.Code).To(Equal(200))
+		Expect(w.Body.String()).To(ContainSubstring("headerParam"))
+
+		w = httptest.NewRecorder()
+		req = httptest.NewRequest("GET", "/e2e/get-header-start-with-letter", nil)
+		req.Header.Add("headerParam", "1headerParam")
+		e.ServeHTTP(w, req)
+		Expect(w.Code).To(Equal(422))
+		Expect(w.Body.String()).To(ContainSubstring("Field 'headerParam' failed validation with tag 'validate_starts_with_letter'"))
+
+	})
+
 	It("Should return status code 204 for explicit set status", func() {
 		// Create a response recorder
 		w := httptest.NewRecorder()

@@ -12,7 +12,14 @@
 		"authorizationConfig": {
 			"authFileFullPackageName": "github.com/gopher-fleece/gleece/e2e/echo/auth",
 			"enforceSecurityOnAllRoutes": true
-		}
+		},
+		"customValidators" : [
+			{
+				"validateTagName": "validate_starts_with_letter",
+				"functionName": "ValidateStartsWithLetter",
+				"fullPackageName": "github.com/gopher-fleece/gleece/e2e/assets"
+			}
+		]
 	},
 	"openAPIGeneratorConfig": {
 		"openapi" : "3.0.0",

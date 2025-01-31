@@ -106,3 +106,10 @@ func (ec *E2EController) PostWithAllParamsWithBodyRequiredPtr(theBody *BodyInfo)
 		BodyParam: theBody.BodyParam,
 	}, nil
 }
+
+// @Method(GET) This text is not part of the OpenAPI spec
+// @Route(/get-header-start-with-letter)
+// @Header(headerParam, { validate: "required,validate_starts_with_letter" })
+func (ec *E2EController) GetHeaderStartWithLetter(headerParam string) (string, error) {
+	return headerParam, nil
+}

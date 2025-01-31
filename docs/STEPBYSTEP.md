@@ -31,7 +31,7 @@ func main() {
 To add the `Gleece` external package, run the following command:
 
 ```bash
-go get github.com/gopher-fleece/gleece/external
+go get github.com/gopher-fleece/gleece@latest
 ```
 
 Install the `Gleece` CLI:
