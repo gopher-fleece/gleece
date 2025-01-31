@@ -19,6 +19,9 @@ import (
 
 var RoutesTemplateName = "Routes"
 
+var helpersRegistered bool
+var lastEngine *definitions.RoutingEngineType
+
 // dumpContext Dumps the routes context to the log for debugging purposes
 func dumpContext(ctx any) {
 	// It's basically impossible to break the marshaller without some pretty crazy, and very intentional hacks
@@ -103,6 +106,8 @@ func registerHelpers() {
 		last := types[len(types)-1]
 		return fmt.Sprintf("Response%d%s.%s", last.UniqueImportSerial, last.Name, last.Name)
 	})
+
+	helpersRegistered = true
 }
 
 func toSlice(input any) ([]any, bool) {
@@ -156,7 +161,7 @@ func getRoutesTemplateString(engine definitions.RoutingEngineType, templateFileP
 func getTemplateData(name string, path string) (string, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return "", fmt.Errorf("Could not read given template %s override at '%s' - %s", name, path, err.Error())
+		return "", fmt.Errorf("could not read given template %s override at '%s' - %s", name, path, err.Error())
 	}
 	return string(data), nil
 }
@@ -169,7 +174,7 @@ func overrideTemplates(config *definitions.GleeceConfig, templatePartials map[st
 		}
 		_, exists := templatePartials[name]
 		if !exists {
-			return fmt.Errorf("Partial '%s' is not a valid %s partials", name, config.RoutesConfig.Engine)
+			return fmt.Errorf("partial '%s' is not a valid %s partials", name, config.RoutesConfig.Engine)
 		}
 		data, err := getTemplateData(name, path)
 		if err != nil {
@@ -181,7 +186,7 @@ func overrideTemplates(config *definitions.GleeceConfig, templatePartials map[st
 }
 
 func registerPartials(config *definitions.GleeceConfig) error {
-	partials := make(map[string]string)
+	var partials map[string]string
 	engine := config.RoutesConfig.Engine
 	switch engine {
 	case definitions.RoutingEngineGin:
@@ -196,7 +201,24 @@ func registerPartials(config *definitions.GleeceConfig) error {
 		return err
 	}
 
+	// Partials are currently registered on the package level.
+	// Will likely need to find a way to register on the template level.
+	//
+	// Note that registering the same partials twice causes a panic.
+	if lastEngine != nil {
+		if *lastEngine == config.RoutesConfig.Engine {
+			logger.Debug("Last engine is %v, partials are already registered", *lastEngine)
+			return nil
+		}
+
+		logger.Debug("Last used engine was %v, removing all partials before re-registration'", *lastEngine)
+		raymond.RemoveAllPartials()
+	}
+
+	logger.Debug("Registering partials for '%v'", config.RoutesConfig.Engine)
 	raymond.RegisterPartials(partials)
+
+	lastEngine = &engine
 	return nil
 }
 
@@ -220,7 +242,10 @@ func GenerateRoutes(config *definitions.GleeceConfig, controllerMeta []definitio
 	if err := registerPartials(config); err != nil {
 		return err
 	}
-	registerHelpers()
+
+	if !helpersRegistered {
+		registerHelpers()
+	}
 
 	ctx, err := GetTemplateContext(args, controllerMeta)
 

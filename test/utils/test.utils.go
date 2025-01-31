@@ -24,3 +24,12 @@ func GetControllersAndModels() ([]definitions.ControllerMetadata, []definitions.
 	}
 	return controllers, flatModels, hasStdError
 }
+
+func GetAbsPathByRelative(relativePath string) string {
+	cwd, err := os.Getwd()
+	if err != nil {
+		Fail(fmt.Sprintf("Could not determine process working directory - %v", err))
+	}
+
+	return filepath.Join(cwd, relativePath)
+}

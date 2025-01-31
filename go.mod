@@ -3,7 +3,7 @@ module github.com/gopher-fleece/gleece
 go 1.23.4
 
 require (
-	github.com/aymerick/raymond v2.0.2+incompatible
+	github.com/aymerick/raymond v2.0.3-0.20180322193309-b565731e1464+incompatible
 	github.com/bmatcuk/doublestar/v4 v4.7.1
 	github.com/deckarep/golang-set/v2 v2.7.0
 	github.com/getkin/kin-openapi v0.128.0
