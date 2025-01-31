@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"reflect"
+	"strings"
 
 	"github.com/aymerick/raymond"
 	"github.com/iancoleman/strcase"
@@ -54,27 +54,6 @@ func registerHelpers() {
 		return options.Inverse()
 	})
 
-	raymond.RegisterHelper("ifLongerThan", func(value any, length int, options *raymond.Options) string {
-		var valueLength int
-
-		slice, ok := toSlice(value)
-		if ok {
-			valueLength = len(slice)
-		} else {
-			str, ok := toString(value)
-			if !ok {
-				panic("ifLongerThan helper was called with a non-array/string first value")
-			}
-			valueLength = len(str)
-		}
-
-		if valueLength > length {
-			return options.Fn()
-		}
-
-		return options.Inverse()
-	})
-
 	raymond.RegisterHelper("ifAnyParamRequiresConversion", func(params []definitions.FuncParam, options *raymond.Options) string {
 		for _, param := range params {
 			if param.TypeMeta.Name != "string" && param.TypeMeta.FullyQualifiedPackage != "" {
@@ -108,33 +87,6 @@ func registerHelpers() {
 	})
 
 	helpersRegistered = true
-}
-
-func toSlice(input any) ([]any, bool) {
-	val := reflect.ValueOf(input)
-
-	switch val.Kind() {
-	case reflect.Slice, reflect.Array:
-		// Create a generic slice of `any`
-		slice := make([]any, val.Len())
-		for i := 0; i < val.Len(); i++ {
-			slice[i] = val.Index(i).Interface()
-		}
-		return slice, true
-	default:
-		return nil, false
-	}
-}
-
-func toString(input any) (string, bool) {
-	val := reflect.ValueOf(input)
-
-	switch val.Kind() {
-	case reflect.String:
-		return input.(string), true
-	default:
-		return "", false
-	}
 }
 
 func getDefaultTemplate(engine definitions.RoutingEngineType) string {
@@ -172,10 +124,21 @@ func overrideTemplates(config *definitions.GleeceConfig, templatePartials map[st
 			// Do not handle the routes template here, as it is handled separately see getRoutesTemplateString
 			continue
 		}
+
 		_, exists := templatePartials[name]
 		if !exists {
-			return fmt.Errorf("partial '%s' is not a valid %s partials", name, config.RoutesConfig.Engine)
+			var knownPartials []string
+			for partialName := range templatePartials {
+				knownPartials = append(knownPartials, partialName)
+			}
+			return fmt.Errorf(
+				"partial '%s' is not a valid %s partial. Known partials: %s",
+				name,
+				config.RoutesConfig.Engine,
+				strings.Join(knownPartials, ", "),
+			)
 		}
+
 		data, err := getTemplateData(name, path)
 		if err != nil {
 			return err

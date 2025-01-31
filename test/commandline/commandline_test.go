@@ -2,14 +2,20 @@ package imports_test
 
 import (
 	"fmt"
-	"path/filepath"
+	"os"
 	"testing"
 
 	"github.com/gopher-fleece/gleece/cmd"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
+	"github.com/gopher-fleece/gleece/test/utils"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
+
+var _ = AfterEach(func() {
+	distPath := utils.GetAbsPathByRelative("dist")
+	os.RemoveAll(distPath)
+})
 
 var _ = Describe("Commandline", func() {
 	It("Generate spec should complete successfully", func() {
@@ -20,10 +26,7 @@ var _ = Describe("Commandline", func() {
 			}
 		}()
 
-		absPath, err := filepath.Abs("./gleece.test.config.json")
-		if err != nil {
-			Fail(fmt.Sprintf("Failed to resolve absolute path for config - %v", err))
-		}
+		absPath := utils.GetAbsPathByRelative("./gleece.test.config.json")
 
 		result := cmd.ExecuteWithArgs([]string{"generate", "spec", "--no-banner", "-c", absPath}, true)
 		Expect(result.Error).To(BeNil())
@@ -47,10 +50,7 @@ var _ = Describe("Commandline", func() {
 			}
 		}()
 
-		absPath, err := filepath.Abs("./gleece.test.config.json")
-		if err != nil {
-			Fail(fmt.Sprintf("Failed to resolve absolute path for config - %v", err))
-		}
+		absPath := utils.GetAbsPathByRelative("./gleece.test.config.json")
 
 		result := cmd.ExecuteWithArgs([]string{"generate", "routes", "--no-banner", "-c", absPath}, true)
 		Expect(result.Error).To(BeNil())
@@ -68,10 +68,7 @@ var _ = Describe("Commandline", func() {
 			}
 		}()
 
-		absPath, err := filepath.Abs("./gleece.test.config.json")
-		if err != nil {
-			Fail(fmt.Sprintf("Failed to resolve absolute path for config - %v", err))
-		}
+		absPath := utils.GetAbsPathByRelative("./gleece.test.config.json")
 
 		result := cmd.ExecuteWithArgs([]string{"generate", "spec-and-routes", "--no-banner", "-c", absPath}, true)
 		Expect(result.Error).To(BeNil())
@@ -85,6 +82,21 @@ var _ = Describe("Commandline", func() {
 		Expect(result.Logs).To(ContainSubstring("OpenAPI specification generation completed successfully"))
 		Expect(result.Logs).To(ContainSubstring("OpenAPI specification written to"))
 		Expect(result.Logs).To(ContainSubstring("[INFO]   Spec and routes successfully generated"))
+	})
+
+	It("Correctly detects and handles engine change during multiple invocations", func() {
+		configPath := utils.GetAbsPathByRelative("gleece.test.config.gin.json")
+		cmd.ExecuteWithArgs([]string{"generate", "routes", "--no-banner", "-v=5", "-c", configPath}, true)
+
+		configPath = utils.GetAbsPathByRelative("gleece.test.config.echo.json")
+		result := cmd.ExecuteWithArgs([]string{"generate", "routes", "--no-banner", "-v=0", "-c", configPath}, true)
+
+		Expect(result.Error).To(BeNil())
+		Expect(result.StdErr).To(BeEmpty())
+
+		Expect(result.Logs).To(ContainSubstring("[INFO]   Generating routes"))
+		Expect(result.Logs).To(ContainSubstring("Last used engine was gin, removing all partials before re-registration"))
+		Expect(result.Logs).To(ContainSubstring("[INFO]   Routes successfully generated"))
 	})
 })
 

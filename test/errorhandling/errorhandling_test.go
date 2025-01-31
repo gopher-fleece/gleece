@@ -30,6 +30,30 @@ var _ = Describe("Error-handling", func() {
 		_, _, _, _, err := cmd.GetConfigAndMetadata(arguments.CliArguments{ConfigPath: configPath})
 		Expect(err).To(MatchError(ContainSubstring("Field 'ControllerGlobs' failed validation with tag 'min'")))
 	})
+
+	It("Returns a clear error when configuration has a non-existent template override", func() {
+		configPath := utils.GetAbsPathByRelative("gleece.missing.partial.config.json")
+		err := cmd.GenerateRoutes(arguments.CliArguments{ConfigPath: configPath})
+
+		Expect(err).To(MatchError(ContainSubstring("could not read given template Imports override at")))
+		Expect(err).To(MatchError(ContainSubstring("no such file or directory")))
+	})
+
+	It("Returns a clear error when configuration references a non-existent partial", func() {
+		configPath := utils.GetAbsPathByRelative("gleece.unknown.partial.config.json")
+		err := cmd.GenerateRoutes(arguments.CliArguments{ConfigPath: configPath})
+
+		Expect(err).To(MatchError(ContainSubstring("partial 'thisPartialDoesNotExist' is not a valid gin partial")))
+	})
+
+	It("Returns a clear error when configuration has a syntactically broken template override", func() {
+		configPath := utils.GetAbsPathByRelative("gleece.broken.override.syntax.config.json")
+		err := cmd.GenerateRoutes(arguments.CliArguments{ConfigPath: configPath})
+
+		Expect(err).To(MatchError(ContainSubstring("Evaluation error")))
+		Expect(err).To(MatchError(ContainSubstring("Lexer error")))
+		Expect(err).To(MatchError(ContainSubstring("Unclosed expression")))
+	})
 })
 
 func TestErrorHandling(t *testing.T) {
