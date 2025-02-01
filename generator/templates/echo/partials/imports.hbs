@@ -26,10 +26,9 @@ import (
 			{{/if}}
 		{{/each}}
 	{{/each}}
-
-	{{#each CustomValidators}}
+{{/each}}
+{{!-- Import Validators --}}
+{{#each CustomValidators}}
 		CustomValidatorPkg{{@index}} "{{{FullPackageName}}}"
-	{{/each}}
-
 {{/each}}
 )
