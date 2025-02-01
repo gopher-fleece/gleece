@@ -1,0 +1,19 @@
+authorize(
+	ctx,
+	[]SecurityCheckList { {{#each Security}}
+		{
+			{{#each SecurityAnnotation}} 
+			Relation: SecurityListRelationAnd,
+			Checks: []external.SecurityCheck {
+				{
+					SchemaName: "{{{SchemaName}}}",
+					Scopes: []string{
+						{{#each Scopes}}"{{{.}}}",{{#unless @last}}
+						{{/unless}}{{/each}}
+					},{{/each}}
+				},
+			},
+		},
+		{{/each}}
+	},
+)
