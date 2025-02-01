@@ -168,6 +168,9 @@ func (ec *UsersController) GetUser(id string) (string, error) {
 }
 ```
 
+Every route function must declare at least one return type: `error`. For operations without a response payload, `error` will be the only return type. For operations that return data, the response payload (`string`, `struct` etc.) must be the first return value, followed by error as the second return value.
+
+
 ## Running the Gleece Generator
 
 Now you are ready to the Gleece generator.
@@ -219,7 +222,6 @@ Now you can run your app and see that everything works like a charm :)
 
 ## Further Reading:
 - [Annotations & Options](./ANNOTATIONS.md)
-- [Controllers](./CONTROLLERS.md)
 - [Authentication](./AUTHENTICATION.md)
 - [Validations](./VALIDATION.md) 
 - [Error handling](./SECURITY.md)

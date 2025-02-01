@@ -1,3 +1,58 @@
+# Advanced Abilities for Controllers
+
+### Set HTTP Response Code in Run-time
+
+When a controller function returns with a nil error, the operation is considered successful.
+
+If the function has no response payload, the status code will be `204`. If it contains a payload, the status code will be `200`, as per HTTP specifications.
+
+If the function returns an error, the default error code will be `500`.
+
+However, it is possible to set a custom response code using the `SetStatus` API.
+
+```go
+// @Method(GET)
+// @Route(/my-route)
+func (mc *MyController) MyRoute() (string, error) {
+	mc.SetStatus(external.StatusPartialContent)
+	return "", nil
+}
+```
+
+### Set HTTP Response Header in Run-time
+
+To set HTTP response headers, use the `SetHeader` API.
+
+```go
+// @Method(GET)
+// @Route(/my-route)
+func (mc *MyController) MyRoute() (string, error) {
+	mc.SetHeader("X-my-Header", "some string")
+	mc.SetHeader("X-my-Header-2", "some string 2")
+	return "", nil
+}
+```
+
+### Access HTTP Request Context
+
+Sometimes, especially in edge cases, there is a need to access the full HTTP request context.
+
+This might be necessary to perform extra dynamic operations on the request, support features not yet implemented and integrated into Gleece, or other specific needs.
+
+Whatever the reason, you can access the router context via the `GetContext` API. The type is `any`, and you can cast it to your router's specific context type.
+
+For example, for `gin`:
+```go
+// @Method(GET)
+// @Route(/my-route)
+func (mc *MyController) MyRoute() (string, error) {
+	context := mc.GetContext()
+	ginContext, ok := context.(*gin.Context)
+    // Do the advanced logic with the ginContext....
+	return "", nil
+}
+```
+
 # Template Overriding
 
 Gleece supports template overriding.
@@ -27,3 +82,4 @@ Your configuration might look like this:
 ```
 
 The main template name is `Routes` (for all engines), and each engine’s partial template names are listed in the `Partials` map within the engine embed file. For the `gin` engine, see: [https://github.com/gopher-fleece/gleece/generator/templates/gin/embeds.go](https://github.com/gopher-fleece/gleece/blob/main/generator/templates/gin/embeds.go)  
+
