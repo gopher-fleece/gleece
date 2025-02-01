@@ -1,20 +1,20 @@
 {
 	"commonConfig": {
 		"controllerGlobs": [
-			"../*.go",
-			"../**/*.go"
+			"./assets/*.go",
+			"./assets/**/*.go"
 		]
 	},
 	"routesConfig": {
 		"engine": "gin",
-		"outputPath": "./routes/gin.e2e.gleece.go",
+		"outputPath": "./gin/routes/gin.e2e.gleece.go",
 		"outputFilePerms": "0644",
 		"authorizationConfig": {
 			"authFileFullPackageName": "github.com/gopher-fleece/gleece/e2e/gin/auth",
 			"enforceSecurityOnAllRoutes": true
 		},
 		"templateOverrides": {
-			"ResponseHeaders" : "./assets/gin.custom.response.headers.hbs"
+			"ResponseHeaders" : "./gin/assets/gin.custom.response.headers.hbs"
 		},
 		"customValidators" : [
 			{
@@ -49,23 +49,29 @@
 				"fieldName": "x-header-name",
 				"type": "apiKey",
 				"in": "header"
+			},
+			{
+				"description": "API Key for accessing the API",
+				"name": "securitySchemaName2",
+				"fieldName": "x-header-name",
+				"type": "apiKey",
+				"in": "header"
 			}
 		],
 		"defaultSecurity": [
 			{
 				"securityMethod": [
 					{
-						"name": "securitySchemaName",
+						"name": "securitySchemaName2",
 						"scopes": [
-							"read",
-							"write"
+							"config"
 						]
 					}
 				]
 			}
 		],
 		"specGeneratorConfig": {
-			"outputPath": "./dist/swagger.json"
+			"outputPath": "./gin/dist/swagger.json"
 		}
 	}
 }

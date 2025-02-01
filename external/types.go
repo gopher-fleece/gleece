@@ -115,6 +115,11 @@ func (gc *GleeceController) GetHeaders() map[string]string {
 	return gc.headers
 }
 
+// GetContext returns the underlying request object (the type of the object is specific to the underlying routing engine).
+func (gc *GleeceController) GetContext() any {
+	return gc.request
+}
+
 type Controller interface {
 	InitController(request any)
 
@@ -129,6 +134,9 @@ type Controller interface {
 
 	// GetHeaders get headers set (defined using the `SetHeader` API).
 	GetHeaders() map[string]string
+
+	// GetContext returns the underlying request object (the type of the object is specific to the underlying routing engine).
+	GetContext() any
 }
 
 type SecurityCheck struct {

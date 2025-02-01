@@ -1,0 +1,265 @@
+package e2e
+
+import (
+	"github.com/gopher-fleece/gleece/e2e/assets"
+	. "github.com/onsi/ginkgo/v2"
+)
+
+var _ = Describe("E2E Routing Spec", func() {
+	It("Should return status code 200 for simple get", func() {
+		RunRouterTest(RouterTest{
+			Name:            "Should return status code 200 for simple get",
+			ExpectedStatus:  200,
+			ExpectedBody:    "\"works\"",
+			ExpendedHeaders: nil,
+			Path:            "/e2e/simple-get",
+			Method:          "GET",
+			Body:            nil,
+			Query:           nil,
+			Headers:         nil,
+		})
+	})
+
+	It("Should set custom template header", func() {
+		RunRouterTest(RouterTest{
+			Name:           "Should set custom template header",
+			ExpectedStatus: 200,
+			ExpectedBody:   "\"works\"",
+			ExpendedHeaders: map[string]string{
+				"x-test-header": "test",
+				"x-inject":      "true",
+			},
+			Path:    "/e2e/simple-get",
+			Method:  "GET",
+			Body:    nil,
+			Query:   nil,
+			Headers: nil,
+		})
+	})
+
+	It("Should use custom validator", func() {
+		RunRouterTest(RouterTest{
+			Name:            "Should use custom validator - valid header",
+			ExpectedStatus:  200,
+			ExpectedBody:    "\"headerParam\"",
+			ExpendedHeaders: nil,
+			Path:            "/e2e/get-header-start-with-letter",
+			Method:          "GET",
+			Body:            nil,
+			Query:           nil,
+			Headers: map[string]string{
+				"headerparam": "headerParam",
+			},
+		})
+
+		RunRouterTest(RouterTest{
+			Name:                "Should use custom validator - invalid header",
+			ExpectedStatus:      422,
+			ExpectedBodyContain: "Field 'headerParam' failed validation with tag 'validate_starts_with_letter'",
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/get-header-start-with-letter",
+			Method:              "GET",
+			Body:                nil,
+			Query:               nil,
+			Headers: map[string]string{
+				"headerparam": "1headerParam",
+			},
+		})
+	})
+
+	It("Should return status code 200 for get with all params in use", func() {
+		RunRouterTest(RouterTest{
+			Name:            "Should return status code 200 for get with all params in use",
+			ExpectedStatus:  200,
+			ExpectedBody:    "\"pathParamqueryParamheaderParam\"",
+			ExpendedHeaders: nil,
+			Path:            "/e2e/get-with-all-params/pathParam",
+			Method:          "GET",
+			Body:            nil,
+			Query:           map[string]string{"queryParam": "queryParam"},
+			Headers: map[string]string{
+				"headerParam": "headerParam",
+			},
+		})
+	})
+
+	It("Should return status code 200 for get with all params ptr", func() {
+		RunRouterTest(RouterTest{
+			Name:            "Should return status code 200 for get with all params ptr",
+			ExpectedStatus:  200,
+			ExpectedBody:    "\"pathParamqueryParamheaderParam\"",
+			ExpendedHeaders: nil,
+			Path:            "/e2e/get-with-all-params-ptr/pathParam",
+			Method:          "GET",
+			Body:            nil,
+			Query:           map[string]string{"queryParam": "queryParam"},
+			Headers: map[string]string{
+				"headerParam": "headerParam",
+			},
+		})
+	})
+
+	It("Should return status code 200 for get with all params empty ptr", func() {
+		RunRouterTest(RouterTest{
+			Name:            "Should return status code 200 for get with all params empty ptr",
+			ExpectedStatus:  200,
+			ExpectedBody:    "\"pathParam\"",
+			ExpendedHeaders: nil,
+			Path:            "/e2e/get-with-all-params-ptr/pathParam",
+			Method:          "GET",
+			Body:            nil,
+			Query:           nil,
+			Headers:         nil,
+		})
+	})
+
+	It("Should return status code 422 for get with all params empty ptr", func() {
+		RunRouterTest(RouterTest{
+			Name:                "Should return status code 422 for get with all params empty ptr - missing header",
+			ExpectedStatus:      422,
+			ExpectedBodyContain: "A request was made to operation 'GetWithAllParamsRequiredPtr' but parameter 'headerParam' did not pass validation - Field 'headerParam' failed validation with tag 'required'",
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/get-with-all-params-required-ptr/pathParam",
+			Method:              "GET",
+			Body:                nil,
+			Query:               map[string]string{"queryParam": "queryParam"},
+			Headers:             nil,
+		})
+
+		RunRouterTest(RouterTest{
+			Name:                "Should return status code 422 for get with all params empty ptr - missing query",
+			ExpectedStatus:      422,
+			ExpectedBodyContain: "A request was made to operation 'GetWithAllParamsRequiredPtr' but parameter 'queryParam' did not pass validation - Field 'queryParam' failed validation with tag 'required'",
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/get-with-all-params-required-ptr/pathParam",
+			Method:              "GET",
+			Body:                nil,
+			Query:               nil,
+			Headers: map[string]string{
+				"headerParam": "headerParam",
+			},
+		})
+	})
+
+	It("Should return status code 200 for get with all params with body", func() {
+		RunRouterTest(RouterTest{
+			Name:            "Should return status code 200 for get with all params with body",
+			ExpectedStatus:  200,
+			ExpectedBody:    "{\"bodyParam\":\"queryParamheaderParamthebody\"}",
+			ExpendedHeaders: nil,
+			Path:            "/e2e/post-with-all-params-body",
+			Method:          "POST",
+			Body:            assets.BodyInfo{BodyParam: "thebody"},
+			Query:           map[string]string{"queryParam": "queryParam"},
+			Headers: map[string]string{
+				"headerParam": "headerParam",
+			},
+		})
+	})
+
+	It("Should return status code 422 for missing body", func() {
+		RunRouterTest(RouterTest{
+			Name:                "Should return status code 422 for missing body",
+			ExpectedStatus:      422,
+			ExpectedBodyContain: "A request was made to operation 'PostWithAllParamsWithBody' but body parameter 'theBody' did not pass validation of 'BodyInfo' - body is required but was not provided",
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/post-with-all-params-body",
+			Method:              "POST",
+			Body:                nil,
+			Query:               map[string]string{"queryParam": "queryParam"},
+			Headers: map[string]string{
+				"headerParam": "headerParam",
+			},
+		})
+	})
+
+	It("Should return status code 200 for get with all params with body ptr", func() {
+		RunRouterTest(RouterTest{
+			Name:            "Should return status code 200 for get with all params with body ptr",
+			ExpectedStatus:  200,
+			ExpectedBody:    "{\"bodyParam\":\"queryParamheaderParamthebody\"}",
+			ExpendedHeaders: nil,
+			Path:            "/e2e/post-with-all-params-body-ptr",
+			Method:          "POST",
+			Body:            assets.BodyInfo{BodyParam: "thebody"},
+			Query:           map[string]string{"queryParam": "queryParam"},
+			Headers: map[string]string{
+				"headerParam": "headerParam",
+			},
+		})
+
+		RunRouterTest(RouterTest{
+			Name:            "Should return status code 200 for get with all params with body ptr - empty body",
+			ExpectedStatus:  200,
+			ExpectedBody:    "{\"bodyParam\":\"queryParamheaderParamempty\"}",
+			ExpendedHeaders: nil,
+			Path:            "/e2e/post-with-all-params-body-ptr",
+			Method:          "POST",
+			Body:            nil,
+			Query:           map[string]string{"queryParam": "queryParam"},
+			Headers: map[string]string{
+				"headerParam": "headerParam",
+			},
+		})
+	})
+
+	It("Should return status code 200 for get with all params with body required ptr", func() {
+		RunRouterTest(RouterTest{
+			Name:                "Should return status code 200 for get with all params with body required ptr - missing body",
+			ExpectedStatus:      422,
+			ExpectedBodyContain: "A request was made to operation 'PostWithAllParamsWithBodyRequiredPtr' but body parameter 'theBody' did not pass validation of 'BodyInfo' - body is required but was not provided",
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/post-with-all-params-body-required-ptr",
+			Method:              "POST",
+			Body:                nil,
+			Query:               map[string]string{"queryParam": "queryParam"},
+			Headers: map[string]string{
+				"headerParam": "headerParam",
+			},
+		})
+
+		RunRouterTest(RouterTest{
+			Name:                "Should return status code 200 for get with all params with body required ptr - empty body",
+			ExpectedStatus:      422,
+			ExpectedBodyContain: "A request was made to operation 'PostWithAllParamsWithBodyRequiredPtr' but body parameter 'theBody' did not pass validation of 'BodyInfo' - Field 'BodyParam' failed validation with tag 'required'.",
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/post-with-all-params-body-required-ptr",
+			Method:              "POST",
+			Body:                assets.BodyInfo{},
+			Query:               map[string]string{"queryParam": "queryParam"},
+			Headers: map[string]string{
+				"headerParam": "headerParam",
+			},
+		})
+
+		RunRouterTest(RouterTest{
+			Name:                "Should return status code 200 for get with all params with body required ptr - invalid body",
+			ExpectedStatus:      422,
+			ExpectedBodyContain: "cannot unmarshal number into Go struct field BodyInfo.bodyParam of type string",
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/post-with-all-params-body-required-ptr",
+			Method:              "POST",
+			Body:                assets.BodyInfo2{BodyParam: 1},
+			Query:               map[string]string{"queryParam": "queryParam"},
+			Headers: map[string]string{
+				"headerParam": "headerParam",
+			},
+		})
+
+		RunRouterTest(RouterTest{
+			Name:                "Should return status code 200 for get with all params with body required ptr - empty body with validation",
+			ExpectedStatus:      422,
+			ExpectedBodyContain: "Field 'BodyParam' failed validation with tag 'required'",
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/post-with-all-params-body-required-ptr",
+			Method:              "POST",
+			Body:                assets.BodyInfo{},
+			Query:               map[string]string{"queryParam": "queryParam"},
+			Headers: map[string]string{
+				"headerParam": "headerParam",
+			},
+		})
+	})
+
+	// TODO: Add test for all supported methods
+})
