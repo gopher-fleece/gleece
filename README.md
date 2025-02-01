@@ -91,7 +91,6 @@ All other aspects, including HTTP routing generation, authorization enforcement,
 
 - [Step By Step Guide](./docs/STEPBYSTEP.md)
 - [Annotations & Options](./docs/ANNOTATIONS.md)
-- [Controllers](./docs/CONTROLLERS.md)
 - [Authentication](./docs/AUTHENTICATION.md)
 - [Validations](./docs/VALIDATION.md) 
 - [Error handling](./docs/ERROR_HANDLING.md)
