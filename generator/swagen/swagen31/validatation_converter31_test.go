@@ -299,6 +299,25 @@ var _ = Describe("Validation Converter Spec", func() {
 					Expect(enum.Value).To(Equal(expectedEnums[i].Value))
 				}
 			})
+
+			It("should handle oneof validation for non-standard types", func() {
+				// Using a type that doesn't match string/integer/number
+				BuildSchemaValidationV31(schema, "oneof=true false maybe", "bool")
+
+				expectedEnums := []*yaml.Node{
+					{Kind: yaml.ScalarNode, Value: "true"},
+					{Kind: yaml.ScalarNode, Value: "false"},
+					{Kind: yaml.ScalarNode, Value: "maybe"},
+				}
+
+				Expect(schema.Enum).To(HaveLen(3))
+				for i, enum := range schema.Enum {
+					Expect(enum.Kind).To(Equal(expectedEnums[i].Kind))
+					Expect(enum.Value).To(Equal(expectedEnums[i].Value))
+					// Note: No Tag is set in the default case
+					Expect(enum.Tag).To(BeEmpty())
+				}
+			})
 		})
 	})
 })

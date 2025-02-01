@@ -12,7 +12,7 @@ import (
 
 var _ = Describe("Spec Preparing", func() {
 
-	It("Should output spec file", func() {
+	It("Should output v3.0 spec file", func() {
 
 		defs := []definitions.ControllerMetadata{}
 
@@ -28,6 +28,36 @@ var _ = Describe("Spec Preparing", func() {
 
 		GenerateAndOutputSpec(&definitions.OpenAPIGeneratorConfig{
 			OpenAPI: "3.0.0",
+			Info: definitions.OpenAPIInfo{
+				Title:   "My API",
+				Version: "1.0.0",
+			},
+			BaseURL:              "http://localhost:8080",
+			DefaultRouteSecurity: []definitions.RouteSecurity{},
+			SpecGeneratorConfig: definitions.SpecGeneratorConfig{
+				OutputPath: outputPath,
+			},
+		}, defs, models, false)
+
+		Expect(swagtool.FileExists(outputPath)).To(BeTrue())
+	})
+
+	It("Should output v3.1 spec file", func() {
+
+		defs := []definitions.ControllerMetadata{}
+
+		// Create an example controller and add it to the definitions
+		defs = append(defs, definitions.ControllerMetadata{})
+
+		models := []definitions.ModelMetadata{}
+
+		outputPath := "./dist/test-spec-pre-v31-out.json"
+		if swagtool.FileExists(outputPath) {
+			os.Remove(outputPath)
+		}
+
+		GenerateAndOutputSpec(&definitions.OpenAPIGeneratorConfig{
+			OpenAPI: "3.1.0",
 			Info: definitions.OpenAPIInfo{
 				Title:   "My API",
 				Version: "1.0.0",
