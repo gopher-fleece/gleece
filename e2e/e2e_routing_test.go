@@ -261,5 +261,83 @@ var _ = Describe("E2E Routing Spec", func() {
 		})
 	})
 
-	// TODO: Add test for all supported methods
+	It("Should handle GET request", func() {
+		RunRouterTest(RouterTest{
+			Name:           "Should handle GET request",
+			ExpectedStatus: 204,
+			ExpectedBody:   "",
+			Headers:        nil,
+			Path:           "/e2e/http-method",
+			Method:         "GET",
+			Body:           nil,
+			Query:          nil,
+			ExpendedHeaders: map[string]string{
+				"x-method": "get",
+			},
+		})
+	})
+
+	It("Should handle POST request", func() {
+		RunRouterTest(RouterTest{
+			Name:           "Should handle POST request",
+			ExpectedStatus: 204,
+			ExpectedBody:   "",
+			Headers:        nil,
+			Path:           "/e2e/http-method",
+			Method:         "POST",
+			Body:           nil,
+			Query:          nil,
+			ExpendedHeaders: map[string]string{
+				"x-method": "post",
+			},
+		})
+	})
+
+	It("Should handle PUT request", func() {
+		RunRouterTest(RouterTest{
+			Name:           "Should handle PUT request",
+			ExpectedStatus: 204,
+			ExpectedBody:   "",
+			Headers:        nil,
+			Path:           "/e2e/http-method",
+			Method:         "PUT",
+			Body:           nil,
+			Query:          nil,
+			ExpendedHeaders: map[string]string{
+				"x-method": "put",
+			},
+		})
+	})
+
+	It("Should handle DELETE request", func() {
+		RunRouterTest(RouterTest{
+			Name:           "Should handle DELETE request",
+			ExpectedStatus: 204,
+			ExpectedBody:   "",
+			Headers:        nil,
+			Path:           "/e2e/http-method",
+			Method:         "DELETE",
+			Body:           nil,
+			Query:          nil,
+			ExpendedHeaders: map[string]string{
+				"x-method": "delete",
+			},
+		})
+	})
+
+	It("Should handle PATCH request", func() {
+		RunRouterTest(RouterTest{
+			Name:           "Should handle PATCH request",
+			ExpectedStatus: 204,
+			ExpectedBody:   "",
+			Headers:        nil,
+			Path:           "/e2e/http-method",
+			Method:         "PATCH",
+			Body:           nil,
+			Query:          nil,
+			ExpendedHeaders: map[string]string{
+				"x-method": "patch",
+			},
+		})
+	})
 })

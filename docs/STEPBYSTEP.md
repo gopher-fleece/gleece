@@ -1,6 +1,9 @@
-## Step by Step Gin REST Server Example
+## Gleece Step by Step Instructions
 
-Assuming you already have a REST server using Gin, a simple server might look like this:
+Assuming you already have a REST server, a simple server might look like this:
+
+Example in `Gin`:
+
 ```go
 package main
 
@@ -182,7 +185,11 @@ Run the Gleece generator in your terminal:
 gleece
 ```
 
-By default, it will read the `gleece.config.json` configuration and generate the Gin routes and OpenAPI3 specification file into the `dist` directory.
+By default, it reads the `gleece.config.json` configuration file.
+It generates routers based on the engine specified in `routesConfig->engine`.
+It also generates the OpenAPI specification according to the version set in `openAPIGeneratorConfig->openapi`.
+
+In this example configuration, it generates `gin` routes and OpenAPI `v3.0.0` specifications, with both outputs in the `dist` directory.
 
 ## Integrating Generated Routes
 
@@ -218,7 +225,9 @@ func main() {
 }
 ```
 
-Now you can run your app and see that everything works like a charm :)
+And... start the application.
+
+Happy Coding! 🤓
 
 ---
 
