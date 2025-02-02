@@ -37,7 +37,7 @@ With Gleece, you can:
 - 🎯 Ensure your APIs are always **well-documented and consistent**.  
 - ✅ **Validate input data** effortlessly to keep your APIs robust and secure.
 - 🛡 **Security first** approach, easy authorization with supplied check function.
-- ⚡️ Choose Your Framework - seamlessly works with both **Gin,  Echo & Gorilla Mux** Rest frameworks
+- ⚡️ Choose Your Framework - seamlessly works with **Gin, Echo & Gorilla Mux** Rest frameworks
 
 Gleece aims to make Go developers’ lives easier by seamlessly integrating API routes, validation, and documentation into a single cohesive workflow.
 
