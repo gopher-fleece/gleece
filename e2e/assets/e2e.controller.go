@@ -311,3 +311,38 @@ func (ec *E2EController) ContextAccess() error {
 	}
 	return nil
 }
+
+// @Method(GET)
+// @Route(/http-method)
+func (ec *E2EController) Get() error {
+	ec.SetHeader("x-method", "get")
+	return nil
+}
+
+// @Method(POST)
+// @Route(/http-method)
+func (ec *E2EController) Post() error {
+	ec.SetHeader("x-method", "post")
+	return nil
+}
+
+// @Method(PUT)
+// @Route(/http-method)
+func (ec *E2EController) Put() error {
+	ec.SetHeader("x-method", "put")
+	return nil
+}
+
+// @Method(DELETE)
+// @Route(/http-method)
+func (ec *E2EController) Delete() error {
+	ec.SetHeader("x-method", "delete")
+	return nil
+}
+
+// @Method(PATCH)
+// @Route(/http-method)
+func (ec *E2EController) Patch() error {
+	ec.SetHeader("x-method", "patch")
+	return nil
+}
