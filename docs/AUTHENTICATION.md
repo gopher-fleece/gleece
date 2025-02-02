@@ -148,6 +148,19 @@ func GleeceRequestAuthorization(ctx *gin.Context, check external.SecurityCheck) 
 }
 ```
 
+For Gorilla's `Mux`
+```go
+import (
+	"net/http"
+
+	"github.com/gopher-fleece/gleece/external"
+)
+
+func GleeceRequestAuthorization(r *http.Request, check external.SecurityCheck) *external.SecurityError {
+    return nil
+}
+```
+
 The function will be called from the generated routes once a request arrives, with route's context and the defined security and scopes.
 
 Implement your own check logic.

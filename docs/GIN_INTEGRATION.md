@@ -1,5 +1,5 @@
 # Gin & Gleece Integration
-If you are using the Gin framework for your HTTP routes, you can easily integrate Gleece by following these steps:
+If you are using the [Gin](https://github.com/gin-gonic/gin) framework for your HTTP routes, you can easily integrate Gleece by following these steps:
 
 1. **Configure Gin as the engine**
    - In the Gleece configuration (usually `gleece.config.json`) make sure the `routesConfig->engine` is `gin`.

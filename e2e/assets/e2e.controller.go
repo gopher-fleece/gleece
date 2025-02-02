@@ -2,6 +2,7 @@ package assets
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gopher-fleece/gleece/external"
@@ -303,6 +304,10 @@ func (ec *E2EController) ContextAccess() error {
 	case echo.Context:
 		echoContext := context.(echo.Context)
 		echoContext.Response().Header().Set("x-context-pass", "true")
+	case *http.Request:
+		httpRequest := context.(*http.Request)
+		ec.SetHeader("x-context-host", httpRequest.Host)
+		ec.SetHeader("x-context-pass", "true")
 	}
 	return nil
 }

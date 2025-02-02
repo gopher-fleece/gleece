@@ -47,8 +47,14 @@ For example, for `gin`:
 // @Route(/my-route)
 func (mc *MyController) MyRoute() (string, error) {
 	context := mc.GetContext()
-	ginContext, ok := context.(*gin.Context)
-    // Do the advanced logic with the ginContext....
+    // For Gin
+	ginContext := context.(*gin.Context)
+    // For Echo
+    echoContext := context.(echo.Context)
+    // For Gorilla Mux
+    httpRequest := context.(*http.Request)
+
+    // Do the advanced logic....
 	return "", nil
 }
 ```

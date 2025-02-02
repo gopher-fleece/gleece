@@ -1,0 +1,10 @@
+type SecurityListRelation string
+
+const (
+	SecurityListRelationAnd SecurityListRelation = "AND"
+)
+
+type SecurityCheckList struct {
+	Checks   []external.SecurityCheck
+	Relation SecurityListRelation
+}
