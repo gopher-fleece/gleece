@@ -1,8 +1,8 @@
-# Echo & Gleece Integration
-If you are using the [echo v4](https://github.com/labstack/echo) framework for your HTTP routes, you can easily integrate Gleece by following these steps:
+# Gorilla Mux & Gleece Integration
+If you are using the [Gorilla Mux](https://github.com/gorilla/mux) framework for your HTTP routes, you can easily integrate Gleece by following these steps:
 
-1. **Configure Echo as the engine**
-   - In the Gleece configuration (usually `gleece.config.json`) set the `routesConfig->engine` to `echo`.
+1. **Configure Mux as the engine**
+   - In the Gleece configuration (usually `gleece.config.json`) set the `routesConfig->engine` to `mux`.
 
 2. **Configure security function**
    - In the Gleece configuration set the full package path `routesConfig->authorizationConfig->authFileFullPackageName` (e.g. `github.com/gopher-fleece/gleece/security`).
@@ -21,19 +21,21 @@ Here's an example:
 package main
 
 import (
-    "github.com/labstack/echo/v4"
+	"net/http"
+
+    "github.com/gorilla/mux"
     "github.com/gopher-fleece/gleece/routes" // Import the generated routes file
 )
 
 func main() {
-    // Create a Echo router
-    e := echo.New()
+    // Create a Mux router
+    router := mux.NewRouter()
 
     // Register Gleece routes
-    routes.RegisterRoutes(e)
+    routes.RegisterRoutes(router)
 
     // Start the server
-    e.Start(":8080")
+    http.ListenAndServe(":8080", router)
 }
 ```
 
@@ -42,11 +44,12 @@ func main() {
 package security
 
 import (
+	"net/http"
+
 	"github.com/gopher-fleece/gleece/external"
-   "github.com/labstack/echo/v4"
 )
 
-func GleeceRequestAuthorization(ctx echo.Context, check external.SecurityCheck) *external.SecurityError {
+func GleeceRequestAuthorization(r *http.Request, check external.SecurityCheck) *external.SecurityError {
 	return nil
 }
 ```

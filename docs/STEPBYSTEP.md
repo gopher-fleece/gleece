@@ -134,6 +134,8 @@ func GleeceRequestAuthorization(ctx *gin.Context, check external.SecurityCheck) 
 }
 ```
 
+Note: This example is for the `Gin` engine. See [Integrating with Golang Rest Routers](#Integrating-with-Golang-Rest-Routers) for instructions on integrating authorization with other engines.
+
 ## Creating Controllers
 
 Create the controller `controllers/user.ctrl.go`.
@@ -231,3 +233,4 @@ Now you can run your app and see that everything works like a charm :)
 
 - [Gin](./GIN_INTEGRATION.md)
 - [Echo](./ECHO_INTEGRATION.md)
+- [Gorilla Mux](./MUX_INTEGRATION.md)
