@@ -29,6 +29,7 @@ type RoutesContext struct {
 	PackageName      string
 	Controllers      []definitions.ControllerMetadata
 	CustomValidators []definitions.CustomValidators
+	Middlewares      []definitions.Middleware
 	GenerationDate   string
 	AuthConfig       definitions.AuthorizationConfig
 }
@@ -50,6 +51,8 @@ func GetTemplateContext(
 		ctx.CustomValidators = []definitions.CustomValidators{}
 	}
 	ctx.GenerationDate = time.Now().Format(time.RFC822)
+
+	ctx.Middlewares = config.Middlewares
 
 	return ctx, nil
 }

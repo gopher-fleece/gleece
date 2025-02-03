@@ -299,9 +299,23 @@ const (
 )
 
 type CustomValidators struct {
-	FunctionName    string `json:"functionName" validate:"required"`
+	FunctionName    string `json:"functionName" validate:"required,starts_with_letter"`
 	FullPackageName string `json:"fullPackageName" validate:"required"`
 	ValidateTagName string `json:"validateTagName" validate:"required,starts_with_letter"`
+}
+
+type MiddlewareExecutionType string
+
+const (
+	MiddlewareExecutionBeforeOperation       MiddlewareExecutionType = "beforeOperation"
+	MiddlewareExecutionAfterSucceedOperation MiddlewareExecutionType = "afterSucceedOperation"
+	MiddlewareExecutionOnError               MiddlewareExecutionType = "onError"
+)
+
+type Middleware struct {
+	FullPackageName string                  `json:"fullPackageName" validate:"required"`
+	Execution       MiddlewareExecutionType `json:"execution" validate:"required,oneof=beforeOperation afterSucceedOperation onError"`
+	FunctionName    string                  `json:"functionName" validate:"required,starts_with_letter"`
 }
 
 type RoutesConfig struct {
@@ -312,6 +326,7 @@ type RoutesConfig struct {
 	PackageName         string              `json:"packageName"`
 	CustomValidators    []CustomValidators  `json:"customValidators" validate:"dive"`
 	AuthorizationConfig AuthorizationConfig `json:"authorizationConfig" validate:"required"`
+	Middlewares         []Middleware        `json:"middlewares" validate:"dive"`
 }
 
 type AuthorizationConfig struct {
