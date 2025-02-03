@@ -236,6 +236,7 @@ Happy Coding! 🤓
 - [Authentication](./AUTHENTICATION.md)
 - [Validations](./VALIDATION.md) 
 - [Error handling](./SECURITY.md)
+- [Middlewares](./MIDDLEWARES.md)
 - [Advanced](./ADVANCED.md)
 
 ## Integrating with Golang Rest Routers 

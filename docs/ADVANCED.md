@@ -74,12 +74,7 @@ Your configuration might look like this:
 ...
 "routesConfig": {
     "engine": "gin",
-    "outputPath": "./routes/gin.e2e.gleece.go",
-    "outputFilePerms": "0644",
-    "authorizationConfig": {
-        "authFileFullPackageName": "github.com/gopher-fleece/gleece/e2e/gin/auth",
-        "enforceSecurityOnAllRoutes": true
-    },
+    ...
     "templateOverrides": {
         "ResponseHeaders" : "./assets/gin.custom.response.headers.hbs"
     }
