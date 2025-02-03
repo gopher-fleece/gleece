@@ -22,6 +22,28 @@
 				"functionName": "ValidateStartsWithLetter",
 				"fullPackageName": "github.com/gopher-fleece/gleece/e2e/assets"
 			}
+		],
+		"middlewares": [
+			{
+				"fullPackageName": "github.com/gopher-fleece/gleece/e2e/mux/middlewares",
+				"execution": "beforeOperation",
+				"functionName": "MiddlewareBeforeOperation"
+			},
+			{
+				"fullPackageName": "github.com/gopher-fleece/gleece/e2e/mux/middlewares",
+				"execution": "afterSucceedOperation",
+				"functionName": "MiddlewareAfterSucceedOperation"
+			},
+			{
+				"fullPackageName": "github.com/gopher-fleece/gleece/e2e/mux/middlewares",
+				"execution": "onError",
+				"functionName": "MiddlewareOnError"
+			},
+			{
+				"fullPackageName": "github.com/gopher-fleece/gleece/e2e/mux/middlewares",
+				"execution": "onError",
+				"functionName": "MiddlewareOnError2"
+			}
 		]
 	},
 	"openAPIGeneratorConfig": {
