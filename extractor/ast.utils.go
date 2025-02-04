@@ -476,6 +476,9 @@ func DoesTypeOrInterfaceExistInPackage(
 		return false, definitions.AstNodeKindNone, err
 	}
 
+	if (typeName == nil) || (typeName.Type() == nil) {
+		return false, definitions.AstNodeKindNone, fmt.Errorf("could not find type '%s' in package '%s', are you sure it's included in the 'commonConfig->controllerGlobs' search paths?", ident.Name, packageFullName)
+	}
 	if _, isStruct := typeName.Type().Underlying().(*types.Struct); isStruct {
 		return true, definitions.AstNodeKindStruct, nil
 	}
