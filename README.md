@@ -95,6 +95,7 @@ All other aspects, including HTTP routing generation, authorization enforcement,
 - [Authentication](./docs/AUTHENTICATION.md)
 - [Validations](./docs/VALIDATION.md) 
 - [Error handling](./docs/ERROR_HANDLING.md)
+- [Middlewares](./docs/MIDDLEWARES.md)
 - [Advanced](./docs/ADVANCED.md)
 
 ## 🌐 Integrating with Golang Rest Routers 

@@ -1,12 +1,25 @@
 statusCode := getStatusCode(&controller, {{{HasReturnValue}}}, opError)
 {{#LastTypeNameEquals Responses "error"}}
+	if opError == nil {
+		{{> Middleware isErrorMiddleware=false middlewaresExecution="afterOperationSuccess" }} 
+	}
 	if opError != nil {
+		{{> Middleware isErrorMiddleware=true middlewaresExecution="onError" }} 
 {{else}}
 	{{#LastTypeIsByAddress Responses}}
+		if opError == nil {
+			{{> Middleware isErrorMiddleware=false middlewaresExecution="afterOperationSuccess" }} 
+		}
 		if opError != nil {
+			{{> Middleware isErrorMiddleware=true middlewaresExecution="onError" }} 
 	{{else}}
 		emptyErr := {{GetLastTyeFullyQualified Responses}}{}
+		if opError == emptyErr {
+			{{> Middleware isErrorMiddleware=false middlewaresExecution="afterOperationSuccess" }} 
+		}
 		if opError != emptyErr {
+			{{> Middleware isErrorMiddleware=true middlewaresExecution="onError" }} 
+
 	{{/LastTypeIsByAddress}}
 {{/LastTypeNameEquals}}
 	{{#equal ResponseContentType "application/json"}}

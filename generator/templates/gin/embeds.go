@@ -52,6 +52,9 @@ var JsonErrorResponse string
 //go:embed partials/run.validator.hbs
 var RunValidator string
 
+//go:embed partials/middleware.hbs
+var Middleware string
+
 var Partials = map[string]string{
 	"Imports":                         Imports,
 	"TypeDeclarations":                TypeDeclarations,
@@ -66,4 +69,5 @@ var Partials = map[string]string{
 	"ResponseHeaders":                 ResponseHeaders,
 	"RequestSwitchParamType":          RequestSwitchParamType,
 	"RunValidator":                    RunValidator,
+	"Middleware":                      Middleware,
 }
