@@ -47,7 +47,6 @@
 				"in": "header"
 			}
 		],
-		"defaultSecurity": [],
 		"specGeneratorConfig": {
 			"outputPath": "./dist/swagger.json"
 		}

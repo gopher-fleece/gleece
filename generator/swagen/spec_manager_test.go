@@ -32,8 +32,7 @@ var _ = Describe("Spec Preparing", func() {
 				Title:   "My API",
 				Version: "1.0.0",
 			},
-			BaseURL:              "http://localhost:8080",
-			DefaultRouteSecurity: []definitions.RouteSecurity{},
+			BaseURL: "http://localhost:8080",
 			SpecGeneratorConfig: definitions.SpecGeneratorConfig{
 				OutputPath: outputPath,
 			},
@@ -62,8 +61,7 @@ var _ = Describe("Spec Preparing", func() {
 				Title:   "My API",
 				Version: "1.0.0",
 			},
-			BaseURL:              "http://localhost:8080",
-			DefaultRouteSecurity: []definitions.RouteSecurity{},
+			BaseURL: "http://localhost:8080",
 			SpecGeneratorConfig: definitions.SpecGeneratorConfig{
 				OutputPath: outputPath,
 			},
@@ -128,8 +126,7 @@ var _ = Describe("Spec Preparing", func() {
 				Title:   "My API",
 				Version: "1.0.0",
 			},
-			BaseURL:              "http://localhost:8080",
-			DefaultRouteSecurity: []definitions.RouteSecurity{},
+			BaseURL: "http://localhost:8080",
 		}, defs, models, true)
 
 		// Expect error not to be nil

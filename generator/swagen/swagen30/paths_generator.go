@@ -90,8 +90,8 @@ func generateOperationSecurity(operation *openapi3.Operation, config *definition
 
 	routeSecurity := route.Security
 
-	if len(routeSecurity) == 0 {
-		routeSecurity = config.DefaultRouteSecurity
+	if len(routeSecurity) == 0 && config.DefaultRouteSecurity != nil {
+		routeSecurity = []definitions.RouteSecurity{{SecurityAnnotation: []definitions.SecurityAnnotationComponent{*config.DefaultRouteSecurity}}}
 	}
 
 	for _, security := range routeSecurity {

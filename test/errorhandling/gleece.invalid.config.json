@@ -38,19 +38,13 @@
 				"in": "header"
 			}
 		],
-		"defaultSecurity": [
-			{
-				"securityMethod": [
-					{
-						"name": "sanitySchema",
-						"scopes": [
-							"read",
-							"write"
-						]
-					}
-				]
-			}
-		],
+		"defaultSecurity": {
+			"name": "sanitySchema",
+			"scopes": [
+				"read",
+				"write"
+			]
+		},
 		"specGeneratorConfig": {
 			"outputPath": "./dist/swagger.json"
 		}

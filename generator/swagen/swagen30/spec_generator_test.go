@@ -347,15 +347,9 @@ var _ = Describe("Spec Generator", func() {
 					Description:  "API Key",
 				},
 			},
-			DefaultRouteSecurity: []definitions.RouteSecurity{
-				{
-					SecurityAnnotation: []definitions.SecurityAnnotationComponent{
-						{
-							SchemaName: "ApiKeyAuth",
-							Scopes:     []string{"read"},
-						},
-					},
-				},
+			DefaultRouteSecurity: &definitions.SecurityAnnotationComponent{
+				SchemaName: "ApiKeyAuth",
+				Scopes:     []string{"read"},
 			},
 		}, defs, models)
 
@@ -447,8 +441,7 @@ var _ = Describe("Spec Generator", func() {
 				Title:   "My API",
 				Version: "1.0.0",
 			},
-			BaseURL:              "http://localhost:8080",
-			DefaultRouteSecurity: []definitions.RouteSecurity{},
+			BaseURL: "http://localhost:8080",
 		}, defs, models)
 
 		// Expect error not to be nil

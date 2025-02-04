@@ -40,19 +40,13 @@
 				"in": "header"
 			}
 		],
-		"defaultSecurity": [
-			{
-				"securityMethod": [
-					{
-						"name": "commandlineSchema",
-						"scopes": [
-							"read",
-							"write"
-						]
-					}
-				]
-			}
-		],
+		"defaultSecurity": {
+			"name": "commandlineSchema",
+			"scopes": [
+				"read",
+				"write"
+			]
+		},
 		"specGeneratorConfig": {
 			"outputPath": "./dist/swagger.json"
 		}
