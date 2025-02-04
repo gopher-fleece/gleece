@@ -51,7 +51,7 @@ func (ec *UserController) CreateNewUser(email string, name string, domicile Domi
   - The email query parameter is mandatory
   - The value must be a valid email format
 
-> In REST params, if the value is non-pointer, the parameter will be considered mandatory regardless of the `validate` content.
+> In REST parameters, if the value is non-pointer, the parameter will be considered mandatory regardless of the `validate` content. In the case of a `path` parameter, it will always be considered mandatory as enforced by the OpenAPI specification (a missing path can result in a `404` error).
 
 # Custom Validators
 
