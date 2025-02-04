@@ -28,15 +28,9 @@ var _ = Describe("Swagen", func() {
 					Description:  "API Key Authentication",
 				},
 			},
-			DefaultRouteSecurity: []definitions.RouteSecurity{
-				{
-					SecurityAnnotation: []definitions.SecurityAnnotationComponent{
-						{
-							SchemaName: "apiKeyAuth",
-							Scopes:     []string{},
-						},
-					},
-				},
+			DefaultRouteSecurity: &definitions.SecurityAnnotationComponent{
+				SchemaName: "apiKeyAuth",
+				Scopes:     []string{},
 			},
 		}
 	})

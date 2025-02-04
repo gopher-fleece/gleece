@@ -6,7 +6,16 @@ import (
 )
 
 func (v ControllerVisitor) getDefaultSecurity() []definitions.RouteSecurity {
-	return v.config.OpenAPIGeneratorConfig.DefaultRouteSecurity
+	defaultSecurity := []definitions.RouteSecurity{}
+
+	if v.config.OpenAPIGeneratorConfig.DefaultRouteSecurity == nil {
+		return defaultSecurity
+	}
+
+	defaultSecurity = append(defaultSecurity, definitions.RouteSecurity{
+		SecurityAnnotation: []definitions.SecurityAnnotationComponent{*v.config.OpenAPIGeneratorConfig.DefaultRouteSecurity},
+	})
+	return defaultSecurity
 }
 
 func (v *ControllerVisitor) getSecurityFromContext(holder annotations.AnnotationHolder) ([]definitions.RouteSecurity, error) {

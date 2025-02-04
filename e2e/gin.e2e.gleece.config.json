@@ -80,18 +80,12 @@
 				"in": "header"
 			}
 		],
-		"defaultSecurity": [
-			{
-				"securityMethod": [
-					{
-						"name": "securitySchemaName2",
-						"scopes": [
-							"config"
-						]
-					}
-				]
-			}
-		],
+		"defaultSecurity": {
+			"name": "securitySchemaName2",
+			"scopes": [
+				"config"
+			]
+		},
 		"specGeneratorConfig": {
 			"outputPath": "./gin/dist/swagger.json"
 		}

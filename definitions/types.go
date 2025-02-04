@@ -282,12 +282,12 @@ type OpenAPIInfo struct {
 }
 
 type OpenAPIGeneratorConfig struct {
-	OpenAPI              string                 `json:"openAPI" validate:"required,oneof=3.0.0 3.1.0"` // only 3.0.0 is fully supported
-	Info                 OpenAPIInfo            `json:"info" validate:"required"`
-	BaseURL              string                 `json:"baseUrl" validate:"required,url"`
-	SecuritySchemes      []SecuritySchemeConfig `json:"securitySchemes" validate:"not_nil_array"`
-	DefaultRouteSecurity []RouteSecurity        `json:"defaultSecurity" validate:"not_nil_array"`
-	SpecGeneratorConfig  SpecGeneratorConfig    `json:"specGeneratorConfig" validate:"required"`
+	OpenAPI              string                       `json:"openAPI" validate:"required,oneof=3.0.0 3.1.0"` // only 3.0.0 is fully supported
+	Info                 OpenAPIInfo                  `json:"info" validate:"required"`
+	BaseURL              string                       `json:"baseUrl" validate:"required,url"`
+	SecuritySchemes      []SecuritySchemeConfig       `json:"securitySchemes" validate:"dive"`
+	DefaultRouteSecurity *SecurityAnnotationComponent `json:"defaultSecurity"`
+	SpecGeneratorConfig  SpecGeneratorConfig          `json:"specGeneratorConfig" validate:"required"`
 }
 
 type RoutingEngineType string
@@ -320,12 +320,12 @@ type Middleware struct {
 
 type RoutesConfig struct {
 	Engine              RoutingEngineType   `json:"engine" validate:"required,oneof=gin echo mux"`
-	TemplateOverrides   map[string]string   `json:"templateOverrides"`
+	PackageName         string              `json:"packageName"`
 	OutputPath          string              `json:"outputPath" validate:"required,filepath"`
 	OutputFilePerms     string              `json:"outputFilePerms" validate:"regex=^(0?[0-7]{3})?$"`
-	PackageName         string              `json:"packageName"`
-	CustomValidators    []CustomValidators  `json:"customValidators" validate:"dive"`
 	AuthorizationConfig AuthorizationConfig `json:"authorizationConfig" validate:"required"`
+	TemplateOverrides   map[string]string   `json:"templateOverrides"`
+	CustomValidators    []CustomValidators  `json:"customValidators" validate:"dive"`
 	Middlewares         []Middleware        `json:"middlewares" validate:"dive"`
 }
 
@@ -339,9 +339,9 @@ type CommonConfig struct {
 }
 
 type GleeceConfig struct {
-	OpenAPIGeneratorConfig OpenAPIGeneratorConfig `json:"openAPIGeneratorConfig" validate:"required"`
-	RoutesConfig           RoutesConfig           `json:"routesConfig" validate:"required"`
 	CommonConfig           CommonConfig           `json:"commonConfig" validate:"required"`
+	RoutesConfig           RoutesConfig           `json:"routesConfig" validate:"required"`
+	OpenAPIGeneratorConfig OpenAPIGeneratorConfig `json:"openAPIGeneratorConfig" validate:"required"`
 }
 
 type AstNodeKind string
