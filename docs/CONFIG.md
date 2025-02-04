@@ -4,7 +4,7 @@ The Gleece configuration file, usually named `gleece.config.json`, contains all 
 
 Below are all the options with comments explaining each property:
 
-```json
+```json5
 {
     "commonConfig": { // Mandatory
         "controllerGlobs": [ // Mandatory with minimum one path - These paths are the directories/files where Gleece will search for controllers and types/structs. Defining controllers/types outside these paths will result in them being ignored or cause build errors. In this example, it will search in the entire codebase.
