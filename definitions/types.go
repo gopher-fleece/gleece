@@ -308,13 +308,13 @@ type MiddlewareExecutionType string
 
 const (
 	MiddlewareExecutionBeforeOperation       MiddlewareExecutionType = "beforeOperation"
-	MiddlewareExecutionAfterSucceedOperation MiddlewareExecutionType = "afterSucceedOperation"
+	MiddlewareExecutionAfterOperationSuccess MiddlewareExecutionType = "afterOperationSuccess"
 	MiddlewareExecutionOnError               MiddlewareExecutionType = "onError"
 )
 
 type Middleware struct {
 	FullPackageName string                  `json:"fullPackageName" validate:"required"`
-	Execution       MiddlewareExecutionType `json:"execution" validate:"required,oneof=beforeOperation afterSucceedOperation onError"`
+	Execution       MiddlewareExecutionType `json:"execution" validate:"required,oneof=beforeOperation afterOperationSuccess onError"`
 	FunctionName    string                  `json:"functionName" validate:"required,starts_with_letter"`
 }
 

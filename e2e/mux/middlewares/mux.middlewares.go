@@ -20,11 +20,11 @@ func MiddlewareBeforeOperation(w http.ResponseWriter, r *http.Request) bool {
 	return true
 }
 
-func MiddlewareAfterSucceedOperation(w http.ResponseWriter, r *http.Request) bool {
+func MiddlewareAfterOperationSuccess(w http.ResponseWriter, r *http.Request) bool {
 	w.Header().Set("X-pass-after-succeed-operation", "true")
 
-	abortAfterSucceedOperation := r.Header.Get("abort-after-operation")
-	if abortAfterSucceedOperation == "true" {
+	abortAfterOperationSuccess := r.Header.Get("abort-after-operation")
+	if abortAfterOperationSuccess == "true" {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": "abort-after-operation header is set to true"})
 		return false

@@ -31,8 +31,8 @@
 			},
 			{
 				"fullPackageName": "github.com/gopher-fleece/gleece/e2e/mux/middlewares",
-				"execution": "afterSucceedOperation",
-				"functionName": "MiddlewareAfterSucceedOperation"
+				"execution": "afterOperationSuccess",
+				"functionName": "MiddlewareAfterOperationSuccess"
 			},
 			{
 				"fullPackageName": "github.com/gopher-fleece/gleece/e2e/mux/middlewares",

@@ -1,5 +1,5 @@
 {{#each Middlewares}}
-	{{#equal Execution MiddlewaresExecution }}
+	{{#equal Execution middlewaresExecution }}
 		{{#if isErrorMiddleware}}
 		if continueOperation := MiddlewarePkg{{@index}}.{{{FunctionName}}}(w, ctx, opError); continueOperation == false {
 			return

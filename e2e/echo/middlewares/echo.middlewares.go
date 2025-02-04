@@ -19,11 +19,11 @@ func MiddlewareBeforeOperation(c echo.Context) bool {
 	return true
 }
 
-func MiddlewareAfterSucceedOperation(c echo.Context) bool {
+func MiddlewareAfterOperationSuccess(c echo.Context) bool {
 	c.Response().Header().Set("X-pass-after-succeed-operation", "true")
 
-	abortAfterSucceedOperation := c.Request().Header.Get("abort-after-operation")
-	if abortAfterSucceedOperation == "true" {
+	abortAfterOperationSuccess := c.Request().Header.Get("abort-after-operation")
+	if abortAfterOperationSuccess == "true" {
 		c.JSON(http.StatusBadRequest, map[string]string{"error": "abort-after-operation header is set to true"})
 		return false
 	}

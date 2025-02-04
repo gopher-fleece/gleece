@@ -17,11 +17,11 @@ func MiddlewareBeforeOperation(ctx *gin.Context) bool {
 	return true
 }
 
-func MiddlewareAfterSucceedOperation(ctx *gin.Context) bool {
+func MiddlewareAfterOperationSuccess(ctx *gin.Context) bool {
 	ctx.Header("X-pass-after-succeed-operation", "true")
 
-	abortAfterSucceedOperation := ctx.GetHeader("abort-after-operation")
-	if abortAfterSucceedOperation == "true" {
+	abortAfterOperationSuccess := ctx.GetHeader("abort-after-operation")
+	if abortAfterOperationSuccess == "true" {
 		ctx.JSON(400, gin.H{"error": "abort-after-operation header is set to true"})
 		return false
 	}
