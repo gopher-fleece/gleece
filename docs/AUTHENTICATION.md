@@ -49,22 +49,16 @@ So you can define a default security in the config, override it and set a defaul
 #### Declare security in configuration
 Set the default security in the `gleece.config.json` file.
 
-Add your security to `openAPIGeneratorConfig->defaultSecurity` array.
+Set default security method to `openAPIGeneratorConfig->defaultSecurity`.
 
 For example:
 ```json
-"defaultSecurity": [
-			{
-				"securityMethod": [
-					{
-						"name": "securitySchemaName",
-						"scopes": [
-							"read",
-						]
-					}
-				]
-			}
-		],
+"defaultSecurity": {
+			"name": "securitySchemaName",
+			"scopes": [
+				"read",
+			]
+		}
 ```
 
 #### Declare security in a controller

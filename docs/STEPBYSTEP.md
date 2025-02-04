@@ -69,15 +69,6 @@ Create a basic `Gleece` configuration file named `gleece.config.json`:
 			"title": "Sample API",
 			"description": "This is a sample API",
 			"termsOfService": "http://example.com/terms/",
-			"contact": {
-				"name": "API Support",
-				"url": "http://www.example.com/support",
-				"email": "support@example.com"
-			},
-			"license": {
-				"name": "Apache 2.0",
-				"url": "http://www.apache.org/licenses/LICENSE-2.0.html"
-			},
 			"version": "1.0.0"
 		},
 		"baseUrl": "https://api.example.com",
@@ -90,25 +81,21 @@ Create a basic `Gleece` configuration file named `gleece.config.json`:
 				"in": "header"
 			}
 		],
-		"defaultSecurity": [
-			{
-				"securityMethod": [
-					{
-						"name": "securitySchemaName",
-						"scopes": [
-							"read",
-							"write"
-						]
-					}
-				]
-			}
-		],
+		"defaultSecurity": {
+			"name": "securitySchemaName",
+			"scopes": [
+				"read",
+				"write"
+			]
+		},
 		"specGeneratorConfig": {
 			"outputPath": "./dist/swagger.json"
 		}
 	}
 }
 ```
+
+See the full [configuration](./CONFIG.md) documentation for detailed explanation of all available properties.
 
 ## Authentication Function
 
@@ -237,6 +224,7 @@ Happy Coding! 🤓
 - [Validations](./VALIDATION.md) 
 - [Error handling](./SECURITY.md)
 - [Middlewares](./MIDDLEWARES.md)
+- [Configuration](./CONFIG.md)
 - [Advanced](./ADVANCED.md)
 
 ## Integrating with Golang Rest Routers 
