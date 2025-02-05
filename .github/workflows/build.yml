@@ -36,6 +36,7 @@ jobs:
       - name: 4️⃣ Run tests 🧪
         if: github.ref != 'refs/heads/main'
         run: |
+          go mod tidy
           ginkgo ./...
 
       - name: 5️⃣ Send coverage 📊
