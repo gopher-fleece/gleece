@@ -46,9 +46,9 @@ For example, for `gin`:
 // @Method(GET)
 // @Route(/my-route)
 func (mc *MyController) MyRoute() (string, error) {
-	context := mc.GetContext()
+    context := mc.GetContext()
     // For Gin
-	ginContext := context.(*gin.Context)
+    ginContext := context.(*gin.Context)
     // For Echo
     echoContext := context.(echo.Context)
     // For Fiber
@@ -57,7 +57,7 @@ func (mc *MyController) MyRoute() (string, error) {
     httpRequest := context.(*http.Request)
 
     // Do the advanced logic....
-	return "", nil
+    return "", nil
 }
 ```
 
