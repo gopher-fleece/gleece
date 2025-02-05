@@ -44,6 +44,7 @@ jobs:
         env:
           COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          go mod tidy
           mkdir dist
           go test -covermode atomic -coverpkg=$(go list ./... | grep -vE "/test/|/e2e/" | tr '\n' ',') -coverprofile=dist/covprofile ./...
           goveralls -coverprofile=dist/covprofile -service=github
