@@ -12,12 +12,16 @@
 [![Latest Release](https://img.shields.io/github/v/release/gopher-fleece/gleece)](https://github.com/gopher-fleece/gleece/releases)
 [![Go Reference](https://pkg.go.dev/badge/github.com/gopher-fleece/gleece.svg)](https://pkg.go.dev/github.com/gopher-fleece/gleece)
 
-<!-- Supported standards/frameworks -->
+<!-- Supported standards -->
 [![OpenAPI 3.0](https://img.shields.io/badge/OpenAPI-3.0.0-green.svg)](https://spec.openapis.org/oas/v3.0.0)
 [![OpenAPI 3.1](https://img.shields.io/badge/OpenAPI-3.1.0-green.svg)](https://spec.openapis.org/oas/v3.1.0)
+
+<!-- Supported frameworks -->
 [![Gin Support](https://img.shields.io/badge/Gin-Supported-blue)](https://gin-gonic.com/)
 [![Echo Support](https://img.shields.io/badge/Echo-Supported-blue)](https://echo.labstack.com/)
 [![Gorilla Mux Support](https://img.shields.io/badge/Gorilla_Mux-Supported-blue)](https://github.com/gorilla/mux)
+[![Chi Support](https://img.shields.io/badge/Chi-Supported-blue)](https://github.com/go-chi/chi)
+[![Fiber Support](https://img.shields.io/badge/Fiber-Supported-blue)](https://github.com/gofiber/fiber)
 
 <!-- Social -->
 [![GitHub stars](https://img.shields.io/github/stars/gopher-fleece/gleece.svg?style=social&label=Stars)](https://github.com/gopher-fleece/gleece/stargazers) 
@@ -37,7 +41,7 @@ With Gleece, you can:
 - 🎯 Ensure your APIs are always **well-documented and consistent**.  
 - ✅ **Validate input data** effortlessly to keep your APIs robust and secure.
 - 🛡 **Security first** approach, easy authorization with supplied check function.
-- ⚡️ Choose Your Framework - seamlessly works with **Gin, Echo & Gorilla Mux** Rest frameworks
+- ⚡️ Choose Your Framework - seamlessly works with **Gin, Echo, Gorilla Mux, Chi, & Fiber** Rest frameworks
 
 Gleece aims to make Go developers’ lives easier by seamlessly integrating API routes, validation, and documentation into a single cohesive workflow.
 
@@ -101,9 +105,11 @@ All other aspects, including HTTP routing generation, authorization enforcement,
 
 ## 🌐 Integrating with Golang Rest Routers 
 
-- [Gin](./docs/GIN_INTEGRATION.md)
-- [Echo](./docs/ECHO_INTEGRATION.md)
-- [Gorilla Mux](./docs/MUX_INTEGRATION.md)
+- [Gin](./docs/routers/GIN_INTEGRATION.md)
+- [Echo](./docs/routers/ECHO_INTEGRATION.md)
+- [Gorilla Mux](./docs/routers/MUX_INTEGRATION.md)
+- [Chi](./docs/routers/CHI_INTEGRATION.md)
+- [Fiber](./docs/routers/FIBER_INTEGRATION.md)
 
 
 For a complete example project using Gleece, check out the [Gleece Example Project](https://github.com/gopher-fleece/gleecexample#readme). This project demonstrates how to set up and use Gleece in a real-world scenario, providing you with a practical reference to get started quickly.

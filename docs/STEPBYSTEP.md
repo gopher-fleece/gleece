@@ -229,6 +229,8 @@ Happy Coding! 🤓
 
 ## Integrating with Golang Rest Routers 
 
-- [Gin](./GIN_INTEGRATION.md)
-- [Echo](./ECHO_INTEGRATION.md)
-- [Gorilla Mux](./MUX_INTEGRATION.md)
+- [Gin](./routers/GIN_INTEGRATION.md)
+- [Echo](./routers/ECHO_INTEGRATION.md)
+- [Gorilla Mux](./routers/MUX_INTEGRATION.md)
+- [Chi](./routers/CHI_INTEGRATION.md)
+- [Fiber](./routers/FIBER_INTEGRATION.md)

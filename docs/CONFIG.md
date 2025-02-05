@@ -13,7 +13,7 @@ Below are all the options with comments explaining each property:
         ]
     },
     "routesConfig": { // Mandatory
-        "engine": "gin", // Mandatory - The router engine to generate routes for. Available options: "gin", "echo", "mux"
+        "engine": "gin", // Mandatory - The router engine to generate routes for. Available options: "gin", "echo", "mux", "chi", "fiber"
         "packageName": "<package name>", // Optional - Set the package name of the generated routes. Default is "routes"
         "outputPath": "./routes/gleece.routes.go", // Mandatory - The path of the generated routes
         "outputFilePerms": "0644", // Optional - Set Linux permissions for the generated routes go file

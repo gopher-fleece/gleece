@@ -1,6 +1,7 @@
 package e2e
 
 import (
+	"github.com/gopher-fleece/gleece/e2e/common"
 	. "github.com/onsi/ginkgo/v2"
 )
 
@@ -8,7 +9,7 @@ var _ = Describe("E2E Controller Spec", func() {
 
 	It("Should return status code 200 for response with payload", func() {
 
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:            "Should return status code 200 for response with payload",
 			ExpectedStatus:  200,
 			ExpectedBody:    "\"works\"",
@@ -22,7 +23,7 @@ var _ = Describe("E2E Controller Spec", func() {
 	})
 
 	It("Should return status code 204 for with payload get", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:            "Should return status code 204 for with payload get",
 			ExpectedStatus:  204,
 			ExpectedBody:    "",
@@ -36,7 +37,7 @@ var _ = Describe("E2E Controller Spec", func() {
 	})
 
 	It("Should return status code 204 for explicit set status", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:                "Should return status code 204 for explicit set status",
 			ExpectedStatus:      204,
 			ExpectedBodyContain: "",
@@ -50,7 +51,7 @@ var _ = Describe("E2E Controller Spec", func() {
 	})
 
 	It("Should return status code 200 for explicit set status", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:            "Should return status code 200 for explicit set status",
 			ExpectedStatus:  200,
 			ExpectedBody:    "",
@@ -64,7 +65,7 @@ var _ = Describe("E2E Controller Spec", func() {
 	})
 
 	It("Should set custom header", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:            "Should set custom header",
 			ExpectedStatus:  200,
 			ExpectedBody:    "\"works\"",
@@ -78,7 +79,7 @@ var _ = Describe("E2E Controller Spec", func() {
 	})
 
 	It("Should response payload with string", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:            "Should response payload with string",
 			ExpectedStatus:  200,
 			ExpectedBody:    "\"works\"",
@@ -92,7 +93,7 @@ var _ = Describe("E2E Controller Spec", func() {
 	})
 
 	It("Should response payload with empty string", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:            "Should response payload with empty string",
 			ExpectedStatus:  200,
 			ExpectedBody:    "\"\"",
@@ -106,7 +107,7 @@ var _ = Describe("E2E Controller Spec", func() {
 	})
 
 	It("Should response payload string pointer payload", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:            "Should response payload string pointer payload",
 			ExpectedStatus:  200,
 			ExpectedBody:    "\"ptr\"",
@@ -120,7 +121,7 @@ var _ = Describe("E2E Controller Spec", func() {
 	})
 
 	It("Should response payload with null string", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:            "Should response payload with null string",
 			ExpectedStatus:  200,
 			ExpectedBody:    "null",
@@ -134,7 +135,7 @@ var _ = Describe("E2E Controller Spec", func() {
 	})
 
 	It("Should response object payload", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:            "Should response object payload",
 			ExpectedStatus:  200,
 			ExpectedBody:    "{\"data\":\"BodyResponse\"}",
@@ -148,7 +149,7 @@ var _ = Describe("E2E Controller Spec", func() {
 	})
 
 	It("Should response object pointer payload", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:            "Should response object pointer payload",
 			ExpectedStatus:  200,
 			ExpectedBody:    "{\"data\":\"BodyResponse\"}",
@@ -162,7 +163,7 @@ var _ = Describe("E2E Controller Spec", func() {
 	})
 
 	It("Should response object pointer payload", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:            "Should response object pointer payload",
 			ExpectedStatus:  200,
 			ExpectedBody:    "{\"data\":\"BodyResponse\"}",
@@ -176,7 +177,7 @@ var _ = Describe("E2E Controller Spec", func() {
 	})
 
 	It("Should response object null payload with null", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:            "Should response object null payload with null",
 			ExpectedStatus:  200,
 			ExpectedBody:    "null",
@@ -190,7 +191,7 @@ var _ = Describe("E2E Controller Spec", func() {
 	})
 
 	It("Should allow custom context pass", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:            "Should allow custom context pass",
 			ExpectedStatus:  204,
 			ExpectedBody:    "",

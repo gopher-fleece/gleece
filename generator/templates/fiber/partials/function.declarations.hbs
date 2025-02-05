@@ -1,0 +1,124 @@
+func getStatusCode(controller external.Controller, hasReturnValue bool, err error) int {
+	if controller.GetStatus() != nil {
+		return int(*controller.GetStatus())
+	} 
+
+	if err != nil {
+		return http.StatusInternalServerError
+	}
+
+	if hasReturnValue {
+		return http.StatusOK
+	}
+
+	return http.StatusNoContent
+}
+
+func bindAndValidateBody[TOutput any](ctx *fiber.Ctx, contentType string, validation string, output **TOutput) error {
+	var err error
+	bodyBytes := ctx.Body()
+
+	if len(bodyBytes) == 0 {
+		if strings.Contains(validation, "required") {
+			return fmt.Errorf("body is required but was not provided")
+		}
+		return nil
+	}
+
+	var deserializedOutput TOutput
+
+	switch contentType {
+	case "application/json":
+		err = json.Unmarshal(bodyBytes, &deserializedOutput)
+	default:
+		return fmt.Errorf("content-type %s is not currently supported by the validation subsystem", contentType)
+	}
+
+	if err != nil {
+		return err
+	}
+
+	if err = validatorInstance.Struct(&deserializedOutput); err != nil {
+		return err
+	}
+
+	*output = &deserializedOutput
+	return nil
+}
+
+func toFiberUrl(url string) string {
+	processedUrl := urlParamRegex.ReplaceAllString(url, ":$1")
+	processedUrl = strings.ReplaceAll(processedUrl, "//", "/")
+	if processedUrl == "" {
+		return "/"
+	}
+
+	if !strings.HasPrefix(processedUrl, "/") {
+		processedUrl = "/" + processedUrl
+	}
+
+	return processedUrl
+}
+
+func authorize(ctx *fiber.Ctx, checksLists []SecurityCheckList) *external.SecurityError {
+	var lastError *external.SecurityError
+
+	for _, list := range checksLists {
+		if list.Relation != SecurityListRelationAnd {
+			panic(
+				"Encountered a security list relation of type '%s' - this is unexpected and indicates a bug in Gleece itself." +
+					"Please open an issue at https://github.com/gopher-fleece/gleece/issues",
+			)
+		}
+
+		// Iterate over each security list
+		encounteredErrorInList := false
+		for _, check := range list.Checks {
+			secErr := RequestAuth.GleeceRequestAuthorization(ctx, check)
+			if secErr != nil {
+				lastError = secErr
+				encounteredErrorInList = true
+				break
+			}
+		}
+
+		// If no error was encountered, validation is considered successful
+		// otherwise, we continue over to the next iteration whilst keeping track of the last error
+		if !encounteredErrorInList {
+			return nil
+		}
+	}
+
+	// If we got here it means authentication has failed
+	return lastError
+}
+
+func handleAuthorizationError(ctx *fiber.Ctx, authErr *external.SecurityError, operationId string) error {
+	statusCode := int(authErr.StatusCode)
+	if authErr.CustomError != nil {
+		// For now, we support JSON only
+		return ctx.Status(statusCode).JSON(authErr.CustomError.Payload)
+		
+	} 
+	stdError := external.Rfc7807Error{
+		Type:     http.StatusText(statusCode),
+		Detail:   authErr.Message,
+		Status:   statusCode,
+		Instance: "/gleece/authorization/error/" + operationId,
+	}
+	return ctx.Status(statusCode).JSON(stdError)
+}
+
+func wrapValidatorError(validatorErr error, operationId string, fieldName string) external.Rfc7807Error {
+	return external.Rfc7807Error{
+		Type:       http.StatusText(http.StatusUnprocessableEntity),
+		Detail:     fmt.Sprintf(
+			"A request was made to operation '%s' but parameter '%s' did not pass validation - %s",
+			operationId,
+			fieldName,
+			validation.ExtractValidationErrorMessage(validatorErr, &fieldName),
+		),
+		Status:     http.StatusUnprocessableEntity,
+		Instance:   fmt.Sprintf("/gleece/validation/error/%s", operationId),
+	}
+}

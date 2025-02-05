@@ -1,0 +1,15 @@
+{{#LastTypeNameEquals Responses "error"}}
+
+stdError := external.Rfc7807Error{
+	Type:       http.StatusText(statusCode),
+	Detail:     "Encountered an error during operation '{{{OperationId}}}'",
+	Status:     statusCode,
+	Instance:   "/gleece/controller/error/{{{OperationId}}}",
+	Extensions: map[string]string{"error": opError.Error()},
+}
+w.WriteHeader(statusCode)
+json.NewEncoder(w).Encode(stdError)
+{{else}}
+w.WriteHeader(statusCode)
+json.NewEncoder(w).Encode(opError)
+{{/LastTypeNameEquals}}

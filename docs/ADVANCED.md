@@ -51,7 +51,9 @@ func (mc *MyController) MyRoute() (string, error) {
 	ginContext := context.(*gin.Context)
     // For Echo
     echoContext := context.(echo.Context)
-    // For Gorilla Mux
+    // For Fiber
+    fiberContext := context.(*fiber.Ctx)
+    // For Gorilla Mux & Chi
     httpRequest := context.(*http.Request)
 
     // Do the advanced logic....

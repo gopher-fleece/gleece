@@ -1,0 +1,40 @@
+import (
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"strconv"
+	"strings"
+	"reflect"
+	"regexp"
+	"github.com/go-playground/validator/v10"
+	"github.com/go-chi/chi/v5"
+	"github.com/gopher-fleece/gleece/external"
+	"github.com/gopher-fleece/gleece/infrastructure/validation"
+	RequestAuth "{{{AuthConfig.AuthFileFullPackageName}}}"
+
+{{#each Controllers}}
+	{{{Name}}}Import "{{{FullyQualifiedPackage}}}"
+	{{#each Routes}}
+		{{#each FuncParams}}
+			{{#if TypeMeta.FullyQualifiedPackage}}
+				Param{{{UniqueImportSerial}}}{{{Name}}} "{{{TypeMeta.FullyQualifiedPackage}}}"
+			{{/if}}
+		{{/each}}
+		{{#each Responses}}
+			{{#if FullyQualifiedPackage}}
+				Response{{{UniqueImportSerial}}}{{{Name}}} "{{{FullyQualifiedPackage}}}"
+			{{/if}}
+		{{/each}}
+	{{/each}}
+{{/each}}
+{{!-- Import Validators --}}
+{{#each CustomValidators}}
+		CustomValidatorPkg{{@index}} "{{{FullPackageName}}}"
+{{/each}}
+
+{{!-- Import Middlewares --}}
+{{#each Middlewares}}
+		MiddlewarePkg{{@index}} "{{{FullPackageName}}}"
+{{/each}}
+)

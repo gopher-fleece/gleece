@@ -1,0 +1,13 @@
+{{#each Middlewares}}
+	{{#equal Execution middlewaresExecution }}
+		{{#if isErrorMiddleware}}
+		if continueOperation := MiddlewarePkg{{@index}}.{{{FunctionName}}}(w, ctx, opError); continueOperation == false {
+			return
+		}
+		{{else}}
+		if continueOperation := MiddlewarePkg{{@index}}.{{{FunctionName}}}(w, ctx); continueOperation == false {
+			return
+		}
+		{{/if}}
+	{{/equal}}
+{{/each}}

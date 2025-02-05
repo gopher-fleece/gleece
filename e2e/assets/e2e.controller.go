@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 	"github.com/gopher-fleece/gleece/external"
 	"github.com/labstack/echo/v4"
 )
@@ -304,6 +305,9 @@ func (ec *E2EController) ContextAccess() error {
 	case echo.Context:
 		echoContext := context.(echo.Context)
 		echoContext.Response().Header().Set("x-context-pass", "true")
+	case *fiber.Ctx:
+		fiberContext := context.(*fiber.Ctx)
+		fiberContext.Set("x-context-pass", "true")
 	case *http.Request:
 		httpRequest := context.(*http.Request)
 		ec.SetHeader("x-context-host", httpRequest.Host)

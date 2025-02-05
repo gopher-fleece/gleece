@@ -1,0 +1,8 @@
+{{#equal HasReturnValue true}}
+	return ctx.Status(statusCode).JSON(value)
+{{/equal}}
+{{#equal HasReturnValue false}}
+	ctx.Set("Content-Type", "application/json")
+	ctx.Status(statusCode)
+	return nil
+{{/equal}}

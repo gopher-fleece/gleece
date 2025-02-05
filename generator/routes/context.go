@@ -50,7 +50,7 @@ func GetTemplateContext(
 	} else {
 		ctx.CustomValidators = []definitions.CustomValidators{}
 	}
-	ctx.GenerationDate = time.Now().Format(time.RFC822)
+	ctx.GenerationDate = time.Now().Format(time.DateOnly)
 
 	ctx.Middlewares = config.Middlewares
 

@@ -1,13 +1,14 @@
 package e2e
 
 import (
+	"github.com/gopher-fleece/gleece/e2e/common"
 	. "github.com/onsi/ginkgo/v2"
 )
 
 var _ = Describe("E2E Middlewares Spec", func() {
 
 	It("Should pass succeeded middlewares", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:                "Should pass succeeded middlewares",
 			ExpectedStatus:      200,
 			ExpectedBodyContain: "works",
@@ -25,7 +26,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 	})
 
 	It("Should pass failed middlewares for default error", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:           "Should pass failed middlewares for default error",
 			ExpectedStatus: 500,
 			ExpectedBody:   "",
@@ -43,7 +44,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 	})
 
 	It("Should pass failed middlewares for default error with payload", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:           "Should pass failed middlewares for default error with payload",
 			ExpectedStatus: 500,
 			ExpectedBody:   "",
@@ -61,7 +62,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 	})
 
 	It("Should pass failed middlewares for custom error", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:           "Should pass failed middlewares for custom error",
 			ExpectedStatus: 500,
 			ExpectedBody:   "",
@@ -79,7 +80,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 	})
 
 	It("Should abort on before operation middlewares", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:                "Should abort on before operation middlewares",
 			ExpectedStatus:      400,
 			ExpectedBodyContain: "abort-before-operation header is set to true",
@@ -97,7 +98,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 	})
 
 	It("Should abort on after operation middlewares", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:                "Should abort on after operation middlewares",
 			ExpectedStatus:      400,
 			ExpectedBodyContain: "abort-after-operation header is set to true",
@@ -115,7 +116,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 	})
 
 	It("Should abort on error operation middlewares", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:                "Should abort on error operation middlewares",
 			ExpectedStatus:      400,
 			ExpectedBodyContain: "abort-on-error header is set to true default error",
@@ -133,7 +134,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 	})
 
 	It("Should abort on custom error operation middlewares", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:                "Should abort on custom error operation middlewares",
 			ExpectedStatus:      400,
 			ExpectedBodyContain: "abort-on-error header is set to true custom error",
@@ -151,7 +152,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 	})
 
 	It("Should run all on error operation middlewares", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:           "Should run all on error operation middlewares",
 			ExpectedStatus: 500,
 			ExpectedBody:   "",
@@ -170,7 +171,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 	})
 
 	It("Should abort on after operation middlewares and skip next middleware", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:                "Should abort on after operation middlewares and skip next middleware",
 			ExpectedStatus:      400,
 			ExpectedBodyContain: "abort-after-operation header is set to true",

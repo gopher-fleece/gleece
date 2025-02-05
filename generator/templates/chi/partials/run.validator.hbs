@@ -1,0 +1,9 @@
+{{#if Validator}}
+    if validatorErr := validatorInstance.Var({{ToLowerCamel Name}}RawPtr, "{{Validator}}"); validatorErr != nil {
+        fieldName := "{{ToLowerCamel Name}}"
+		validationError := wrapValidatorError(validatorErr, "{{{OperationId}}}", fieldName)
+        w.WriteHeader(http.StatusUnprocessableEntity)
+		json.NewEncoder(w).Encode(validationError)
+        return
+    }
+{{/if}}
