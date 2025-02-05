@@ -142,7 +142,20 @@ func GleeceRequestAuthorization(ctx *gin.Context, check external.SecurityCheck) 
 }
 ```
 
-For Gorilla's `Mux`
+For `Fiber`
+```go
+import (
+	"github.com/gofiber/fiber/v2"
+
+	"github.com/gopher-fleece/gleece/external"
+)
+
+func GleeceRequestAuthorization(ctx *fiber.Ctx, check external.SecurityCheck) *external.SecurityError {
+    return nil
+}
+```
+
+For Gorilla's `Mux` and `chi`
 ```go
 import (
 	"net/http"

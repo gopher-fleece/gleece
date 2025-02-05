@@ -2,12 +2,13 @@ package e2e
 
 import (
 	"github.com/gopher-fleece/gleece/e2e/assets"
+	"github.com/gopher-fleece/gleece/e2e/common"
 	. "github.com/onsi/ginkgo/v2"
 )
 
 var _ = Describe("E2E Routing Spec", func() {
 	It("Should return status code 200 for simple get", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:            "Should return status code 200 for simple get",
 			ExpectedStatus:  200,
 			ExpectedBody:    "\"works\"",
@@ -21,7 +22,7 @@ var _ = Describe("E2E Routing Spec", func() {
 	})
 
 	It("Should set custom template header", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:           "Should set custom template header",
 			ExpectedStatus: 200,
 			ExpectedBody:   "\"works\"",
@@ -38,7 +39,7 @@ var _ = Describe("E2E Routing Spec", func() {
 	})
 
 	It("Should use custom validator", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:            "Should use custom validator - valid header",
 			ExpectedStatus:  200,
 			ExpectedBody:    "\"headerParam\"",
@@ -52,7 +53,7 @@ var _ = Describe("E2E Routing Spec", func() {
 			},
 		})
 
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:                "Should use custom validator - invalid header",
 			ExpectedStatus:      422,
 			ExpectedBodyContain: "Field 'headerParam' failed validation with tag 'validate_starts_with_letter'",
@@ -68,7 +69,7 @@ var _ = Describe("E2E Routing Spec", func() {
 	})
 
 	It("Should return status code 200 for get with all params in use", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:            "Should return status code 200 for get with all params in use",
 			ExpectedStatus:  200,
 			ExpectedBody:    "\"pathParamqueryParamheaderParam\"",
@@ -84,7 +85,7 @@ var _ = Describe("E2E Routing Spec", func() {
 	})
 
 	It("Should return status code 200 for get with all params ptr", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:            "Should return status code 200 for get with all params ptr",
 			ExpectedStatus:  200,
 			ExpectedBody:    "\"pathParamqueryParamheaderParam\"",
@@ -100,7 +101,7 @@ var _ = Describe("E2E Routing Spec", func() {
 	})
 
 	It("Should return status code 200 for get with all params empty ptr", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:            "Should return status code 200 for get with all params empty ptr",
 			ExpectedStatus:  200,
 			ExpectedBody:    "\"pathParam\"",
@@ -114,7 +115,7 @@ var _ = Describe("E2E Routing Spec", func() {
 	})
 
 	It("Should return status code 422 for get with all params empty ptr", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:                "Should return status code 422 for get with all params empty ptr - missing header",
 			ExpectedStatus:      422,
 			ExpectedBodyContain: "A request was made to operation 'GetWithAllParamsRequiredPtr' but parameter 'headerParam' did not pass validation - Field 'headerParam' failed validation with tag 'required'",
@@ -126,7 +127,7 @@ var _ = Describe("E2E Routing Spec", func() {
 			Headers:             nil,
 		})
 
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:                "Should return status code 422 for get with all params empty ptr - missing query",
 			ExpectedStatus:      422,
 			ExpectedBodyContain: "A request was made to operation 'GetWithAllParamsRequiredPtr' but parameter 'queryParam' did not pass validation - Field 'queryParam' failed validation with tag 'required'",
@@ -142,7 +143,7 @@ var _ = Describe("E2E Routing Spec", func() {
 	})
 
 	It("Should return status code 200 for get with all params with body", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:            "Should return status code 200 for get with all params with body",
 			ExpectedStatus:  200,
 			ExpectedBody:    "{\"bodyParam\":\"queryParamheaderParamthebody\"}",
@@ -158,7 +159,7 @@ var _ = Describe("E2E Routing Spec", func() {
 	})
 
 	It("Should return status code 422 for missing body", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:                "Should return status code 422 for missing body",
 			ExpectedStatus:      422,
 			ExpectedBodyContain: "A request was made to operation 'PostWithAllParamsWithBody' but body parameter 'theBody' did not pass validation of 'BodyInfo' - body is required but was not provided",
@@ -174,7 +175,7 @@ var _ = Describe("E2E Routing Spec", func() {
 	})
 
 	It("Should return status code 200 for get with all params with body ptr", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:            "Should return status code 200 for get with all params with body ptr",
 			ExpectedStatus:  200,
 			ExpectedBody:    "{\"bodyParam\":\"queryParamheaderParamthebody\"}",
@@ -188,7 +189,7 @@ var _ = Describe("E2E Routing Spec", func() {
 			},
 		})
 
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:            "Should return status code 200 for get with all params with body ptr - empty body",
 			ExpectedStatus:  200,
 			ExpectedBody:    "{\"bodyParam\":\"queryParamheaderParamempty\"}",
@@ -204,7 +205,7 @@ var _ = Describe("E2E Routing Spec", func() {
 	})
 
 	It("Should return status code 200 for get with all params with body required ptr", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:                "Should return status code 200 for get with all params with body required ptr - missing body",
 			ExpectedStatus:      422,
 			ExpectedBodyContain: "A request was made to operation 'PostWithAllParamsWithBodyRequiredPtr' but body parameter 'theBody' did not pass validation of 'BodyInfo' - body is required but was not provided",
@@ -218,7 +219,7 @@ var _ = Describe("E2E Routing Spec", func() {
 			},
 		})
 
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:                "Should return status code 200 for get with all params with body required ptr - empty body",
 			ExpectedStatus:      422,
 			ExpectedBodyContain: "A request was made to operation 'PostWithAllParamsWithBodyRequiredPtr' but body parameter 'theBody' did not pass validation of 'BodyInfo' - Field 'BodyParam' failed validation with tag 'required'.",
@@ -232,7 +233,7 @@ var _ = Describe("E2E Routing Spec", func() {
 			},
 		})
 
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:                "Should return status code 200 for get with all params with body required ptr - invalid body",
 			ExpectedStatus:      422,
 			ExpectedBodyContain: "cannot unmarshal number into Go struct field BodyInfo.bodyParam of type string",
@@ -246,7 +247,7 @@ var _ = Describe("E2E Routing Spec", func() {
 			},
 		})
 
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:                "Should return status code 200 for get with all params with body required ptr - empty body with validation",
 			ExpectedStatus:      422,
 			ExpectedBodyContain: "Field 'BodyParam' failed validation with tag 'required'",
@@ -262,7 +263,7 @@ var _ = Describe("E2E Routing Spec", func() {
 	})
 
 	It("Should handle GET request", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:           "Should handle GET request",
 			ExpectedStatus: 204,
 			ExpectedBody:   "",
@@ -278,7 +279,7 @@ var _ = Describe("E2E Routing Spec", func() {
 	})
 
 	It("Should handle POST request", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:           "Should handle POST request",
 			ExpectedStatus: 204,
 			ExpectedBody:   "",
@@ -294,7 +295,7 @@ var _ = Describe("E2E Routing Spec", func() {
 	})
 
 	It("Should handle PUT request", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:           "Should handle PUT request",
 			ExpectedStatus: 204,
 			ExpectedBody:   "",
@@ -310,7 +311,7 @@ var _ = Describe("E2E Routing Spec", func() {
 	})
 
 	It("Should handle DELETE request", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:           "Should handle DELETE request",
 			ExpectedStatus: 204,
 			ExpectedBody:   "",
@@ -326,7 +327,7 @@ var _ = Describe("E2E Routing Spec", func() {
 	})
 
 	It("Should handle PATCH request", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:           "Should handle PATCH request",
 			ExpectedStatus: 204,
 			ExpectedBody:   "",

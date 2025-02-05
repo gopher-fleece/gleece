@@ -1,0 +1,4 @@
+for key, value := range controller.GetHeaders() {
+	w.Header().Set(key, value)
+}
+w.Header().Set("x-inject", "true")

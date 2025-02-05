@@ -20,11 +20,16 @@ func MyMiddleware(ctx *gin.Context) bool {
 }
 
 // For echo
-func MyMiddleware(c echo.Context) bool {
+func MyMiddleware(ctx echo.Context) bool {
 	return true
 }
 
-// For Gorilla Mux
+// For Fiber
+func MyMiddleware(ctx *fiber.Ctx) bool {
+	return true
+}
+
+// For Gorilla Mux & Chi
 func MyMiddleware(w http.ResponseWriter, r *http.Request) bool {
 	return true
 }
@@ -44,6 +49,11 @@ func MyErrorMiddleware(c echo.Context, err error) bool {
 
 // For Gorilla Mux
 func MyErrorMiddleware(w http.ResponseWriter, r *http.Request, err error) bool {
+	return true
+}
+
+// For Fiber
+func MyMiddleware(ctx *fiber.Ctx, err error) bool {
 	return true
 }
 ```

@@ -293,9 +293,11 @@ type OpenAPIGeneratorConfig struct {
 type RoutingEngineType string
 
 const (
-	RoutingEngineGin  RoutingEngineType = "gin"
-	RoutingEngineEcho RoutingEngineType = "echo"
-	RoutingEngineMux  RoutingEngineType = "mux"
+	RoutingEngineGin   RoutingEngineType = "gin"
+	RoutingEngineEcho  RoutingEngineType = "echo"
+	RoutingEngineMux   RoutingEngineType = "mux"
+	RoutingEngineFiber RoutingEngineType = "fiber"
+	RoutingEngineChi   RoutingEngineType = "chi"
 )
 
 type CustomValidators struct {
@@ -319,7 +321,7 @@ type Middleware struct {
 }
 
 type RoutesConfig struct {
-	Engine              RoutingEngineType   `json:"engine" validate:"required,oneof=gin echo mux"`
+	Engine              RoutingEngineType   `json:"engine" validate:"required,oneof=gin echo mux fiber chi"`
 	PackageName         string              `json:"packageName"`
 	OutputPath          string              `json:"outputPath" validate:"required,filepath"`
 	OutputFilePerms     string              `json:"outputFilePerms" validate:"regex=^(0?[0-7]{3})?$"`

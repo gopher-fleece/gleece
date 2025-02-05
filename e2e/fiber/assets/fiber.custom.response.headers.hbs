@@ -1,0 +1,4 @@
+for key, value := range controller.GetHeaders() {
+	ctx.Set(key, value)
+}
+ctx.Set("x-inject", "true")

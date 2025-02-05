@@ -1,13 +1,14 @@
 package e2e
 
 import (
+	"github.com/gopher-fleece/gleece/e2e/common"
 	. "github.com/onsi/ginkgo/v2"
 )
 
 var _ = Describe("E2E Authorization Spec", func() {
 
 	It("Should as default use class' security", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:                "Should as default use class' security",
 			ExpectedStatus:      200,
 			ExpectedBodyContain: "securitySchemaNameclass",
@@ -21,7 +22,7 @@ var _ = Describe("E2E Authorization Spec", func() {
 	})
 
 	It("Should override default class' security", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:                "Should override default class' security",
 			ExpectedStatus:      200,
 			ExpectedBodyContain: "securitySchemaNamemethod",
@@ -35,7 +36,7 @@ var _ = Describe("E2E Authorization Spec", func() {
 	})
 
 	It("Should as default use config security", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:                "Should as default use config security",
 			ExpectedStatus:      200,
 			ExpectedBodyContain: "securitySchemaName2config",
@@ -49,7 +50,7 @@ var _ = Describe("E2E Authorization Spec", func() {
 	})
 
 	It("Should override default config security", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:                "Should override default config security",
 			ExpectedStatus:      200,
 			ExpectedBodyContain: "securitySchemaNameother",
@@ -63,7 +64,7 @@ var _ = Describe("E2E Authorization Spec", func() {
 	})
 
 	It("Should fail one security check", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:            "Should fail one security check",
 			ExpectedStatus:  401,
 			ExpectedBody:    "{\"type\":\"Unauthorized\",\"title\":\"\",\"detail\":\"Failed to authorize\",\"status\":401,\"instance\":\"/gleece/authorization/error/WithOneSecurity\",\"extensions\":null}",
@@ -79,7 +80,7 @@ var _ = Describe("E2E Authorization Spec", func() {
 	})
 
 	It("Should not fail on other security check", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:                "Should not fail on other security check",
 			ExpectedStatus:      200,
 			ExpectedBodyContain: "securitySchemaNameother",
@@ -95,7 +96,7 @@ var _ = Describe("E2E Authorization Spec", func() {
 	})
 
 	It("Should not fail by only first security check", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:                "Should not fail by only first security check",
 			ExpectedStatus:      200,
 			ExpectedBodyContain: "securitySchemaName2write",
@@ -111,7 +112,7 @@ var _ = Describe("E2E Authorization Spec", func() {
 	})
 
 	It("Should not fail by only second security check", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:                "Should not fail by only second security check",
 			ExpectedStatus:      200,
 			ExpectedBodyContain: "securitySchemaNameother",
@@ -127,7 +128,7 @@ var _ = Describe("E2E Authorization Spec", func() {
 	})
 
 	It("Should fail by both security check", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:            "Should fail by both security check",
 			ExpectedStatus:  401,
 			ExpectedBody:    "{\"type\":\"Unauthorized\",\"title\":\"\",\"detail\":\"Failed to authorize\",\"status\":401,\"instance\":\"/gleece/authorization/error/WithTwoSecuritySameMethod\",\"extensions\":null}",
@@ -143,7 +144,7 @@ var _ = Describe("E2E Authorization Spec", func() {
 	})
 
 	It("Should pass if both security passes check", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:                "Should pass if both security passes check",
 			ExpectedStatus:      200,
 			ExpectedBodyContain: "securitySchemaNameother",
@@ -157,7 +158,7 @@ var _ = Describe("E2E Authorization Spec", func() {
 	})
 
 	It("Should allow set custom auth code", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:                "Should allow set custom auth code",
 			ExpectedStatus:      403,
 			ExpectedBodyContain: "Failed to authorize\",\"status\":403",
@@ -174,7 +175,7 @@ var _ = Describe("E2E Authorization Spec", func() {
 	})
 
 	It("Should allow set custom auth code and error", func() {
-		RunRouterTest(RouterTest{
+		RunRouterTest(common.RouterTest{
 			Name:            "Should allow set custom auth code and error",
 			ExpectedStatus:  403,
 			ExpectedBody:    "{\"message\":\"Custom error message\",\"description\":\"Custom error description\"}",

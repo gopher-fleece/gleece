@@ -12,7 +12,9 @@ import (
 
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/generator/compilation"
+	"github.com/gopher-fleece/gleece/generator/templates/chi"
 	"github.com/gopher-fleece/gleece/generator/templates/echo"
+	"github.com/gopher-fleece/gleece/generator/templates/fiber"
 	"github.com/gopher-fleece/gleece/generator/templates/gin"
 	"github.com/gopher-fleece/gleece/generator/templates/mux"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
@@ -33,6 +35,10 @@ func dumpContext(ctx any) {
 func registerHelpers() {
 	raymond.RegisterHelper("ToLowerCamel", func(arg string) string {
 		return strcase.ToLowerCamel(arg)
+	})
+
+	raymond.RegisterHelper("ToUpperCamel", func(arg string) string {
+		return strcase.ToCamel(arg)
 	})
 
 	raymond.RegisterHelper("LastTypeNameEquals", func(types []definitions.FuncReturnValue, value string, options *raymond.Options) string {
@@ -98,6 +104,10 @@ func getDefaultTemplate(engine definitions.RoutingEngineType) string {
 		return echo.RoutesTemplate
 	case definitions.RoutingEngineMux:
 		return mux.RoutesTemplate
+	case definitions.RoutingEngineFiber:
+		return fiber.RoutesTemplate
+	case definitions.RoutingEngineChi:
+		return chi.RoutesTemplate
 	}
 	// This should not happen. It indicates a breakage in the build itself.
 	panic(fmt.Sprintf("Could not find an embedded template for routing engine %v", engine))
@@ -161,6 +171,10 @@ func registerPartials(config *definitions.GleeceConfig) error {
 		partials = echo.Partials
 	case definitions.RoutingEngineMux:
 		partials = mux.Partials
+	case definitions.RoutingEngineFiber:
+		partials = fiber.Partials
+	case definitions.RoutingEngineChi:
+		partials = chi.Partials
 	default:
 		panic(fmt.Sprintf("Unknown routing engine type '%v'", engine))
 	}

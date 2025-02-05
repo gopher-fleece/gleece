@@ -1,0 +1,93 @@
+{
+	"commonConfig": {
+		"controllerGlobs": [
+			"./*.go",
+			"./**/*.go"
+		]
+	},
+	"routesConfig": {
+		"engine": "fiber",
+		"outputPath": "./fiber/routes/fiber.e2e.gleece.go",
+		"outputFilePerms": "0644",
+		"authorizationConfig": {
+			"authFileFullPackageName": "github.com/gopher-fleece/gleece/e2e/fiber/auth",
+			"enforceSecurityOnAllRoutes": true
+		},
+		"templateOverrides": {
+			"ResponseHeaders" : "./fiber/assets/fiber.custom.response.headers.hbs"
+		},
+		"customValidators" : [
+			{
+				"validateTagName": "validate_starts_with_letter",
+				"functionName": "ValidateStartsWithLetter",
+				"fullPackageName": "github.com/gopher-fleece/gleece/e2e/assets"
+			}
+		],
+		"middlewares": [
+			{
+				"fullPackageName": "github.com/gopher-fleece/gleece/e2e/fiber/middlewares",
+				"execution": "beforeOperation",
+				"functionName": "MiddlewareBeforeOperation"
+			},
+			{
+				"fullPackageName": "github.com/gopher-fleece/gleece/e2e/fiber/middlewares",
+				"execution": "afterOperationSuccess",
+				"functionName": "MiddlewareAfterOperationSuccess"
+			},
+			{
+				"fullPackageName": "github.com/gopher-fleece/gleece/e2e/fiber/middlewares",
+				"execution": "onError",
+				"functionName": "MiddlewareOnError"
+			},
+			{
+				"fullPackageName": "github.com/gopher-fleece/gleece/e2e/fiber/middlewares",
+				"execution": "onError",
+				"functionName": "MiddlewareOnError2"
+			}
+		]
+	},
+	"openAPIGeneratorConfig": {
+		"openapi" : "3.0.0",
+		"info": {
+			"title": "Sample API",
+			"description": "This is a sample API",
+			"termsOfService": "http://example.com/terms/",
+			"contact": {
+				"name": "API Support",
+				"url": "http://www.example.com/support",
+				"email": "support@example.com"
+			},
+			"license": {
+				"name": "Apache 2.0",
+				"url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+			},
+			"version": "1.0.0"
+		},
+		"baseUrl": "https://api.example.com",
+		"securitySchemes": [
+			{
+				"description": "API Key for accessing the API",
+				"name": "securitySchemaName",
+				"fieldName": "x-header-name",
+				"type": "apiKey",
+				"in": "header"
+			},
+			{
+				"description": "API Key for accessing the API",
+				"name": "securitySchemaName2",
+				"fieldName": "x-header-name",
+				"type": "apiKey",
+				"in": "header"
+			}
+		],
+		"defaultSecurity": {
+			"name": "securitySchemaName2",
+			"scopes": [
+				"config"
+			]
+		},
+		"specGeneratorConfig": {
+			"outputPath": "./fiber/dist/swagger.json"
+		}
+	}
+}
