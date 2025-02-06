@@ -34,7 +34,7 @@ func main() {
 To add the `Gleece` `runtime` package, run the following command:
 
 ```bash
-go get github.com/gopher-fleece/gleece/runtime
+go get github.com/gopher-fleece/runtime
 ```
 
 > In your code, there is no need for the entire `Gleece` package to be added.
@@ -113,7 +113,7 @@ package auth
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/gopher-fleece/gleece/runtime"
+	"github.com/gopher-fleece/runtime"
 )
 
 func GleeceRequestAuthorization(ctx *gin.Context, check runtime.SecurityCheck) *runtime.SecurityError {
@@ -141,7 +141,7 @@ First, create a struct and embed the `GleeceController` in it. Then add a route 
 package controllers
 
 import (
-	"github.com/gopher-fleece/gleece/runtime"
+	"github.com/gopher-fleece/runtime"
 )
 
 // UsersController

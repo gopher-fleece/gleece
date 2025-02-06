@@ -42,7 +42,7 @@ func main() {
 package security
 
 import (
-	"github.com/gopher-fleece/gleece/runtime"
+	"github.com/gopher-fleece/runtime"
    "github.com/labstack/echo/v4"
 )
 

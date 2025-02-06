@@ -1,11 +1,6 @@
 module github.com/gopher-fleece/gleece
 
-go 1.23.4
-
-require github.com/gopher-fleece/gleece/runtime v1.0.10
-
-// Replace tells Go where the runtime module is located on disk.
-// replace github.com/gopher-fleece/gleece/runtime => ./runtime
+go 1.23.6
 
 require (
 	github.com/aymerick/raymond v2.0.3-0.20180322193309-b565731e1464+incompatible
@@ -17,6 +12,7 @@ require (
 	github.com/go-playground/validator/v10 v10.24.0
 	github.com/gofiber/fiber/v2 v2.52.6
 	github.com/google/uuid v1.6.0
+	github.com/gopher-fleece/runtime v1.0.2
 	github.com/gorilla/mux v1.8.0
 	github.com/iancoleman/strcase v0.3.0
 	github.com/labstack/echo/v4 v4.13.3

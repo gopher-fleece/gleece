@@ -67,7 +67,7 @@ package validators
 import (
 	"unicode"
 
-	"github.com/gopher-fleece/gleece/runtime"
+	"github.com/gopher-fleece/runtime"
 )
 
 // Custom validation function to check if a string starts with a letter

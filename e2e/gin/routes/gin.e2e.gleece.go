@@ -26,7 +26,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	RequestAuth "github.com/gopher-fleece/gleece/e2e/gin/auth"
-	"github.com/gopher-fleece/gleece/runtime"
+	"github.com/gopher-fleece/runtime"
 	E2EControllerImport "github.com/gopher-fleece/gleece/e2e/assets"
 	Param33theBody "github.com/gopher-fleece/gleece/e2e/assets"
 	Param38theBody "github.com/gopher-fleece/gleece/e2e/assets"

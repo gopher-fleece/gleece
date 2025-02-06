@@ -4,7 +4,7 @@ import (
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gopher-fleece/gleece/runtime"
+	"github.com/gopher-fleece/runtime"
 )
 
 func GleeceRequestAuthorization(c *fiber.Ctx, check runtime.SecurityCheck) *runtime.SecurityError {

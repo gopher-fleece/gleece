@@ -3,7 +3,7 @@ package auth
 import (
 	"strconv"
 
-	"github.com/gopher-fleece/gleece/runtime"
+	"github.com/gopher-fleece/runtime"
 	"github.com/labstack/echo/v4"
 )
 
