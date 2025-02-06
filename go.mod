@@ -2,7 +2,7 @@ module github.com/gopher-fleece/gleece
 
 go 1.23.4
 
-require github.com/gopher-fleece/gleece/runtime v0.0.0
+require github.com/gopher-fleece/gleece/runtime v1.0.9
 
 // Replace tells Go where the runtime module is located on disk.
 replace github.com/gopher-fleece/gleece/runtime => ./runtime
