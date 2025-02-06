@@ -22,7 +22,7 @@ package main
 
 import (
     "github.com/labstack/echo/v4"
-    "github.com/gopher-fleece/gleece/routes" // Import the generated routes file
+    "<package>/routes" // Import the generated routes file
 )
 
 func main() {
@@ -42,11 +42,11 @@ func main() {
 package security
 
 import (
-	"github.com/gopher-fleece/gleece/external"
+	"github.com/gopher-fleece/gleece/runtime"
    "github.com/labstack/echo/v4"
 )
 
-func GleeceRequestAuthorization(ctx echo.Context, check external.SecurityCheck) *external.SecurityError {
+func GleeceRequestAuthorization(ctx echo.Context, check runtime.SecurityCheck) *runtime.SecurityError {
 	return nil
 }
 ```

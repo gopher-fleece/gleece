@@ -1,7 +1,7 @@
 package imports_test
 
 import (
-	"github.com/gopher-fleece/gleece/external"
+	"github.com/gopher-fleece/gleece/runtime"
 )
 
 type SimpleCustomError struct {
@@ -23,7 +23,7 @@ type ComplexCustomError struct {
 // @Tag(Errors Controller Tag)
 // @Route(/test/errors)
 type ErrorsController struct {
-	external.GleeceController
+	runtime.GleeceController
 }
 
 // @Method(POST)

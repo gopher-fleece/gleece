@@ -3,11 +3,11 @@ package auth
 import (
 	"strconv"
 
-	"github.com/gopher-fleece/gleece/external"
+	"github.com/gopher-fleece/gleece/runtime"
 	"github.com/labstack/echo/v4"
 )
 
-func GleeceRequestAuthorization(ctx echo.Context, check external.SecurityCheck) *external.SecurityError {
+func GleeceRequestAuthorization(ctx echo.Context, check runtime.SecurityCheck) *runtime.SecurityError {
 	// A WA to set the header for the test with the given LAST run scope
 	ctx.Request().Header.Set("x-test-scopes", check.SchemaName+check.Scopes[0])
 	// Simulate auth failed
@@ -20,18 +20,18 @@ func GleeceRequestAuthorization(ctx echo.Context, check external.SecurityCheck) 
 	}
 
 	if ctx.Request().Header.Get("fail-auth") == check.SchemaName {
-		return &external.SecurityError{
+		return &runtime.SecurityError{
 			Message:    "Failed to authorize",
-			StatusCode: external.HttpStatusCode(authCode),
+			StatusCode: runtime.HttpStatusCode(authCode),
 		}
 	}
 
 	// Simulate auth failed with custom error
 	if ctx.Request().Header.Get("fail-auth-custom") == check.SchemaName {
-		return &external.SecurityError{
+		return &runtime.SecurityError{
 			Message:    "Failed to authorize",
-			StatusCode: external.HttpStatusCode(authCode),
-			CustomError: &external.CustomError{
+			StatusCode: runtime.HttpStatusCode(authCode),
+			CustomError: &runtime.CustomError{
 				Payload: struct {
 					Message     string `json:"message"`
 					Description string `json:"description"`

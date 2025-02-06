@@ -54,14 +54,14 @@ package api
 
 import (
 	"github.com/google/uuid"
-	"github.com/gopher-fleece/gleece/external" // Importing GleeceController
+	"github.com/gopher-fleece/gleece/runtime" // Importing GleeceController
 )
 
 // @Tag(User Management)
 // @Route(/users-management)
 // @Description The User Management API
 type UserController struct {
-	external.GleeceController // Embedding the GleeceController
+	runtime.GleeceController // Embedding the GleeceController
 }
 
 // @Description User's domicile

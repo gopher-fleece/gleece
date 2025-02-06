@@ -7,10 +7,10 @@ import (
 
 	MapSet "github.com/deckarep/golang-set/v2"
 	"github.com/gopher-fleece/gleece/definitions"
-	"github.com/gopher-fleece/gleece/external"
 	"github.com/gopher-fleece/gleece/extractor"
 	"github.com/gopher-fleece/gleece/extractor/annotations"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
+	"github.com/gopher-fleece/gleece/runtime"
 )
 
 func (v *ControllerVisitor) getNextImportId() uint64 {
@@ -85,7 +85,7 @@ func (v ControllerVisitor) getErrorResponseMetadata(attributes *annotations.Anno
 	responseAttributes := attributes.GetAll(annotations.AttributeErrorResponse)
 
 	responses := []definitions.ErrorResponse{}
-	encounteredCodes := MapSet.NewSet[external.HttpStatusCode]()
+	encounteredCodes := MapSet.NewSet[runtime.HttpStatusCode]()
 
 	for _, attr := range responseAttributes {
 		code, err := definitions.ConvertToHttpStatus(attr.Value)
@@ -111,18 +111,18 @@ func (v ControllerVisitor) getErrorResponseMetadata(attributes *annotations.Anno
 func (v *ControllerVisitor) getResponseStatusCodeAndDescription(
 	attributes *annotations.AnnotationHolder,
 	hasReturnValue bool,
-) (external.HttpStatusCode, string, error) {
+) (runtime.HttpStatusCode, string, error) {
 	// Set the success attrib code based on whether function returns a value or only error (200 vs 204)
 	attrib := attributes.GetFirst(annotations.AttributeResponse)
 	if attrib == nil {
 		if hasReturnValue {
-			return external.StatusOK, "", nil
+			return runtime.StatusOK, "", nil
 		}
 
-		return external.StatusNoContent, "", nil
+		return runtime.StatusNoContent, "", nil
 	}
 
-	var statusCode external.HttpStatusCode
+	var statusCode runtime.HttpStatusCode
 	if len(attrib.Value) > 0 {
 		code, err := definitions.ConvertToHttpStatus(attrib.Value)
 		if err != nil {

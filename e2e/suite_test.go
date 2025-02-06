@@ -27,7 +27,6 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
-	"github.com/haimkastner/unitsnet-go/units"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	. "github.com/onsi/ginkgo/v2"
@@ -40,8 +39,6 @@ func TestGleeceE2E(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Gleece E2E Suite")
 }
-
-var suitPrepareTimeout, _ = units.DurationFactory{}.FromMinutes(1.5)
 
 func RegenerateRoutes() {
 
@@ -84,7 +81,6 @@ func RegenerateRoutes() {
 }
 
 var _ = BeforeSuite(func() {
-
 	RegenerateRoutes()
 	// Init routes
 

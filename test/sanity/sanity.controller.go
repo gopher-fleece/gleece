@@ -1,7 +1,7 @@
 package sanity_test
 
 import (
-	"github.com/gopher-fleece/gleece/external"
+	"github.com/gopher-fleece/gleece/runtime"
 )
 
 // Some comment
@@ -15,7 +15,7 @@ type SimpleResponseModel struct {
 // @Route(/test/sanity)
 // @Description Sanity Controller
 type SanityController struct {
-	external.GleeceController // Embedding the GleeceController to inherit its methods
+	runtime.GleeceController // Embedding the GleeceController to inherit its methods
 }
 
 // A sanity test controller method

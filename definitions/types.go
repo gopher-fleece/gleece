@@ -1,11 +1,11 @@
 package definitions
 
 import (
-	"github.com/gopher-fleece/gleece/external"
+	"github.com/gopher-fleece/gleece/runtime"
 )
 
 const Rfc7807ErrorName = "Rfc7807Error"
-const Rfc7807ErrorFullPackage = "github.com/gopher-fleece/gleece/external"
+const Rfc7807ErrorFullPackage = "github.com/gopher-fleece/gleece/runtime"
 
 // Enum of HTTP parma type (header, query, path, body)
 type ParamPassedIn string
@@ -112,7 +112,7 @@ type TypeMetadata struct {
 }
 
 type ErrorResponse struct {
-	HttpStatusCode external.HttpStatusCode
+	HttpStatusCode runtime.HttpStatusCode
 	Description    string
 }
 
@@ -152,7 +152,7 @@ type RouteMetadata struct {
 	// The HTTP code expected to be returned from a successful call
 	//
 	// TODO: Needs to be an array
-	ResponseSuccessCode external.HttpStatusCode
+	ResponseSuccessCode runtime.HttpStatusCode
 
 	// Metadata on the type of errors that may be returned from the operation
 	ErrorResponses []ErrorResponse

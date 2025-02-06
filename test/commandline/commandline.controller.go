@@ -1,13 +1,13 @@
 package imports_test
 
 import (
-	"github.com/gopher-fleece/gleece/external"
+	"github.com/gopher-fleece/gleece/runtime"
 )
 
 // @Tag(Commandline Controller Tag)
 // @Route(/test/commandline)
 type CommandlineController struct {
-	external.GleeceController
+	runtime.GleeceController
 }
 
 // @Method(POST)

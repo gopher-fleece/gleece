@@ -1,7 +1,7 @@
 package swagtool
 
 import (
-	"github.com/gopher-fleece/gleece/external"
+	"github.com/gopher-fleece/gleece/runtime"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -10,7 +10,7 @@ var _ = Describe("Swagtools - Spec Utilities", func() {
 
 	Describe("HttpStatusCodeToString", func() {
 		It("should convert HttpStatusCode to string", func() {
-			code := external.HttpStatusCode(200)
+			code := runtime.HttpStatusCode(200)
 			Expect(HttpStatusCodeToString(code)).To(Equal("200"))
 		})
 	})
