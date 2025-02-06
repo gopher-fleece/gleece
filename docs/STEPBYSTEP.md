@@ -29,21 +29,18 @@ func main() {
 }
 ```
 
-## Adding Gleece Package
+## Importing Gleece
 
-To add the `Gleece` `runtime` package, run the following command:
+Add Gleece's `runtime` package to the app's codebase:
 
 ```bash
 go get github.com/gopher-fleece/runtime
 ```
 
-> In your code, there is no need for the entire `Gleece` package to be added.
-
-
-Install the `Gleece` CLI:
+And install the `Gleece` CLI:
 
 ```bash
-# go get github.com/gopher-fleece
+go get github.com/gopher-fleece/gleece
 go install github.com/gopher-fleece/gleece
 ```
 
