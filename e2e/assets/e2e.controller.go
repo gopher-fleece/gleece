@@ -6,13 +6,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gofiber/fiber/v2"
-	"github.com/gopher-fleece/gleece/external"
+	"github.com/gopher-fleece/gleece/runtime"
 	"github.com/labstack/echo/v4"
 )
 
 // @Route(/e2e)
 type E2EController struct {
-	external.GleeceController // Embedding the GleeceController to inherit its methods
+	runtime.GleeceController // Embedding the GleeceController to inherit its methods
 }
 
 // @Method(GET) This text is not part of the OpenAPI spec
@@ -68,7 +68,7 @@ func (ec *E2EController) SimpleGetObjectNull() (*BodyResponse, error) {
 // @Query(queryParam)
 func (ec *E2EController) SimpleGetEmpty(queryParam string) error {
 	if queryParam == "200" {
-		ec.SetStatus(external.StatusOK)
+		ec.SetStatus(runtime.StatusOK)
 	}
 	return nil
 }
@@ -80,7 +80,7 @@ func (ec *E2EController) SimpleGetEmpty(queryParam string) error {
 // @Header(headerParam)
 func (ec *E2EController) GetWithAllParams(queryParam string, pathParam string, headerParam string) (string, error) {
 	if queryParam == "204" {
-		ec.SetStatus(external.StatusNoContent)
+		ec.SetStatus(runtime.StatusNoContent)
 	}
 	return pathParam + queryParam + headerParam, nil
 }
@@ -174,7 +174,7 @@ func (ec *E2EController) GetHeaderStartWithLetter(headerParam string) (string, e
 // @Route(/e2e)
 // @Security(securitySchemaName, { scopes: ["class"] })
 type E2EClassSecController struct {
-	external.GleeceController // Embedding the GleeceController to inherit its methods
+	runtime.GleeceController // Embedding the GleeceController to inherit its methods
 }
 
 // @Method(GET)
@@ -281,14 +281,14 @@ func (ec *E2EController) CustomPtrError() *CustomError {
 // @Method(GET)
 // @Route(/503-error-code)
 func (ec *E2EController) Error503() error {
-	ec.SetStatus(external.StatusServiceUnavailable)
+	ec.SetStatus(runtime.StatusServiceUnavailable)
 	return fmt.Errorf("default error")
 }
 
 // @Method(GET)
 // @Route(/custom-error-503)
 func (ec *E2EController) CustomError503() CustomError {
-	ec.SetStatus(external.StatusServiceUnavailable)
+	ec.SetStatus(runtime.StatusServiceUnavailable)
 	return CustomError{
 		Message: "custom error",
 	}

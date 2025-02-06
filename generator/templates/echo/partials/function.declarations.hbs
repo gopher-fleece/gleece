@@ -1,4 +1,4 @@
-func getStatusCode(controller external.Controller, hasReturnValue bool, err error) int {
+func getStatusCode(controller runtime.Controller, hasReturnValue bool, err error) int {
 	if controller.GetStatus() != nil {
 		return int(*controller.GetStatus())
 	} 
@@ -60,8 +60,8 @@ func toEchoUrl(url string) string {
 	return processedUrl
 }
 
-func authorize(ctx echo.Context, checksLists []SecurityCheckList) *external.SecurityError {
-	var lastError *external.SecurityError
+func authorize(ctx echo.Context, checksLists []SecurityCheckList) *runtime.SecurityError {
+	var lastError *runtime.SecurityError
 
 	for _, list := range checksLists {
 		if list.Relation != SecurityListRelationAnd {
@@ -93,14 +93,14 @@ func authorize(ctx echo.Context, checksLists []SecurityCheckList) *external.Secu
 	return lastError
 }
 
-func handleAuthorizationError(ctx echo.Context, authErr *external.SecurityError, operationId string) error {
+func handleAuthorizationError(ctx echo.Context, authErr *runtime.SecurityError, operationId string) error {
 	statusCode := int(authErr.StatusCode)
 	if authErr.CustomError != nil {
 		// For now, we support JSON only
 		return ctx.JSON(statusCode, authErr.CustomError.Payload)
 		
 	} 
-	stdError := external.Rfc7807Error{
+	stdError := runtime.Rfc7807Error{
 		Type:     http.StatusText(statusCode),
 		Detail:   authErr.Message,
 		Status:   statusCode,
@@ -109,14 +109,14 @@ func handleAuthorizationError(ctx echo.Context, authErr *external.SecurityError,
 	return ctx.JSON(statusCode, stdError)
 }
 
-func wrapValidatorError(validatorErr error, operationId string, fieldName string) external.Rfc7807Error {
-	return external.Rfc7807Error{
+func wrapValidatorError(validatorErr error, operationId string, fieldName string) runtime.Rfc7807Error {
+	return runtime.Rfc7807Error{
 		Type:       http.StatusText(http.StatusUnprocessableEntity),
 		Detail:     fmt.Sprintf(
 			"A request was made to operation '%s' but parameter '%s' did not pass validation - %s",
 			operationId,
 			fieldName,
-			validation.ExtractValidationErrorMessage(validatorErr, &fieldName),
+			runtime.ExtractValidationErrorMessage(validatorErr, &fieldName),
 		),
 		Status:     http.StatusUnprocessableEntity,
 		Instance:   fmt.Sprintf("/gleece/validation/error/%s", operationId),

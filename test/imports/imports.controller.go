@@ -1,7 +1,7 @@
 package imports_test
 
 import (
-	. "github.com/gopher-fleece/gleece/external"
+	. "github.com/gopher-fleece/gleece/runtime"
 	"github.com/gopher-fleece/gleece/test/types"
 	. "github.com/gopher-fleece/gleece/test/types"
 	alias "github.com/gopher-fleece/gleece/test/types"

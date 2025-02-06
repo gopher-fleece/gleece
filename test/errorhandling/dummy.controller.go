@@ -1,14 +1,14 @@
 package errorhandling_test
 
 import (
-	"github.com/gopher-fleece/gleece/external"
+	"github.com/gopher-fleece/gleece/runtime"
 )
 
 // @Tag(Dummy Controller Tag)
 // @Route(/test/sanity)
 // @Description Sanity Controller
 type DummyController struct {
-	external.GleeceController // Embedding the GleeceController to inherit its methods
+	runtime.GleeceController // Embedding the GleeceController to inherit its methods
 }
 
 // @Method(POST)

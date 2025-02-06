@@ -70,7 +70,7 @@ For example:
 // @Method(GET)
 // @Route(/default-error)
 func (mc *MyController) DefaultError() error {
-    mc.SetStatus(external.StatusNotImplemented)
+    mc.SetStatus(runtime.StatusNotImplemented)
 	return fmt.Errorf("default error")
 }
 ```

@@ -7,10 +7,10 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/gopher-fleece/gleece/external"
+	"github.com/gopher-fleece/gleece/runtime"
 )
 
-func HttpStatusCodeToString(httpStatusCode external.HttpStatusCode) string {
+func HttpStatusCodeToString(httpStatusCode runtime.HttpStatusCode) string {
 	statusCode := uint64(httpStatusCode)
 	return strconv.FormatUint(statusCode, 10)
 }

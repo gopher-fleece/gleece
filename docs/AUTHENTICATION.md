@@ -70,7 +70,7 @@ For example:
 // @Route(/my-route)
 // @Security(securitySchemaName, { scopes: ["read", "write"] })
 type MyController struct {
-	external.GleeceController
+	runtime.GleeceController
 }
 ```
 #### Declare security in a route
@@ -123,9 +123,9 @@ For `gin`:
 ```go
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/gopher-fleece/gleece/external"
+	"github.com/gopher-fleece/gleece/runtime"
 )
-func GleeceRequestAuthorization(ctx *gin.Context, check external.SecurityCheck) *external.SecurityError {
+func GleeceRequestAuthorization(ctx *gin.Context, check runtime.SecurityCheck) *runtime.SecurityError {
     return nil
 }
 ```
@@ -133,11 +133,11 @@ func GleeceRequestAuthorization(ctx *gin.Context, check external.SecurityCheck) 
 For `echo`
 ```go
 import (
-	"github.com/gopher-fleece/gleece/external"
+	"github.com/gopher-fleece/gleece/runtime"
 	"github.com/labstack/echo/v4"
 )
 
-func GleeceRequestAuthorization(ctx *gin.Context, check external.SecurityCheck) *external.SecurityError {
+func GleeceRequestAuthorization(ctx *gin.Context, check runtime.SecurityCheck) *runtime.SecurityError {
     return nil
 }
 ```
@@ -147,10 +147,10 @@ For `Fiber`
 import (
 	"github.com/gofiber/fiber/v2"
 
-	"github.com/gopher-fleece/gleece/external"
+	"github.com/gopher-fleece/gleece/runtime"
 )
 
-func GleeceRequestAuthorization(ctx *fiber.Ctx, check external.SecurityCheck) *external.SecurityError {
+func GleeceRequestAuthorization(ctx *fiber.Ctx, check runtime.SecurityCheck) *runtime.SecurityError {
     return nil
 }
 ```
@@ -160,10 +160,10 @@ For Gorilla's `Mux` and `chi`
 import (
 	"net/http"
 
-	"github.com/gopher-fleece/gleece/external"
+	"github.com/gopher-fleece/gleece/runtime"
 )
 
-func GleeceRequestAuthorization(r *http.Request, check external.SecurityCheck) *external.SecurityError {
+func GleeceRequestAuthorization(r *http.Request, check runtime.SecurityCheck) *runtime.SecurityError {
     return nil
 }
 ```
@@ -180,10 +180,10 @@ By default, the error will be formatted as [rfc7807](https://datatracker.ietf.or
 
 For example
 ```go
-func GleeceRequestAuthorization(ctx *gin.Context, check external.SecurityCheck) *external.SecurityError {
-    return &external.SecurityError{
+func GleeceRequestAuthorization(ctx *gin.Context, check runtime.SecurityCheck) *runtime.SecurityError {
+    return &runtime.SecurityError{
 			Message:    "Failed to authorize",
-			StatusCode: external.StatusUnauthorized,
+			StatusCode: runtime.StatusUnauthorized,
 	}
 }
 ```
@@ -191,11 +191,11 @@ This will be returned with a 401 status code and the payload will be formatted a
 
 And this:
 ```go
-func GleeceRequestAuthorization(ctx *gin.Context, check external.SecurityCheck) *external.SecurityError {
-    return &external.SecurityError{
+func GleeceRequestAuthorization(ctx *gin.Context, check runtime.SecurityCheck) *runtime.SecurityError {
+    return &runtime.SecurityError{
 			Message:    "Failed to authorize",
-			StatusCode: external.StatusForbidden,
-           	CustomError: &external.CustomError{
+			StatusCode: runtime.StatusForbidden,
+           	CustomError: &runtime.CustomError{
 				Payload: struct {
 					Message     string `json:"message"`
 					Description string `json:"description"`

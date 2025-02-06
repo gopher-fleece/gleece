@@ -24,7 +24,7 @@ import (
 	"net/http"
 
     "github.com/gorilla/mux"
-    "github.com/gopher-fleece/gleece/routes" // Import the generated routes file
+    "<package>/routes" // Import the generated routes file
 )
 
 func main() {
@@ -46,10 +46,10 @@ package security
 import (
 	"net/http"
 
-	"github.com/gopher-fleece/gleece/external"
+	"github.com/gopher-fleece/gleece/runtime"
 )
 
-func GleeceRequestAuthorization(r *http.Request, check external.SecurityCheck) *external.SecurityError {
+func GleeceRequestAuthorization(r *http.Request, check runtime.SecurityCheck) *runtime.SecurityError {
 	return nil
 }
 ```

@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/gopher-fleece/gleece/definitions"
-	"github.com/gopher-fleece/gleece/external"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
+	"github.com/gopher-fleece/gleece/runtime"
 	"github.com/gopher-fleece/gleece/test/utils"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -63,11 +63,11 @@ var _ = Describe("Sanity Controller", func() {
 		Expect(route.Responses).To(HaveLen(2))
 		Expect(route.HasReturnValue).To(BeTrue())
 		Expect(route.ResponseDescription).To(Equal("Description for HTTP 200"))
-		Expect(route.ResponseSuccessCode).To(Equal(external.StatusOK))
+		Expect(route.ResponseSuccessCode).To(Equal(runtime.StatusOK))
 		Expect(route.ErrorResponses).To(HaveLen(2))
-		Expect(route.ErrorResponses[0].HttpStatusCode).To(Equal(external.StatusInternalServerError))
+		Expect(route.ErrorResponses[0].HttpStatusCode).To(Equal(runtime.StatusInternalServerError))
 		Expect(route.ErrorResponses[0].Description).To(Equal("Code 500"))
-		Expect(route.ErrorResponses[1].HttpStatusCode).To(Equal(external.StatusBadGateway))
+		Expect(route.ErrorResponses[1].HttpStatusCode).To(Equal(runtime.StatusBadGateway))
 		Expect(route.ErrorResponses[1].Description).To(Equal("Code 502"))
 		Expect(route.RequestContentType).To(Equal(definitions.ContentTypeJSON))
 		Expect(route.ResponseContentType).To(Equal(definitions.ContentTypeJSON))

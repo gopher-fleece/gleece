@@ -7,6 +7,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
+	"github.com/gopher-fleece/gleece/runtime"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -62,16 +63,18 @@ var _ = Describe("Validation Utilities", func() {
 		})
 	})
 
+	// The implementation of this function is located in external/validation.logic.go
+	// Since it's also been used in the generated routes and need to be exposed to package apps consumer's
 	Describe("ExtractValidationErrorMessage", func() {
 		It("should return an empty string for no error", func() {
 			err := error(nil)
-			message := ExtractValidationErrorMessage(err, nil)
+			message := runtime.ExtractValidationErrorMessage(err, nil)
 			Expect(message).To(Equal(""))
 		})
 
 		It("should return the error message for a non-validation error", func() {
 			err := fmt.Errorf("some non-validation error")
-			message := ExtractValidationErrorMessage(err, nil)
+			message := runtime.ExtractValidationErrorMessage(err, nil)
 			Expect(message).To(Equal("some non-validation error"))
 		})
 
@@ -90,7 +93,7 @@ var _ = Describe("Validation Utilities", func() {
 			Expect(err).To(HaveOccurred())
 
 			// Extract readable validation error messages
-			message := ExtractValidationErrorMessage(err, nil)
+			message := runtime.ExtractValidationErrorMessage(err, nil)
 			Expect(message).To(ContainSubstring("Field 'SliceField' failed validation with tag 'not_nil_array'."))
 			Expect(message).To(ContainSubstring("Field 'StringField' failed validation with tag 'starts_with_letter'."))
 			Expect(message).To(ContainSubstring("Field 'RegexField' failed validation with tag 'regex'."))
@@ -114,7 +117,7 @@ var _ = Describe("Validation Utilities", func() {
 
 			// Extract readable validation error messages with overridden field name
 			overrideFieldName := "CustomField"
-			message := ExtractValidationErrorMessage(err, &overrideFieldName)
+			message := runtime.ExtractValidationErrorMessage(err, &overrideFieldName)
 			Expect(message).To(ContainSubstring("Field 'CustomField' failed validation with tag 'not_nil_array'."))
 			Expect(message).To(ContainSubstring("Field 'CustomField' failed validation with tag 'starts_with_letter'."))
 			Expect(message).To(ContainSubstring("Field 'CustomField' failed validation with tag 'regex'."))

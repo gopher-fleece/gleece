@@ -22,7 +22,7 @@ package main
 
 import (
     "github.com/gofiber/fiber/v2"
-    "github.com/gopher-fleece/gleece/routes" // Import the generated routes file
+    "<package>/routes" // Import the generated routes file
 )
 
 func main() {
@@ -43,11 +43,11 @@ func main() {
 package security
 
 import (
-    "github.com/gopher-fleece/gleece/external"
+    "github.com/gopher-fleece/gleece/runtime"
     "github.com/gofiber/fiber/v2"
 )
 
-func GleeceRequestAuthorization(ctx *fiber.Ctx, check external.SecurityCheck) *external.SecurityError {
+func GleeceRequestAuthorization(ctx *fiber.Ctx, check runtime.SecurityCheck) *runtime.SecurityError {
     return nil
 }
 ```

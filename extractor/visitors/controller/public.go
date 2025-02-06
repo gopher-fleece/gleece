@@ -49,7 +49,7 @@ func (v *ControllerVisitor) Visit(node ast.Node) ast.Visitor {
 		if structType, isOk := currentNode.Type.(*ast.StructType); isOk {
 			if extractor.DoesStructEmbedStruct(
 				v.currentSourceFile,
-				"github.com/gopher-fleece/gleece/external",
+				"github.com/gopher-fleece/gleece/runtime",
 				structType,
 				"GleeceController",
 			) {

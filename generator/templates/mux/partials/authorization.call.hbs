@@ -4,7 +4,7 @@ authorize(
 		{
 			{{#each SecurityAnnotation}} 
 			Relation: SecurityListRelationAnd,
-			Checks: []external.SecurityCheck {
+			Checks: []runtime.SecurityCheck {
 				{
 					SchemaName: "{{{SchemaName}}}",
 					Scopes: []string{

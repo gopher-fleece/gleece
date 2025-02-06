@@ -21,7 +21,7 @@ package main
 
 import (
     "github.com/gin-gonic/gin"
-    "github.com/gopher-fleece/gleece/routes" // Import the generated routes file
+    "<package>/routes" // Import the generated routes file
 )
 
 func main() {
@@ -42,10 +42,10 @@ package security
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/gopher-fleece/gleece/external"
+	"github.com/gopher-fleece/gleece/runtime"
 )
 
-func GleeceRequestAuthorization(ctx *gin.Context, check external.SecurityCheck) *external.SecurityError {
+func GleeceRequestAuthorization(ctx *gin.Context, check runtime.SecurityCheck) *runtime.SecurityError {
 	return nil
 }
 ```

@@ -31,17 +31,22 @@ func main() {
 
 ## Adding Gleece Package
 
-To add the `Gleece` external package, run the following command:
+To add the `Gleece` `runtime` package, run the following command:
 
 ```bash
-go get github.com/gopher-fleece/gleece@latest
+go get github.com/gopher-fleece/gleece/runtime
 ```
+
+> In your code, there is no need for the entire `Gleece` package to be added.
+
 
 Install the `Gleece` CLI:
 
 ```bash
+# go get github.com/gopher-fleece
 go install github.com/gopher-fleece/gleece
 ```
+
 
 ## Basic Gleece Configuration
 
@@ -108,14 +113,14 @@ package auth
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/gopher-fleece/gleece/external"
+	"github.com/gopher-fleece/gleece/runtime"
 )
 
-func GleeceRequestAuthorization(ctx *gin.Context, check external.SecurityCheck) *external.SecurityError {
+func GleeceRequestAuthorization(ctx *gin.Context, check runtime.SecurityCheck) *runtime.SecurityError {
 
 	authHeader := ctx.GetHeader("Authorization")
 	if authHeader == "change that condition...." {
-		return &external.SecurityError{
+		return &runtime.SecurityError{
 			StatusCode: 403,
 			Message:    "You are not authorized to read that API",
 		}
@@ -136,7 +141,7 @@ First, create a struct and embed the `GleeceController` in it. Then add a route 
 package controllers
 
 import (
-	"github.com/gopher-fleece/gleece/external"
+	"github.com/gopher-fleece/gleece/runtime"
 )
 
 // UsersController
@@ -144,7 +149,7 @@ import (
 // @Route(/users)
 // @Description The Users API
 type UsersController struct {
-	external.GleeceController // Embedding the GleeceController to inherit its methods
+	runtime.GleeceController // Embedding the GleeceController to inherit its methods
 }
 
 // @Description Get user data

@@ -14,7 +14,7 @@ However, it is possible to set a custom response code using the `SetStatus` API.
 // @Method(GET)
 // @Route(/my-route)
 func (mc *MyController) MyRoute() (string, error) {
-	mc.SetStatus(external.StatusPartialContent)
+	mc.SetStatus(runtime.StatusPartialContent)
 	return "", nil
 }
 ```

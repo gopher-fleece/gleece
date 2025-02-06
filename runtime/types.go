@@ -1,4 +1,4 @@
-package external
+package runtime
 
 type HttpStatusCode uint
 
