@@ -1,7 +1,7 @@
 package errorhandling_test
 
 import (
-	"github.com/gopher-fleece/gleece/runtime"
+	"github.com/gopher-fleece/runtime"
 )
 
 // @Tag(Dummy Controller Tag)

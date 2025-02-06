@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gofiber/fiber/v2"
-	"github.com/gopher-fleece/gleece/runtime"
+	"github.com/gopher-fleece/runtime"
 	"github.com/labstack/echo/v4"
 )
 

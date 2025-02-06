@@ -54,7 +54,7 @@ package api
 
 import (
 	"github.com/google/uuid"
-	"github.com/gopher-fleece/gleece/runtime" // Importing GleeceController
+	"github.com/gopher-fleece/runtime" // Importing GleeceController
 )
 
 // @Tag(User Management)

@@ -1,7 +1,7 @@
 package sanity_test
 
 import (
-	"github.com/gopher-fleece/gleece/runtime"
+	"github.com/gopher-fleece/runtime"
 )
 
 // Some comment

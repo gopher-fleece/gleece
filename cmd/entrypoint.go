@@ -13,7 +13,7 @@ import (
 	"github.com/gopher-fleece/gleece/generator/swagen"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
 	"github.com/gopher-fleece/gleece/infrastructure/validation"
-	"github.com/gopher-fleece/gleece/runtime"
+	"github.com/gopher-fleece/runtime"
 	"github.com/titanous/json5"
 )
 

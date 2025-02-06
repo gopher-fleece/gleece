@@ -10,7 +10,7 @@ import (
 	"github.com/gopher-fleece/gleece/extractor"
 	"github.com/gopher-fleece/gleece/extractor/annotations"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
-	"github.com/gopher-fleece/gleece/runtime"
+	"github.com/gopher-fleece/runtime"
 )
 
 func (v *ControllerVisitor) getNextImportId() uint64 {

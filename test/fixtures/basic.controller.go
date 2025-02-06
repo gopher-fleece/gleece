@@ -2,10 +2,10 @@ package fixtures
 
 import (
 	"github.com/google/uuid"
-	SomeRandomName "github.com/gopher-fleece/gleece/runtime"
 	"github.com/gopher-fleece/gleece/test/types"
 	. "github.com/gopher-fleece/gleece/test/types"
 	CustomAlias "github.com/gopher-fleece/gleece/test/types"
+	SomeRandomName "github.com/gopher-fleece/runtime"
 )
 
 // ExtendedController

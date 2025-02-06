@@ -123,7 +123,7 @@ For `gin`:
 ```go
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/gopher-fleece/gleece/runtime"
+	"github.com/gopher-fleece/runtime"
 )
 func GleeceRequestAuthorization(ctx *gin.Context, check runtime.SecurityCheck) *runtime.SecurityError {
     return nil
@@ -133,7 +133,7 @@ func GleeceRequestAuthorization(ctx *gin.Context, check runtime.SecurityCheck) *
 For `echo`
 ```go
 import (
-	"github.com/gopher-fleece/gleece/runtime"
+	"github.com/gopher-fleece/runtime"
 	"github.com/labstack/echo/v4"
 )
 
@@ -147,7 +147,7 @@ For `Fiber`
 import (
 	"github.com/gofiber/fiber/v2"
 
-	"github.com/gopher-fleece/gleece/runtime"
+	"github.com/gopher-fleece/runtime"
 )
 
 func GleeceRequestAuthorization(ctx *fiber.Ctx, check runtime.SecurityCheck) *runtime.SecurityError {
@@ -160,7 +160,7 @@ For Gorilla's `Mux` and `chi`
 import (
 	"net/http"
 
-	"github.com/gopher-fleece/gleece/runtime"
+	"github.com/gopher-fleece/runtime"
 )
 
 func GleeceRequestAuthorization(r *http.Request, check runtime.SecurityCheck) *runtime.SecurityError {

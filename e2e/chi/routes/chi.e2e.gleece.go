@@ -15,6 +15,7 @@ Repository: https://github.com/gopher-fleece/gleece
 --
 */
 package routes
+
 import (
 	"encoding/json"
 	"fmt"
@@ -22,34 +23,40 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
-	RequestAuth "github.com/gopher-fleece/gleece/e2e/chi/auth"
-	"github.com/gopher-fleece/gleece/runtime"
+	CustomValidatorPkg0 "github.com/gopher-fleece/gleece/e2e/assets"
+	E2EClassSecControllerImport "github.com/gopher-fleece/gleece/e2e/assets"
 	E2EControllerImport "github.com/gopher-fleece/gleece/e2e/assets"
 	Param33theBody "github.com/gopher-fleece/gleece/e2e/assets"
 	Param38theBody "github.com/gopher-fleece/gleece/e2e/assets"
 	Param41theBody "github.com/gopher-fleece/gleece/e2e/assets"
 	Response62CustomError "github.com/gopher-fleece/gleece/e2e/assets"
 	Response65CustomError "github.com/gopher-fleece/gleece/e2e/assets"
-	E2EClassSecControllerImport "github.com/gopher-fleece/gleece/e2e/assets"
-	CustomValidatorPkg0 "github.com/gopher-fleece/gleece/e2e/assets"
+	RequestAuth "github.com/gopher-fleece/gleece/e2e/chi/auth"
 	MiddlewarePkg0 "github.com/gopher-fleece/gleece/e2e/chi/middlewares"
 	MiddlewarePkg1 "github.com/gopher-fleece/gleece/e2e/chi/middlewares"
 	MiddlewarePkg2 "github.com/gopher-fleece/gleece/e2e/chi/middlewares"
 	MiddlewarePkg3 "github.com/gopher-fleece/gleece/e2e/chi/middlewares"
+	"github.com/gopher-fleece/runtime"
 )
+
 // we have started!
 var validatorInstance *validator.Validate
 var urlParamRegex *regexp.Regexp
+
 type SecurityListRelation string
+
 const (
 	SecurityListRelationAnd SecurityListRelation = "AND"
 )
+
 type SecurityCheckList struct {
 	Checks   []runtime.SecurityCheck
 	Relation SecurityListRelation
 }
+
 func getStatusCode(controller runtime.Controller, hasReturnValue bool, err error) int {
 	if controller.GetStatus() != nil {
 		return int(*controller.GetStatus())

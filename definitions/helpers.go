@@ -5,7 +5,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/gopher-fleece/gleece/runtime"
+	"github.com/gopher-fleece/runtime"
 )
 
 var validHttpVerbs = map[string]struct{}{

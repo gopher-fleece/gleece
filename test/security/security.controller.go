@@ -1,7 +1,7 @@
 package security_test
 
 import (
-	"github.com/gopher-fleece/gleece/runtime"
+	"github.com/gopher-fleece/runtime"
 )
 
 // @Tag(Sanity Controller Tag)

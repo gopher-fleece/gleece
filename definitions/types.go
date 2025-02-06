@@ -1,11 +1,11 @@
 package definitions
 
 import (
-	"github.com/gopher-fleece/gleece/runtime"
+	"github.com/gopher-fleece/runtime"
 )
 
 const Rfc7807ErrorName = "Rfc7807Error"
-const Rfc7807ErrorFullPackage = "github.com/gopher-fleece/gleece/runtime"
+const Rfc7807ErrorFullPackage = "github.com/gopher-fleece/runtime"
 
 // Enum of HTTP parma type (header, query, path, body)
 type ParamPassedIn string
