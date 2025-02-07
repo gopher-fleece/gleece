@@ -31,7 +31,7 @@ func main() {
 
 ## Importing Gleece
 
-Add Gleece's `runtime` package to the app's codebase:
+Add Gleece's [runtime](https://github.com/gopher-fleece/runtime) package to the app's codebase:
 
 ```bash
 go get github.com/gopher-fleece/runtime
