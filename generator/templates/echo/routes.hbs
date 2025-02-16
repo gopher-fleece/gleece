@@ -19,22 +19,23 @@ package {{{PackageName}}}
 
 {{> Imports}}
 
-var validatorInstance *validator.Validate
+var validatorInstance = validator.New()
 var urlParamRegex *regexp.Regexp
 
 {{> TypeDeclarations}}
 
 {{> FunctionDeclarations}}
 
-func RegisterRoutes(engine *echo.Echo) {
-	validatorInstance = validator.New()
-	urlParamRegex = regexp.MustCompile(`\{([\w\d-_]+)\}`)
+{{> RegisterMiddleware}}
 
-{{#each CustomValidators}}
-	validatorInstance.RegisterValidation("{{{ValidateTagName}}}", func(fl validator.FieldLevel) bool {
-		return CustomValidatorPkg{{@index}}.{{{FunctionName}}}(fl)
+func RegisterCustomValidator(validateTagName string, validateFunc runtime.ValidationFunc) {
+	validatorInstance.RegisterValidation(validateTagName, func(fl validator.FieldLevel) bool {
+		return validateFunc(fl)
 	})
-{{/each}}
+}
+
+func RegisterRoutes(engine *echo.Echo) {
+	urlParamRegex = regexp.MustCompile(`\{([\w\d-_]+)\}`)
 
 {{#each Controllers}}
 	// {{{Name}}}
@@ -53,10 +54,10 @@ func RegisterRoutes(engine *echo.Echo) {
 				{{> RequestArgsParsing}}
 			{{/each}}
 
-		{{> Middleware isErrorMiddleware=false middlewaresExecution="beforeOperation" }} 
+		{{> Middleware isErrorMiddleware=false middlewares="beforeOperationMiddlewares" }} 
 		{{#equal HasReturnValue true}}value, {{/equal}}opError := controller.{{{OperationId}}}({{#each FuncParams}}{{#if TypeMeta.IsByAddress}}{{else}}*{{/if}}{{ToLowerCamel Name}}RawPtr{{#unless @last}}, {{/unless}}{{/each}})
 		{{> ResponseHeaders }}
-
+		
 		{{> ReplyResponse}}
 	})
 

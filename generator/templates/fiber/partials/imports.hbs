@@ -26,13 +26,4 @@ import (
 		{{/each}}
 	{{/each}}
 {{/each}}
-{{!-- Import Validators --}}
-{{#each CustomValidators}}
-		CustomValidatorPkg{{@index}} "{{{FullPackageName}}}"
-{{/each}}
-
-{{!-- Import Middlewares --}}
-{{#each Middlewares}}
-		MiddlewarePkg{{@index}} "{{{FullPackageName}}}"
-{{/each}}
 )

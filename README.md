@@ -49,48 +49,20 @@ Gleece aims to make Go developers’ lives easier by seamlessly integrating API 
 
 Here’s a practical snippet of how Gleece simplifies your API development:  
 
-```go
-package api
+![Screenshot](https://raw.githubusercontent.com/gophar-fleece/.github/main/docs/screenshots/usage-example.png)
 
-import (
-	"github.com/google/uuid"
-	"github.com/gopher-fleece/runtime" // Importing GleeceController
-)
+All other aspects, including HTTP routing generation, authorization enforcement, payload validation, error handling, and OpenAPI v3 specification generation, are handled by Gleece.
 
-// @Tag(User Management)
-// @Route(/users-management)
-// @Description The User Management API
-type UserController struct {
-	runtime.GleeceController // Embedding the GleeceController
-}
+## 🪄 How It Works
 
-// @Description User's domicile
-type Domicile struct {
-	// @Description The address
-	Address string `json:"address" validate:"required"`
-	// @Description The number of the house (must be at least 1)
-	HouseNumber int `json:"houseNumber" validate:"gte=1"`
-}
+There's NO magic or hidden underlying hacks here! 😊
 
-// @Description Create a new user
-// @Method(POST)
-// @Route(/user/{user_name})
-// @Path(name, { name: "user_name", validate: "required" }) The user's name
-// @Query(email, { validate: "required,email" }) The user's email
-// @Body(domicile, { validate: "required" }) The user's domicile info
-// @Header(origin, { name: "x-origin" }) The request origin
-// @Header(trace) The trace info
-// @Response(200) The ID of the newly created user
-// @ErrorResponse(500) The error when process failed
-// @Security(ApiKeyAuth, { scopes: ["read:users", "write:users"] })
-func (ec *UserController) CreateNewUser(email string, name string, domicile Domicile, origin string, trace string) (string, error) {
-	// Do the logic....
-	userId := uuid.New()
-	return userId.String(), nil
-}
-```
+Once your API functions are ready, use the Gleece CLI to generate routes according to your chosen engine.
 
-All other aspects, including HTTP routing generation, authorization enforcement, payload validation, error handling, and OpenAPI v3 specification generation, are handled by Gleece CLI.
+These generated routes work just like any manually written route and need to be registered to your engine's router instance through your application code.
+
+You can continue to use your engine's native calls, middlewares, and other features as before - Gleece generated code acts only as a complementary plugin to your router.
+
 
 ## 📚 Documentation
 
@@ -124,7 +96,7 @@ To install it search `Gleece` in the "Extension" tab or go to the [VSCode Market
 
 ## 💡 Our Initiative
 
-We believe that API development should be code-first, focusing on the developer experience while maintaining industry standards. Our journey began when we noticed a gap in the Go ecosystem for a comprehensive, [TSOA](https://github.com/lukeautry/tsoa)-like framework that would handle everything from routing and validating to OpenAPI generation - all from a single source of truth: your code.
+We believe that API development should be code-first, focusing on the developer experience while maintaining industry standards. Coming from the TypeScript ecosystem, we were inspired by frameworks like [TSOA](https://github.com/lukeautry/tsoa) that handle everything from routing and validation to OpenAPI generation - all from a single source of truth: your code.
 
 Read more about our initiative and development philosophy in my [Gleece Project](https://blog.castnet.club/en/blog/gleece-project) blog post.
 
@@ -132,8 +104,6 @@ Read more about our initiative and development philosophy in my [Gleece Project]
 Gleece is currently an under-development project.  We’re working hard to make it amazing.
 
 We’d love your feedback and contributions as we shape Gleece!
-
-Stay tuned for updates, and feel free to open issues or pull requests to help us improve!  
 
 ---
 

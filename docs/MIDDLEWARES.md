@@ -1,17 +1,17 @@
 # Gleece Middlewares
 
-Gleece supports middlewares.
+Gleece provides middleware support for request processing.
 
-The event middleware can be triggered:
-- Before running the operation/function: `beforeOperation`
-- After the operation returns without error: `afterOperationSuccess`
-- After the operation returns with error: `onError`
+Middleware events can be triggered at three points:
+- Before the operation/function execution: `beforeOperation`
+- After successful operation completion: `afterOperationSuccess`
+- After operation failure: `onOperationError`
 
-The middleware receives the router's context (depending on the engine in use), and in the case of `onError`, it also receives the error instance.
+Each middleware receives the router's context (specific to the engine in use). For `onOperationError` events, the middleware also receives the error instance.
 
-The middleware returns a boolean indicating whether to continue the execution or to abort it (usually when the response is handled inside the middleware function).
+The middleware returns a boolean value that determines whether to continue execution (`true`) or abort it (`false`). Typically, execution is aborted when the response is handled within the middleware function.
 
-## Implement Middleware
+## Implementing Middleware
 
 ```go
 // For Gin
@@ -19,7 +19,7 @@ func MyMiddleware(ctx *gin.Context) bool {
 	return true
 }
 
-// For echo
+// For Echo
 func MyMiddleware(ctx echo.Context) bool {
 	return true
 }
@@ -35,58 +35,77 @@ func MyMiddleware(w http.ResponseWriter, r *http.Request) bool {
 }
 ```
 
-And similarly for `onError` middlewares:
+And similarly for errors middlewares:
 ```go
 // For Gin
 func MyErrorMiddleware(ctx *gin.Context, err error) bool {
 	return true
 }
 
-// For echo
+// For Echo
 func MyErrorMiddleware(c echo.Context, err error) bool {
 	return true
 }
 
-// For Gorilla Mux
+// For Gorilla Mux & Chi
 func MyErrorMiddleware(w http.ResponseWriter, r *http.Request, err error) bool {
 	return true
 }
 
 // For Fiber
-func MyMiddleware(ctx *fiber.Ctx, err error) bool {
+func MyErrorMiddleware(ctx *fiber.Ctx, err error) bool {
 	return true
 }
 ```
 
-## Declare Middleware
+## Registering Middleware
 
-In the `gleece.config.json`, set the `routesConfig->middlewares` with an array of middlewares.
+Use the generated code's `RegisterMiddleware` / `RegisterErrorMiddleware` API to register your middleware functions.
 
-Each middleware should contain the package from where to import, the middleware function name, and when to execute it.
+Example:
+```go
+package main
 
-For example:
-```json
-...
-"middlewares": [
-		{
-			"fullPackageName": "github.com/gopher-fleece/gleece/middlewares",
-			"execution": "beforeOperation",
-			"functionName": "MiddlewareBeforeOperation"
-		},
-		{
-			"fullPackageName": "github.com/gopher-fleece/gleece/middlewares",
-			"execution": "afterOperationSuccess",
-			"functionName": "MiddlewareAfterOperationSuccess"
-		},
-		{
-			"fullPackageName": "github.com/gopher-fleece/gleece/middlewares",
-			"execution": "onError",
-			"functionName": "MiddlewareOnError"
-		}
-	]
-...
+import (
+    "net/http"
+
+    gleeceRoutes "<package>"
+
+    "github.com/gin-gonic/gin"
+)
+
+func LogBeforeOperationMiddleware(ctx *gin.Context) bool {
+	println("Method:", ctx.Request.Method, "Path:", ctx.Request.URL.Path, "arrived")
+	return true
+}
+
+func LogAfterOperationSuccessMiddleware(ctx *gin.Context) bool {
+	println("Method:", ctx.Request.Method, "Path:", ctx.Request.URL.Path, "completed")
+	return true
+}
+
+func LogOnErrorMiddleware(ctx *gin.Context, err error) bool {
+	println("Method:", ctx.Request.Method, "Path:", ctx.Request.URL.Path, "failed with error:", err.Error())
+	return true
+}
+
+func main() {
+    // Create a default Gin router
+    router := gin.Default()
+
+    // Register the middlewares
+    gleeceRoutes.RegisterMiddleware(runtime.BeforeOperation, LogBeforeOperationMiddleware)
+    gleeceRoutes.RegisterMiddleware(runtime.AfterOperationSuccess, LogAfterOperationSuccessMiddleware)
+    gleeceRoutes.RegisterErrorMiddleware(runtime.OnOperationError, LogOnErrorMiddleware)
+
+    // Register the routes from the generated code
+    gleeceRoutes.RegisterRoutes(router)
+
+    // Start the server on port 8080
+    router.Run("127.0.0.1:8080")
+}
 ```
 
-There is an unlimited number of middlewares, and they are executed in the order specified in the configuration.
+You can register any number of middleware functions. They will be executed in the order of registration.
 
-Aborting execution (returning `false`) will stop the execution of the next (if any) middlewares as well.
+When a middleware returns `false`, it halts the execution chain, preventing any remaining middleware from running.

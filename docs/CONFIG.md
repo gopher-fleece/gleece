@@ -23,21 +23,7 @@ Below are all the options with comments explaining each property:
         },
         "templateOverrides": { // Optional - Override selected engine templates. Key is the template name and value is the path of the custom template
             "ResponseHeaders": "./gin.custom.response.headers.hbs"
-        },
-        "customValidators": [ // Optional - Collection of custom validators that can be used in controllers and structs and will be validated by Gleece when a request arrives
-            {
-                "validateTagName": "validate_starts_with_letter", // Mandatory - The name to be used (e.g. validate:"validate_starts_with_letter" for the tag name validate_starts_with_letter)
-                "functionName": "ValidateStartsWithLetter", // Mandatory - The name of the validation function
-                "fullPackageName": "<package>" // Mandatory - The package where the custom function is located (e.g. github.com/gopher-fleece/gleece/validators)
-            }
-        ],
-        "middlewares": [ // Optional - Collection of middlewares to be invoked during request life-cycle
-            {
-                "fullPackageName": "<package>", // Mandatory - The package where the middleware function is located (e.g. github.com/gopher-fleece/gleece/middlewares)
-                "execution": "beforeOperation", // Mandatory - The request lifecycle trigger when this middleware will be executed. Available options: "beforeOperation", "afterOperationSuccess", "onError"
-                "functionName": "MiddlewareBeforeOperation" // Mandatory - The middleware function name
-            }
-        ]
+        }
     },
     "openAPIGeneratorConfig": { // Mandatory
         "openapi": "3.0.0", // Mandatory - The OpenAPI specification version to generate. Available options: "3.0.0", "3.1.0"
