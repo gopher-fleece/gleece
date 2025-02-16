@@ -55,6 +55,9 @@ var RunValidator string
 //go:embed partials/middleware.hbs
 var Middleware string
 
+//go:embed partials/register.middleware.hbs
+var RegisterMiddleware string
+
 var Partials = map[string]string{
 	"Imports":                         Imports,
 	"TypeDeclarations":                TypeDeclarations,
@@ -70,4 +73,5 @@ var Partials = map[string]string{
 	"RequestSwitchParamType":          RequestSwitchParamType,
 	"RunValidator":                    RunValidator,
 	"Middleware":                      Middleware,
+	"RegisterMiddleware":              RegisterMiddleware,
 }

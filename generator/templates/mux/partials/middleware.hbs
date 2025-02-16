@@ -1,13 +1,13 @@
-{{#each Middlewares}}
-	{{#equal Execution middlewaresExecution }}
-		{{#if isErrorMiddleware}}
-		if continueOperation := MiddlewarePkg{{@index}}.{{{FunctionName}}}(w, ctx, opError); continueOperation == false {
+// Middlewares {{middlewares}} section
+for _, middleware := range {{middlewares}} {
+	{{#if isErrorMiddleware}}
+		if continueOperation := middleware(w, ctx, opError); continueOperation == false {
 			return
 		}
-		{{else}}
-		if continueOperation := MiddlewarePkg{{@index}}.{{{FunctionName}}}(w, ctx); continueOperation == false {
+	{{else}}
+		if continueOperation := middleware(w, ctx); continueOperation == false {
 			return
 		}
-		{{/if}}
-	{{/equal}}
-{{/each}}
+	{{/if}}
+}
+// End middlewares {{middlewares}} section

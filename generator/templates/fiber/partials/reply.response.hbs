@@ -1,24 +1,24 @@
 statusCode := getStatusCode(&controller, {{{HasReturnValue}}}, opError)
 {{#LastTypeNameEquals Responses "error"}}
 	if opError == nil {
-		{{> Middleware isErrorMiddleware=false middlewaresExecution="afterOperationSuccess" }} 
+		{{> Middleware isErrorMiddleware=false middlewares="afterOperationSuccessMiddlewares" }} 
 	}
 	if opError != nil {
-		{{> Middleware isErrorMiddleware=true middlewaresExecution="onError" }} 
+		{{> Middleware isErrorMiddleware=true middlewares="onErrorMiddlewares" }} 
 {{else}}
 	{{#LastTypeIsByAddress Responses}}
 		if opError == nil {
-			{{> Middleware isErrorMiddleware=false middlewaresExecution="afterOperationSuccess" }} 
+			{{> Middleware isErrorMiddleware=false middlewares="afterOperationSuccessMiddlewares" }} 
 		}
 		if opError != nil {
-			{{> Middleware isErrorMiddleware=true middlewaresExecution="onError" }} 
+			{{> Middleware isErrorMiddleware=true middlewares="onErrorMiddlewares" }} 
 	{{else}}
 		emptyErr := {{GetLastTyeFullyQualified Responses}}{}
 		if opError == emptyErr {
-			{{> Middleware isErrorMiddleware=false middlewaresExecution="afterOperationSuccess" }} 
+			{{> Middleware isErrorMiddleware=false middlewares="afterOperationSuccessMiddlewares" }} 
 		}
 		if opError != emptyErr {
-			{{> Middleware isErrorMiddleware=true middlewaresExecution="onError" }} 
+			{{> Middleware isErrorMiddleware=true middlewares="onErrorMiddlewares" }} 
 
 	{{/LastTypeIsByAddress}}
 {{/LastTypeNameEquals}}

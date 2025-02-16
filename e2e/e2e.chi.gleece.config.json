@@ -15,36 +15,7 @@
 		},
 		"templateOverrides": {
 			"ResponseHeaders" : "./chi/assets/chi.custom.response.headers.hbs"
-		},
-		"customValidators" : [
-			{
-				"validateTagName": "validate_starts_with_letter",
-				"functionName": "ValidateStartsWithLetter",
-				"fullPackageName": "github.com/gopher-fleece/gleece/e2e/assets"
-			}
-		],
-		"middlewares": [
-			{
-				"fullPackageName": "github.com/gopher-fleece/gleece/e2e/chi/middlewares",
-				"execution": "beforeOperation",
-				"functionName": "MiddlewareBeforeOperation"
-			},
-			{
-				"fullPackageName": "github.com/gopher-fleece/gleece/e2e/chi/middlewares",
-				"execution": "afterOperationSuccess",
-				"functionName": "MiddlewareAfterOperationSuccess"
-			},
-			{
-				"fullPackageName": "github.com/gopher-fleece/gleece/e2e/chi/middlewares",
-				"execution": "onError",
-				"functionName": "MiddlewareOnError"
-			},
-			{
-				"fullPackageName": "github.com/gopher-fleece/gleece/e2e/chi/middlewares",
-				"execution": "onError",
-				"functionName": "MiddlewareOnError2"
-			}
-		]
+		}
 	},
 	"openAPIGeneratorConfig": {
 		"openapi" : "3.0.0",

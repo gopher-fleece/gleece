@@ -11,6 +11,10 @@ import (
 
 	"github.com/gopher-fleece/gleece/cmd"
 	"github.com/gopher-fleece/gleece/cmd/arguments"
+	"github.com/gopher-fleece/runtime"
+
+	"github.com/gopher-fleece/gleece/e2e/common"
+
 	gleeceChiRoutes "github.com/gopher-fleece/gleece/e2e/chi/routes"
 	gleeceEchoRoutes "github.com/gopher-fleece/gleece/e2e/echo/routes"
 	gleeceFiberRoutes "github.com/gopher-fleece/gleece/e2e/fiber/routes"
@@ -23,7 +27,12 @@ import (
 	ginTester "github.com/gopher-fleece/gleece/e2e/gin"
 	muxTester "github.com/gopher-fleece/gleece/e2e/mux"
 
-	"github.com/gopher-fleece/gleece/e2e/common"
+	e2eAssets "github.com/gopher-fleece/gleece/e2e/assets"
+	chiMiddlewares "github.com/gopher-fleece/gleece/e2e/chi/middlewares"
+	echoMiddlewares "github.com/gopher-fleece/gleece/e2e/echo/middlewares"
+	fiberMiddlewares "github.com/gopher-fleece/gleece/e2e/fiber/middlewares"
+	ginMiddlewares "github.com/gopher-fleece/gleece/e2e/gin/middlewares"
+	muxMiddlewares "github.com/gopher-fleece/gleece/e2e/mux/middlewares"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
@@ -88,22 +97,47 @@ var _ = BeforeSuite(func() {
 	gin.SetMode(gin.TestMode)
 	ginTester.GinRouter = gin.Default()
 	gleeceGinRoutes.RegisterRoutes(ginTester.GinRouter)
+	gleeceGinRoutes.RegisterMiddleware(runtime.BeforeOperation, ginMiddlewares.MiddlewareBeforeOperation)
+	gleeceGinRoutes.RegisterMiddleware(runtime.AfterOperationSuccess, ginMiddlewares.MiddlewareAfterOperationSuccess)
+	gleeceGinRoutes.RegisterErrorMiddleware(runtime.OnOperationError, ginMiddlewares.MiddlewareOnError)
+	gleeceGinRoutes.RegisterErrorMiddleware(runtime.OnOperationError, ginMiddlewares.MiddlewareOnError2)
+	gleeceGinRoutes.RegisterCustomValidator("validate_starts_with_letter", e2eAssets.ValidateStartsWithLetter)
 
 	// Set Echo
 	echoTester.EchoRouter = echo.New()
 	echoTester.EchoRouter.Use(middleware.Recover())
+	gleeceEchoRoutes.RegisterMiddleware(runtime.BeforeOperation, echoMiddlewares.MiddlewareBeforeOperation)
+	gleeceEchoRoutes.RegisterMiddleware(runtime.AfterOperationSuccess, echoMiddlewares.MiddlewareAfterOperationSuccess)
+	gleeceEchoRoutes.RegisterErrorMiddleware(runtime.OnOperationError, echoMiddlewares.MiddlewareOnError)
+	gleeceEchoRoutes.RegisterErrorMiddleware(runtime.OnOperationError, echoMiddlewares.MiddlewareOnError2)
+	gleeceEchoRoutes.RegisterCustomValidator("validate_starts_with_letter", e2eAssets.ValidateStartsWithLetter)
 	gleeceEchoRoutes.RegisterRoutes(echoTester.EchoRouter)
 
 	// Set Gorilla mux
 	muxTester.MuxRouter = mux.NewRouter()
+	gleeceMuxRoutes.RegisterMiddleware(runtime.BeforeOperation, muxMiddlewares.MiddlewareBeforeOperation)
+	gleeceMuxRoutes.RegisterMiddleware(runtime.AfterOperationSuccess, muxMiddlewares.MiddlewareAfterOperationSuccess)
+	gleeceMuxRoutes.RegisterErrorMiddleware(runtime.OnOperationError, muxMiddlewares.MiddlewareOnError)
+	gleeceMuxRoutes.RegisterErrorMiddleware(runtime.OnOperationError, muxMiddlewares.MiddlewareOnError2)
+	gleeceMuxRoutes.RegisterCustomValidator("validate_starts_with_letter", e2eAssets.ValidateStartsWithLetter)
 	gleeceMuxRoutes.RegisterRoutes(muxTester.MuxRouter)
 
 	// Set Chi
 	chiTester.ChiRouter = chi.NewRouter()
+	gleeceChiRoutes.RegisterMiddleware(runtime.BeforeOperation, chiMiddlewares.MiddlewareBeforeOperation)
+	gleeceChiRoutes.RegisterMiddleware(runtime.AfterOperationSuccess, chiMiddlewares.MiddlewareAfterOperationSuccess)
+	gleeceChiRoutes.RegisterErrorMiddleware(runtime.OnOperationError, chiMiddlewares.MiddlewareOnError)
+	gleeceChiRoutes.RegisterErrorMiddleware(runtime.OnOperationError, chiMiddlewares.MiddlewareOnError2)
+	gleeceChiRoutes.RegisterCustomValidator("validate_starts_with_letter", e2eAssets.ValidateStartsWithLetter)
 	gleeceChiRoutes.RegisterRoutes(chiTester.ChiRouter)
 
 	// Set Fiber
 	fiberTester.FiberRouter = fiber.New()
+	gleeceFiberRoutes.RegisterMiddleware(runtime.BeforeOperation, fiberMiddlewares.MiddlewareBeforeOperation)
+	gleeceFiberRoutes.RegisterMiddleware(runtime.AfterOperationSuccess, fiberMiddlewares.MiddlewareAfterOperationSuccess)
+	gleeceFiberRoutes.RegisterErrorMiddleware(runtime.OnOperationError, fiberMiddlewares.MiddlewareOnError)
+	gleeceFiberRoutes.RegisterErrorMiddleware(runtime.OnOperationError, fiberMiddlewares.MiddlewareOnError2)
+	gleeceFiberRoutes.RegisterCustomValidator("validate_starts_with_letter", e2eAssets.ValidateStartsWithLetter)
 	gleeceFiberRoutes.RegisterRoutes(fiberTester.FiberRouter)
 })
 

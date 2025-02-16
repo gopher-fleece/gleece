@@ -300,26 +300,6 @@ const (
 	RoutingEngineChi   RoutingEngineType = "chi"
 )
 
-type CustomValidators struct {
-	FunctionName    string `json:"functionName" validate:"required,starts_with_letter"`
-	FullPackageName string `json:"fullPackageName" validate:"required"`
-	ValidateTagName string `json:"validateTagName" validate:"required,starts_with_letter"`
-}
-
-type MiddlewareExecutionType string
-
-const (
-	MiddlewareExecutionBeforeOperation       MiddlewareExecutionType = "beforeOperation"
-	MiddlewareExecutionAfterOperationSuccess MiddlewareExecutionType = "afterOperationSuccess"
-	MiddlewareExecutionOnError               MiddlewareExecutionType = "onError"
-)
-
-type Middleware struct {
-	FullPackageName string                  `json:"fullPackageName" validate:"required"`
-	Execution       MiddlewareExecutionType `json:"execution" validate:"required,oneof=beforeOperation afterOperationSuccess onError"`
-	FunctionName    string                  `json:"functionName" validate:"required,starts_with_letter"`
-}
-
 type RoutesConfig struct {
 	Engine              RoutingEngineType   `json:"engine" validate:"required,oneof=gin echo mux fiber chi"`
 	PackageName         string              `json:"packageName"`
@@ -327,8 +307,6 @@ type RoutesConfig struct {
 	OutputFilePerms     string              `json:"outputFilePerms" validate:"regex=^(0?[0-7]{3})?$"`
 	AuthorizationConfig AuthorizationConfig `json:"authorizationConfig" validate:"required"`
 	TemplateOverrides   map[string]string   `json:"templateOverrides"`
-	CustomValidators    []CustomValidators  `json:"customValidators" validate:"dive"`
-	Middlewares         []Middleware        `json:"middlewares" validate:"dive"`
 }
 
 type AuthorizationConfig struct {

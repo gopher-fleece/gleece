@@ -26,12 +26,10 @@ type PackageImport struct {
 }
 
 type RoutesContext struct {
-	PackageName      string
-	Controllers      []definitions.ControllerMetadata
-	CustomValidators []definitions.CustomValidators
-	Middlewares      []definitions.Middleware
-	GenerationDate   string
-	AuthConfig       definitions.AuthorizationConfig
+	PackageName    string
+	Controllers    []definitions.ControllerMetadata
+	GenerationDate string
+	AuthConfig     definitions.AuthorizationConfig
 }
 
 func GetTemplateContext(
@@ -45,14 +43,7 @@ func GetTemplateContext(
 		ctx.PackageName = "routes"
 	}
 
-	if config.CustomValidators != nil {
-		ctx.CustomValidators = config.CustomValidators
-	} else {
-		ctx.CustomValidators = []definitions.CustomValidators{}
-	}
 	ctx.GenerationDate = time.Now().Format(time.DateOnly)
-
-	ctx.Middlewares = config.Middlewares
 
 	return ctx, nil
 }

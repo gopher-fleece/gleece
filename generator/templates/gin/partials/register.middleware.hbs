@@ -1,0 +1,20 @@
+type MiddlewareFunc func(ctx *gin.Context) bool
+type ErrorMiddlewareFunc func(ctx *gin.Context, err error) bool
+
+var beforeOperationMiddlewares []MiddlewareFunc
+var afterOperationSuccessMiddlewares []MiddlewareFunc
+var onErrorMiddlewares []ErrorMiddlewareFunc
+
+func RegisterMiddleware(executionType runtime.MiddlewareExecutionType, middlewareFunc MiddlewareFunc) {
+	if executionType == runtime.BeforeOperation {
+		beforeOperationMiddlewares = append(beforeOperationMiddlewares, middlewareFunc)
+	} else if executionType == runtime.AfterOperationSuccess {
+		afterOperationSuccessMiddlewares = append(afterOperationSuccessMiddlewares, middlewareFunc)
+	}
+}
+
+func RegisterErrorMiddleware(executionType runtime.ErrorMiddlewareExecutionType, errorMiddlewareFunc ErrorMiddlewareFunc) {
+	if executionType == runtime.OnOperationError {
+		onErrorMiddlewares = append(onErrorMiddlewares, errorMiddlewareFunc)
+	}
+}
