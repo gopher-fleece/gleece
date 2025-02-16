@@ -71,6 +71,7 @@ import (
 
     gleeceRoutes "<package>"
 
+    "github.com/gopher-fleece/runtime"
     "github.com/gin-gonic/gin"
 )
 

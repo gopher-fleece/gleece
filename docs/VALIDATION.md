@@ -64,12 +64,12 @@ To create a custom validator, implement Gleece's `runtime.ValidationFunc` interf
 package main
 
 import (
-	"unicode"
+    "unicode"
     "net/http"
 
     gleeceRoutes "<package>"
 
-	"github.com/gopher-fleece/runtime"
+    "github.com/gopher-fleece/runtime"
     "github.com/gin-gonic/gin"
 )
 
@@ -87,8 +87,8 @@ func main() {
     // Create a default Gin router
     router := gin.Default()
 
-	// Register the `ValidateStartsWithLetter` custom validator
-	gleeceRoutes.RegisterCustomValidator("validate_starts_with_letter", ValidateStartsWithLetter)
+    // Register the `ValidateStartsWithLetter` custom validator
+    gleeceRoutes.RegisterCustomValidator("validate_starts_with_letter", ValidateStartsWithLetter)
 
     // Register the routes from the generated code
     gleeceRoutes.RegisterRoutes(router)

@@ -55,13 +55,13 @@ All other aspects, including HTTP routing generation, authorization enforcement,
 
 ## 🪄 How It Works
 
-There's NO magic or hidden underlying hacks here! 😊
+There's NO magic or hidden underlying hacks at runtime! 😊
 
 Once your API functions are ready, use the Gleece CLI to generate routes according to your chosen engine.
 
 These generated routes work just like any manually written route and need to be registered to your engine's router instance through your application code.
 
-You can continue to use your engine's native calls, middlewares, and other features as before - Gleece generated code acts only as a complementary plugin to your router.
+You can continue to use your engine's native calls, middlewares, and other features as before - Gleece's generated code acts only as a complementary plugin to your router.
 
 
 ## 📚 Documentation
