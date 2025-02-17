@@ -1,6 +1,6 @@
 # Advanced Abilities for Controllers
 
-### Set HTTP Response Code in Run-time
+### Set HTTP Response Code in Runtime
 
 When a controller function returns with a nil error, the operation is considered successful.
 
@@ -19,7 +19,7 @@ func (mc *MyController) MyRoute() (string, error) {
 }
 ```
 
-### Set HTTP Response Header in Run-time
+### Set HTTP Response Header in Runtime
 
 To set HTTP response headers, use the `SetHeader` API.
 

@@ -12,7 +12,7 @@ For example, this route function logic:
 // @Method(GET)
 // @Route(/default-error)
 func (ec *MyController) DefaultError() error {
-	return fmt.Errorf("default error")
+    return fmt.Errorf("default error")
 }
 ```
 
@@ -71,7 +71,7 @@ For example:
 // @Route(/default-error)
 func (mc *MyController) DefaultError() error {
     mc.SetStatus(runtime.StatusNotImplemented)
-	return fmt.Errorf("default error")
+    return fmt.Errorf("default error")
 }
 ```
 

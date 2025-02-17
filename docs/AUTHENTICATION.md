@@ -54,11 +54,11 @@ Set default security method to `openAPIGeneratorConfig->defaultSecurity`.
 For example:
 ```json
 "defaultSecurity": {
-			"name": "securitySchemaName",
-			"scopes": [
-				"read",
-			]
-		}
+            "name": "securitySchemaName",
+            "scopes": [
+                "read",
+            ]
+        }
 ```
 
 #### Declare security in a controller
@@ -86,7 +86,7 @@ func (ec *MyController) MyRouteMethod() (error) {
 }
 ```
 
-At each level (configuration, class, and method), you can define more than one security set, and there will be an OR relationship between them. This means if one of them passes, the authentication is considered PASSED, even if other security checks failed.
+At each level (class, and method), you can define more than one security set, and there will be an OR relationship between them. This means if one of them passes, the authentication is considered PASSED, even if other security checks failed.
 
 For example:
 ```go

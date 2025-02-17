@@ -175,7 +175,7 @@ gleece
 ```
 
 By default, it reads the `gleece.config.json` configuration file.
-It generates routers based on the engine specified in `routesConfig->engine`.
+It generates routes based on the engine specified in `routesConfig->engine`.
 It also generates the OpenAPI specification according to the version set in `openAPIGeneratorConfig->openapi`.
 
 In this example configuration, it generates `gin` routes and OpenAPI `v3.0.0` specifications, with both outputs in the `dist` directory.
@@ -190,7 +190,7 @@ package main
 import (
     "net/http"
 
-    gleeceRoutes "example-prog/dist"
+    gleeceRoutes "<package>/routes"
 
     "github.com/gin-gonic/gin"
 )
@@ -224,7 +224,7 @@ Happy Coding! 🤓
 - [Annotations & Options](./ANNOTATIONS.md)
 - [Authentication](./AUTHENTICATION.md)
 - [Validations](./VALIDATION.md) 
-- [Error handling](./SECURITY.md)
+- [Error handling](./ERROR_HANDLING.md)
 - [Middlewares](./MIDDLEWARES.md)
 - [Configuration](./CONFIG.md)
 - [Advanced](./ADVANCED.md)
