@@ -8,7 +8,9 @@
 
 <!-- Packages, Releases etc -->
 [![VSCode Extension](https://img.shields.io/visual-studio-marketplace/v/haim-kastner.gleece-extension?label=VSCode%20Extension)](https://marketplace.visualstudio.com/items?itemName=haim-kastner.gleece-extension)
-[![Documentation](https://img.shields.io/badge/docs-available-brightgreen.svg)](https://docs.gleece.dev/docs/intro)
+<a href="https://docs.gleece.dev">
+    <img src="https://img.shields.io/badge/docs-gleece.dev-blue" alt="Documentation">
+</a>
 [![Latest Release](https://img.shields.io/github/v/release/gopher-fleece/gleece)](https://github.com/gopher-fleece/gleece/releases)
 [![Go Reference](https://pkg.go.dev/badge/github.com/gopher-fleece/gleece.svg)](https://pkg.go.dev/github.com/gopher-fleece/gleece)
 
