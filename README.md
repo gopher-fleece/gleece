@@ -8,7 +8,7 @@
 
 <!-- Packages, Releases etc -->
 [![VSCode Extension](https://img.shields.io/visual-studio-marketplace/v/haim-kastner.gleece-extension?label=VSCode%20Extension)](https://marketplace.visualstudio.com/items?itemName=haim-kastner.gleece-extension)
-[![Documentation](https://img.shields.io/badge/docs-available-brightgreen.svg)](./docs/STEPBYSTEP.md)
+[![Documentation](https://img.shields.io/badge/docs-available-brightgreen.svg)](https://docs.gleece.dev/docs/intro)
 [![Latest Release](https://img.shields.io/github/v/release/gopher-fleece/gleece)](https://github.com/gopher-fleece/gleece/releases)
 [![Go Reference](https://pkg.go.dev/badge/github.com/gopher-fleece/gleece.svg)](https://pkg.go.dev/github.com/gopher-fleece/gleece)
 
@@ -64,27 +64,11 @@ These generated routes work just like any manually written route and need to be 
 You can continue to use your engine's native calls, middlewares, and other features as before - Gleece's generated code acts only as a complementary plugin to your router.
 
 
-## 📚 Documentation
+## 📚 Documentation  
 
-- [Step By Step Guide](./docs/STEPBYSTEP.md)
-- [Annotations & Options](./docs/ANNOTATIONS.md)
-- [Authentication](./docs/AUTHENTICATION.md)
-- [Validations](./docs/VALIDATION.md) 
-- [Error handling](./docs/ERROR_HANDLING.md)
-- [Middlewares](./docs/MIDDLEWARES.md)
-- [Configuration](./docs/CONFIG.md)
-- [Advanced](./docs/ADVANCED.md)
+Explore the complete [Gleece documentation](https://docs.gleece.dev/docs/intro) to get started quickly.  
 
-## 🌐 Integrating with Golang Rest Routers 
-
-- [Gin](./docs/routers/GIN_INTEGRATION.md)
-- [Echo](./docs/routers/ECHO_INTEGRATION.md)
-- [Gorilla Mux](./docs/routers/MUX_INTEGRATION.md)
-- [Chi](./docs/routers/CHI_INTEGRATION.md)
-- [Fiber](./docs/routers/FIBER_INTEGRATION.md)
-
-
-For a complete example project using Gleece, check out the [Gleece Example Project](https://github.com/gopher-fleece/gleecexample#readme). This project demonstrates how to set up and use Gleece in a real-world scenario, providing you with a practical reference to get started quickly.
+You can also check out the [Gleece Example Project](https://github.com/gopher-fleece/gleecexample#readme), which demonstrates how to set up and use Gleece in a real-world scenario. This hands-on reference will help you integrate Gleece seamlessly.
 
 ## 🎨 VSCode Extension
 
