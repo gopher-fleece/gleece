@@ -15,6 +15,9 @@
 		},
 		"templateOverrides": {
 			"ResponseHeaders" : "./mux/assets/mux.custom.response.headers.hbs"
+		},
+		"templateExtensions": {
+			"RouteEndRoutesExtension" : "./mux/assets/mux.end.route.extension.hbs"
 		}
 	},
 	"openAPIGeneratorConfig": {

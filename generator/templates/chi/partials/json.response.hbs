@@ -1,3 +1,4 @@
+{{> JsonResponseExtension}}
 {{#equal HasReturnValue true}}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)

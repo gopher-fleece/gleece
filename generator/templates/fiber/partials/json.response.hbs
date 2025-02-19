@@ -1,3 +1,4 @@
+{{> JsonResponseExtension}}
 {{#equal HasReturnValue true}}
 	return ctx.Status(statusCode).JSON(value)
 {{/equal}}

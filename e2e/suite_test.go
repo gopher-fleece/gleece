@@ -9,10 +9,10 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/mux"
 
-	"github.com/gopher-fleece/gleece/cmd"
-	"github.com/gopher-fleece/gleece/cmd/arguments"
 	"github.com/gopher-fleece/runtime"
 
+	"github.com/gopher-fleece/gleece/cmd"
+	"github.com/gopher-fleece/gleece/cmd/arguments"
 	"github.com/gopher-fleece/gleece/e2e/common"
 
 	gleeceChiRoutes "github.com/gopher-fleece/gleece/e2e/chi/routes"
@@ -54,7 +54,7 @@ func RegenerateRoutes() {
 	// Always build routes for gin  ...
 	err := cmd.GenerateSpecAndRoutes(arguments.CliArguments{ConfigPath: "./e2e.gin.gleece.config.json"})
 	if err != nil {
-		Fail("Failed to generate gin routes" + err.Error())
+		Fail("Failed to generate gin routes " + err.Error())
 	}
 
 	// Get from env var whenever to regenerate all routes again.
@@ -67,25 +67,25 @@ func RegenerateRoutes() {
 	// Build routes for echo ...
 	err = cmd.GenerateSpecAndRoutes(arguments.CliArguments{ConfigPath: "./e2e.echo.gleece.config.json"})
 	if err != nil {
-		Fail("Failed to generate echo routes" + err.Error())
+		Fail("Failed to generate echo routes " + err.Error())
 	}
 
 	// Build routes for Gorilla mux ...
 	err = cmd.GenerateSpecAndRoutes(arguments.CliArguments{ConfigPath: "./e2e.mux.gleece.config.json"})
 	if err != nil {
-		Fail("Failed to generate echo routes" + err.Error())
+		Fail("Failed to generate echo routes " + err.Error())
 	}
 
 	// Build routes for chi ...
 	err = cmd.GenerateSpecAndRoutes(arguments.CliArguments{ConfigPath: "./e2e.chi.gleece.config.json"})
 	if err != nil {
-		Fail("Failed to generate echo routes" + err.Error())
+		Fail("Failed to generate echo routes " + err.Error())
 	}
 
 	// Build routes for Fiber ...
 	err = cmd.GenerateSpecAndRoutes(arguments.CliArguments{ConfigPath: "./e2e.fiber.gleece.config.json"})
 	if err != nil {
-		Fail("Failed to generate echo routes" + err.Error())
+		Fail("Failed to generate echo routes " + err.Error())
 	}
 }
 

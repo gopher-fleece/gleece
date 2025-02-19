@@ -15,6 +15,9 @@
 		},
 		"templateOverrides": {
 			"ResponseHeaders" : "./echo/assets/echo.custom.response.headers.hbs"
+		},
+		"templateExtensions": {
+			"RouteEndRoutesExtension" : "./echo/assets/echo.end.route.extension.hbs"
 		}
 	},
 	"openAPIGeneratorConfig": {

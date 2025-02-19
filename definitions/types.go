@@ -307,6 +307,7 @@ type RoutesConfig struct {
 	OutputFilePerms     string              `json:"outputFilePerms" validate:"regex=^(0?[0-7]{3})?$"`
 	AuthorizationConfig AuthorizationConfig `json:"authorizationConfig" validate:"required"`
 	TemplateOverrides   map[string]string   `json:"templateOverrides"`
+	TemplateExtensions  map[string]string   `json:"templateExtensions"`
 }
 
 type AuthorizationConfig struct {

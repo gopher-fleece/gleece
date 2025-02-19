@@ -161,25 +161,60 @@ func overrideTemplates(config *definitions.GleeceConfig, templatePartials map[st
 	return nil
 }
 
+func loadTemplatesExtensions(config *definitions.GleeceConfig, templateExtensions map[string]string) error {
+	for name, path := range config.RoutesConfig.TemplateExtensions {
+		_, exists := templateExtensions[name]
+		if !exists {
+			var knownExtensions []string
+			for partialName := range templateExtensions {
+				knownExtensions = append(knownExtensions, partialName)
+			}
+			return fmt.Errorf(
+				"The extension '%s' is not a valid %s extension. Known extensions: %s",
+				name,
+				config.RoutesConfig.Engine,
+				strings.Join(knownExtensions, ", "),
+			)
+		}
+
+		data, err := getTemplateData(name, path)
+		if err != nil {
+			return err
+		}
+		templateExtensions[name] = data
+	}
+	return nil
+}
+
 func registerPartials(config *definitions.GleeceConfig) error {
 	var partials map[string]string
+	var extensions map[string]string
 	engine := config.RoutesConfig.Engine
 	switch engine {
 	case definitions.RoutingEngineGin:
 		partials = gin.Partials
+		extensions = gin.TemplateExtensions
 	case definitions.RoutingEngineEcho:
 		partials = echo.Partials
+		extensions = echo.TemplateExtensions
 	case definitions.RoutingEngineMux:
 		partials = mux.Partials
+		extensions = mux.TemplateExtensions
 	case definitions.RoutingEngineFiber:
 		partials = fiber.Partials
+		extensions = fiber.TemplateExtensions
 	case definitions.RoutingEngineChi:
 		partials = chi.Partials
+		extensions = chi.TemplateExtensions
 	default:
 		panic(fmt.Sprintf("Unknown routing engine type '%v'", engine))
 	}
 
 	if err := overrideTemplates(config, partials); err != nil {
+		return err
+	}
+
+	if err := loadTemplatesExtensions(config, extensions); err != nil {
 		return err
 	}
 
@@ -199,6 +234,8 @@ func registerPartials(config *definitions.GleeceConfig) error {
 
 	logger.Debug("Registering partials for '%v'", config.RoutesConfig.Engine)
 	raymond.RegisterPartials(partials)
+	logger.Debug("Registering extensions for '%v'", config.RoutesConfig.Engine)
+	raymond.RegisterPartials(extensions)
 
 	lastEngine = &engine
 	return nil

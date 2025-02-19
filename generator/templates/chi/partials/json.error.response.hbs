@@ -7,6 +7,7 @@ stdError := runtime.Rfc7807Error{
 	Instance:   "/gleece/controller/error/{{{OperationId}}}",
 	Extensions: map[string]string{"error": opError.Error()},
 }
+{{> JsonErrorResponseExtension}}
 w.WriteHeader(statusCode)
 json.NewEncoder(w).Encode(stdError)
 {{else}}
