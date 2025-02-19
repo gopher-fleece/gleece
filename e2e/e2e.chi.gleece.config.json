@@ -15,6 +15,9 @@
 		},
 		"templateOverrides": {
 			"ResponseHeaders" : "./chi/assets/chi.custom.response.headers.hbs"
+		},
+		"templateExtensions": {
+			"RouteEndRoutesExtension" : "./chi/assets/chi.end.route.extension.hbs"
 		}
 	},
 	"openAPIGeneratorConfig": {

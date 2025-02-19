@@ -55,6 +55,20 @@ var _ = Describe("Error-handling", func() {
 		Expect(err).To(MatchError(ContainSubstring("Unclosed expression")))
 	})
 
+	It("Returns a clear error when configuration references a non-existent template extension", func() {
+		configPath := utils.GetAbsPathByRelative("gleece.unknown.extension.config.json")
+		err := cmd.GenerateRoutes(arguments.CliArguments{ConfigPath: configPath})
+
+		Expect(err).To(MatchError(ContainSubstring("The extension 'thisExtensionsDoesNotExist' is not a valid gin extension")))
+	})
+
+	It("Returns a clear error when configuration has a non-existent template extension", func() {
+		configPath := utils.GetAbsPathByRelative("gleece.missing.extension.config.json")
+		err := cmd.GenerateRoutes(arguments.CliArguments{ConfigPath: configPath})
+
+		Expect(err).To(MatchError(ContainSubstring("could not read given template ImportsExtension override at")))
+	})
+
 	It("Returns a clear error when type declared outside of global path", func() {
 		configPath := utils.GetAbsPathByRelative("gleece.unscanned.types.json")
 		err := cmd.GenerateRoutes(arguments.CliArguments{ConfigPath: configPath})

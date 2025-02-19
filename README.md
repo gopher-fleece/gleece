@@ -39,10 +39,11 @@ Gone are the days of manually writing repetitive boilerplate code or struggling 
 
 With Gleece, you can:  
 - ✨ **Simplify** your API development process.  
-- 📄 Automatically **generate OpenAPI v3.0.0 / v3.1.0** specification directly from your code.  
+- 📝 Automatically **generate OpenAPI v3.0.0 / v3.1.0** specification directly from your code.  
 - 🎯 Ensure your APIs are always **well-documented and consistent**.  
 - ✅ **Validate input data** effortlessly to keep your APIs robust and secure.
 - 🛡 **Security first** approach, easy authorization with supplied check function.
+- 🧩 **Customize behavior** to your exact needs by extending or overriding the routes templates.
 - ⚡️ Choose Your Framework - seamlessly works with **Gin, Echo, Gorilla Mux, Chi, & Fiber** Rest frameworks.
 
 Gleece aims to make Go developers’ lives easier by seamlessly integrating API routes, validation, and documentation into a single cohesive workflow.

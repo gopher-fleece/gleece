@@ -58,6 +58,26 @@ var Middleware string
 //go:embed partials/register.middleware.hbs
 var RegisterMiddleware string
 
+// Those are the extension that made to allow *extend* Gleece's routes logic. as default they are all empty.
+var TemplateExtensions = map[string]string{
+	// On routes.hbs
+	"RegisterRoutesExtension":        "// register routes extension placeholder \n",
+	"RouteStartRoutesExtension":      "// route start routes extension placeholder \n",
+	"BeforeOperationRoutesExtension": "// before operation routes extension placeholder \n",
+	"AfterOperationRoutesExtension":  "// after operation routes extension placeholder \n",
+	"RouteEndRoutesExtension":        "// route end routes extension placeholder \n",
+
+	// On partials
+	"ImportsExtension":                         "// import extension placeholder \n",
+	"TypeDeclarationsExtension":                "// type declarations extension placeholder \n",
+	"FunctionDeclarationsExtension":            "// function declarations extension placeholder \n",
+	"JsonResponseExtension":                    "// json response extension placeholder \n",
+	"JsonValidationErrorResponseExtension":     "// json validation error response extension placeholder \n",
+	"JsonBodyValidationErrorResponseExtension": "// json body validation error response extension placeholder \n",
+	"JsonErrorResponseExtension":               "// json error response extension placeholder \n",
+	"ResponseHeadersExtension":                 "// response headers extension placeholder \n",
+}
+
 var Partials = map[string]string{
 	"Imports":                         Imports,
 	"TypeDeclarations":                TypeDeclarations,

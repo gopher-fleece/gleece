@@ -37,10 +37,14 @@ func RegisterCustomValidator(validateTagName string, validateFunc runtime.Valida
 func RegisterRoutes(engine *echo.Echo) {
 	urlParamRegex = regexp.MustCompile(`\{([\w\d-_]+)\}`)
 
+	{{> RegisterRoutesExtension }}
+
 {{#each Controllers}}
 	// {{{Name}}}
 	{{#each Routes}}
 		engine.{{{HttpVerb}}}(toEchoUrl("{{{../RestMetadata.Path}}}{{{RestMetadata.Path}}}"), func(ctx echo.Context) error  {
+			{{> RouteStartRoutesExtension }}
+			
 			authErr := {{> AuthorizationCall}}
 			if authErr != nil {
 				return handleAuthorizationError(ctx, authErr, "{{{OperationId}}}")
@@ -55,9 +59,14 @@ func RegisterRoutes(engine *echo.Echo) {
 			{{/each}}
 
 		{{> Middleware isErrorMiddleware=false middlewares="beforeOperationMiddlewares" }} 
+		{{> BeforeOperationRoutesExtension }}
 		{{#equal HasReturnValue true}}value, {{/equal}}opError := controller.{{{OperationId}}}({{#each FuncParams}}{{#if TypeMeta.IsByAddress}}{{else}}*{{/if}}{{ToLowerCamel Name}}RawPtr{{#unless @last}}, {{/unless}}{{/each}})
+		{{> AfterOperationRoutesExtension }}
+		
 		{{> ResponseHeaders }}
 		
+		{{> RouteEndRoutesExtension }}
+
 		{{> ReplyResponse}}
 	})
 

@@ -21,23 +21,6 @@ var _ = Describe("E2E Routing Spec", func() {
 		})
 	})
 
-	It("Should set custom template header", func() {
-		RunRouterTest(common.RouterTest{
-			Name:           "Should set custom template header",
-			ExpectedStatus: 200,
-			ExpectedBody:   "\"works\"",
-			ExpendedHeaders: map[string]string{
-				"x-test-header": "test",
-				"x-inject":      "true",
-			},
-			Path:    "/e2e/simple-get",
-			Method:  "GET",
-			Body:    nil,
-			Query:   nil,
-			Headers: nil,
-		})
-	})
-
 	It("Should use custom validator", func() {
 		RunRouterTest(common.RouterTest{
 			Name:            "Should use custom validator - valid header",

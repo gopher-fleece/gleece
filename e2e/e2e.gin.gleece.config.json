@@ -15,6 +15,9 @@
 		},
 		"templateOverrides": {
 			"ResponseHeaders" : "./gin/assets/gin.custom.response.headers.hbs"
+		},
+		"templateExtensions": {
+			"RouteEndRoutesExtension" : "./gin/assets/gin.end.route.extension.hbs"
 		}
 	},
 	"openAPIGeneratorConfig": {

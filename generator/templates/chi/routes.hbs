@@ -37,10 +37,15 @@ func RegisterCustomValidator(validateTagName string, validateFunc runtime.Valida
 func RegisterRoutes(engine *chi.Mux) {
 	urlParamRegex = regexp.MustCompile(`\{([\w\d-_]+)\}`)
 
+	{{> RegisterRoutesExtension }}
+
 {{#each Controllers}}
 	// {{{Name}}}
+
 	{{#each Routes}}
 		engine.{{{ToUpperCamel HttpVerb}}}(toChiUrl("{{{../RestMetadata.Path}}}{{{RestMetadata.Path}}}"), func(w http.ResponseWriter, ctx *http.Request) {
+			{{> RouteStartRoutesExtension }}
+			
 			authErr := {{> AuthorizationCall}}
 			if authErr != nil {
 				handleAuthorizationError(w, authErr, "{{{OperationId}}}")
@@ -56,9 +61,14 @@ func RegisterRoutes(engine *chi.Mux) {
 			{{/each}}
 
 		{{> Middleware isErrorMiddleware=false middlewares="beforeOperationMiddlewares" }} 
+		{{> BeforeOperationRoutesExtension }}
 		{{#equal HasReturnValue true}}value, {{/equal}}opError := controller.{{{OperationId}}}({{#each FuncParams}}{{#if TypeMeta.IsByAddress}}{{else}}*{{/if}}{{ToLowerCamel Name}}RawPtr{{#unless @last}}, {{/unless}}{{/each}})
+		{{> AfterOperationRoutesExtension }}
+		
 		{{> ResponseHeaders }}
 		
+		{{> RouteEndRoutesExtension }}
+
 		{{> ReplyResponse}}
 	})
 

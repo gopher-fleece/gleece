@@ -37,10 +37,14 @@ func RegisterCustomValidator(validateTagName string, validateFunc runtime.Valida
 func RegisterRoutes(engine *fiber.App) {
 	urlParamRegex = regexp.MustCompile(`\{([\w\d-_]+)\}`)
 
+	{{> RegisterRoutesExtension }}
+
 {{#each Controllers}}
 	// {{{Name}}}
 	{{#each Routes}}
 		engine.{{{ToUpperCamel HttpVerb}}}(toFiberUrl("{{{../RestMetadata.Path}}}{{{RestMetadata.Path}}}"), func(ctx *fiber.Ctx) error  {
+			{{> RouteStartRoutesExtension }}
+			
 			authErr := {{> AuthorizationCall}}
 			if authErr != nil {
 				return handleAuthorizationError(ctx, authErr, "{{{OperationId}}}")
@@ -55,9 +59,14 @@ func RegisterRoutes(engine *fiber.App) {
 			{{/each}}
 
 		{{> Middleware isErrorMiddleware=false middlewares="beforeOperationMiddlewares" }} 
+		{{> BeforeOperationRoutesExtension }}
 		{{#equal HasReturnValue true}}value, {{/equal}}opError := controller.{{{OperationId}}}({{#each FuncParams}}{{#if TypeMeta.IsByAddress}}{{else}}*{{/if}}{{ToLowerCamel Name}}RawPtr{{#unless @last}}, {{/unless}}{{/each}})
+		{{> AfterOperationRoutesExtension }}
+		
 		{{> ResponseHeaders }}
 		
+		{{> RouteEndRoutesExtension }}
+
 		{{> ReplyResponse}}
 	})
 

@@ -27,18 +27,18 @@ func bindAndValidateBody[TOutput any](ctx *fiber.Ctx, contentType string, valida
 
 	var deserializedOutput TOutput
 
-	switch contentType {
-	case "application/json":
-		err = json.Unmarshal(bodyBytes, &deserializedOutput)
-	default:
-		return fmt.Errorf("content-type %s is not currently supported by the validation subsystem", contentType)
-	}
+			switch contentType {
+		case "application/json":
+			err = json.Unmarshal(bodyBytes, &deserializedOutput)
+		default:
+			return fmt.Errorf("content-type %s is not currently supported by the validation subsystem", contentType)
+		}
+		
+		if err != nil {
+			return err
+			}
 
-	if err != nil {
-		return err
-	}
-
-	if err = validatorInstance.Struct(&deserializedOutput); err != nil {
+		if err = validatorInstance.Struct(&deserializedOutput); err != nil {
 		return err
 	}
 
@@ -122,3 +122,5 @@ func wrapValidatorError(validatorErr error, operationId string, fieldName string
 		Instance:   fmt.Sprintf("/gleece/validation/error/%s", operationId),
 	}
 }
+
+{{> FunctionDeclarationsExtension }}
