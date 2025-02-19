@@ -350,3 +350,18 @@ func (ec *E2EController) Patch() error {
 	ec.SetHeader("x-method", "patch")
 	return nil
 }
+
+// @Method(GET)
+// @Route(/custom-context-1)
+// @CustomContext(LEVEL, {value: "high"})
+func (ec *E2EController) CustomContext1() (string, error) {
+	return "works", nil
+}
+
+// @Method(GET)
+// @Route(/custom-context-2)
+// @CustomContext(LEVEL, {value: "low"})
+// @CustomContext(MODE, {mode: "100"})
+func (ec *E2EController) CustomContext2() (string, error) {
+	return "works", nil
+}

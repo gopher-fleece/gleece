@@ -2791,6 +2791,157 @@ func RegisterRoutes(engine *chi.Mux) {
 		// json response extension placeholder
 		w.WriteHeader(statusCode)
 	})
+	engine.Get(toChiUrl("/e2e/custom-context-1"), func(w http.ResponseWriter, ctx *http.Request) {
+		// route start routes extension placeholder
+		authErr := authorize(
+			ctx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(w, authErr, "CustomContext1")
+			return
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(ctx)
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			if continueOperation := middleware(w, ctx); continueOperation == false {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.CustomContext1()
+		// after operation routes extension placeholder
+		for key, value := range controller.GetHeaders() {
+			w.Header().Set(key, value)
+		}
+		w.Header().Set("x-inject", "true")
+		w.Header().Set("x-extended", "CustomContext1")
+		w.Header().Set("x-level", "high")
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError == nil {
+			// Middlewares afterOperationSuccessMiddlewares section
+			for _, middleware := range afterOperationSuccessMiddlewares {
+				if continueOperation := middleware(w, ctx); continueOperation == false {
+					return
+				}
+			}
+			// End middlewares afterOperationSuccessMiddlewares section
+		}
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				if continueOperation := middleware(w, ctx, opError); continueOperation == false {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'CustomContext1'",
+				Status:     statusCode,
+				Instance:   "/gleece/controller/error/CustomContext1",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			w.WriteHeader(statusCode)
+			json.NewEncoder(w).Encode(stdError)
+			return
+		}
+		// json response extension placeholder
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(statusCode)
+		json.NewEncoder(w).Encode(value)
+	})
+	engine.Get(toChiUrl("/e2e/custom-context-2"), func(w http.ResponseWriter, ctx *http.Request) {
+		// route start routes extension placeholder
+		authErr := authorize(
+			ctx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(w, authErr, "CustomContext2")
+			return
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(ctx)
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			if continueOperation := middleware(w, ctx); continueOperation == false {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.CustomContext2()
+		// after operation routes extension placeholder
+		for key, value := range controller.GetHeaders() {
+			w.Header().Set(key, value)
+		}
+		w.Header().Set("x-inject", "true")
+		w.Header().Set("x-extended", "CustomContext2")
+		w.Header().Set("x-level", "low")
+		w.Header().Set("x-mode", "100")
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError == nil {
+			// Middlewares afterOperationSuccessMiddlewares section
+			for _, middleware := range afterOperationSuccessMiddlewares {
+				if continueOperation := middleware(w, ctx); continueOperation == false {
+					return
+				}
+			}
+			// End middlewares afterOperationSuccessMiddlewares section
+		}
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				if continueOperation := middleware(w, ctx, opError); continueOperation == false {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'CustomContext2'",
+				Status:     statusCode,
+				Instance:   "/gleece/controller/error/CustomContext2",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			w.WriteHeader(statusCode)
+			json.NewEncoder(w).Encode(stdError)
+			return
+		}
+		// json response extension placeholder
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(statusCode)
+		json.NewEncoder(w).Encode(value)
+	})
 	// E2EClassSecController
 	engine.Get(toChiUrl("/e2e/with-default-class-security"), func(w http.ResponseWriter, ctx *http.Request) {
 		// route start routes extension placeholder

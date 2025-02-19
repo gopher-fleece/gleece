@@ -2602,6 +2602,147 @@ func RegisterRoutes(engine *fiber.App) {
 		ctx.Status(statusCode)
 		return nil
 	})
+	engine.Get(toFiberUrl("/e2e/custom-context-1"), func(ctx *fiber.Ctx) error {
+		// route start routes extension placeholder
+		authErr := authorize(
+			ctx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(ctx, authErr, "CustomContext1")
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(ctx)
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			if continueOperation := middleware(ctx); continueOperation == false {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.CustomContext1()
+		// after operation routes extension placeholder
+		for key, value := range controller.GetHeaders() {
+			ctx.Set(key, value)
+		}
+		ctx.Set("x-inject", "true")
+		ctx.Set("x-extended", "CustomContext1")
+		ctx.Set("x-level", "high")
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError == nil {
+			// Middlewares afterOperationSuccessMiddlewares section
+			for _, middleware := range afterOperationSuccessMiddlewares {
+				if continueOperation := middleware(ctx); continueOperation == false {
+					return nil
+				}
+			}
+			// End middlewares afterOperationSuccessMiddlewares section
+		}
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				if continueOperation := middleware(ctx, opError); continueOperation == false {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'CustomContext1'",
+				Status:     statusCode,
+				Instance:   "/gleece/controller/error/CustomContext1",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			return ctx.Status(statusCode).JSON(stdError)
+		}
+		// json response extension placeholder
+		return ctx.Status(statusCode).JSON(value)
+	})
+	engine.Get(toFiberUrl("/e2e/custom-context-2"), func(ctx *fiber.Ctx) error {
+		// route start routes extension placeholder
+		authErr := authorize(
+			ctx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(ctx, authErr, "CustomContext2")
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(ctx)
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			if continueOperation := middleware(ctx); continueOperation == false {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.CustomContext2()
+		// after operation routes extension placeholder
+		for key, value := range controller.GetHeaders() {
+			ctx.Set(key, value)
+		}
+		ctx.Set("x-inject", "true")
+		ctx.Set("x-extended", "CustomContext2")
+		ctx.Set("x-level", "low")
+		ctx.Set("x-mode", "100")
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError == nil {
+			// Middlewares afterOperationSuccessMiddlewares section
+			for _, middleware := range afterOperationSuccessMiddlewares {
+				if continueOperation := middleware(ctx); continueOperation == false {
+					return nil
+				}
+			}
+			// End middlewares afterOperationSuccessMiddlewares section
+		}
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				if continueOperation := middleware(ctx, opError); continueOperation == false {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'CustomContext2'",
+				Status:     statusCode,
+				Instance:   "/gleece/controller/error/CustomContext2",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			return ctx.Status(statusCode).JSON(stdError)
+		}
+		// json response extension placeholder
+		return ctx.Status(statusCode).JSON(value)
+	})
 	// E2EClassSecController
 	engine.Get(toFiberUrl("/e2e/with-default-class-security"), func(ctx *fiber.Ctx) error {
 		// route start routes extension placeholder

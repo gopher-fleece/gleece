@@ -1,1 +1,10 @@
 ctx.Set("x-extended", "{{{ OperationId }}}")
+
+{{#each CustomContext}}
+    {{#equal Value "MODE"}}
+        ctx.Set("x-mode", "{{{ Options.mode }}}")
+    {{/equal}}
+    {{#equal Value "LEVEL"}}
+        ctx.Set("x-level", "{{{ Options.value }}}")
+    {{/equal}}
+{{/each}}

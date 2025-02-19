@@ -108,6 +108,23 @@ func (v ControllerVisitor) getErrorResponseMetadata(attributes *annotations.Anno
 	return responses, nil
 }
 
+func (v ControllerVisitor) getCustomContextMetadata(attributes *annotations.AnnotationHolder) []definitions.CustomContext {
+	customAttributes := attributes.GetAll(annotations.AttributeCustomContext)
+
+	customContexts := []definitions.CustomContext{}
+
+	for _, attr := range customAttributes {
+
+		customContexts = append(customContexts, definitions.CustomContext{
+			Value:       attr.Value,
+			Options:     attr.Properties,
+			Description: attr.Description,
+		})
+	}
+
+	return customContexts
+}
+
 func (v *ControllerVisitor) getResponseStatusCodeAndDescription(
 	attributes *annotations.AnnotationHolder,
 	hasReturnValue bool,

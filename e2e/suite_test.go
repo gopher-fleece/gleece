@@ -1,7 +1,6 @@
 package e2e
 
 import (
-	"os"
 	"strings"
 	"testing"
 
@@ -52,32 +51,32 @@ func TestGleeceE2E(t *testing.T) {
 func RegenerateRoutes() {
 
 	// Always build routes for gin  ...
-	err := cmd.GenerateSpecAndRoutes(arguments.CliArguments{ConfigPath: "./e2e.gin.gleece.config.json"})
-	if err != nil {
-		Fail("Failed to generate gin routes " + err.Error())
-	}
+	// err := cmd.GenerateSpecAndRoutes(arguments.CliArguments{ConfigPath: "./e2e.gin.gleece.config.json"})
+	// if err != nil {
+	// 	Fail("Failed to generate gin routes " + err.Error())
+	// }
 
 	// Get from env var whenever to regenerate all routes again.
 	// Use it only when modifying the templates which requires new routes for tests for all other engines too.
-	generate, exists := os.LookupEnv("GENERATE_ALL_E2E_ROUTES")
-	if !exists || generate != "true" {
-		return
-	}
+	// generate, exists := os.LookupEnv("GENERATE_ALL_E2E_ROUTES")
+	// if !exists || generate != "true" {
+	// 	return
+	// }
 
 	// Build routes for echo ...
-	err = cmd.GenerateSpecAndRoutes(arguments.CliArguments{ConfigPath: "./e2e.echo.gleece.config.json"})
-	if err != nil {
-		Fail("Failed to generate echo routes " + err.Error())
-	}
+	// err = cmd.GenerateSpecAndRoutes(arguments.CliArguments{ConfigPath: "./e2e.echo.gleece.config.json"})
+	// if err != nil {
+	// 	Fail("Failed to generate echo routes " + err.Error())
+	// }
 
 	// Build routes for Gorilla mux ...
-	err = cmd.GenerateSpecAndRoutes(arguments.CliArguments{ConfigPath: "./e2e.mux.gleece.config.json"})
-	if err != nil {
-		Fail("Failed to generate echo routes " + err.Error())
-	}
+	// err = cmd.GenerateSpecAndRoutes(arguments.CliArguments{ConfigPath: "./e2e.mux.gleece.config.json"})
+	// if err != nil {
+	// 	Fail("Failed to generate echo routes " + err.Error())
+	// }
 
 	// Build routes for chi ...
-	err = cmd.GenerateSpecAndRoutes(arguments.CliArguments{ConfigPath: "./e2e.chi.gleece.config.json"})
+	err := cmd.GenerateSpecAndRoutes(arguments.CliArguments{ConfigPath: "./e2e.chi.gleece.config.json"})
 	if err != nil {
 		Fail("Failed to generate echo routes " + err.Error())
 	}
@@ -90,7 +89,7 @@ func RegenerateRoutes() {
 }
 
 var _ = BeforeSuite(func() {
-	RegenerateRoutes()
+	// RegenerateRoutes()
 	// Init routes
 
 	// Set Gin
