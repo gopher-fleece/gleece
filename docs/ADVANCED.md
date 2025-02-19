@@ -1,1 +1,1 @@
-The content moved to https://docs.gleece.dev/docs/category/advanced
+The content moved to https://docs.gleece.dev/docs/category/extras

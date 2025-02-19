@@ -1,1 +1,1 @@
-The content moved to https://docs.gleece.dev/docs/advanced/configuration
+The content moved to https://docs.gleece.dev/docs/extras/configuration
