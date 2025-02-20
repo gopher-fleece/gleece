@@ -11,6 +11,7 @@
 <a href="https://docs.gleece.dev">
     <img src="https://img.shields.io/badge/docs-gleece.dev-blue" alt="Documentation">
 </a>
+[![LibHunt - Gleece](https://img.shields.io/badge/LibHunt-Gleece-blue)](https://www.libhunt.com/r/gleece)
 [![Latest Release](https://img.shields.io/github/v/release/gopher-fleece/gleece)](https://github.com/gopher-fleece/gleece/releases)
 [![Go Reference](https://pkg.go.dev/badge/github.com/gopher-fleece/gleece.svg)](https://pkg.go.dev/github.com/gopher-fleece/gleece)
 
