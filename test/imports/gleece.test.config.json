@@ -14,7 +14,7 @@
 			"enforceSecurityOnAllRoutes": true
 		}
 	},
-	"openAPIGeneratorConfig": {
+	"openapiGeneratorConfig": {
 		"openapi": "3.0.0",
 		"info": {
 			"title": "Sample API",

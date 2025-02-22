@@ -20,7 +20,7 @@
 			"RouteEndRoutesExtension" : "./mux/assets/mux.end.route.extension.hbs"
 		}
 	},
-	"openAPIGeneratorConfig": {
+	"openapiGeneratorConfig": {
 		"openapi" : "3.0.0",
 		"info": {
 			"title": "Sample API",

@@ -290,7 +290,7 @@ type OpenAPIInfo struct {
 }
 
 type OpenAPIGeneratorConfig struct {
-	OpenAPI              string                       `json:"openAPI" validate:"required,oneof=3.0.0 3.1.0"` // only 3.0.0 is fully supported
+	OpenAPI              string                       `json:"openapi" validate:"required,oneof=3.0.0 3.1.0"` // only 3.0.0 is fully supported
 	Info                 OpenAPIInfo                  `json:"info" validate:"required"`
 	BaseURL              string                       `json:"baseUrl" validate:"required,url"`
 	SecuritySchemes      []SecuritySchemeConfig       `json:"securitySchemes" validate:"dive"`
@@ -330,7 +330,7 @@ type CommonConfig struct {
 type GleeceConfig struct {
 	CommonConfig           CommonConfig           `json:"commonConfig" validate:"required"`
 	RoutesConfig           RoutesConfig           `json:"routesConfig" validate:"required"`
-	OpenAPIGeneratorConfig OpenAPIGeneratorConfig `json:"openAPIGeneratorConfig" validate:"required"`
+	OpenAPIGeneratorConfig OpenAPIGeneratorConfig `json:"openapiGeneratorConfig" validate:"required"`
 }
 
 type AstNodeKind string
