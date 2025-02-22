@@ -1,3 +1,25 @@
+func extractValidationErrorMessage(err error, fieldName *string) string {
+	if err == nil {
+		return ""
+	}
+
+	validationErrors, ok := err.(validator.ValidationErrors)
+	if !ok {
+		return err.Error()
+	}
+
+	var errStr string
+	for _, validationErr := range validationErrors {
+		fName := validationErr.Field()
+		if fieldName != nil {
+			fName = *fieldName
+		}
+		errStr += fmt.Sprintf("Field '%s' failed validation with tag '%s'. ", fName, validationErr.Tag())
+	}
+
+	return errStr
+}
+
 func getStatusCode(controller runtime.Controller, hasReturnValue bool, err error) int {
 	if controller.GetStatus() != nil {
 		return int(*controller.GetStatus())
@@ -116,7 +138,7 @@ func wrapValidatorError(validatorErr error, operationId string, fieldName string
 			"A request was made to operation '%s' but parameter '%s' did not pass validation - %s",
 			operationId,
 			fieldName,
-			runtime.ExtractValidationErrorMessage(validatorErr, &fieldName),
+			extractValidationErrorMessage(validatorErr, &fieldName),
 		),
 		Status:     http.StatusUnprocessableEntity,
 		Instance:   fmt.Sprintf("/gleece/validation/error/%s", operationId),
