@@ -108,21 +108,30 @@ func (v ControllerVisitor) getErrorResponseMetadata(attributes *annotations.Anno
 	return responses, nil
 }
 
-func (v ControllerVisitor) getCustomContextMetadata(attributes *annotations.AnnotationHolder) []definitions.CustomContext {
-	customAttributes := attributes.GetAll(annotations.AttributeCustomContext)
+func (v ControllerVisitor) getTemplateContextMetadata(attributes *annotations.AnnotationHolder) (map[string]definitions.TemplateContext, error) {
+	v.enter("")
+	defer v.exit()
 
-	customContexts := []definitions.CustomContext{}
+	customAttributes := attributes.GetAll(annotations.AttributeTemplateContext)
+
+	templateContext := map[string]definitions.TemplateContext{}
 
 	for _, attr := range customAttributes {
 
-		customContexts = append(customContexts, definitions.CustomContext{
-			Value:       attr.Value,
+		if _, exists := templateContext[attr.Value]; exists {
+			return nil, v.getFrozenError("Duplicate template context attribute '%s'", attr.Value)
+		}
+
+		if templateContext != nil {
+
+		}
+		templateContext[attr.Value] = definitions.TemplateContext{
 			Options:     attr.Properties,
 			Description: attr.Description,
-		})
+		}
 	}
 
-	return customContexts
+	return templateContext, nil
 }
 
 func (v *ControllerVisitor) getResponseStatusCodeAndDescription(

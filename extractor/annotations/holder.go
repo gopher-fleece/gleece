@@ -28,7 +28,7 @@ const (
 	AttributeDescription      = "Description"
 	AttributeMethod           = "Method"
 	AttributeErrorResponse    = "ErrorResponse"
-	AttributeCustomContext    = "CustomContext"
+	AttributeTemplateContext  = "TemplateContext"
 )
 
 type Attribute struct {

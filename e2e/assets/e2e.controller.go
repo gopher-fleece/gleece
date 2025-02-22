@@ -352,16 +352,16 @@ func (ec *E2EController) Patch() error {
 }
 
 // @Method(GET)
-// @Route(/custom-context-1)
-// @CustomContext(LEVEL, {value: "high"})
-func (ec *E2EController) CustomContext1() (string, error) {
+// @Route(/template-context-1)
+// @TemplateContext(LEVEL, {value: "high"})
+func (ec *E2EController) TemplateContext1() (string, error) {
 	return "works", nil
 }
 
 // @Method(GET)
-// @Route(/custom-context-2)
-// @CustomContext(LEVEL, {value: "low"})
-// @CustomContext(MODE, {mode: "100"})
-func (ec *E2EController) CustomContext2() (string, error) {
+// @Route(/template-context-2)
+// @TemplateContext(LEVEL, {value: "low"})
+// @TemplateContext(MODE, {mode: "100"})
+func (ec *E2EController) TemplateContext2() (string, error) {
 	return "works", nil
 }

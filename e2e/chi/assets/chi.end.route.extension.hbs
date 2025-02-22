@@ -1,10 +1,8 @@
 w.Header().Set("x-extended", "{{{ OperationId }}}")
 
-{{#each CustomContext}}
-    {{#equal Value "MODE"}}
-        w.Header().Set("x-mode", "{{{ Options.mode }}}")
-    {{/equal}}
-    {{#equal Value "LEVEL"}}
-        w.Header().Set("x-level", "{{{ Options.value }}}")
-    {{/equal}}
-{{/each}}
+{{#if TemplateContext.MODE }}
+    w.Header().Set("x-mode", "{{{ TemplateContext.MODE.Options.mode }}}")
+{{/if }}
+{{#if TemplateContext.LEVEL }}
+    w.Header().Set("x-level", "{{{ TemplateContext.LEVEL.Options.value }}}")
+{{/if }}

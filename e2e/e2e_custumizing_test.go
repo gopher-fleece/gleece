@@ -48,7 +48,7 @@ var _ = Describe("E2E Customizing Spec", func() {
 			ExpendedHeaders: map[string]string{
 				"x-level": "high",
 			},
-			Path:    "/e2e/custom-context-1",
+			Path:    "/e2e/template-context-1",
 			Method:  "GET",
 			Body:    nil,
 			Query:   nil,
@@ -65,7 +65,7 @@ var _ = Describe("E2E Customizing Spec", func() {
 				"x-level": "low",
 				"x-mode":  "100",
 			},
-			Path:    "/e2e/custom-context-2",
+			Path:    "/e2e/template-context-2",
 			Method:  "GET",
 			Body:    nil,
 			Query:   nil,
