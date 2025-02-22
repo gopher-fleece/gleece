@@ -13,7 +13,6 @@ import (
 	"github.com/gopher-fleece/gleece/generator/swagen"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
 	"github.com/gopher-fleece/gleece/infrastructure/validation"
-	"github.com/gopher-fleece/runtime"
 	"github.com/titanous/json5"
 )
 
@@ -35,7 +34,7 @@ func getConfig(configPath string) (*definitions.GleeceConfig, error) {
 	// Validate the struct
 	err = validation.ValidateStruct(config)
 	if err != nil {
-		return nil, fmt.Errorf(`configuration file "%s" is invalid - "%s"`, configPath, runtime.ExtractValidationErrorMessage(err, nil))
+		return nil, fmt.Errorf(`configuration file "%s" is invalid - "%s"`, configPath, validation.ExtractValidationErrorMessage(err, nil))
 	}
 
 	return &config, nil
