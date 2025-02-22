@@ -116,6 +116,11 @@ type ErrorResponse struct {
 	Description    string
 }
 
+type TemplateContext struct {
+	Options     map[string]any
+	Description string
+}
+
 type RouteMetadata struct {
 	// The handler function's and operation name in the OpenAPI schema
 	OperationId string
@@ -169,6 +174,9 @@ type RouteMetadata struct {
 
 	// The security schema/s used for the operation
 	Security []RouteSecurity // OR between security routes
+
+	// Custom template context for the operation, provided by the route developer, used template extension/override
+	TemplateContext map[string]TemplateContext
 }
 
 func (m RouteMetadata) GetValueReturnType() *TypeMetadata {

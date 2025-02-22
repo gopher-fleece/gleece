@@ -350,3 +350,18 @@ func (ec *E2EController) Patch() error {
 	ec.SetHeader("x-method", "patch")
 	return nil
 }
+
+// @Method(GET)
+// @Route(/template-context-1)
+// @TemplateContext(LEVEL, {value: "high"})
+func (ec *E2EController) TemplateContext1() (string, error) {
+	return "works", nil
+}
+
+// @Method(GET)
+// @Route(/template-context-2)
+// @TemplateContext(LEVEL, {value: "low"})
+// @TemplateContext(MODE, {mode: "100"})
+func (ec *E2EController) TemplateContext2() (string, error) {
+	return "works", nil
+}

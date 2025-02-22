@@ -1,1 +1,8 @@
 ctx.Header("x-extended", "{{{ OperationId }}}")
+
+{{#if TemplateContext.MODE }}
+        ctx.Header("x-mode", "{{{ TemplateContext.MODE.Options.mode }}}")
+{{/if }}
+{{#if TemplateContext.LEVEL }}
+        ctx.Header("x-level", "{{{ TemplateContext.LEVEL.Options.value }}}")
+{{/if }}

@@ -1,1 +1,8 @@
 ctx.Set("x-extended", "{{{ OperationId }}}")
+
+{{#if TemplateContext.MODE }}
+        ctx.Set("x-mode", "{{{ TemplateContext.MODE.Options.mode }}}")
+{{/if }}
+{{#if TemplateContext.LEVEL }}
+        ctx.Set("x-level", "{{{ TemplateContext.LEVEL.Options.value }}}")
+{{/if }}

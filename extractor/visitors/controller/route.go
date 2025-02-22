@@ -58,6 +58,11 @@ func (v *ControllerVisitor) visitMethod(funcDecl *ast.FuncDecl) (definitions.Rou
 		)
 	}
 
+	templateContext, err := v.getTemplateContextMetadata(&attributes)
+	if err != nil {
+		return definitions.RouteMetadata{}, true, err
+	}
+
 	meta := definitions.RouteMetadata{
 		OperationId:         funcDecl.Name.Name,
 		HttpVerb:            definitions.EnsureValidHttpVerb(methodAttr.Value),
@@ -69,6 +74,7 @@ func (v *ControllerVisitor) visitMethod(funcDecl *ast.FuncDecl) (definitions.Rou
 		RequestContentType:  definitions.ContentTypeJSON, // Hardcoded for now, should be supported via comments later
 		ResponseContentType: definitions.ContentTypeJSON, // Hardcoded for now, should be supported via comments later
 		Security:            security,
+		TemplateContext:     templateContext,
 	}
 
 	// Check whether the method is an API endpoint, i.e., has all the relevant metadata.
