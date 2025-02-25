@@ -7,6 +7,7 @@ type RouterTest struct {
 	Body                any
 	Query               map[string]string
 	Headers             map[string]string
+	Form                map[string]string
 	ExpectedStatus      int
 	ExpectedBody        string
 	ExpectedBodyContain string

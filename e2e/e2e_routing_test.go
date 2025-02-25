@@ -324,4 +324,43 @@ var _ = Describe("E2E Routing Spec", func() {
 			},
 		})
 	})
+
+	It("Should return status code 200 for form parameters", func() {
+		RunRouterTest(common.RouterTest{
+			Name:                "Should return status code 200 for form parameters",
+			ExpectedStatus:      200,
+			ExpectedBodyContain: "form1form2",
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/form",
+			Method:              "POST",
+			Form:                map[string]string{"item1": "form1", "item2": "form2"},
+			Headers:             map[string]string{},
+		})
+	})
+
+	It("Should return status code 422 for missing form parameters", func() {
+		RunRouterTest(common.RouterTest{
+			Name:                "Should return status code 200 for form parameters",
+			ExpectedStatus:      422,
+			ExpectedBodyContain: "",
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/form",
+			Method:              "POST",
+			Form:                map[string]string{"item1": "form1"},
+			Headers:             map[string]string{},
+		})
+	})
+
+	It("Should return status code 200 for empty form parameters", func() {
+		RunRouterTest(common.RouterTest{
+			Name:                "Should return status code 200 for empty form parameters",
+			ExpectedStatus:      200,
+			ExpectedBodyContain: "form1",
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/form",
+			Method:              "POST",
+			Form:                map[string]string{"item1": "form1", "item2": ""},
+			Headers:             map[string]string{},
+		})
+	})
 })

@@ -19,6 +19,7 @@ const (
 	AttributePath             = "Path"
 	AttributeBody             = "Body"
 	AttributeHeader           = "Header"
+	AttributeForm             = "Form"
 	AttributeDeprecated       = "Deprecated"
 	AttributeHidden           = "Hidden"
 	AttributeSecurity         = "Security"

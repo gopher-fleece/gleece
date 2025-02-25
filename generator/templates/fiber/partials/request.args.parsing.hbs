@@ -23,6 +23,14 @@
 	{{> RunValidator}}
 {{/equal}}
 
+{{#equal PassedIn "Form"}}
+	var {{ToLowerCamel Name}}RawPtr *{{{TypeMeta.Name}}} = nil
+	{{ToLowerCamel Name}}Raw := ctx.FormValue("{{{NameInSchema}}}")
+	is{{Name}}Exists := ctx.Context().PostArgs().Has("{{{NameInSchema}}}")
+	{{> RequestSwitchParamType}}
+	{{> RunValidator}}
+{{/equal}}
+
 {{#equal PassedIn "Body"}}
 	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
 	conversionErr = bindAndValidateBody(ctx, "{{{ResponseContentType}}}", "{{Validator}}",&{{ToLowerCamel Name}}RawPtr)

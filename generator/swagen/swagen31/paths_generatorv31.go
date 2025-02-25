@@ -52,7 +52,7 @@ func createContentWithSchemaRef(doc *v3.Document, validationString string, inter
 	}
 
 	content := orderedmap.New[string, *v3.MediaType]()
-	content.Set("application/json", &v3.MediaType{
+	content.Set(string(definitions.ContentTypeJSON), &v3.MediaType{
 		Schema: schemaRef,
 	})
 	return content
@@ -194,12 +194,47 @@ func createRequestBodyParam(doc *v3.Document, param definitions.FuncParam) *v3.R
 	}
 }
 
+func createRequestFormParam(doc *v3.Document, param definitions.FuncParam, operation *v3.Operation) {
+	// Form parameters are always passed in the body, so we need to create a request body if it doesn't exist
+	if operation.RequestBody == nil {
+		// The body will be a object with the form parameters as properties
+		schemaRef := ToOpenApiSchemaV3("object")
+		schemaRef.Properties = orderedmap.New[string, *highbase.SchemaProxy]()
+		content := orderedmap.New[string, *v3.MediaType]()
+		content.Set(string(definitions.ContentTypeFormURLEncoded), &v3.MediaType{
+			Schema: highbase.CreateSchemaProxy(schemaRef),
+		})
+		operation.RequestBody = &v3.RequestBody{
+			Description: param.Description,
+			Content:     content,
+		}
+	}
+
+	// Get the schema from the request body
+	formMedia, _ := operation.RequestBody.Content.Get(string(definitions.ContentTypeFormURLEncoded))
+	formSchema := formMedia.Schema.Schema()
+	// Create a new schema for the form parameter
+	propertySchemaRef := InterfaceToSchemaV3(doc, param.TypeMeta.Name)
+	// Add the validation to the schema
+	BuildSchemaValidationV31(propertySchemaRef.Schema(), param.Validator, param.TypeMeta.Name)
+	// Add the form parameter to the schema
+	formSchema.Properties.Set(param.NameInSchema, propertySchemaRef)
+	// Add the form parameter to the required list if it is required
+	if swagtool.IsFieldRequired(param.Validator) {
+		formSchema.Required = append(formSchema.Required, param.NameInSchema)
+	}
+}
+
 func generateParams(doc *v3.Document, route definitions.RouteMetadata, operation *v3.Operation) {
 	// Iterate over FuncParams and create parameters
 	for _, param := range route.FuncParams {
-		if param.PassedIn == definitions.PassedInBody {
+
+		switch param.PassedIn {
+		case definitions.PassedInBody:
 			operation.RequestBody = createRequestBodyParam(doc, param)
-		} else {
+		case definitions.PassedInForm:
+			createRequestFormParam(doc, param, operation)
+		default:
 			operation.Parameters = append(operation.Parameters, createRouteParam(doc, param))
 		}
 	}

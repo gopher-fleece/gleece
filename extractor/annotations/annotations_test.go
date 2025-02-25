@@ -161,6 +161,7 @@ var _ = Describe("Annotation Holder", func() {
 			`// @ErrorResponse(500) The error when process failed`,
 			`// @Security(schema1, { scopes: ["read:users", "write:users"] })`,
 			`// @Security(schema2, { scopes: ["read:devices", "write:devices"] })`,
+			`// @TemplateContext(MODE, {mode: "100"})`,
 		}
 
 		It("Constructs without error", func() {
@@ -181,6 +182,7 @@ var _ = Describe("Annotation Holder", func() {
 			Expect(holder.Has(annotations.AttributeResponse)).To(BeTrue())
 			Expect(holder.Has(annotations.AttributeErrorResponse)).To(BeTrue())
 			Expect(holder.Has(annotations.AttributeSecurity)).To(BeTrue())
+			Expect(holder.Has(annotations.AttributeTemplateContext)).To(BeTrue())
 		})
 
 		It("Correctly gets all attributes of the same type", func() {
