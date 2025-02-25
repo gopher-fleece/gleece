@@ -15,7 +15,6 @@ Repository: https://github.com/gopher-fleece/gleece
 --
 */
 package routes
-
 import (
 	"encoding/json"
 	"fmt"
@@ -23,35 +22,29 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
-
 	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
-	E2EClassSecControllerImport "github.com/gopher-fleece/gleece/e2e/assets"
+	RequestAuth "github.com/gopher-fleece/gleece/e2e/chi/auth"
+	"github.com/gopher-fleece/runtime"
 	E2EControllerImport "github.com/gopher-fleece/gleece/e2e/assets"
 	Param33theBody "github.com/gopher-fleece/gleece/e2e/assets"
 	Param38theBody "github.com/gopher-fleece/gleece/e2e/assets"
 	Param41theBody "github.com/gopher-fleece/gleece/e2e/assets"
 	Response62CustomError "github.com/gopher-fleece/gleece/e2e/assets"
 	Response65CustomError "github.com/gopher-fleece/gleece/e2e/assets"
-	RequestAuth "github.com/gopher-fleece/gleece/e2e/chi/auth"
-	"github.com/gopher-fleece/runtime"
+	E2EClassSecControllerImport "github.com/gopher-fleece/gleece/e2e/assets"
 	// import extension placeholder
 )
-
 var validatorInstance = validator.New()
 var urlParamRegex *regexp.Regexp
-
 type SecurityListRelation string
-
 const (
 	SecurityListRelationAnd SecurityListRelation = "AND"
 )
-
 type SecurityCheckList struct {
 	Checks   []runtime.SecurityCheck
 	Relation SecurityListRelation
 }
-
 // type declarations extension placeholder
 func extractValidationErrorMessage(err error, fieldName *string) string {
 	if err == nil {
@@ -169,15 +162,12 @@ func wrapValidatorError(validatorErr error, operationId string, fieldName string
 		Instance: fmt.Sprintf("/gleece/validation/error/%s", operationId),
 	}
 }
-
 // function declarations extension placeholder
 type MiddlewareFunc func(w http.ResponseWriter, r *http.Request) bool
 type ErrorMiddlewareFunc func(w http.ResponseWriter, r *http.Request, err error) bool
-
 var beforeOperationMiddlewares []MiddlewareFunc
 var afterOperationSuccessMiddlewares []MiddlewareFunc
 var onErrorMiddlewares []ErrorMiddlewareFunc
-
 func RegisterMiddleware(executionType runtime.MiddlewareExecutionType, middlewareFunc MiddlewareFunc) {
 	if executionType == runtime.BeforeOperation {
 		beforeOperationMiddlewares = append(beforeOperationMiddlewares, middlewareFunc)
