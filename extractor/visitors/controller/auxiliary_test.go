@@ -1,11 +1,8 @@
 package controller
 
 import (
-	"testing"
-
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/extractor/annotations"
-	"github.com/gopher-fleece/gleece/infrastructure/logger"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -65,9 +62,3 @@ var _ = Describe("Auxiliary Tests", func() {
 		})
 	})
 })
-
-func TestAuxiliary(t *testing.T) {
-	logger.SetLogLevel(logger.LogLevelNone)
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Auxiliary Suite")
-}

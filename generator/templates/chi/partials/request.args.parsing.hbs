@@ -29,6 +29,19 @@
 	{{> RunValidator}}
 {{/equal}}
 
+{{#equal PassedIn "Form"}}
+	ctx.ParseForm()
+	var {{ToLowerCamel Name}}RawPtr *{{{TypeMeta.Name}}} = nil
+	{{ToLowerCamel Name}}RawArr, is{{Name}}Exists := ctx.PostForm["{{{NameInSchema}}}"]
+	{{ToLowerCamel Name}}Raw := ""
+	if is{{Name}}Exists {
+		{{ToLowerCamel Name}}Raw = {{ToLowerCamel Name}}RawArr[0] // Get first value since form values are slices
+	}
+
+	{{> RequestSwitchParamType}}
+	{{> RunValidator}}
+{{/equal}}
+
 {{#equal PassedIn "Body"}}
 	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
 	conversionErr = bindAndValidateBody(ctx, "{{{ResponseContentType}}}", "{{Validator}}",&{{ToLowerCamel Name}}RawPtr)

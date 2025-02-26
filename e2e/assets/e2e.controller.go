@@ -365,3 +365,14 @@ func (ec *E2EController) TemplateContext1() (string, error) {
 func (ec *E2EController) TemplateContext2() (string, error) {
 	return "works", nil
 }
+
+// @Description Create a new user
+// @Method(POST) This text is not part of the OpenAPI spec
+// @Route(/form) Same here
+// @Form(item1) The user's ID
+// @Form(item2) The user's ID
+// @Response(200) The ID of the newly created user
+// @ErrorResponse(500) The error when process failed
+func (ec *E2EController) TestForm(item1 string, item2 string) (string, error) {
+	return item1 + item2, nil
+}

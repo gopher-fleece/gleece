@@ -18,52 +18,61 @@ var FiberRouter *fiber.App
 
 func FiberRouterTest(routerTest common.RouterTest) common.RouterTestResult {
 	// Build the query parameters
-	params := url.Values{}
+	queryParams := url.Values{}
+	formParams := url.Values{}
 	path := routerTest.Path
+
 	if routerTest.Query != nil {
 		for k, v := range routerTest.Query {
-			params.Add(k, v)
+			queryParams.Add(k, v)
 		}
-		if encoded := params.Encode(); encoded != "" {
+		if encoded := queryParams.Encode(); encoded != "" {
 			path += "?" + encoded
 		}
 	}
 
-	// Prepare request body if available.
-	var jsonDataBuffer *bytes.Buffer
-	if routerTest.Body != nil {
-		jsonData, _ := json.Marshal(routerTest.Body)
-		jsonDataBuffer = bytes.NewBuffer(jsonData)
-	}
-
-	// Create the new HTTP request.
 	var req *http.Request
-	if jsonDataBuffer == nil {
-		req = httptest.NewRequest(routerTest.Method, path, nil)
+
+	// Handle form data
+	if routerTest.Form != nil {
+		// Convert form data to url.Values
+		for k, v := range routerTest.Form {
+			formParams.Add(k, v)
+		}
+		// Create request with form data
+		req = httptest.NewRequest(routerTest.Method, path, strings.NewReader(formParams.Encode()))
+		// Set content type for form data
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	} else if routerTest.Body != nil {
+		// Handle JSON body
+		jsonData, _ := json.Marshal(routerTest.Body)
+		req = httptest.NewRequest(routerTest.Method, path, bytes.NewBuffer(jsonData))
+		req.Header.Set("Content-Type", "application/json")
 	} else {
-		req = httptest.NewRequest(routerTest.Method, path, jsonDataBuffer)
+		// No body or form data
+		req = httptest.NewRequest(routerTest.Method, path, nil)
 	}
 
-	// Add the provided headers to the request.
+	// Add the provided headers to the request
 	if routerTest.Headers != nil {
 		for k, v := range routerTest.Headers {
 			req.Header.Add(strings.ToLower(k), v)
 		}
 	}
 
-	// Execute the request on the Fiber app.
-	// The second parameter is the timeout in milliseconds.
+	// Execute the request on the Fiber app
+	// The second parameter is the timeout in milliseconds
 	resp, err := FiberRouter.Test(req, -1)
 	if err != nil {
 		// Handle error as needed (e.g. panic or return a default result)
 		panic(err)
 	}
 
-	// Read the response body.
+	// Read the response body
 	bodyBytes, _ := io.ReadAll(resp.Body)
 	resp.Body.Close()
 
-	// Convert the HTTP response headers to a map[string]string.
+	// Convert the HTTP response headers to a map[string]string
 	headers := make(map[string]string)
 	for k, v := range resp.Header {
 		if len(v) > 0 {
@@ -71,7 +80,7 @@ func FiberRouterTest(routerTest common.RouterTest) common.RouterTestResult {
 		}
 	}
 
-	// Trim any trailing whitespace from the response body.
+	// Trim any trailing whitespace from the response body
 	bodyRes := string(bodyBytes)
 	if bodyRes != "" {
 		bodyRes = strings.TrimRightFunc(bodyRes, unicode.IsSpace)

@@ -3,6 +3,7 @@ package controller
 import (
 	"fmt"
 	"go/ast"
+	"slices"
 	"strings"
 
 	"github.com/gopher-fleece/gleece/definitions"
@@ -169,6 +170,33 @@ func (v *ControllerVisitor) validatePrimitiveParam(param definitions.FuncParam) 
 	return nil
 }
 
+func (v *ControllerVisitor) validateParamsCombinations(funcParams []definitions.FuncParam, newParamType definitions.ParamPassedIn) error {
+
+	isBodyParamAlreadyExists := slices.ContainsFunc(funcParams, func(p definitions.FuncParam) bool {
+		return p.PassedIn == definitions.PassedInBody
+	})
+
+	isFormParamAlreadyExists := slices.ContainsFunc(funcParams, func(p definitions.FuncParam) bool {
+		return p.PassedIn == definitions.PassedInForm
+	})
+
+	// Body is a special case, only one body parameter is allowed per route
+	if newParamType == definitions.PassedInBody && isBodyParamAlreadyExists {
+		return v.getFrozenError("body parameter is invalid, only one body per route is allowed")
+	}
+
+	// Form is an implementation of url encoded string in the body, thus it cannot be used if the body is already in use
+	if newParamType == definitions.PassedInBody && isFormParamAlreadyExists {
+		return v.getFrozenError("body parameter is invalid, using body is not allowed when a form is in use")
+	}
+
+	// Form is an implementation of url encoded string in the body, thus it cannot be used if the body is already in use
+	if newParamType == definitions.PassedInForm && isBodyParamAlreadyExists {
+		return v.getFrozenError("form parameter is invalid, using form is not allowed when a body is in use")
+	}
+	return nil
+}
+
 func (v *ControllerVisitor) getFuncParams(funcDecl *ast.FuncDecl, comments []string) ([]definitions.FuncParam, error) {
 	v.enter("")
 	defer v.exit()
@@ -223,6 +251,12 @@ func (v *ControllerVisitor) getFuncParams(funcDecl *ast.FuncDecl, comments []str
 			paramPassedIn = definitions.PassedInPath
 		case "body":
 			paramPassedIn = definitions.PassedInBody
+		case "form":
+			paramPassedIn = definitions.PassedInForm
+		}
+
+		if err := v.validateParamsCombinations(funcParams, paramPassedIn); err != nil {
+			return funcParams, err
 		}
 
 		finalParamMeta := definitions.FuncParam{

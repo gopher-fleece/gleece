@@ -15,6 +15,7 @@ const (
 	PassedInQuery  ParamPassedIn = "Query"
 	PassedInPath   ParamPassedIn = "Path"
 	PassedInBody   ParamPassedIn = "Body"
+	PassedInForm   ParamPassedIn = "Form"
 )
 
 type HttpVerb string

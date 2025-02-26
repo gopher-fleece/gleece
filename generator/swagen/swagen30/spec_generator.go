@@ -67,7 +67,7 @@ func GenerateSpec(config *definitions.OpenAPIGeneratorConfig, defs []definitions
 
 	// Validate the spec to ensure it meets OpenAPI requirements
 	if err := openapi.Validate(context.Background()); err != nil {
-		logger.Error("Validation failed - %v", err.Error())
+		logger.Error("Spec Validation failed - %v", err.Error())
 		return nil, err
 	}
 	logger.Info("OpenAPI specification validated successfully")

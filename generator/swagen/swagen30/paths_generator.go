@@ -155,12 +155,46 @@ func createRequestBodyParam(openapi *openapi3.T, param definitions.FuncParam) *o
 	}
 }
 
+func createRequestFormParam(openapi *openapi3.T, param definitions.FuncParam, operation *openapi3.Operation) {
+	// Form parameters are always passed in the body, so we need to create a request body if it doesn't exist
+	if operation.RequestBody == nil {
+		// The body will be a object with the form parameters as properties
+		schemaRef := ToOpenApiSchemaRef("object")
+		operation.RequestBody = &openapi3.RequestBodyRef{
+			Value: &openapi3.RequestBody{
+				Content: openapi3.Content{
+					string(definitions.ContentTypeFormURLEncoded): &openapi3.MediaType{
+						Schema: schemaRef,
+					},
+				},
+			},
+		}
+	}
+
+	// Get the schema from the request body
+	formSchema := operation.RequestBody.Value.Content[string(definitions.ContentTypeFormURLEncoded)].Schema
+	// Create a new schema for the form parameter
+	propertySchemaRef := InterfaceToSchemaRef(openapi, param.TypeMeta.Name)
+	// Add the validation to the schema
+	BuildSchemaValidation(propertySchemaRef, param.Validator, param.TypeMeta.Name)
+	// Add the form parameter to the schema
+	formSchema.Value.Properties[param.NameInSchema] = propertySchemaRef
+	// Add the form parameter to the required list if it is required
+	if swagtool.IsFieldRequired(param.Validator) {
+		formSchema.Value.Required = append(formSchema.Value.Required, param.NameInSchema)
+	}
+}
+
 func generateParams(openapi *openapi3.T, route definitions.RouteMetadata, operation *openapi3.Operation) {
 	// Iterate over FuncParams and create parameters
 	for _, param := range route.FuncParams {
-		if param.PassedIn == definitions.PassedInBody {
+
+		switch param.PassedIn {
+		case definitions.PassedInBody:
 			operation.RequestBody = createRequestBodyParam(openapi, param)
-		} else {
+		case definitions.PassedInForm:
+			createRequestFormParam(openapi, param, operation)
+		default:
 			operation.Parameters = append(operation.Parameters, createRouteParam(openapi, param))
 		}
 	}

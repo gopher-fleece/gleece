@@ -311,4 +311,83 @@ var _ = Describe("Swagen", func() {
 			Expect(err).To(HaveOccurred())
 		})
 	})
+
+	Describe("createRequestFormParam", func() {
+		It("should create form parameters in request body when none exists", func() {
+			operation := &openapi3.Operation{}
+			param := definitions.FuncParam{
+				NameInSchema: "testField",
+				ParamMeta: definitions.ParamMeta{
+					Name: "string",
+				},
+				Validator: "required",
+			}
+
+			createRequestFormParam(openapi, param, operation)
+
+			// Check if request body was created
+			Expect(operation.RequestBody).NotTo(BeNil())
+
+			// Check if content type is correct
+			mediaType := operation.RequestBody.Value.Content[string(definitions.ContentTypeFormURLEncoded)]
+			Expect(mediaType).NotTo(BeNil())
+
+			// Check if property was added
+			propertySchema := mediaType.Schema.Value.Properties["testField"]
+			Expect(propertySchema).NotTo(BeNil())
+
+			// Check if required field was added
+			Expect(mediaType.Schema.Value.Required).To(ContainElement("testField"))
+		})
+
+		It("should add form parameters to existing request body", func() {
+			// Create initial request body with one parameter
+			operation := &openapi3.Operation{}
+			firstParam := definitions.FuncParam{
+				NameInSchema: "firstField",
+				ParamMeta: definitions.ParamMeta{
+					Name: "string",
+				},
+			}
+			createRequestFormParam(openapi, firstParam, operation)
+
+			// Add second parameter
+			secondParam := definitions.FuncParam{
+				NameInSchema: "secondField",
+				ParamMeta: definitions.ParamMeta{
+					Name: "integer",
+				},
+				Validator: "required",
+			}
+			createRequestFormParam(openapi, secondParam, operation)
+
+			// Check if both parameters exist in schema
+			mediaType := operation.RequestBody.Value.Content[string(definitions.ContentTypeFormURLEncoded)]
+			Expect(mediaType.Schema.Value.Properties).To(HaveLen(2))
+			Expect(mediaType.Schema.Value.Properties).To(HaveKey("firstField"))
+			Expect(mediaType.Schema.Value.Properties).To(HaveKey("secondField"))
+
+			// Check if only second parameter is required
+			Expect(mediaType.Schema.Value.Required).To(ConsistOf("secondField"))
+		})
+
+		It("should handle validation rules", func() {
+			operation := &openapi3.Operation{}
+			param := definitions.FuncParam{
+				NameInSchema: "validatedField",
+				ParamMeta: definitions.ParamMeta{
+					Name: "string",
+				},
+				Validator: "required,min=5,max=10",
+			}
+
+			createRequestFormParam(openapi, param, operation)
+
+			mediaType := operation.RequestBody.Value.Content[string(definitions.ContentTypeFormURLEncoded)]
+			propertySchema := mediaType.Schema.Value.Properties["validatedField"]
+			Expect(propertySchema).NotTo(BeNil())
+			// Check if required validation was applied
+			Expect(mediaType.Schema.Value.Required).To(ContainElement("validatedField"))
+		})
+	})
 })
