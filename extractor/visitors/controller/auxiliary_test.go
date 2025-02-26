@@ -18,7 +18,7 @@ var _ = Describe("Auxiliary Tests", func() {
 		It("should successfully create template context map", func() {
 			attributes, _ := annotations.NewAnnotationHolder([]string{
 				"// @TemplateContext(testcontext, {key: \"value\"}) Test description",
-			})
+			}, annotations.CommentSourceRoute)
 
 			// Act
 			result, err := visitor.getTemplateContextMetadata(&attributes)
@@ -38,7 +38,7 @@ var _ = Describe("Auxiliary Tests", func() {
 			attributes, _ := annotations.NewAnnotationHolder([]string{
 				"// @TemplateContext(duplicatecontext, {key1: \"value1\"}) First description",
 				"// @TemplateContext(duplicatecontext, {key2: \"value2\"}) Second description",
-			})
+			}, annotations.CommentSourceRoute)
 
 			// Act
 			result, err := visitor.getTemplateContextMetadata(&attributes)
@@ -51,7 +51,7 @@ var _ = Describe("Auxiliary Tests", func() {
 
 		It("should handle empty attributes", func() {
 			// Arrange
-			attributes, _ := annotations.NewAnnotationHolder([]string{})
+			attributes, _ := annotations.NewAnnotationHolder([]string{}, annotations.CommentSourceRoute)
 
 			// Act
 			result, err := visitor.getTemplateContextMetadata(&attributes)

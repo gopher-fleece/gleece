@@ -23,7 +23,7 @@ func (v *ControllerVisitor) visitMethod(funcDecl *ast.FuncDecl) (definitions.Rou
 	}
 
 	comments := extractor.MapDocListToStrings(funcDecl.Doc.List)
-	attributes, err := annotations.NewAnnotationHolder(comments)
+	attributes, err := annotations.NewAnnotationHolder(comments, annotations.CommentSourceRoute)
 	if err != nil {
 		return definitions.RouteMetadata{}, false, v.frozenError(err)
 	}
@@ -170,6 +170,7 @@ func (v *ControllerVisitor) validatePrimitiveParam(param definitions.FuncParam) 
 	return nil
 }
 
+// This function is deprecated - no need to test here, all validation moved to the NewAnnotationHolder logic
 func (v *ControllerVisitor) validateParamsCombinations(funcParams []definitions.FuncParam, newParamType definitions.ParamPassedIn) error {
 
 	isBodyParamAlreadyExists := slices.ContainsFunc(funcParams, func(p definitions.FuncParam) bool {
@@ -213,7 +214,10 @@ func (v *ControllerVisitor) getFuncParams(funcDecl *ast.FuncDecl, comments []str
 		v.enter(fmt.Sprintf("Param %s", param.Name))
 		defer v.exit()
 
-		holder, _ := annotations.NewAnnotationHolder(comments)
+		holder, err := annotations.NewAnnotationHolder(comments, annotations.CommentSourceRoute)
+		if err != nil {
+			return funcParams, err
+		}
 		paramAttrib := holder.FindFirstByValue(param.Name)
 		if paramAttrib == nil {
 			return funcParams, v.getFrozenError("parameter '%s' does not have a matching documentation attribute", param.Name)
@@ -251,7 +255,7 @@ func (v *ControllerVisitor) getFuncParams(funcDecl *ast.FuncDecl, comments []str
 			paramPassedIn = definitions.PassedInPath
 		case "body":
 			paramPassedIn = definitions.PassedInBody
-		case "form":
+		case "formfield": // Currently, form fields are the only supported form of form parameters, in the future, a full form object may be supported too
 			paramPassedIn = definitions.PassedInForm
 		}
 

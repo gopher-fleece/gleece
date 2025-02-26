@@ -139,7 +139,7 @@ func (v *TypeVisitor) getAttributeHolders(fullPackageName string, structName str
 	}
 
 	if genDecl.Doc != nil && genDecl.Doc.List != nil && len(genDecl.Doc.List) > 0 {
-		structAttributes, err := annotations.NewAnnotationHolder(extractor.MapDocListToStrings(genDecl.Doc.List))
+		structAttributes, err := annotations.NewAnnotationHolder(extractor.MapDocListToStrings(genDecl.Doc.List), annotations.CommentSourceSchema)
 		if err != nil {
 			logger.Error("Could not create an attribute holder for struct '%s' - %v", structName, err)
 			return holders, err
@@ -163,7 +163,7 @@ func (v *TypeVisitor) getAttributeHolders(fullPackageName string, structName str
 			}
 
 			fieldName := field.Names[0].Name
-			fieldHolder, err := annotations.NewAnnotationHolder(extractor.MapDocListToStrings(field.Doc.List))
+			fieldHolder, err := annotations.NewAnnotationHolder(extractor.MapDocListToStrings(field.Doc.List), annotations.CommentSourceProperty)
 			if err != nil {
 				logger.Error("Could not create an attribute holder for field %s on struct '%s' - %v", fieldName, structName, err)
 				return holders, err

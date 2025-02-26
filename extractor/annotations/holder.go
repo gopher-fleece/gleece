@@ -14,22 +14,22 @@ const (
 )
 
 const (
-	AttributeTag              = "Tag"
-	AttributeQuery            = "Query"
-	AttributePath             = "Path"
-	AttributeBody             = "Body"
-	AttributeHeader           = "Header"
-	AttributeForm             = "Form"
-	AttributeDeprecated       = "Deprecated"
-	AttributeHidden           = "Hidden"
-	AttributeSecurity         = "Security"
-	AttributeAdvancedSecurity = "AdvancedSecurity"
-	AttributeRoute            = "Route"
-	AttributeResponse         = "Response"
-	AttributeDescription      = "Description"
-	AttributeMethod           = "Method"
-	AttributeErrorResponse    = "ErrorResponse"
-	AttributeTemplateContext  = "TemplateContext"
+	AttributeTag             = "Tag"
+	AttributeQuery           = "Query"
+	AttributePath            = "Path"
+	AttributeBody            = "Body"
+	AttributeHeader          = "Header"
+	AttributeFormField       = "FormField"
+	AttributeDeprecated      = "Deprecated"
+	AttributeHidden          = "Hidden"
+	AttributeSecurity        = "Security"
+	AttributeRoute           = "Route"
+	AttributeResponse        = "Response"
+	AttributeDescription     = "Description"
+	AttributeMethod          = "Method"
+	AttributeErrorResponse   = "ErrorResponse"
+	AttributeTemplateContext = "TemplateContext"
+	// AttributeAdvancedSecurity = "AdvancedSecurity"
 )
 
 type Attribute struct {
@@ -61,7 +61,18 @@ type AnnotationHolder struct {
 	nonAttributeComments []NonAttributeComment
 }
 
-func NewAnnotationHolder(comments []string) (AnnotationHolder, error) {
+type CommentSource string
+
+// controller, route, schema, property
+
+const (
+	CommentSourceController CommentSource = "controller"
+	CommentSourceRoute      CommentSource = "route"
+	CommentSourceSchema     CommentSource = "schema"
+	CommentSourceProperty   CommentSource = "property"
+)
+
+func NewAnnotationHolder(comments []string, commentSource CommentSource) (AnnotationHolder, error) {
 	// Captures: 1. TEXT (after @), 2. TEXT (inside parentheses), 3. JSON5 Object, 4. Remaining TEXT
 	parsingRegex := regexp.MustCompile(`^// @(\w+)(?:(?:\(([\w-_/\\{} ]+))(?:\s*,\s*(\{.*\}))?\))?(?:\s+(.+))?$`)
 
@@ -76,6 +87,10 @@ func NewAnnotationHolder(comments []string) (AnnotationHolder, error) {
 		}
 
 		if isAnAttribute {
+			// Check that this is a valid attribute with valid properties
+			if err := IsValidAnnotation(attr, commentSource); err != nil {
+				return holder, err
+			}
 			holder.attributes = append(holder.attributes, attr)
 		} else {
 			holder.nonAttributeComments = append(
@@ -86,6 +101,10 @@ func NewAnnotationHolder(comments []string) (AnnotationHolder, error) {
 				},
 			)
 		}
+	}
+
+	if err := IsValidAnnotationCollection(holder.attributes, commentSource); err != nil {
+		return holder, err
 	}
 
 	return holder, nil

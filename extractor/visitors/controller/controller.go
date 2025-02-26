@@ -82,7 +82,7 @@ func (v *ControllerVisitor) createControllerMetadata(controllerNode *ast.TypeSpe
 	// Do we want to fail if there are no attributes on the controller?
 	if commentSource != nil {
 		comments := extractor.MapDocListToStrings(commentSource.List)
-		holder, err := annotations.NewAnnotationHolder(comments)
+		holder, err := annotations.NewAnnotationHolder(comments, annotations.CommentSourceController)
 		if err != nil {
 			return meta, v.frozenError(err)
 		}
