@@ -88,15 +88,18 @@ We believe that API development should be code-first, focusing on the developer 
 
 Read more about our initiative and development philosophy in my [Gleece Project](https://blog.castnet.club/en/blog/gleece-project) blog post.
 
-## ⚠️ Disclaimer
-Gleece is currently an under-development project.  We’re working hard to make it amazing.
 
-We’d love your feedback and contributions as we shape Gleece!
+## 🔐 Security
+
+To report security concerns or vulnerabilities, please follow the instructions in our [Security Policy](./SECURITY.md).
+
+## 📫 Contact
+
+For general inquiries or feedback, please reach out to us at [contact@gleece.dev](mailto:contact@gleece.dev).
+
+Anyway, we'd love to hear from you, especially if you or your company use Gleece.
 
 ---
 
 ## 📜 License  
 Gleece is licensed under the [MIT LICENSE](./LICENSE). 
-
----
-
