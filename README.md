@@ -95,9 +95,9 @@ To report security concerns or vulnerabilities, please follow the instructions i
 
 ## 📫 Contact
 
-We'd love to hear from you if you or your company uses Gleece!
+For general inquiries or feedback, please reach out to us at [contact@gleece.dev](mailto:contact@gleece.dev).
 
-For general inquiries or feedback, please reach out to us at [contact@gleece.dev](mailto:contact@gleece.dev)
+Anyway, we'd love to hear from you, especially if you or your company use Gleece.
 
 ---
 
