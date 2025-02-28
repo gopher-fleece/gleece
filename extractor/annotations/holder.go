@@ -81,7 +81,7 @@ func NewAnnotationHolder(comments []string, commentSource CommentSource) (Annota
 	}
 
 	for lineIndex, comment := range comments {
-		attr, isAnAttribute, err := parseComment(parsingRegex, comment)
+		attr, isAnAttribute, err := parseComment(parsingRegex, strings.TrimSpace(comment))
 		if err != nil {
 			return holder, err
 		}
