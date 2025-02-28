@@ -4,21 +4,21 @@ statusCode := getStatusCode(&controller, {{{HasReturnValue}}}, opError)
 		{{> Middleware isErrorMiddleware=false middlewares="afterOperationSuccessMiddlewares" }} 
 	}
 	if opError != nil {
-		{{> Middleware isErrorMiddleware=true middlewares="onErrorMiddlewares" }} 
+		{{> Middleware isErrorMiddleware=true middlewares="onErrorMiddlewares" errorName="opError" }} 
 {{else}}
 	{{#LastTypeIsByAddress Responses}}
 		if opError == nil {
 			{{> Middleware isErrorMiddleware=false middlewares="afterOperationSuccessMiddlewares" }} 
 		}
 		if opError != nil {
-			{{> Middleware isErrorMiddleware=true middlewares="onErrorMiddlewares" }} 
+			{{> Middleware isErrorMiddleware=true middlewares="onErrorMiddlewares" errorName="opError" }} 
 	{{else}}
 		emptyErr := {{GetLastTyeFullyQualified Responses}}{}
 		if opError == emptyErr {
 			{{> Middleware isErrorMiddleware=false middlewares="afterOperationSuccessMiddlewares" }} 
 		}
 		if opError != emptyErr {
-			{{> Middleware isErrorMiddleware=true middlewares="onErrorMiddlewares" }} 
+			{{> Middleware isErrorMiddleware=true middlewares="onErrorMiddlewares" errorName="opError" }} 
 
 	{{/LastTypeIsByAddress}}
 {{/LastTypeNameEquals}}

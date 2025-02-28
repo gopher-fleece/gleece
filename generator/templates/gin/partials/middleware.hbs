@@ -1,7 +1,7 @@
 // Middlewares {{middlewares}} section
 for _, middleware := range {{middlewares}} {
 	{{#if isErrorMiddleware}}
-		if continueOperation := middleware(ctx, opError); continueOperation == false {
+		if continueOperation := middleware(ctx, {{errorName}}); continueOperation == false {
 			return
 		}
 	{{else}}

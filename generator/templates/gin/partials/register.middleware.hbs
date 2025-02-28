@@ -4,17 +4,25 @@ type ErrorMiddlewareFunc func(ctx *gin.Context, err error) bool
 var beforeOperationMiddlewares []MiddlewareFunc
 var afterOperationSuccessMiddlewares []MiddlewareFunc
 var onErrorMiddlewares []ErrorMiddlewareFunc
+var onInputValidationMiddlewares []ErrorMiddlewareFunc
+var onOutputValidationMiddlewares []ErrorMiddlewareFunc
 
 func RegisterMiddleware(executionType runtime.MiddlewareExecutionType, middlewareFunc MiddlewareFunc) {
-	if executionType == runtime.BeforeOperation {
+	switch executionType {
+	case runtime.BeforeOperation:
 		beforeOperationMiddlewares = append(beforeOperationMiddlewares, middlewareFunc)
-	} else if executionType == runtime.AfterOperationSuccess {
+	case runtime.AfterOperationSuccess:
 		afterOperationSuccessMiddlewares = append(afterOperationSuccessMiddlewares, middlewareFunc)
 	}
 }
 
 func RegisterErrorMiddleware(executionType runtime.ErrorMiddlewareExecutionType, errorMiddlewareFunc ErrorMiddlewareFunc) {
-	if executionType == runtime.OnOperationError {
+	switch executionType {
+	case runtime.OnInputValidationError:
+		onInputValidationMiddlewares = append(onInputValidationMiddlewares, errorMiddlewareFunc)
+	case runtime.OnOutputValidationError:
+		onOutputValidationMiddlewares = append(onOutputValidationMiddlewares, errorMiddlewareFunc)
+	case runtime.OnOperationError:
 		onErrorMiddlewares = append(onErrorMiddlewares, errorMiddlewareFunc)
 	}
 }

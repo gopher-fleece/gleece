@@ -310,13 +310,14 @@ const (
 )
 
 type RoutesConfig struct {
-	Engine              RoutingEngineType   `json:"engine" validate:"required,oneof=gin echo mux fiber chi"`
-	PackageName         string              `json:"packageName"`
-	OutputPath          string              `json:"outputPath" validate:"required,filepath"`
-	OutputFilePerms     string              `json:"outputFilePerms" validate:"regex=^(0?[0-7]{3})?$"`
-	AuthorizationConfig AuthorizationConfig `json:"authorizationConfig" validate:"required"`
-	TemplateOverrides   map[string]string   `json:"templateOverrides"`
-	TemplateExtensions  map[string]string   `json:"templateExtensions"`
+	Engine                  RoutingEngineType   `json:"engine" validate:"required,oneof=gin echo mux fiber chi"`
+	PackageName             string              `json:"packageName"`
+	OutputPath              string              `json:"outputPath" validate:"required,filepath"`
+	OutputFilePerms         string              `json:"outputFilePerms" validate:"regex=^(0?[0-7]{3})?$"`
+	AuthorizationConfig     AuthorizationConfig `json:"authorizationConfig" validate:"required"`
+	TemplateOverrides       map[string]string   `json:"templateOverrides"`
+	TemplateExtensions      map[string]string   `json:"templateExtensions"`
+	ValidateResponsePayload bool                `json:"validateResponsePayload"`
 }
 
 type AuthorizationConfig struct {
