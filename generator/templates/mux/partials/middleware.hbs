@@ -1,11 +1,11 @@
 // Middlewares {{middlewares}} section
 for _, middleware := range {{middlewares}} {
 	{{#if isErrorMiddleware}}
-		if continueOperation := middleware(w, ctx, opError); continueOperation == false {
+		if continueOperation := middleware(w, ctx, opError); !continueOperation {
 			return
 		}
 	{{else}}
-		if continueOperation := middleware(w, ctx); continueOperation == false {
+		if continueOperation := middleware(w, ctx); !continueOperation {
 			return
 		}
 	{{/if}}
