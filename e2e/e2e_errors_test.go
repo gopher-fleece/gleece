@@ -76,4 +76,18 @@ var _ = Describe("E2E Errors Spec", func() {
 			Headers:         nil,
 		})
 	})
+
+	It("Should set validation error for invalid response payload", func() {
+		RunRouterTest(common.RouterTest{
+			Name:            "Should set validation error for invalid response payload",
+			ExpectedStatus:  500,
+			ExpectedBody:    "{\"type\":\"Internal Server Error\",\"title\":\"\",\"detail\":\"Encountered an error during operation 'TestResponseValidation'\",\"status\":500,\"instance\":\"/gleece/controller/error/TestResponseValidation\",\"extensions\":{}}",
+			ExpendedHeaders: nil,
+			Path:            "/e2e/test-response-validation",
+			Method:          "POST",
+			Body:            nil,
+			Query:           nil,
+			Headers:         nil,
+		})
+	})
 })

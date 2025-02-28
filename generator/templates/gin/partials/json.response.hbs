@@ -1,7 +1,10 @@
 {{> JsonResponseExtension}}
 {{#equal HasReturnValue true}}
 	{{#if ValidateResponsePayload}}
-		if outputValidationErr := validatorInstance.Struct(value); outputValidationErr != nil {
+		{{#each Responses}}
+		{{#unless @last}}
+			{{#equal Responses.IsUniverseType false}}
+			if outputValidationErr := validatorInstance.Struct(value); outputValidationErr != nil {
 			{{> Middleware isErrorMiddleware=true middlewares="onOutputValidationMiddlewares" errorName="outputValidationErr" }}
 			outputValidationStatusCode := http.StatusInternalServerError
 			outputValidationRfc7807Error := runtime.Rfc7807Error{
@@ -13,7 +16,10 @@
 			}
 			ctx.JSON(outputValidationStatusCode, outputValidationRfc7807Error)
 			return
-		}
+			}
+			{{/equal}}
+		{{/unless}}
+		{{/each}}
 	{{/if}}
 	ctx.JSON(statusCode, value)
 {{/equal}}

@@ -376,3 +376,34 @@ func (ec *E2EController) TemplateContext2() (string, error) {
 func (ec *E2EController) TestForm(item1 string, item2 string) (string, error) {
 	return item1 + item2, nil
 }
+
+type ResponseTest struct {
+	Success string `json:"success"`
+	Index   int    `json:"index" validate:"required,gte=0"`
+}
+
+// @Method(POST)
+// @Route(/test-response-validation)
+// @Response(200) 
+// @ErrorResponse(500)
+func (ec *E2EController) TestResponseValidation() (ResponseTest, error) {
+	return ResponseTest{
+		Success: "success",
+		Index:   -1,
+	}, nil
+}
+
+
+
+// @Method(POST)	
+// @Route(/test-response-validation-ptr)
+// @Response(200) The ID of the newly created user
+// @ErrorResponse(500) The error when process failed
+func (ec *E2EController) TestResponseValidationPtr() (*ResponseTest, error) {
+	return &ResponseTest{
+		Success: "success",
+		Index:   -1,
+	}, nil
+}
+
+

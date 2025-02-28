@@ -175,15 +175,23 @@ type ErrorMiddlewareFunc func(ctx *gin.Context, err error) bool
 var beforeOperationMiddlewares []MiddlewareFunc
 var afterOperationSuccessMiddlewares []MiddlewareFunc
 var onErrorMiddlewares []ErrorMiddlewareFunc
+var onInputValidationMiddlewares []ErrorMiddlewareFunc
+var onOutputValidationMiddlewares []ErrorMiddlewareFunc
 func RegisterMiddleware(executionType runtime.MiddlewareExecutionType, middlewareFunc MiddlewareFunc) {
-	if executionType == runtime.BeforeOperation {
+	switch executionType {
+	case runtime.BeforeOperation:
 		beforeOperationMiddlewares = append(beforeOperationMiddlewares, middlewareFunc)
-	} else if executionType == runtime.AfterOperationSuccess {
+	case runtime.AfterOperationSuccess:
 		afterOperationSuccessMiddlewares = append(afterOperationSuccessMiddlewares, middlewareFunc)
 	}
 }
 func RegisterErrorMiddleware(executionType runtime.ErrorMiddlewareExecutionType, errorMiddlewareFunc ErrorMiddlewareFunc) {
-	if executionType == runtime.OnOperationError {
+	switch executionType {
+	case runtime.OnInputValidationError:
+		onInputValidationMiddlewares = append(onInputValidationMiddlewares, errorMiddlewareFunc)
+	case runtime.OnOutputValidationError:
+		onOutputValidationMiddlewares = append(onOutputValidationMiddlewares, errorMiddlewareFunc)
+	case runtime.OnOperationError:
 		onErrorMiddlewares = append(onErrorMiddlewares, errorMiddlewareFunc)
 	}
 }
@@ -724,6 +732,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			queryParamRawPtr = &queryParam
 		}
 		if validatorErr := validatorInstance.Var(queryParamRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				if continueOperation := middleware(ctx, validatorErr); !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
 			fieldName := "queryParam"
 			validationError := wrapValidatorError(validatorErr, "SimpleGetEmpty", fieldName)
 			ctx.JSON(http.StatusUnprocessableEntity, validationError)
@@ -808,6 +823,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			queryParamRawPtr = &queryParam
 		}
 		if validatorErr := validatorInstance.Var(queryParamRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				if continueOperation := middleware(ctx, validatorErr); !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
 			fieldName := "queryParam"
 			validationError := wrapValidatorError(validatorErr, "GetWithAllParams", fieldName)
 			ctx.JSON(http.StatusUnprocessableEntity, validationError)
@@ -820,6 +842,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			pathParamRawPtr = &pathParam
 		}
 		if validatorErr := validatorInstance.Var(pathParamRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				if continueOperation := middleware(ctx, validatorErr); !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
 			fieldName := "pathParam"
 			validationError := wrapValidatorError(validatorErr, "GetWithAllParams", fieldName)
 			ctx.JSON(http.StatusUnprocessableEntity, validationError)
@@ -833,6 +862,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			headerParamRawPtr = &headerParam
 		}
 		if validatorErr := validatorInstance.Var(headerParamRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				if continueOperation := middleware(ctx, validatorErr); !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
 			fieldName := "headerParam"
 			validationError := wrapValidatorError(validatorErr, "GetWithAllParams", fieldName)
 			ctx.JSON(http.StatusUnprocessableEntity, validationError)
@@ -922,6 +958,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			pathParamRawPtr = &pathParam
 		}
 		if validatorErr := validatorInstance.Var(pathParamRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				if continueOperation := middleware(ctx, validatorErr); !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
 			fieldName := "pathParam"
 			validationError := wrapValidatorError(validatorErr, "GetWithAllParamsPtr", fieldName)
 			ctx.JSON(http.StatusUnprocessableEntity, validationError)
@@ -1012,6 +1055,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			queryParamRawPtr = &queryParam
 		}
 		if validatorErr := validatorInstance.Var(queryParamRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				if continueOperation := middleware(ctx, validatorErr); !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
 			fieldName := "queryParam"
 			validationError := wrapValidatorError(validatorErr, "GetWithAllParamsRequiredPtr", fieldName)
 			ctx.JSON(http.StatusUnprocessableEntity, validationError)
@@ -1024,6 +1074,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			pathParamRawPtr = &pathParam
 		}
 		if validatorErr := validatorInstance.Var(pathParamRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				if continueOperation := middleware(ctx, validatorErr); !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
 			fieldName := "pathParam"
 			validationError := wrapValidatorError(validatorErr, "GetWithAllParamsRequiredPtr", fieldName)
 			ctx.JSON(http.StatusUnprocessableEntity, validationError)
@@ -1037,6 +1094,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			headerParamRawPtr = &headerParam
 		}
 		if validatorErr := validatorInstance.Var(headerParamRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				if continueOperation := middleware(ctx, validatorErr); !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
 			fieldName := "headerParam"
 			validationError := wrapValidatorError(validatorErr, "GetWithAllParamsRequiredPtr", fieldName)
 			ctx.JSON(http.StatusUnprocessableEntity, validationError)
@@ -1121,6 +1185,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			queryParamRawPtr = &queryParam
 		}
 		if validatorErr := validatorInstance.Var(queryParamRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				if continueOperation := middleware(ctx, validatorErr); !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
 			fieldName := "queryParam"
 			validationError := wrapValidatorError(validatorErr, "PostWithAllParamsWithBody", fieldName)
 			ctx.JSON(http.StatusUnprocessableEntity, validationError)
@@ -1134,6 +1205,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			headerParamRawPtr = &headerParam
 		}
 		if validatorErr := validatorInstance.Var(headerParamRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				if continueOperation := middleware(ctx, validatorErr); !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
 			fieldName := "headerParam"
 			validationError := wrapValidatorError(validatorErr, "PostWithAllParamsWithBody", fieldName)
 			ctx.JSON(http.StatusUnprocessableEntity, validationError)
@@ -1142,6 +1220,13 @@ func RegisterRoutes(engine *gin.Engine) {
 		var theBodyRawPtr *Param33theBody.BodyInfo = nil
 		conversionErr = bindAndValidateBody(ctx, "application/json", "required", &theBodyRawPtr)
 		if conversionErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				if continueOperation := middleware(ctx, conversionErr); !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
 			validationError := runtime.Rfc7807Error{
 				Type: http.StatusText(http.StatusUnprocessableEntity),
 				Detail: fmt.Sprintf(
@@ -1245,6 +1330,13 @@ func RegisterRoutes(engine *gin.Engine) {
 		var theBodyRawPtr *Param38theBody.BodyInfo = nil
 		conversionErr = bindAndValidateBody(ctx, "application/json", "", &theBodyRawPtr)
 		if conversionErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				if continueOperation := middleware(ctx, conversionErr); !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
 			validationError := runtime.Rfc7807Error{
 				Type: http.StatusText(http.StatusUnprocessableEntity),
 				Detail: fmt.Sprintf(
@@ -1335,6 +1427,13 @@ func RegisterRoutes(engine *gin.Engine) {
 		var theBodyRawPtr *Param41theBody.BodyInfo = nil
 		conversionErr = bindAndValidateBody(ctx, "application/json", "required", &theBodyRawPtr)
 		if conversionErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				if continueOperation := middleware(ctx, conversionErr); !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
 			validationError := runtime.Rfc7807Error{
 				Type: http.StatusText(http.StatusUnprocessableEntity),
 				Detail: fmt.Sprintf(
@@ -1429,6 +1528,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			headerParamRawPtr = &headerParam
 		}
 		if validatorErr := validatorInstance.Var(headerParamRawPtr, "required,validate_starts_with_letter"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				if continueOperation := middleware(ctx, validatorErr); !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
 			fieldName := "headerParam"
 			validationError := wrapValidatorError(validatorErr, "GetHeaderStartWithLetter", fieldName)
 			ctx.JSON(http.StatusUnprocessableEntity, validationError)
@@ -1513,6 +1619,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			headerParamRawPtr = &headerParam
 		}
 		if validatorErr := validatorInstance.Var(headerParamRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				if continueOperation := middleware(ctx, validatorErr); !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
 			fieldName := "headerParam"
 			validationError := wrapValidatorError(validatorErr, "WithDefaultConfigSecurity", fieldName)
 			ctx.JSON(http.StatusUnprocessableEntity, validationError)
@@ -1597,6 +1710,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			headerParamRawPtr = &headerParam
 		}
 		if validatorErr := validatorInstance.Var(headerParamRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				if continueOperation := middleware(ctx, validatorErr); !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
 			fieldName := "headerParam"
 			validationError := wrapValidatorError(validatorErr, "WithOneSecurity", fieldName)
 			ctx.JSON(http.StatusUnprocessableEntity, validationError)
@@ -1693,6 +1813,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			headerParamRawPtr = &headerParam
 		}
 		if validatorErr := validatorInstance.Var(headerParamRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				if continueOperation := middleware(ctx, validatorErr); !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
 			fieldName := "headerParam"
 			validationError := wrapValidatorError(validatorErr, "WithTwoSecurity", fieldName)
 			ctx.JSON(http.StatusUnprocessableEntity, validationError)
@@ -1789,6 +1916,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			headerParamRawPtr = &headerParam
 		}
 		if validatorErr := validatorInstance.Var(headerParamRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				if continueOperation := middleware(ctx, validatorErr); !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
 			fieldName := "headerParam"
 			validationError := wrapValidatorError(validatorErr, "WithTwoSecuritySameMethod", fieldName)
 			ctx.JSON(http.StatusUnprocessableEntity, validationError)
@@ -2858,6 +2992,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			item1RawPtr = &item1
 		}
 		if validatorErr := validatorInstance.Var(item1RawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				if continueOperation := middleware(ctx, validatorErr); !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
 			fieldName := "item1"
 			validationError := wrapValidatorError(validatorErr, "TestForm", fieldName)
 			ctx.JSON(http.StatusUnprocessableEntity, validationError)
@@ -2870,6 +3011,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			item2RawPtr = &item2
 		}
 		if validatorErr := validatorInstance.Var(item2RawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				if continueOperation := middleware(ctx, validatorErr); !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
 			fieldName := "item2"
 			validationError := wrapValidatorError(validatorErr, "TestForm", fieldName)
 			ctx.JSON(http.StatusUnprocessableEntity, validationError)
@@ -2922,6 +3070,148 @@ func RegisterRoutes(engine *gin.Engine) {
 		// json response extension placeholder
 		ctx.JSON(statusCode, value)
 	})
+	engine.POST(toGinUrl("/e2e/test-response-validation"), func(ctx *gin.Context) {
+		// route start routes extension placeholder
+		authErr := authorize(
+			ctx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(ctx, authErr, "TestResponseValidation")
+			return
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(ctx)
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			if continueOperation := middleware(ctx); !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.TestResponseValidation()
+		// after operation routes extension placeholder
+		for key, value := range controller.GetHeaders() {
+			ctx.Header(key, value)
+		}
+		ctx.Header("x-inject", "true")
+		ctx.Header("x-extended", "TestResponseValidation")
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError == nil {
+			// Middlewares afterOperationSuccessMiddlewares section
+			for _, middleware := range afterOperationSuccessMiddlewares {
+				if continueOperation := middleware(ctx); !continueOperation {
+					return
+				}
+			}
+			// End middlewares afterOperationSuccessMiddlewares section
+		}
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				if continueOperation := middleware(ctx, opError); !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'TestResponseValidation'",
+				Status:     statusCode,
+				Instance:   "/gleece/controller/error/TestResponseValidation",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			ctx.JSON(statusCode, stdError)
+			return
+		}
+		// json response extension placeholder
+		ctx.JSON(statusCode, value)
+	})
+	engine.POST(toGinUrl("/e2e/test-response-validation-ptr"), func(ctx *gin.Context) {
+		// route start routes extension placeholder
+		authErr := authorize(
+			ctx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(ctx, authErr, "TestResponseValidationPtr")
+			return
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(ctx)
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			if continueOperation := middleware(ctx); !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.TestResponseValidationPtr()
+		// after operation routes extension placeholder
+		for key, value := range controller.GetHeaders() {
+			ctx.Header(key, value)
+		}
+		ctx.Header("x-inject", "true")
+		ctx.Header("x-extended", "TestResponseValidationPtr")
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError == nil {
+			// Middlewares afterOperationSuccessMiddlewares section
+			for _, middleware := range afterOperationSuccessMiddlewares {
+				if continueOperation := middleware(ctx); !continueOperation {
+					return
+				}
+			}
+			// End middlewares afterOperationSuccessMiddlewares section
+		}
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				if continueOperation := middleware(ctx, opError); !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'TestResponseValidationPtr'",
+				Status:     statusCode,
+				Instance:   "/gleece/controller/error/TestResponseValidationPtr",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			ctx.JSON(statusCode, stdError)
+			return
+		}
+		// json response extension placeholder
+		ctx.JSON(statusCode, value)
+	})
 	// E2EClassSecController
 	engine.GET(toGinUrl("/e2e/with-default-class-security"), func(ctx *gin.Context) {
 		// route start routes extension placeholder
@@ -2955,6 +3245,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			headerParamRawPtr = &headerParam
 		}
 		if validatorErr := validatorInstance.Var(headerParamRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				if continueOperation := middleware(ctx, validatorErr); !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
 			fieldName := "headerParam"
 			validationError := wrapValidatorError(validatorErr, "WithDefaultClassSecurity", fieldName)
 			ctx.JSON(http.StatusUnprocessableEntity, validationError)
@@ -3039,6 +3336,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			headerParamRawPtr = &headerParam
 		}
 		if validatorErr := validatorInstance.Var(headerParamRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				if continueOperation := middleware(ctx, validatorErr); !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
 			fieldName := "headerParam"
 			validationError := wrapValidatorError(validatorErr, "WithOverrideClassSecurity", fieldName)
 			ctx.JSON(http.StatusUnprocessableEntity, validationError)
