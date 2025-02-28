@@ -345,6 +345,19 @@ var _ = Describe("Annotation Holder", func() {
 			match := holder.FindFirstByProperty("extraProp", "this value doesn't exist")
 			Expect(match).To(BeNil())
 		})
+
+		It("Should trim valid attribute with extra space at the end", func() {
+			comments := []string{
+				`// @Method(GET)	`,
+				`// @Route(/test-response-validation-ptr-2)      `,
+			}
+
+			holder, _ := annotations.NewAnnotationHolder(comments, annotations.CommentSourceRoute)
+			methodAttr := holder.GetFirst(annotations.AttributeMethod)
+			routeAttr := holder.GetFirst(annotations.AttributeRoute)
+			Expect(methodAttr.Name).To(Equal(annotations.AttributeMethod))
+			Expect(routeAttr.Name).To(Equal(annotations.AttributeRoute))
+		})
 	})
 
 	Context("Given comments", func() {
