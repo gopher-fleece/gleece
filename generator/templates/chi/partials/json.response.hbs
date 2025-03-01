@@ -1,9 +1,48 @@
 {{> JsonResponseExtension}}
 {{#equal HasReturnValue true}}
+	{{!-- If validation of output is enabled AND the payload response is an object  --}}
+	{{#if ValidateResponsePayload}}
+	{{#equal Responses.[0].IsUniverseType false}}
+
+		
+		var outputValidationErr error
+		{{#if Responses.[0].IsByAddress}}
+		if value == nil {
+			outputValidationErr = fmt.Errorf("Response payload is nil")
+		} else {
+		{{/if}}
+			outputValidationErr = validatorInstance.Struct(value)
+		{{#if Responses.[0].IsByAddress}}
+		}
+		{{/if}}
+
+    	if outputValidationErr != nil {
+			{{> Middleware isErrorMiddleware=true middlewares="onOutputValidationMiddlewares" errorName="outputValidationErr" }}
+			outputValidationStatusCode := http.StatusInternalServerError
+			outputValidationRfc7807Error := runtime.Rfc7807Error{
+				Type:       http.StatusText(outputValidationStatusCode),
+				Detail:     "Encountered an error during operation '{{{OperationId}}}'",
+				Status:     outputValidationStatusCode,
+				Instance:   "/gleece/controller/error/{{{OperationId}}}",
+				Extensions: map[string]string{},
+			}
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(outputValidationStatusCode)
+			json.NewEncoder(w).Encode(outputValidationRfc7807Error)
+			return
+		}
+	{{/equal}}
+	{{/if}}
+	{{> Middleware isErrorMiddleware=false middlewares="afterOperationSuccessMiddlewares" }} 
+	{{> AfterOperationRoutesExtension }}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	json.NewEncoder(w).Encode(value)
+	{{> RouteEndRoutesExtension }}
 {{/equal}}
 {{#equal HasReturnValue false}}
+	{{> Middleware isErrorMiddleware=false middlewares="afterOperationSuccessMiddlewares" }} 
+	{{> AfterOperationRoutesExtension }}
 	w.WriteHeader(statusCode)
+	{{> RouteEndRoutesExtension }}
 {{/equal}}

@@ -1,5 +1,6 @@
 {{#if Validator}}
     if validatorErr := validatorInstance.Var({{ToLowerCamel Name}}RawPtr, "{{Validator}}"); validatorErr != nil {
+		{{> Middleware isErrorMiddleware=true middlewares="onInputValidationMiddlewares" errorName="validatorErr" }}
         fieldName := "{{ToLowerCamel Name}}"
 		validationError := wrapValidatorError(validatorErr, "{{{OperationId}}}", fieldName)
         return ctx.JSON(http.StatusUnprocessableEntity, validationError)

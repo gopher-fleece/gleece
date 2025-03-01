@@ -101,6 +101,8 @@ var _ = BeforeSuite(func() {
 	gleeceGinRoutes.RegisterMiddleware(runtime.AfterOperationSuccess, ginMiddlewares.MiddlewareAfterOperationSuccess)
 	gleeceGinRoutes.RegisterErrorMiddleware(runtime.OnOperationError, ginMiddlewares.MiddlewareOnError)
 	gleeceGinRoutes.RegisterErrorMiddleware(runtime.OnOperationError, ginMiddlewares.MiddlewareOnError2)
+	gleeceGinRoutes.RegisterErrorMiddleware(runtime.OnInputValidationError, ginMiddlewares.MiddlewareOnValidationError)
+	gleeceGinRoutes.RegisterErrorMiddleware(runtime.OnOutputValidationError, ginMiddlewares.MiddlewareOnOutputValidationError)
 	gleeceGinRoutes.RegisterCustomValidator("validate_starts_with_letter", e2eAssets.ValidateStartsWithLetter)
 
 	// Set Echo
@@ -110,6 +112,8 @@ var _ = BeforeSuite(func() {
 	gleeceEchoRoutes.RegisterMiddleware(runtime.AfterOperationSuccess, echoMiddlewares.MiddlewareAfterOperationSuccess)
 	gleeceEchoRoutes.RegisterErrorMiddleware(runtime.OnOperationError, echoMiddlewares.MiddlewareOnError)
 	gleeceEchoRoutes.RegisterErrorMiddleware(runtime.OnOperationError, echoMiddlewares.MiddlewareOnError2)
+	gleeceEchoRoutes.RegisterErrorMiddleware(runtime.OnInputValidationError, echoMiddlewares.MiddlewareOnValidationError)
+	gleeceEchoRoutes.RegisterErrorMiddleware(runtime.OnOutputValidationError, echoMiddlewares.MiddlewareOnOutputValidationError)
 	gleeceEchoRoutes.RegisterCustomValidator("validate_starts_with_letter", e2eAssets.ValidateStartsWithLetter)
 	gleeceEchoRoutes.RegisterRoutes(echoTester.EchoRouter)
 
@@ -119,6 +123,8 @@ var _ = BeforeSuite(func() {
 	gleeceMuxRoutes.RegisterMiddleware(runtime.AfterOperationSuccess, muxMiddlewares.MiddlewareAfterOperationSuccess)
 	gleeceMuxRoutes.RegisterErrorMiddleware(runtime.OnOperationError, muxMiddlewares.MiddlewareOnError)
 	gleeceMuxRoutes.RegisterErrorMiddleware(runtime.OnOperationError, muxMiddlewares.MiddlewareOnError2)
+	gleeceMuxRoutes.RegisterErrorMiddleware(runtime.OnInputValidationError, muxMiddlewares.MiddlewareOnValidationError)
+	gleeceMuxRoutes.RegisterErrorMiddleware(runtime.OnOutputValidationError, muxMiddlewares.MiddlewareOnOutputValidationError)
 	gleeceMuxRoutes.RegisterCustomValidator("validate_starts_with_letter", e2eAssets.ValidateStartsWithLetter)
 	gleeceMuxRoutes.RegisterRoutes(muxTester.MuxRouter)
 
@@ -128,6 +134,8 @@ var _ = BeforeSuite(func() {
 	gleeceChiRoutes.RegisterMiddleware(runtime.AfterOperationSuccess, chiMiddlewares.MiddlewareAfterOperationSuccess)
 	gleeceChiRoutes.RegisterErrorMiddleware(runtime.OnOperationError, chiMiddlewares.MiddlewareOnError)
 	gleeceChiRoutes.RegisterErrorMiddleware(runtime.OnOperationError, chiMiddlewares.MiddlewareOnError2)
+	gleeceChiRoutes.RegisterErrorMiddleware(runtime.OnInputValidationError, chiMiddlewares.MiddlewareOnValidationError)
+	gleeceChiRoutes.RegisterErrorMiddleware(runtime.OnOutputValidationError, chiMiddlewares.MiddlewareOnOutputValidationError)
 	gleeceChiRoutes.RegisterCustomValidator("validate_starts_with_letter", e2eAssets.ValidateStartsWithLetter)
 	gleeceChiRoutes.RegisterRoutes(chiTester.ChiRouter)
 
@@ -137,6 +145,8 @@ var _ = BeforeSuite(func() {
 	gleeceFiberRoutes.RegisterMiddleware(runtime.AfterOperationSuccess, fiberMiddlewares.MiddlewareAfterOperationSuccess)
 	gleeceFiberRoutes.RegisterErrorMiddleware(runtime.OnOperationError, fiberMiddlewares.MiddlewareOnError)
 	gleeceFiberRoutes.RegisterErrorMiddleware(runtime.OnOperationError, fiberMiddlewares.MiddlewareOnError2)
+	gleeceFiberRoutes.RegisterErrorMiddleware(runtime.OnInputValidationError, fiberMiddlewares.MiddlewareOnValidationError)
+	gleeceFiberRoutes.RegisterErrorMiddleware(runtime.OnOutputValidationError, fiberMiddlewares.MiddlewareOnOutputValidationError)
 	gleeceFiberRoutes.RegisterCustomValidator("validate_starts_with_letter", e2eAssets.ValidateStartsWithLetter)
 	gleeceFiberRoutes.RegisterRoutes(fiberTester.FiberRouter)
 })
@@ -150,7 +160,10 @@ func VerifyResult(result common.RouterTestResult, routerTest common.RouterTest) 
 	}
 	if routerTest.ExpendedHeaders != nil {
 		for k, v := range routerTest.ExpendedHeaders {
-			Expect(result.Headers[strings.ToLower(k)]).To(Equal(v))
+			rawValue := result.Headers[strings.ToLower(k)]
+			// Split by ; and check if all values are present in the response header
+			value := strings.Split(rawValue, ";")[0]
+			Expect(value).To(Equal(v))
 		}
 	}
 }

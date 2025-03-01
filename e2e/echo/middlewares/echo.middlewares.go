@@ -54,3 +54,44 @@ func MiddlewareOnError2(c echo.Context, err error) bool {
 	c.Response().Header().Set("X-pass-on-error-2", "true")
 	return true
 }
+
+func MiddlewareOnValidationError(c echo.Context, err error) bool {
+	c.Response().Header().Set("X-pass-error-validation", "true")
+	
+	abortOnError := c.Request().Header.Get("abort-on-error")
+	if abortOnError == "true" {
+		operationErr := ""
+		switch e := err.(type) {
+		case *echo.HTTPError:
+			operationErr = e.Message.(string)
+		case error:
+			operationErr = e.Error()
+		}
+		c.JSON(http.StatusBadRequest, map[string]string{"error": "abort-on-error header is set to true " + operationErr})
+		return false
+	}
+	return true
+}
+
+func MiddlewareOnOutputValidationError(c echo.Context, err error) bool {
+	c.Response().Header().Set("X-pass-output-validation", "true")
+	
+	returnNull := c.Request().Header.Get("x-return-null")
+	if returnNull == "true" {
+		c.JSON(http.StatusOK, nil)
+		return false
+	}
+	abortOnError := c.Request().Header.Get("abort-on-error")
+	if abortOnError == "true" {
+		operationErr := ""
+		switch e := err.(type) {
+		case *echo.HTTPError:
+			operationErr = e.Message.(string)
+		case error:
+			operationErr = e.Error()
+		}
+		c.JSON(http.StatusBadRequest, map[string]string{"error": "abort-on-error header is set to true " + operationErr})
+		return false
+	}
+	return true
+}

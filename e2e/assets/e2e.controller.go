@@ -406,4 +406,12 @@ func (ec *E2EController) TestResponseValidationPtr() (*ResponseTest, error) {
 	}, nil
 }
 
+// @Method(POST)	
+// @Route(/test-response-validation-null)
+// @Response(200) The ID of the newly created user
+// @ErrorResponse(500) The error when process failed
+func (ec *E2EController) TestResponseValidationNull() (*ResponseTest, error) {
+	return nil, nil
+}
+
 

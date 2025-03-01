@@ -1,6 +1,7 @@
 package e2e
 
 import (
+	"github.com/gopher-fleece/gleece/e2e/assets"
 	"github.com/gopher-fleece/gleece/e2e/common"
 	. "github.com/onsi/ginkgo/v2"
 )
@@ -185,6 +186,253 @@ var _ = Describe("E2E Middlewares Spec", func() {
 				"X-pass-on-error":                "",
 				"X-pass-after-succeed-operation": "true",
 				"X-pass-on-error-2":              "",
+			},
+		})
+	})
+
+	It("Should pass thro validation error middleware for string param", func() {
+		RunRouterTest(common.RouterTest{
+			Name:                "Should pass thro validation error middleware for non-sent string param",
+			ExpectedStatus:      422,
+			ExpectedBodyContain: "A request was made to operation 'GetWithAllParamsRequiredPtr' but parameter 'headerParam' did not pass validation - Field 'headerParam' failed validation with tag 'required'",
+			ExpendedHeaders: map[string]string{
+				"X-pass-error-validation":        "true",
+				"X-pass-after-succeed-operation": "",
+			},
+			Path:    "/e2e/get-with-all-params-required-ptr/pathParam",
+			Method:  "GET",
+			Body:    nil,
+			Query:   map[string]string{"queryParam": "queryParam"},
+			Headers: nil,
+		})
+
+		RunRouterTest(common.RouterTest{
+			Name:                "Should pass thro validation error middleware for non-sent string param - missing query",
+			ExpectedStatus:      422,
+			ExpectedBodyContain: "A request was made to operation 'GetWithAllParamsRequiredPtr' but parameter 'queryParam' did not pass validation - Field 'queryParam' failed validation with tag 'required'",
+			ExpendedHeaders: map[string]string{
+				"X-pass-error-validation":        "true",
+				"X-pass-after-succeed-operation": "",
+			},
+			Path:   "/e2e/get-with-all-params-required-ptr/pathParam",
+			Method: "GET",
+			Body:   nil,
+			Query:  nil,
+			Headers: map[string]string{
+				"headerParam": "headerParam",
+			},
+		})
+
+		RunRouterTest(common.RouterTest{
+			Name:                "Should pass thro validation error middleware for non-sent string param  - invalid value",
+			ExpectedStatus:      422,
+			ExpectedBodyContain: "Field 'headerParam' failed validation with tag 'validate_starts_with_letter'",
+			ExpendedHeaders: map[string]string{
+				"X-pass-error-validation":        "true",
+				"X-pass-after-succeed-operation": "",
+			},
+			Path:   "/e2e/get-header-start-with-letter",
+			Method: "GET",
+			Body:   nil,
+			Query:  nil,
+			Headers: map[string]string{
+				"headerparam": "1headerParam",
+			},
+		})
+	})
+
+	It("Should pass thro validation error middleware for struct param", func() {
+		RunRouterTest(common.RouterTest{
+			Name:                "Should pass thro validation error middleware for struct param - missing body",
+			ExpectedStatus:      422,
+			ExpectedBodyContain: "A request was made to operation 'PostWithAllParamsWithBody' but body parameter 'theBody' did not pass validation of 'BodyInfo' - body is required but was not provided",
+			ExpendedHeaders: map[string]string{
+				"X-pass-error-validation":        "true",
+				"X-pass-after-succeed-operation": "",
+			},
+			Path:   "/e2e/post-with-all-params-body",
+			Method: "POST",
+			Body:   nil,
+			Query:  map[string]string{"queryParam": "queryParam"},
+			Headers: map[string]string{
+				"headerParam": "headerParam",
+			},
+		})
+
+		RunRouterTest(common.RouterTest{
+			Name:                "Should pass thro validation error middleware for struct param - invalid body",
+			ExpectedStatus:      422,
+			ExpectedBodyContain: "cannot unmarshal number into Go struct field BodyInfo.bodyParam of type string",
+			ExpendedHeaders: map[string]string{
+				"X-pass-error-validation":        "true",
+				"X-pass-after-succeed-operation": "",
+			},
+			Path:   "/e2e/post-with-all-params-body-required-ptr",
+			Method: "POST",
+			Body:   assets.BodyInfo2{BodyParam: 1},
+			Query:  map[string]string{"queryParam": "queryParam"},
+			Headers: map[string]string{
+				"headerParam": "headerParam",
+			},
+		})
+	})
+
+	It("Should abort by validation error middleware for string param", func() {
+		RunRouterTest(common.RouterTest{
+			Name:                "Should pass thro validation error middleware for non-sent string param",
+			ExpectedStatus:      400,
+			ExpectedBodyContain: "abort-on-error header is set to true ",
+			ExpendedHeaders: map[string]string{
+				"X-pass-error-validation":        "true",
+				"X-pass-after-succeed-operation": "",
+			},
+			Path:    "/e2e/get-with-all-params-required-ptr/pathParam",
+			Method:  "GET",
+			Body:    nil,
+			Query:   map[string]string{"queryParam": "queryParam"},
+			Headers: map[string]string{"abort-on-error": "true"},
+		})
+
+		RunRouterTest(common.RouterTest{
+			Name:                "Should pass thro validation error middleware for non-sent string param - missing query",
+			ExpectedStatus:      400,
+			ExpectedBodyContain: "abort-on-error header is set to true ",
+			ExpendedHeaders: map[string]string{
+				"X-pass-error-validation":        "true",
+				"X-pass-after-succeed-operation": "",
+			},
+			Path:   "/e2e/get-with-all-params-required-ptr/pathParam",
+			Method: "GET",
+			Body:   nil,
+			Query:  nil,
+			Headers: map[string]string{
+				"headerParam":    "headerParam",
+				"abort-on-error": "true",
+			},
+		})
+
+		RunRouterTest(common.RouterTest{
+			Name:                "Should pass thro validation error middleware for non-sent string param  - invalid value",
+			ExpectedStatus:      400,
+			ExpectedBodyContain: "failed on the 'validate_starts_with_letter' tag",
+			ExpendedHeaders: map[string]string{
+				"X-pass-error-validation":        "true",
+				"X-pass-after-succeed-operation": "",
+			},
+			Path:   "/e2e/get-header-start-with-letter",
+			Method: "GET",
+			Body:   nil,
+			Query:  nil,
+			Headers: map[string]string{
+				"headerparam":    "1headerParam",
+				"abort-on-error": "true",
+			},
+		})
+	})
+
+	It("Should abort by validation error middleware for struct param", func() {
+		RunRouterTest(common.RouterTest{
+			Name:                "Should pass thro validation error middleware for struct param - missing body",
+			ExpectedStatus:      400,
+			ExpectedBodyContain: "body is required but was not provided",
+			ExpendedHeaders: map[string]string{
+				"X-pass-error-validation":        "true",
+				"X-pass-after-succeed-operation": "",
+			},
+			Path:   "/e2e/post-with-all-params-body",
+			Method: "POST",
+			Body:   nil,
+			Query:  map[string]string{"queryParam": "queryParam"},
+			Headers: map[string]string{
+				"headerParam":    "headerParam",
+				"abort-on-error": "true",
+			},
+		})
+
+		RunRouterTest(common.RouterTest{
+			Name:                "Should pass thro validation error middleware for struct param - invalid body",
+			ExpectedStatus:      400,
+			ExpectedBodyContain: "cannot unmarshal number into Go struct field BodyInfo.bodyParam of type string",
+			ExpendedHeaders: map[string]string{
+				"X-pass-error-validation":        "true",
+				"X-pass-after-succeed-operation": "",
+			},
+			Path:   "/e2e/post-with-all-params-body-required-ptr",
+			Method: "POST",
+			Body:   assets.BodyInfo2{BodyParam: 1},
+			Query:  map[string]string{"queryParam": "queryParam"},
+			Headers: map[string]string{
+				"headerParam":    "headerParam",
+				"abort-on-error": "true",
+			},
+		})
+	})
+
+	It("Should pass thro output validation error middleware", func() {
+		RunRouterTest(common.RouterTest{
+			Name:           "Should set validation error for invalid response payload - direct",
+			ExpectedStatus: 500,
+			ExpectedBody:   "{\"type\":\"Internal Server Error\",\"title\":\"\",\"detail\":\"Encountered an error during operation 'TestResponseValidation'\",\"status\":500,\"instance\":\"/gleece/controller/error/TestResponseValidation\",\"extensions\":{}}",
+			ExpendedHeaders: map[string]string{
+				"X-pass-output-validation":       "true",
+				"X-pass-after-succeed-operation": "",
+			},
+			Path:    "/e2e/test-response-validation",
+			Method:  "POST",
+			Body:    nil,
+			Query:   nil,
+			Headers: nil,
+		})
+
+		RunRouterTest(common.RouterTest{
+			Name:           "Should set validation error for invalid response payload -ptr",
+			ExpectedStatus: 500,
+			ExpectedBody:   "{\"type\":\"Internal Server Error\",\"title\":\"\",\"detail\":\"Encountered an error during operation 'TestResponseValidationPtr'\",\"status\":500,\"instance\":\"/gleece/controller/error/TestResponseValidationPtr\",\"extensions\":{}}",
+			ExpendedHeaders: map[string]string{
+				"X-pass-output-validation":       "true",
+				"X-pass-after-succeed-operation": "",
+			},
+			Path:    "/e2e/test-response-validation-ptr",
+			Method:  "POST",
+			Body:    nil,
+			Query:   nil,
+			Headers: nil,
+		})
+	})
+
+	It("Should abort by output validation error middleware", func() {
+		RunRouterTest(common.RouterTest{
+			Name:                "Should set validation error for invalid response payload - direct",
+			ExpectedStatus:      400,
+			ExpectedBodyContain: "Key: 'ResponseTest.Index' Error:Field validation for 'Index' failed on the 'gte' tag",
+			ExpendedHeaders: map[string]string{
+				"X-pass-output-validation":       "true",
+				"X-pass-after-succeed-operation": "",
+			},
+			Path:   "/e2e/test-response-validation",
+			Method: "POST",
+			Body:   nil,
+			Query:  nil,
+			Headers: map[string]string{
+				"abort-on-error":                 "true",
+				"X-pass-after-succeed-operation": "true",
+			},
+		})
+
+		RunRouterTest(common.RouterTest{
+			Name:                "Should set validation error for invalid response payload -ptr",
+			ExpectedStatus:      400,
+			ExpectedBodyContain: "Key: 'ResponseTest.Index' Error:Field validation for 'Index' failed on the 'gte' tag",
+			ExpendedHeaders: map[string]string{
+				"X-pass-output-validation":       "true",
+				"X-pass-after-succeed-operation": "",
+			},
+			Path:   "/e2e/test-response-validation-ptr",
+			Method: "POST",
+			Body:   nil,
+			Query:  nil,
+			Headers: map[string]string{
+				"abort-on-error": "true",
 			},
 		})
 	})

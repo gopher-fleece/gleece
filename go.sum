@@ -87,12 +87,8 @@ github.com/google/pprof v0.0.0-20241210010833-40e02aabc2ad h1:a6HEuzUHeKH6hwfN/Z
 github.com/google/pprof v0.0.0-20241210010833-40e02aabc2ad/go.mod h1:vavhavw2zAxS5dIdcRluK6cSGGPlZynqzFM8NdvU144=
 github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
 github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
-github.com/gopher-fleece/runtime v1.0.2 h1:xA8/ZEgV8gT5GzAw5yXFjSFIe+zfASBJU38Cyzqm9X8=
-github.com/gopher-fleece/runtime v1.0.2/go.mod h1:0yY2w1etYZFD0UAdX+667Ix9c6fzRi37A/MZX+4jxms=
-github.com/gopher-fleece/runtime v1.0.4 h1:Z7uYrBPEO9PhO/jj+nagQ56mC1OVNJUoEh36Pauh6ng=
-github.com/gopher-fleece/runtime v1.0.4/go.mod h1:0yY2w1etYZFD0UAdX+667Ix9c6fzRi37A/MZX+4jxms=
-github.com/gopher-fleece/runtime v1.1.0 h1:XbBTJycrfIxXN9lqBHoY1unoFvx4GGMwbCuXOF/wh6o=
-github.com/gopher-fleece/runtime v1.1.0/go.mod h1:pFmWbzNHwj9IpJQ4gE9aaftJCieDQPu83dyvhd8gFUg=
+github.com/gopher-fleece/runtime v1.2.0 h1:gHydkAeW3AcTo1jQ23EbPlTfXG1igDCWRw3CufuORpY=
+github.com/gopher-fleece/runtime v1.2.0/go.mod h1:pFmWbzNHwj9IpJQ4gE9aaftJCieDQPu83dyvhd8gFUg=
 github.com/gorilla/mux v1.8.0 h1:i40aqfkR1h2SlN9hojwV5ZA91wcXFOvkdNIeFDP5koI=
 github.com/gorilla/mux v1.8.0/go.mod h1:DVbg23sWSpFRCP0SfiEN6jmj59UnW/n46BH5rLB71So=
 github.com/hpcloud/tail v1.0.0/go.mod h1:ab1qPbhIpdTxEkNHXyeSf5vhxWSCs/tWer42PpOxQnU=

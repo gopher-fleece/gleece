@@ -1,10 +1,22 @@
 {{> JsonResponseExtension}}
 {{#equal HasReturnValue true}}
+	{{!-- If validation of output is enabled AND the payload response is an object  --}}
 	{{#if ValidateResponsePayload}}
-		{{#each Responses}}
-		{{#unless @last}}
-			{{#equal Responses.IsUniverseType false}}
-			if outputValidationErr := validatorInstance.Struct(value); outputValidationErr != nil {
+	{{#equal Responses.[0].IsUniverseType false}}
+
+		
+		var outputValidationErr error
+		{{#if Responses.[0].IsByAddress}}
+		if value == nil {
+			outputValidationErr = fmt.Errorf("Response payload is nil")
+		} else {
+		{{/if}}
+			outputValidationErr = validatorInstance.Struct(value)
+		{{#if Responses.[0].IsByAddress}}
+		}
+		{{/if}}
+
+    	if outputValidationErr != nil {
 			{{> Middleware isErrorMiddleware=true middlewares="onOutputValidationMiddlewares" errorName="outputValidationErr" }}
 			outputValidationStatusCode := http.StatusInternalServerError
 			outputValidationRfc7807Error := runtime.Rfc7807Error{
@@ -16,14 +28,17 @@
 			}
 			ctx.JSON(outputValidationStatusCode, outputValidationRfc7807Error)
 			return
-			}
-			{{/equal}}
-		{{/unless}}
-		{{/each}}
+		}
+	{{/equal}}
 	{{/if}}
+	{{> Middleware isErrorMiddleware=false middlewares="afterOperationSuccessMiddlewares" }} 
+	{{> AfterOperationRoutesExtension }}
 	ctx.JSON(statusCode, value)
+	{{> RouteEndRoutesExtension }}
 {{/equal}}
 {{#equal HasReturnValue false}}
-	ctx.Header("Content-Type", "application/json")
+	{{> Middleware isErrorMiddleware=false middlewares="afterOperationSuccessMiddlewares" }} 
+	{{> AfterOperationRoutesExtension }}
 	ctx.Status(statusCode)
+	{{> RouteEndRoutesExtension }}
 {{/equal}}

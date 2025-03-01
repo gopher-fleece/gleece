@@ -11,8 +11,7 @@ require (
 	github.com/go-chi/chi/v5 v5.2.1
 	github.com/go-playground/validator/v10 v10.24.0
 	github.com/gofiber/fiber/v2 v2.52.6
-	github.com/google/uuid v1.6.0
-	github.com/gopher-fleece/runtime v1.1.0
+	github.com/gopher-fleece/runtime v1.2.0
 	github.com/gorilla/mux v1.8.0
 	github.com/iancoleman/strcase v0.3.0
 	github.com/labstack/echo/v4 v4.13.3
@@ -35,6 +34,7 @@ require (
 	github.com/dprotaso/go-yit v0.0.0-20240618133044-5a0af90af097 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
+	github.com/google/uuid v1.6.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.7 // indirect
