@@ -1,0 +1,8 @@
+w.Header().Set("x-RouteEndRoutesExtension", "{{{ OperationId }}}")
+
+{{#if TemplateContext.MODE }}
+        w.Header().Set("x-mode", "{{{ TemplateContext.MODE.Options.mode }}}")
+{{/if }}
+{{#if TemplateContext.LEVEL }}
+        w.Header().Set("x-level", "{{{ TemplateContext.LEVEL.Options.value }}}")
+{{/if }}

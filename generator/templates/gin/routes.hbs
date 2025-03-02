@@ -65,6 +65,8 @@ func RegisterRoutes(engine *gin.Engine) {
 		{{#equal HasReturnValue true}}value, {{/equal}}opError := controller.{{{OperationId}}}({{#each FuncParams}}{{#if TypeMeta.IsByAddress}}{{else}}*{{/if}}{{ToLowerCamel Name}}RawPtr{{#unless @last}}, {{/unless}}{{/each}})
 		
 		{{> ResponseHeaders }}
+
+		{{> ResponseHeadersExtension}}
 		
 		{{> ReplyResponse}}
 	})

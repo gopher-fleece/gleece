@@ -17,7 +17,19 @@
 			"ResponseHeaders" : "./echo/assets/echo.custom.response.headers.hbs"
 		},
 		"templateExtensions": {
-			"RouteEndRoutesExtension" : "./echo/assets/echo.end.route.extension.hbs"
+			"RegisterRoutesExtension" : "./echo/assets/RegisterRoutesExtension.hbs",
+			"RouteStartRoutesExtension" : "./echo/assets/RouteStartRoutesExtension.hbs",
+			"BeforeOperationRoutesExtension" : "./echo/assets/BeforeOperationRoutesExtension.hbs",
+			"AfterOperationRoutesExtension" : "./echo/assets/AfterOperationRoutesExtension.hbs",
+			"RouteEndRoutesExtension" : "./echo/assets/RouteEndRoutesExtension.hbs",
+			"ImportsExtension" : "./echo/assets/ImportsExtension.hbs",
+			"TypeDeclarationsExtension" : "./echo/assets/TypeDeclarationsExtension.hbs",
+			"FunctionDeclarationsExtension" : "./echo/assets/FunctionDeclarationsExtension.hbs",
+			"JsonResponseExtension" : "./echo/assets/JsonResponseExtension.hbs",
+			"RunValidatorExtension" : "./echo/assets/RunValidatorExtension.hbs",
+			"JsonBodyValidationErrorResponseExtension" : "./echo/assets/JsonBodyValidationErrorResponseExtension.hbs",
+			"JsonErrorResponseExtension" : "./echo/assets/JsonErrorResponseExtension.hbs",
+			"ResponseHeadersExtension" : "./echo/assets/ResponseHeadersExtension.hbs"
 		},
 		"validateResponsePayload": true
 	},

@@ -64,6 +64,8 @@ func RegisterRoutes(engine *mux.Router) {
 		{{#equal HasReturnValue true}}value, {{/equal}}opError := controller.{{{OperationId}}}({{#each FuncParams}}{{#if TypeMeta.IsByAddress}}{{else}}*{{/if}}{{ToLowerCamel Name}}RawPtr{{#unless @last}}, {{/unless}}{{/each}})
 		
 		{{> ResponseHeaders }}
+
+		{{> ResponseHeadersExtension}}
 		
 		{{> ReplyResponse}}
 	}).Methods("{{{HttpVerb}}}")

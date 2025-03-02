@@ -11,7 +11,9 @@ validationError := runtime.Rfc7807Error{
 	Status:     http.StatusUnprocessableEntity,
 	Instance:   "/gleece/validation/error/{{{OperationId}}}",
 }
+
 {{> JsonBodyValidationErrorResponseExtension}}
+
 w.WriteHeader(http.StatusUnprocessableEntity)
 json.NewEncoder(w).Encode(validationError)
 return

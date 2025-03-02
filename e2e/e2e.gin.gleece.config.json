@@ -17,7 +17,19 @@
 			"ResponseHeaders" : "./gin/assets/gin.custom.response.headers.hbs"
 		},
 		"templateExtensions": {
-			"RouteEndRoutesExtension" : "./gin/assets/gin.end.route.extension.hbs"
+			"RegisterRoutesExtension" : "./gin/assets/RegisterRoutesExtension.hbs",
+			"RouteStartRoutesExtension" : "./gin/assets/RouteStartRoutesExtension.hbs",
+			"BeforeOperationRoutesExtension" : "./gin/assets/BeforeOperationRoutesExtension.hbs",
+			"AfterOperationRoutesExtension" : "./gin/assets/AfterOperationRoutesExtension.hbs",
+			"RouteEndRoutesExtension" : "./gin/assets/RouteEndRoutesExtension.hbs",
+			"ImportsExtension" : "./gin/assets/ImportsExtension.hbs",
+			"TypeDeclarationsExtension" : "./gin/assets/TypeDeclarationsExtension.hbs",
+			"FunctionDeclarationsExtension" : "./gin/assets/FunctionDeclarationsExtension.hbs",
+			"JsonResponseExtension" : "./gin/assets/JsonResponseExtension.hbs",
+			"RunValidatorExtension" : "./gin/assets/RunValidatorExtension.hbs",
+			"JsonBodyValidationErrorResponseExtension" : "./gin/assets/JsonBodyValidationErrorResponseExtension.hbs",
+			"JsonErrorResponseExtension" : "./gin/assets/JsonErrorResponseExtension.hbs",
+			"ResponseHeadersExtension" : "./gin/assets/ResponseHeadersExtension.hbs"
 		},
 		"validateResponsePayload": true
 	},

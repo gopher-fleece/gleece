@@ -3,6 +3,9 @@
 		{{> Middleware isErrorMiddleware=true middlewares="onInputValidationMiddlewares" errorName="validatorErr" }}
         fieldName := "{{ToLowerCamel Name}}"
 		validationError := wrapValidatorError(validatorErr, "{{{OperationId}}}", fieldName)
+
+        {{> RunValidatorExtension}}
+
         return ctx.Status(http.StatusUnprocessableEntity).JSON(validationError)
     }
 {{/if}}

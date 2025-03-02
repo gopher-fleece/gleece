@@ -33,7 +33,7 @@ import (
 	Response62CustomError "github.com/gopher-fleece/gleece/e2e/assets"
 	Response65CustomError "github.com/gopher-fleece/gleece/e2e/assets"
 	E2EClassSecControllerImport "github.com/gopher-fleece/gleece/e2e/assets"
-	// import extension placeholder
+	// ImportsExtension - test
 )
 var validatorInstance = validator.New()
 var urlParamRegex *regexp.Regexp
@@ -45,7 +45,7 @@ type SecurityCheckList struct {
 	Checks   []runtime.SecurityCheck
 	Relation SecurityListRelation
 }
-// type declarations extension placeholder
+// TypeDeclarationsExtension - test
 func extractValidationErrorMessage(err error, fieldName *string) string {
 	if err == nil {
 		return ""
@@ -162,7 +162,7 @@ func wrapValidatorError(validatorErr error, operationId string, fieldName string
 		Instance: fmt.Sprintf("/gleece/validation/error/%s", operationId),
 	}
 }
-// function declarations extension placeholder
+// FunctionDeclarationsExtension - test
 type MiddlewareFunc func(w http.ResponseWriter, r *http.Request) bool
 type ErrorMiddlewareFunc func(w http.ResponseWriter, r *http.Request, err error) bool
 var beforeOperationMiddlewares []MiddlewareFunc
@@ -195,10 +195,10 @@ func RegisterCustomValidator(validateTagName string, validateFunc runtime.Valida
 }
 func RegisterRoutes(engine *chi.Mux) {
 	urlParamRegex = regexp.MustCompile(`\{([\w\d-_]+)\}`)
-	// register routes extension placeholder
+	// RegisterRoutesExtension - test
 	// E2EController
 	engine.Get(toChiUrl("/e2e/simple-get"), func(w http.ResponseWriter, ctx *http.Request) {
-		// route start routes extension placeholder
+		w.Header().Set("x-RouteStartRoutesExtension", "SimpleGet")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -228,12 +228,13 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		w.Header().Set("x-BeforeOperationRoutesExtension", "SimpleGet")
 		value, opError := controller.SimpleGet()
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
 		w.Header().Set("x-inject", "true")
+		w.Header().Set("x-ResponseHeadersExtension", "SimpleGet")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -250,12 +251,12 @@ func RegisterRoutes(engine *chi.Mux) {
 				Instance:   "/gleece/controller/error/SimpleGet",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			w.Header().Set("x-JsonErrorResponseExtension", "SimpleGet")
 			w.WriteHeader(statusCode)
 			json.NewEncoder(w).Encode(stdError)
 			return
 		}
-		// json response extension placeholder
+		w.Header().Set("x-JsonResponseExtension", "SimpleGet")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(w, ctx); !continueOperation {
@@ -263,14 +264,14 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		w.Header().Set("x-AfterOperationRoutesExtension", "SimpleGet")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(statusCode)
 		json.NewEncoder(w).Encode(value)
-		w.Header().Set("x-extended", "SimpleGet")
+		w.Header().Set("x-RouteEndRoutesExtension", "SimpleGet")
 	})
 	engine.Get(toChiUrl("/e2e/simple-get-empty-string"), func(w http.ResponseWriter, ctx *http.Request) {
-		// route start routes extension placeholder
+		w.Header().Set("x-RouteStartRoutesExtension", "SimpleGetEmptyString")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -300,12 +301,13 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		w.Header().Set("x-BeforeOperationRoutesExtension", "SimpleGetEmptyString")
 		value, opError := controller.SimpleGetEmptyString()
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
 		w.Header().Set("x-inject", "true")
+		w.Header().Set("x-ResponseHeadersExtension", "SimpleGetEmptyString")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -322,12 +324,12 @@ func RegisterRoutes(engine *chi.Mux) {
 				Instance:   "/gleece/controller/error/SimpleGetEmptyString",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			w.Header().Set("x-JsonErrorResponseExtension", "SimpleGetEmptyString")
 			w.WriteHeader(statusCode)
 			json.NewEncoder(w).Encode(stdError)
 			return
 		}
-		// json response extension placeholder
+		w.Header().Set("x-JsonResponseExtension", "SimpleGetEmptyString")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(w, ctx); !continueOperation {
@@ -335,14 +337,14 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		w.Header().Set("x-AfterOperationRoutesExtension", "SimpleGetEmptyString")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(statusCode)
 		json.NewEncoder(w).Encode(value)
-		w.Header().Set("x-extended", "SimpleGetEmptyString")
+		w.Header().Set("x-RouteEndRoutesExtension", "SimpleGetEmptyString")
 	})
 	engine.Get(toChiUrl("/e2e/simple-get-ptr-string"), func(w http.ResponseWriter, ctx *http.Request) {
-		// route start routes extension placeholder
+		w.Header().Set("x-RouteStartRoutesExtension", "SimpleGetPtrString")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -372,12 +374,13 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		w.Header().Set("x-BeforeOperationRoutesExtension", "SimpleGetPtrString")
 		value, opError := controller.SimpleGetPtrString()
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
 		w.Header().Set("x-inject", "true")
+		w.Header().Set("x-ResponseHeadersExtension", "SimpleGetPtrString")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -394,12 +397,12 @@ func RegisterRoutes(engine *chi.Mux) {
 				Instance:   "/gleece/controller/error/SimpleGetPtrString",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			w.Header().Set("x-JsonErrorResponseExtension", "SimpleGetPtrString")
 			w.WriteHeader(statusCode)
 			json.NewEncoder(w).Encode(stdError)
 			return
 		}
-		// json response extension placeholder
+		w.Header().Set("x-JsonResponseExtension", "SimpleGetPtrString")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(w, ctx); !continueOperation {
@@ -407,14 +410,14 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		w.Header().Set("x-AfterOperationRoutesExtension", "SimpleGetPtrString")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(statusCode)
 		json.NewEncoder(w).Encode(value)
-		w.Header().Set("x-extended", "SimpleGetPtrString")
+		w.Header().Set("x-RouteEndRoutesExtension", "SimpleGetPtrString")
 	})
 	engine.Get(toChiUrl("/e2e/simple-get-null-string"), func(w http.ResponseWriter, ctx *http.Request) {
-		// route start routes extension placeholder
+		w.Header().Set("x-RouteStartRoutesExtension", "SimpleGetNullString")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -444,12 +447,13 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		w.Header().Set("x-BeforeOperationRoutesExtension", "SimpleGetNullString")
 		value, opError := controller.SimpleGetNullString()
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
 		w.Header().Set("x-inject", "true")
+		w.Header().Set("x-ResponseHeadersExtension", "SimpleGetNullString")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -466,12 +470,12 @@ func RegisterRoutes(engine *chi.Mux) {
 				Instance:   "/gleece/controller/error/SimpleGetNullString",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			w.Header().Set("x-JsonErrorResponseExtension", "SimpleGetNullString")
 			w.WriteHeader(statusCode)
 			json.NewEncoder(w).Encode(stdError)
 			return
 		}
-		// json response extension placeholder
+		w.Header().Set("x-JsonResponseExtension", "SimpleGetNullString")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(w, ctx); !continueOperation {
@@ -479,14 +483,14 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		w.Header().Set("x-AfterOperationRoutesExtension", "SimpleGetNullString")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(statusCode)
 		json.NewEncoder(w).Encode(value)
-		w.Header().Set("x-extended", "SimpleGetNullString")
+		w.Header().Set("x-RouteEndRoutesExtension", "SimpleGetNullString")
 	})
 	engine.Get(toChiUrl("/e2e/simple-get-object"), func(w http.ResponseWriter, ctx *http.Request) {
-		// route start routes extension placeholder
+		w.Header().Set("x-RouteStartRoutesExtension", "SimpleGetObject")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -516,12 +520,13 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		w.Header().Set("x-BeforeOperationRoutesExtension", "SimpleGetObject")
 		value, opError := controller.SimpleGetObject()
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
 		w.Header().Set("x-inject", "true")
+		w.Header().Set("x-ResponseHeadersExtension", "SimpleGetObject")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -538,12 +543,12 @@ func RegisterRoutes(engine *chi.Mux) {
 				Instance:   "/gleece/controller/error/SimpleGetObject",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			w.Header().Set("x-JsonErrorResponseExtension", "SimpleGetObject")
 			w.WriteHeader(statusCode)
 			json.NewEncoder(w).Encode(stdError)
 			return
 		}
-		// json response extension placeholder
+		w.Header().Set("x-JsonResponseExtension", "SimpleGetObject")
 		var outputValidationErr error
 		outputValidationErr = validatorInstance.Struct(value)
 		if outputValidationErr != nil {
@@ -574,14 +579,14 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		w.Header().Set("x-AfterOperationRoutesExtension", "SimpleGetObject")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(statusCode)
 		json.NewEncoder(w).Encode(value)
-		w.Header().Set("x-extended", "SimpleGetObject")
+		w.Header().Set("x-RouteEndRoutesExtension", "SimpleGetObject")
 	})
 	engine.Get(toChiUrl("/e2e/simple-get-object-ptr"), func(w http.ResponseWriter, ctx *http.Request) {
-		// route start routes extension placeholder
+		w.Header().Set("x-RouteStartRoutesExtension", "SimpleGetObjectPtr")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -611,12 +616,13 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		w.Header().Set("x-BeforeOperationRoutesExtension", "SimpleGetObjectPtr")
 		value, opError := controller.SimpleGetObjectPtr()
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
 		w.Header().Set("x-inject", "true")
+		w.Header().Set("x-ResponseHeadersExtension", "SimpleGetObjectPtr")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -633,12 +639,12 @@ func RegisterRoutes(engine *chi.Mux) {
 				Instance:   "/gleece/controller/error/SimpleGetObjectPtr",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			w.Header().Set("x-JsonErrorResponseExtension", "SimpleGetObjectPtr")
 			w.WriteHeader(statusCode)
 			json.NewEncoder(w).Encode(stdError)
 			return
 		}
-		// json response extension placeholder
+		w.Header().Set("x-JsonResponseExtension", "SimpleGetObjectPtr")
 		var outputValidationErr error
 		if value == nil {
 			outputValidationErr = fmt.Errorf("Response payload is nil")
@@ -673,14 +679,14 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		w.Header().Set("x-AfterOperationRoutesExtension", "SimpleGetObjectPtr")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(statusCode)
 		json.NewEncoder(w).Encode(value)
-		w.Header().Set("x-extended", "SimpleGetObjectPtr")
+		w.Header().Set("x-RouteEndRoutesExtension", "SimpleGetObjectPtr")
 	})
 	engine.Get(toChiUrl("/e2e/simple-get-object-null"), func(w http.ResponseWriter, ctx *http.Request) {
-		// route start routes extension placeholder
+		w.Header().Set("x-RouteStartRoutesExtension", "SimpleGetObjectNull")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -710,12 +716,13 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		w.Header().Set("x-BeforeOperationRoutesExtension", "SimpleGetObjectNull")
 		value, opError := controller.SimpleGetObjectNull()
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
 		w.Header().Set("x-inject", "true")
+		w.Header().Set("x-ResponseHeadersExtension", "SimpleGetObjectNull")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -732,12 +739,12 @@ func RegisterRoutes(engine *chi.Mux) {
 				Instance:   "/gleece/controller/error/SimpleGetObjectNull",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			w.Header().Set("x-JsonErrorResponseExtension", "SimpleGetObjectNull")
 			w.WriteHeader(statusCode)
 			json.NewEncoder(w).Encode(stdError)
 			return
 		}
-		// json response extension placeholder
+		w.Header().Set("x-JsonResponseExtension", "SimpleGetObjectNull")
 		var outputValidationErr error
 		if value == nil {
 			outputValidationErr = fmt.Errorf("Response payload is nil")
@@ -772,14 +779,14 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		w.Header().Set("x-AfterOperationRoutesExtension", "SimpleGetObjectNull")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(statusCode)
 		json.NewEncoder(w).Encode(value)
-		w.Header().Set("x-extended", "SimpleGetObjectNull")
+		w.Header().Set("x-RouteEndRoutesExtension", "SimpleGetObjectNull")
 	})
 	engine.Get(toChiUrl("/e2e/simple-get-empty"), func(w http.ResponseWriter, ctx *http.Request) {
-		// route start routes extension placeholder
+		w.Header().Set("x-RouteStartRoutesExtension", "SimpleGetEmpty")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -819,6 +826,7 @@ func RegisterRoutes(engine *chi.Mux) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "queryParam"
 			validationError := wrapValidatorError(validatorErr, "SimpleGetEmpty", fieldName)
+			w.Header().Set("x-RunValidatorExtension", "SimpleGetEmpty")
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			json.NewEncoder(w).Encode(validationError)
 			return
@@ -830,12 +838,13 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		w.Header().Set("x-BeforeOperationRoutesExtension", "SimpleGetEmpty")
 		opError := controller.SimpleGetEmpty(*queryParamRawPtr)
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
 		w.Header().Set("x-inject", "true")
+		w.Header().Set("x-ResponseHeadersExtension", "SimpleGetEmpty")
 		statusCode := getStatusCode(&controller, false, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -852,12 +861,12 @@ func RegisterRoutes(engine *chi.Mux) {
 				Instance:   "/gleece/controller/error/SimpleGetEmpty",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			w.Header().Set("x-JsonErrorResponseExtension", "SimpleGetEmpty")
 			w.WriteHeader(statusCode)
 			json.NewEncoder(w).Encode(stdError)
 			return
 		}
-		// json response extension placeholder
+		w.Header().Set("x-JsonResponseExtension", "SimpleGetEmpty")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(w, ctx); !continueOperation {
@@ -865,12 +874,12 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		w.Header().Set("x-AfterOperationRoutesExtension", "SimpleGetEmpty")
 		w.WriteHeader(statusCode)
-		w.Header().Set("x-extended", "SimpleGetEmpty")
+		w.Header().Set("x-RouteEndRoutesExtension", "SimpleGetEmpty")
 	})
 	engine.Get(toChiUrl("/e2e/get-with-all-params/{pathParam}"), func(w http.ResponseWriter, ctx *http.Request) {
-		// route start routes extension placeholder
+		w.Header().Set("x-RouteStartRoutesExtension", "GetWithAllParams")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -910,6 +919,7 @@ func RegisterRoutes(engine *chi.Mux) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "queryParam"
 			validationError := wrapValidatorError(validatorErr, "GetWithAllParams", fieldName)
+			w.Header().Set("x-RunValidatorExtension", "GetWithAllParams")
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			json.NewEncoder(w).Encode(validationError)
 			return
@@ -931,6 +941,7 @@ func RegisterRoutes(engine *chi.Mux) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "pathParam"
 			validationError := wrapValidatorError(validatorErr, "GetWithAllParams", fieldName)
+			w.Header().Set("x-RunValidatorExtension", "GetWithAllParams")
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			json.NewEncoder(w).Encode(validationError)
 			return
@@ -957,6 +968,7 @@ func RegisterRoutes(engine *chi.Mux) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "headerParam"
 			validationError := wrapValidatorError(validatorErr, "GetWithAllParams", fieldName)
+			w.Header().Set("x-RunValidatorExtension", "GetWithAllParams")
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			json.NewEncoder(w).Encode(validationError)
 			return
@@ -968,12 +980,13 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		w.Header().Set("x-BeforeOperationRoutesExtension", "GetWithAllParams")
 		value, opError := controller.GetWithAllParams(*queryParamRawPtr, *pathParamRawPtr, *headerParamRawPtr)
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
 		w.Header().Set("x-inject", "true")
+		w.Header().Set("x-ResponseHeadersExtension", "GetWithAllParams")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -990,12 +1003,12 @@ func RegisterRoutes(engine *chi.Mux) {
 				Instance:   "/gleece/controller/error/GetWithAllParams",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			w.Header().Set("x-JsonErrorResponseExtension", "GetWithAllParams")
 			w.WriteHeader(statusCode)
 			json.NewEncoder(w).Encode(stdError)
 			return
 		}
-		// json response extension placeholder
+		w.Header().Set("x-JsonResponseExtension", "GetWithAllParams")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(w, ctx); !continueOperation {
@@ -1003,14 +1016,14 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		w.Header().Set("x-AfterOperationRoutesExtension", "GetWithAllParams")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(statusCode)
 		json.NewEncoder(w).Encode(value)
-		w.Header().Set("x-extended", "GetWithAllParams")
+		w.Header().Set("x-RouteEndRoutesExtension", "GetWithAllParams")
 	})
 	engine.Get(toChiUrl("/e2e/get-with-all-params-ptr/{pathParam}"), func(w http.ResponseWriter, ctx *http.Request) {
-		// route start routes extension placeholder
+		w.Header().Set("x-RouteStartRoutesExtension", "GetWithAllParamsPtr")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -1057,6 +1070,7 @@ func RegisterRoutes(engine *chi.Mux) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "pathParam"
 			validationError := wrapValidatorError(validatorErr, "GetWithAllParamsPtr", fieldName)
+			w.Header().Set("x-RunValidatorExtension", "GetWithAllParamsPtr")
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			json.NewEncoder(w).Encode(validationError)
 			return
@@ -1080,12 +1094,13 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		w.Header().Set("x-BeforeOperationRoutesExtension", "GetWithAllParamsPtr")
 		value, opError := controller.GetWithAllParamsPtr(queryParamRawPtr, pathParamRawPtr, headerParamRawPtr)
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
 		w.Header().Set("x-inject", "true")
+		w.Header().Set("x-ResponseHeadersExtension", "GetWithAllParamsPtr")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -1102,12 +1117,12 @@ func RegisterRoutes(engine *chi.Mux) {
 				Instance:   "/gleece/controller/error/GetWithAllParamsPtr",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			w.Header().Set("x-JsonErrorResponseExtension", "GetWithAllParamsPtr")
 			w.WriteHeader(statusCode)
 			json.NewEncoder(w).Encode(stdError)
 			return
 		}
-		// json response extension placeholder
+		w.Header().Set("x-JsonResponseExtension", "GetWithAllParamsPtr")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(w, ctx); !continueOperation {
@@ -1115,14 +1130,14 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		w.Header().Set("x-AfterOperationRoutesExtension", "GetWithAllParamsPtr")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(statusCode)
 		json.NewEncoder(w).Encode(value)
-		w.Header().Set("x-extended", "GetWithAllParamsPtr")
+		w.Header().Set("x-RouteEndRoutesExtension", "GetWithAllParamsPtr")
 	})
 	engine.Get(toChiUrl("/e2e/get-with-all-params-required-ptr/{pathParam}"), func(w http.ResponseWriter, ctx *http.Request) {
-		// route start routes extension placeholder
+		w.Header().Set("x-RouteStartRoutesExtension", "GetWithAllParamsRequiredPtr")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -1162,6 +1177,7 @@ func RegisterRoutes(engine *chi.Mux) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "queryParam"
 			validationError := wrapValidatorError(validatorErr, "GetWithAllParamsRequiredPtr", fieldName)
+			w.Header().Set("x-RunValidatorExtension", "GetWithAllParamsRequiredPtr")
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			json.NewEncoder(w).Encode(validationError)
 			return
@@ -1183,6 +1199,7 @@ func RegisterRoutes(engine *chi.Mux) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "pathParam"
 			validationError := wrapValidatorError(validatorErr, "GetWithAllParamsRequiredPtr", fieldName)
+			w.Header().Set("x-RunValidatorExtension", "GetWithAllParamsRequiredPtr")
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			json.NewEncoder(w).Encode(validationError)
 			return
@@ -1209,6 +1226,7 @@ func RegisterRoutes(engine *chi.Mux) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "headerParam"
 			validationError := wrapValidatorError(validatorErr, "GetWithAllParamsRequiredPtr", fieldName)
+			w.Header().Set("x-RunValidatorExtension", "GetWithAllParamsRequiredPtr")
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			json.NewEncoder(w).Encode(validationError)
 			return
@@ -1220,12 +1238,13 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		w.Header().Set("x-BeforeOperationRoutesExtension", "GetWithAllParamsRequiredPtr")
 		value, opError := controller.GetWithAllParamsRequiredPtr(queryParamRawPtr, pathParamRawPtr, headerParamRawPtr)
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
 		w.Header().Set("x-inject", "true")
+		w.Header().Set("x-ResponseHeadersExtension", "GetWithAllParamsRequiredPtr")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -1242,12 +1261,12 @@ func RegisterRoutes(engine *chi.Mux) {
 				Instance:   "/gleece/controller/error/GetWithAllParamsRequiredPtr",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			w.Header().Set("x-JsonErrorResponseExtension", "GetWithAllParamsRequiredPtr")
 			w.WriteHeader(statusCode)
 			json.NewEncoder(w).Encode(stdError)
 			return
 		}
-		// json response extension placeholder
+		w.Header().Set("x-JsonResponseExtension", "GetWithAllParamsRequiredPtr")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(w, ctx); !continueOperation {
@@ -1255,14 +1274,14 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		w.Header().Set("x-AfterOperationRoutesExtension", "GetWithAllParamsRequiredPtr")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(statusCode)
 		json.NewEncoder(w).Encode(value)
-		w.Header().Set("x-extended", "GetWithAllParamsRequiredPtr")
+		w.Header().Set("x-RouteEndRoutesExtension", "GetWithAllParamsRequiredPtr")
 	})
 	engine.Post(toChiUrl("/e2e/post-with-all-params-body"), func(w http.ResponseWriter, ctx *http.Request) {
-		// route start routes extension placeholder
+		w.Header().Set("x-RouteStartRoutesExtension", "PostWithAllParamsWithBody")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -1303,6 +1322,7 @@ func RegisterRoutes(engine *chi.Mux) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "queryParam"
 			validationError := wrapValidatorError(validatorErr, "PostWithAllParamsWithBody", fieldName)
+			w.Header().Set("x-RunValidatorExtension", "PostWithAllParamsWithBody")
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			json.NewEncoder(w).Encode(validationError)
 			return
@@ -1329,6 +1349,7 @@ func RegisterRoutes(engine *chi.Mux) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "headerParam"
 			validationError := wrapValidatorError(validatorErr, "PostWithAllParamsWithBody", fieldName)
+			w.Header().Set("x-RunValidatorExtension", "PostWithAllParamsWithBody")
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			json.NewEncoder(w).Encode(validationError)
 			return
@@ -1354,7 +1375,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Status:   http.StatusUnprocessableEntity,
 				Instance: "/gleece/validation/error/PostWithAllParamsWithBody",
 			}
-			// json body validation error response extension placeholder
+			w.Header().Set("x-JsonBodyValidationErrorResponseExtension", "PostWithAllParamsWithBody")
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			json.NewEncoder(w).Encode(validationError)
 			return
@@ -1366,12 +1387,13 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		w.Header().Set("x-BeforeOperationRoutesExtension", "PostWithAllParamsWithBody")
 		value, opError := controller.PostWithAllParamsWithBody(*queryParamRawPtr, *headerParamRawPtr, *theBodyRawPtr)
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
 		w.Header().Set("x-inject", "true")
+		w.Header().Set("x-ResponseHeadersExtension", "PostWithAllParamsWithBody")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -1388,12 +1410,12 @@ func RegisterRoutes(engine *chi.Mux) {
 				Instance:   "/gleece/controller/error/PostWithAllParamsWithBody",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			w.Header().Set("x-JsonErrorResponseExtension", "PostWithAllParamsWithBody")
 			w.WriteHeader(statusCode)
 			json.NewEncoder(w).Encode(stdError)
 			return
 		}
-		// json response extension placeholder
+		w.Header().Set("x-JsonResponseExtension", "PostWithAllParamsWithBody")
 		var outputValidationErr error
 		outputValidationErr = validatorInstance.Struct(value)
 		if outputValidationErr != nil {
@@ -1424,14 +1446,14 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		w.Header().Set("x-AfterOperationRoutesExtension", "PostWithAllParamsWithBody")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(statusCode)
 		json.NewEncoder(w).Encode(value)
-		w.Header().Set("x-extended", "PostWithAllParamsWithBody")
+		w.Header().Set("x-RouteEndRoutesExtension", "PostWithAllParamsWithBody")
 	})
 	engine.Post(toChiUrl("/e2e/post-with-all-params-body-ptr"), func(w http.ResponseWriter, ctx *http.Request) {
-		// route start routes extension placeholder
+		w.Header().Set("x-RouteStartRoutesExtension", "PostWithAllParamsWithBodyPtr")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -1495,7 +1517,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Status:   http.StatusUnprocessableEntity,
 				Instance: "/gleece/validation/error/PostWithAllParamsWithBodyPtr",
 			}
-			// json body validation error response extension placeholder
+			w.Header().Set("x-JsonBodyValidationErrorResponseExtension", "PostWithAllParamsWithBodyPtr")
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			json.NewEncoder(w).Encode(validationError)
 			return
@@ -1507,12 +1529,13 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		w.Header().Set("x-BeforeOperationRoutesExtension", "PostWithAllParamsWithBodyPtr")
 		value, opError := controller.PostWithAllParamsWithBodyPtr(queryParamRawPtr, headerParamRawPtr, theBodyRawPtr)
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
 		w.Header().Set("x-inject", "true")
+		w.Header().Set("x-ResponseHeadersExtension", "PostWithAllParamsWithBodyPtr")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -1529,12 +1552,12 @@ func RegisterRoutes(engine *chi.Mux) {
 				Instance:   "/gleece/controller/error/PostWithAllParamsWithBodyPtr",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			w.Header().Set("x-JsonErrorResponseExtension", "PostWithAllParamsWithBodyPtr")
 			w.WriteHeader(statusCode)
 			json.NewEncoder(w).Encode(stdError)
 			return
 		}
-		// json response extension placeholder
+		w.Header().Set("x-JsonResponseExtension", "PostWithAllParamsWithBodyPtr")
 		var outputValidationErr error
 		if value == nil {
 			outputValidationErr = fmt.Errorf("Response payload is nil")
@@ -1569,14 +1592,14 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		w.Header().Set("x-AfterOperationRoutesExtension", "PostWithAllParamsWithBodyPtr")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(statusCode)
 		json.NewEncoder(w).Encode(value)
-		w.Header().Set("x-extended", "PostWithAllParamsWithBodyPtr")
+		w.Header().Set("x-RouteEndRoutesExtension", "PostWithAllParamsWithBodyPtr")
 	})
 	engine.Post(toChiUrl("/e2e/post-with-all-params-body-required-ptr"), func(w http.ResponseWriter, ctx *http.Request) {
-		// route start routes extension placeholder
+		w.Header().Set("x-RouteStartRoutesExtension", "PostWithAllParamsWithBodyRequiredPtr")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -1621,7 +1644,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Status:   http.StatusUnprocessableEntity,
 				Instance: "/gleece/validation/error/PostWithAllParamsWithBodyRequiredPtr",
 			}
-			// json body validation error response extension placeholder
+			w.Header().Set("x-JsonBodyValidationErrorResponseExtension", "PostWithAllParamsWithBodyRequiredPtr")
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			json.NewEncoder(w).Encode(validationError)
 			return
@@ -1633,12 +1656,13 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		w.Header().Set("x-BeforeOperationRoutesExtension", "PostWithAllParamsWithBodyRequiredPtr")
 		value, opError := controller.PostWithAllParamsWithBodyRequiredPtr(theBodyRawPtr)
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
 		w.Header().Set("x-inject", "true")
+		w.Header().Set("x-ResponseHeadersExtension", "PostWithAllParamsWithBodyRequiredPtr")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -1655,12 +1679,12 @@ func RegisterRoutes(engine *chi.Mux) {
 				Instance:   "/gleece/controller/error/PostWithAllParamsWithBodyRequiredPtr",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			w.Header().Set("x-JsonErrorResponseExtension", "PostWithAllParamsWithBodyRequiredPtr")
 			w.WriteHeader(statusCode)
 			json.NewEncoder(w).Encode(stdError)
 			return
 		}
-		// json response extension placeholder
+		w.Header().Set("x-JsonResponseExtension", "PostWithAllParamsWithBodyRequiredPtr")
 		var outputValidationErr error
 		if value == nil {
 			outputValidationErr = fmt.Errorf("Response payload is nil")
@@ -1695,14 +1719,14 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		w.Header().Set("x-AfterOperationRoutesExtension", "PostWithAllParamsWithBodyRequiredPtr")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(statusCode)
 		json.NewEncoder(w).Encode(value)
-		w.Header().Set("x-extended", "PostWithAllParamsWithBodyRequiredPtr")
+		w.Header().Set("x-RouteEndRoutesExtension", "PostWithAllParamsWithBodyRequiredPtr")
 	})
 	engine.Get(toChiUrl("/e2e/get-header-start-with-letter"), func(w http.ResponseWriter, ctx *http.Request) {
-		// route start routes extension placeholder
+		w.Header().Set("x-RouteStartRoutesExtension", "GetHeaderStartWithLetter")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -1747,6 +1771,7 @@ func RegisterRoutes(engine *chi.Mux) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "headerParam"
 			validationError := wrapValidatorError(validatorErr, "GetHeaderStartWithLetter", fieldName)
+			w.Header().Set("x-RunValidatorExtension", "GetHeaderStartWithLetter")
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			json.NewEncoder(w).Encode(validationError)
 			return
@@ -1758,12 +1783,13 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		w.Header().Set("x-BeforeOperationRoutesExtension", "GetHeaderStartWithLetter")
 		value, opError := controller.GetHeaderStartWithLetter(*headerParamRawPtr)
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
 		w.Header().Set("x-inject", "true")
+		w.Header().Set("x-ResponseHeadersExtension", "GetHeaderStartWithLetter")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -1780,12 +1806,12 @@ func RegisterRoutes(engine *chi.Mux) {
 				Instance:   "/gleece/controller/error/GetHeaderStartWithLetter",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			w.Header().Set("x-JsonErrorResponseExtension", "GetHeaderStartWithLetter")
 			w.WriteHeader(statusCode)
 			json.NewEncoder(w).Encode(stdError)
 			return
 		}
-		// json response extension placeholder
+		w.Header().Set("x-JsonResponseExtension", "GetHeaderStartWithLetter")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(w, ctx); !continueOperation {
@@ -1793,14 +1819,14 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		w.Header().Set("x-AfterOperationRoutesExtension", "GetHeaderStartWithLetter")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(statusCode)
 		json.NewEncoder(w).Encode(value)
-		w.Header().Set("x-extended", "GetHeaderStartWithLetter")
+		w.Header().Set("x-RouteEndRoutesExtension", "GetHeaderStartWithLetter")
 	})
 	engine.Get(toChiUrl("/e2e/with-default-config-security"), func(w http.ResponseWriter, ctx *http.Request) {
-		// route start routes extension placeholder
+		w.Header().Set("x-RouteStartRoutesExtension", "WithDefaultConfigSecurity")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -1845,6 +1871,7 @@ func RegisterRoutes(engine *chi.Mux) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "headerParam"
 			validationError := wrapValidatorError(validatorErr, "WithDefaultConfigSecurity", fieldName)
+			w.Header().Set("x-RunValidatorExtension", "WithDefaultConfigSecurity")
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			json.NewEncoder(w).Encode(validationError)
 			return
@@ -1856,12 +1883,13 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		w.Header().Set("x-BeforeOperationRoutesExtension", "WithDefaultConfigSecurity")
 		value, opError := controller.WithDefaultConfigSecurity(*headerParamRawPtr)
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
 		w.Header().Set("x-inject", "true")
+		w.Header().Set("x-ResponseHeadersExtension", "WithDefaultConfigSecurity")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -1878,12 +1906,12 @@ func RegisterRoutes(engine *chi.Mux) {
 				Instance:   "/gleece/controller/error/WithDefaultConfigSecurity",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			w.Header().Set("x-JsonErrorResponseExtension", "WithDefaultConfigSecurity")
 			w.WriteHeader(statusCode)
 			json.NewEncoder(w).Encode(stdError)
 			return
 		}
-		// json response extension placeholder
+		w.Header().Set("x-JsonResponseExtension", "WithDefaultConfigSecurity")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(w, ctx); !continueOperation {
@@ -1891,14 +1919,14 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		w.Header().Set("x-AfterOperationRoutesExtension", "WithDefaultConfigSecurity")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(statusCode)
 		json.NewEncoder(w).Encode(value)
-		w.Header().Set("x-extended", "WithDefaultConfigSecurity")
+		w.Header().Set("x-RouteEndRoutesExtension", "WithDefaultConfigSecurity")
 	})
 	engine.Get(toChiUrl("/e2e/with-one-security"), func(w http.ResponseWriter, ctx *http.Request) {
-		// route start routes extension placeholder
+		w.Header().Set("x-RouteStartRoutesExtension", "WithOneSecurity")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -1943,6 +1971,7 @@ func RegisterRoutes(engine *chi.Mux) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "headerParam"
 			validationError := wrapValidatorError(validatorErr, "WithOneSecurity", fieldName)
+			w.Header().Set("x-RunValidatorExtension", "WithOneSecurity")
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			json.NewEncoder(w).Encode(validationError)
 			return
@@ -1954,12 +1983,13 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		w.Header().Set("x-BeforeOperationRoutesExtension", "WithOneSecurity")
 		value, opError := controller.WithOneSecurity(*headerParamRawPtr)
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
 		w.Header().Set("x-inject", "true")
+		w.Header().Set("x-ResponseHeadersExtension", "WithOneSecurity")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -1976,12 +2006,12 @@ func RegisterRoutes(engine *chi.Mux) {
 				Instance:   "/gleece/controller/error/WithOneSecurity",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			w.Header().Set("x-JsonErrorResponseExtension", "WithOneSecurity")
 			w.WriteHeader(statusCode)
 			json.NewEncoder(w).Encode(stdError)
 			return
 		}
-		// json response extension placeholder
+		w.Header().Set("x-JsonResponseExtension", "WithOneSecurity")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(w, ctx); !continueOperation {
@@ -1989,14 +2019,14 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		w.Header().Set("x-AfterOperationRoutesExtension", "WithOneSecurity")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(statusCode)
 		json.NewEncoder(w).Encode(value)
-		w.Header().Set("x-extended", "WithOneSecurity")
+		w.Header().Set("x-RouteEndRoutesExtension", "WithOneSecurity")
 	})
 	engine.Get(toChiUrl("/e2e/with-two-security"), func(w http.ResponseWriter, ctx *http.Request) {
-		// route start routes extension placeholder
+		w.Header().Set("x-RouteStartRoutesExtension", "WithTwoSecurity")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -2053,6 +2083,7 @@ func RegisterRoutes(engine *chi.Mux) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "headerParam"
 			validationError := wrapValidatorError(validatorErr, "WithTwoSecurity", fieldName)
+			w.Header().Set("x-RunValidatorExtension", "WithTwoSecurity")
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			json.NewEncoder(w).Encode(validationError)
 			return
@@ -2064,12 +2095,13 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		w.Header().Set("x-BeforeOperationRoutesExtension", "WithTwoSecurity")
 		value, opError := controller.WithTwoSecurity(*headerParamRawPtr)
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
 		w.Header().Set("x-inject", "true")
+		w.Header().Set("x-ResponseHeadersExtension", "WithTwoSecurity")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -2086,12 +2118,12 @@ func RegisterRoutes(engine *chi.Mux) {
 				Instance:   "/gleece/controller/error/WithTwoSecurity",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			w.Header().Set("x-JsonErrorResponseExtension", "WithTwoSecurity")
 			w.WriteHeader(statusCode)
 			json.NewEncoder(w).Encode(stdError)
 			return
 		}
-		// json response extension placeholder
+		w.Header().Set("x-JsonResponseExtension", "WithTwoSecurity")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(w, ctx); !continueOperation {
@@ -2099,14 +2131,14 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		w.Header().Set("x-AfterOperationRoutesExtension", "WithTwoSecurity")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(statusCode)
 		json.NewEncoder(w).Encode(value)
-		w.Header().Set("x-extended", "WithTwoSecurity")
+		w.Header().Set("x-RouteEndRoutesExtension", "WithTwoSecurity")
 	})
 	engine.Get(toChiUrl("/e2e/with-two-security-same-method"), func(w http.ResponseWriter, ctx *http.Request) {
-		// route start routes extension placeholder
+		w.Header().Set("x-RouteStartRoutesExtension", "WithTwoSecuritySameMethod")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -2163,6 +2195,7 @@ func RegisterRoutes(engine *chi.Mux) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "headerParam"
 			validationError := wrapValidatorError(validatorErr, "WithTwoSecuritySameMethod", fieldName)
+			w.Header().Set("x-RunValidatorExtension", "WithTwoSecuritySameMethod")
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			json.NewEncoder(w).Encode(validationError)
 			return
@@ -2174,12 +2207,13 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		w.Header().Set("x-BeforeOperationRoutesExtension", "WithTwoSecuritySameMethod")
 		value, opError := controller.WithTwoSecuritySameMethod(*headerParamRawPtr)
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
 		w.Header().Set("x-inject", "true")
+		w.Header().Set("x-ResponseHeadersExtension", "WithTwoSecuritySameMethod")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -2196,12 +2230,12 @@ func RegisterRoutes(engine *chi.Mux) {
 				Instance:   "/gleece/controller/error/WithTwoSecuritySameMethod",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			w.Header().Set("x-JsonErrorResponseExtension", "WithTwoSecuritySameMethod")
 			w.WriteHeader(statusCode)
 			json.NewEncoder(w).Encode(stdError)
 			return
 		}
-		// json response extension placeholder
+		w.Header().Set("x-JsonResponseExtension", "WithTwoSecuritySameMethod")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(w, ctx); !continueOperation {
@@ -2209,14 +2243,14 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		w.Header().Set("x-AfterOperationRoutesExtension", "WithTwoSecuritySameMethod")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(statusCode)
 		json.NewEncoder(w).Encode(value)
-		w.Header().Set("x-extended", "WithTwoSecuritySameMethod")
+		w.Header().Set("x-RouteEndRoutesExtension", "WithTwoSecuritySameMethod")
 	})
 	engine.Get(toChiUrl("/e2e/default-error"), func(w http.ResponseWriter, ctx *http.Request) {
-		// route start routes extension placeholder
+		w.Header().Set("x-RouteStartRoutesExtension", "DefaultError")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -2246,12 +2280,13 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		w.Header().Set("x-BeforeOperationRoutesExtension", "DefaultError")
 		opError := controller.DefaultError()
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
 		w.Header().Set("x-inject", "true")
+		w.Header().Set("x-ResponseHeadersExtension", "DefaultError")
 		statusCode := getStatusCode(&controller, false, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -2268,12 +2303,12 @@ func RegisterRoutes(engine *chi.Mux) {
 				Instance:   "/gleece/controller/error/DefaultError",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			w.Header().Set("x-JsonErrorResponseExtension", "DefaultError")
 			w.WriteHeader(statusCode)
 			json.NewEncoder(w).Encode(stdError)
 			return
 		}
-		// json response extension placeholder
+		w.Header().Set("x-JsonResponseExtension", "DefaultError")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(w, ctx); !continueOperation {
@@ -2281,12 +2316,12 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		w.Header().Set("x-AfterOperationRoutesExtension", "DefaultError")
 		w.WriteHeader(statusCode)
-		w.Header().Set("x-extended", "DefaultError")
+		w.Header().Set("x-RouteEndRoutesExtension", "DefaultError")
 	})
 	engine.Get(toChiUrl("/e2e/default-error-with-payload"), func(w http.ResponseWriter, ctx *http.Request) {
-		// route start routes extension placeholder
+		w.Header().Set("x-RouteStartRoutesExtension", "DefaultErrorWithPayload")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -2316,12 +2351,13 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		w.Header().Set("x-BeforeOperationRoutesExtension", "DefaultErrorWithPayload")
 		value, opError := controller.DefaultErrorWithPayload()
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
 		w.Header().Set("x-inject", "true")
+		w.Header().Set("x-ResponseHeadersExtension", "DefaultErrorWithPayload")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -2338,12 +2374,12 @@ func RegisterRoutes(engine *chi.Mux) {
 				Instance:   "/gleece/controller/error/DefaultErrorWithPayload",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			w.Header().Set("x-JsonErrorResponseExtension", "DefaultErrorWithPayload")
 			w.WriteHeader(statusCode)
 			json.NewEncoder(w).Encode(stdError)
 			return
 		}
-		// json response extension placeholder
+		w.Header().Set("x-JsonResponseExtension", "DefaultErrorWithPayload")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(w, ctx); !continueOperation {
@@ -2351,14 +2387,14 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		w.Header().Set("x-AfterOperationRoutesExtension", "DefaultErrorWithPayload")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(statusCode)
 		json.NewEncoder(w).Encode(value)
-		w.Header().Set("x-extended", "DefaultErrorWithPayload")
+		w.Header().Set("x-RouteEndRoutesExtension", "DefaultErrorWithPayload")
 	})
 	engine.Get(toChiUrl("/e2e/custom-error"), func(w http.ResponseWriter, ctx *http.Request) {
-		// route start routes extension placeholder
+		w.Header().Set("x-RouteStartRoutesExtension", "CustomError")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -2388,12 +2424,13 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		w.Header().Set("x-BeforeOperationRoutesExtension", "CustomError")
 		opError := controller.CustomError()
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
 		w.Header().Set("x-inject", "true")
+		w.Header().Set("x-ResponseHeadersExtension", "CustomError")
 		statusCode := getStatusCode(&controller, false, opError)
 		emptyErr := Response62CustomError.CustomError{}
 		if opError != emptyErr {
@@ -2408,7 +2445,7 @@ func RegisterRoutes(engine *chi.Mux) {
 			json.NewEncoder(w).Encode(opError)
 			return
 		}
-		// json response extension placeholder
+		w.Header().Set("x-JsonResponseExtension", "CustomError")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(w, ctx); !continueOperation {
@@ -2416,12 +2453,12 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		w.Header().Set("x-AfterOperationRoutesExtension", "CustomError")
 		w.WriteHeader(statusCode)
-		w.Header().Set("x-extended", "CustomError")
+		w.Header().Set("x-RouteEndRoutesExtension", "CustomError")
 	})
 	engine.Get(toChiUrl("/e2e/custom-error-ptr"), func(w http.ResponseWriter, ctx *http.Request) {
-		// route start routes extension placeholder
+		w.Header().Set("x-RouteStartRoutesExtension", "CustomPtrError")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -2451,12 +2488,13 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		w.Header().Set("x-BeforeOperationRoutesExtension", "CustomPtrError")
 		opError := controller.CustomPtrError()
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
 		w.Header().Set("x-inject", "true")
+		w.Header().Set("x-ResponseHeadersExtension", "CustomPtrError")
 		statusCode := getStatusCode(&controller, false, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -2470,7 +2508,7 @@ func RegisterRoutes(engine *chi.Mux) {
 			json.NewEncoder(w).Encode(opError)
 			return
 		}
-		// json response extension placeholder
+		w.Header().Set("x-JsonResponseExtension", "CustomPtrError")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(w, ctx); !continueOperation {
@@ -2478,12 +2516,12 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		w.Header().Set("x-AfterOperationRoutesExtension", "CustomPtrError")
 		w.WriteHeader(statusCode)
-		w.Header().Set("x-extended", "CustomPtrError")
+		w.Header().Set("x-RouteEndRoutesExtension", "CustomPtrError")
 	})
 	engine.Get(toChiUrl("/e2e/503-error-code"), func(w http.ResponseWriter, ctx *http.Request) {
-		// route start routes extension placeholder
+		w.Header().Set("x-RouteStartRoutesExtension", "Error503")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -2513,12 +2551,13 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		w.Header().Set("x-BeforeOperationRoutesExtension", "Error503")
 		opError := controller.Error503()
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
 		w.Header().Set("x-inject", "true")
+		w.Header().Set("x-ResponseHeadersExtension", "Error503")
 		statusCode := getStatusCode(&controller, false, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -2535,12 +2574,12 @@ func RegisterRoutes(engine *chi.Mux) {
 				Instance:   "/gleece/controller/error/Error503",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			w.Header().Set("x-JsonErrorResponseExtension", "Error503")
 			w.WriteHeader(statusCode)
 			json.NewEncoder(w).Encode(stdError)
 			return
 		}
-		// json response extension placeholder
+		w.Header().Set("x-JsonResponseExtension", "Error503")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(w, ctx); !continueOperation {
@@ -2548,12 +2587,12 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		w.Header().Set("x-AfterOperationRoutesExtension", "Error503")
 		w.WriteHeader(statusCode)
-		w.Header().Set("x-extended", "Error503")
+		w.Header().Set("x-RouteEndRoutesExtension", "Error503")
 	})
 	engine.Get(toChiUrl("/e2e/custom-error-503"), func(w http.ResponseWriter, ctx *http.Request) {
-		// route start routes extension placeholder
+		w.Header().Set("x-RouteStartRoutesExtension", "CustomError503")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -2583,12 +2622,13 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		w.Header().Set("x-BeforeOperationRoutesExtension", "CustomError503")
 		opError := controller.CustomError503()
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
 		w.Header().Set("x-inject", "true")
+		w.Header().Set("x-ResponseHeadersExtension", "CustomError503")
 		statusCode := getStatusCode(&controller, false, opError)
 		emptyErr := Response65CustomError.CustomError{}
 		if opError != emptyErr {
@@ -2603,7 +2643,7 @@ func RegisterRoutes(engine *chi.Mux) {
 			json.NewEncoder(w).Encode(opError)
 			return
 		}
-		// json response extension placeholder
+		w.Header().Set("x-JsonResponseExtension", "CustomError503")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(w, ctx); !continueOperation {
@@ -2611,12 +2651,12 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		w.Header().Set("x-AfterOperationRoutesExtension", "CustomError503")
 		w.WriteHeader(statusCode)
-		w.Header().Set("x-extended", "CustomError503")
+		w.Header().Set("x-RouteEndRoutesExtension", "CustomError503")
 	})
 	engine.Get(toChiUrl("/e2e/context-access"), func(w http.ResponseWriter, ctx *http.Request) {
-		// route start routes extension placeholder
+		w.Header().Set("x-RouteStartRoutesExtension", "ContextAccess")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -2646,12 +2686,13 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		w.Header().Set("x-BeforeOperationRoutesExtension", "ContextAccess")
 		opError := controller.ContextAccess()
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
 		w.Header().Set("x-inject", "true")
+		w.Header().Set("x-ResponseHeadersExtension", "ContextAccess")
 		statusCode := getStatusCode(&controller, false, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -2668,12 +2709,12 @@ func RegisterRoutes(engine *chi.Mux) {
 				Instance:   "/gleece/controller/error/ContextAccess",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			w.Header().Set("x-JsonErrorResponseExtension", "ContextAccess")
 			w.WriteHeader(statusCode)
 			json.NewEncoder(w).Encode(stdError)
 			return
 		}
-		// json response extension placeholder
+		w.Header().Set("x-JsonResponseExtension", "ContextAccess")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(w, ctx); !continueOperation {
@@ -2681,12 +2722,12 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		w.Header().Set("x-AfterOperationRoutesExtension", "ContextAccess")
 		w.WriteHeader(statusCode)
-		w.Header().Set("x-extended", "ContextAccess")
+		w.Header().Set("x-RouteEndRoutesExtension", "ContextAccess")
 	})
 	engine.Get(toChiUrl("/e2e/http-method"), func(w http.ResponseWriter, ctx *http.Request) {
-		// route start routes extension placeholder
+		w.Header().Set("x-RouteStartRoutesExtension", "Get")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -2716,12 +2757,13 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		w.Header().Set("x-BeforeOperationRoutesExtension", "Get")
 		opError := controller.Get()
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
 		w.Header().Set("x-inject", "true")
+		w.Header().Set("x-ResponseHeadersExtension", "Get")
 		statusCode := getStatusCode(&controller, false, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -2738,12 +2780,12 @@ func RegisterRoutes(engine *chi.Mux) {
 				Instance:   "/gleece/controller/error/Get",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			w.Header().Set("x-JsonErrorResponseExtension", "Get")
 			w.WriteHeader(statusCode)
 			json.NewEncoder(w).Encode(stdError)
 			return
 		}
-		// json response extension placeholder
+		w.Header().Set("x-JsonResponseExtension", "Get")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(w, ctx); !continueOperation {
@@ -2751,12 +2793,12 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		w.Header().Set("x-AfterOperationRoutesExtension", "Get")
 		w.WriteHeader(statusCode)
-		w.Header().Set("x-extended", "Get")
+		w.Header().Set("x-RouteEndRoutesExtension", "Get")
 	})
 	engine.Post(toChiUrl("/e2e/http-method"), func(w http.ResponseWriter, ctx *http.Request) {
-		// route start routes extension placeholder
+		w.Header().Set("x-RouteStartRoutesExtension", "Post")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -2786,12 +2828,13 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		w.Header().Set("x-BeforeOperationRoutesExtension", "Post")
 		opError := controller.Post()
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
 		w.Header().Set("x-inject", "true")
+		w.Header().Set("x-ResponseHeadersExtension", "Post")
 		statusCode := getStatusCode(&controller, false, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -2808,12 +2851,12 @@ func RegisterRoutes(engine *chi.Mux) {
 				Instance:   "/gleece/controller/error/Post",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			w.Header().Set("x-JsonErrorResponseExtension", "Post")
 			w.WriteHeader(statusCode)
 			json.NewEncoder(w).Encode(stdError)
 			return
 		}
-		// json response extension placeholder
+		w.Header().Set("x-JsonResponseExtension", "Post")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(w, ctx); !continueOperation {
@@ -2821,12 +2864,12 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		w.Header().Set("x-AfterOperationRoutesExtension", "Post")
 		w.WriteHeader(statusCode)
-		w.Header().Set("x-extended", "Post")
+		w.Header().Set("x-RouteEndRoutesExtension", "Post")
 	})
 	engine.Put(toChiUrl("/e2e/http-method"), func(w http.ResponseWriter, ctx *http.Request) {
-		// route start routes extension placeholder
+		w.Header().Set("x-RouteStartRoutesExtension", "Put")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -2856,12 +2899,13 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		w.Header().Set("x-BeforeOperationRoutesExtension", "Put")
 		opError := controller.Put()
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
 		w.Header().Set("x-inject", "true")
+		w.Header().Set("x-ResponseHeadersExtension", "Put")
 		statusCode := getStatusCode(&controller, false, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -2878,12 +2922,12 @@ func RegisterRoutes(engine *chi.Mux) {
 				Instance:   "/gleece/controller/error/Put",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			w.Header().Set("x-JsonErrorResponseExtension", "Put")
 			w.WriteHeader(statusCode)
 			json.NewEncoder(w).Encode(stdError)
 			return
 		}
-		// json response extension placeholder
+		w.Header().Set("x-JsonResponseExtension", "Put")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(w, ctx); !continueOperation {
@@ -2891,12 +2935,12 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		w.Header().Set("x-AfterOperationRoutesExtension", "Put")
 		w.WriteHeader(statusCode)
-		w.Header().Set("x-extended", "Put")
+		w.Header().Set("x-RouteEndRoutesExtension", "Put")
 	})
 	engine.Delete(toChiUrl("/e2e/http-method"), func(w http.ResponseWriter, ctx *http.Request) {
-		// route start routes extension placeholder
+		w.Header().Set("x-RouteStartRoutesExtension", "Delete")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -2926,12 +2970,13 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		w.Header().Set("x-BeforeOperationRoutesExtension", "Delete")
 		opError := controller.Delete()
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
 		w.Header().Set("x-inject", "true")
+		w.Header().Set("x-ResponseHeadersExtension", "Delete")
 		statusCode := getStatusCode(&controller, false, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -2948,12 +2993,12 @@ func RegisterRoutes(engine *chi.Mux) {
 				Instance:   "/gleece/controller/error/Delete",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			w.Header().Set("x-JsonErrorResponseExtension", "Delete")
 			w.WriteHeader(statusCode)
 			json.NewEncoder(w).Encode(stdError)
 			return
 		}
-		// json response extension placeholder
+		w.Header().Set("x-JsonResponseExtension", "Delete")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(w, ctx); !continueOperation {
@@ -2961,12 +3006,12 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		w.Header().Set("x-AfterOperationRoutesExtension", "Delete")
 		w.WriteHeader(statusCode)
-		w.Header().Set("x-extended", "Delete")
+		w.Header().Set("x-RouteEndRoutesExtension", "Delete")
 	})
 	engine.Patch(toChiUrl("/e2e/http-method"), func(w http.ResponseWriter, ctx *http.Request) {
-		// route start routes extension placeholder
+		w.Header().Set("x-RouteStartRoutesExtension", "Patch")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -2996,12 +3041,13 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		w.Header().Set("x-BeforeOperationRoutesExtension", "Patch")
 		opError := controller.Patch()
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
 		w.Header().Set("x-inject", "true")
+		w.Header().Set("x-ResponseHeadersExtension", "Patch")
 		statusCode := getStatusCode(&controller, false, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -3018,12 +3064,12 @@ func RegisterRoutes(engine *chi.Mux) {
 				Instance:   "/gleece/controller/error/Patch",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			w.Header().Set("x-JsonErrorResponseExtension", "Patch")
 			w.WriteHeader(statusCode)
 			json.NewEncoder(w).Encode(stdError)
 			return
 		}
-		// json response extension placeholder
+		w.Header().Set("x-JsonResponseExtension", "Patch")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(w, ctx); !continueOperation {
@@ -3031,12 +3077,12 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		w.Header().Set("x-AfterOperationRoutesExtension", "Patch")
 		w.WriteHeader(statusCode)
-		w.Header().Set("x-extended", "Patch")
+		w.Header().Set("x-RouteEndRoutesExtension", "Patch")
 	})
 	engine.Get(toChiUrl("/e2e/template-context-1"), func(w http.ResponseWriter, ctx *http.Request) {
-		// route start routes extension placeholder
+		w.Header().Set("x-RouteStartRoutesExtension", "TemplateContext1")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -3066,12 +3112,13 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		w.Header().Set("x-BeforeOperationRoutesExtension", "TemplateContext1")
 		value, opError := controller.TemplateContext1()
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
 		w.Header().Set("x-inject", "true")
+		w.Header().Set("x-ResponseHeadersExtension", "TemplateContext1")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -3088,12 +3135,12 @@ func RegisterRoutes(engine *chi.Mux) {
 				Instance:   "/gleece/controller/error/TemplateContext1",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			w.Header().Set("x-JsonErrorResponseExtension", "TemplateContext1")
 			w.WriteHeader(statusCode)
 			json.NewEncoder(w).Encode(stdError)
 			return
 		}
-		// json response extension placeholder
+		w.Header().Set("x-JsonResponseExtension", "TemplateContext1")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(w, ctx); !continueOperation {
@@ -3101,15 +3148,15 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		w.Header().Set("x-AfterOperationRoutesExtension", "TemplateContext1")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(statusCode)
 		json.NewEncoder(w).Encode(value)
-		w.Header().Set("x-extended", "TemplateContext1")
+		w.Header().Set("x-RouteEndRoutesExtension", "TemplateContext1")
 		w.Header().Set("x-level", "high")
 	})
 	engine.Get(toChiUrl("/e2e/template-context-2"), func(w http.ResponseWriter, ctx *http.Request) {
-		// route start routes extension placeholder
+		w.Header().Set("x-RouteStartRoutesExtension", "TemplateContext2")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -3139,12 +3186,13 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		w.Header().Set("x-BeforeOperationRoutesExtension", "TemplateContext2")
 		value, opError := controller.TemplateContext2()
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
 		w.Header().Set("x-inject", "true")
+		w.Header().Set("x-ResponseHeadersExtension", "TemplateContext2")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -3161,12 +3209,12 @@ func RegisterRoutes(engine *chi.Mux) {
 				Instance:   "/gleece/controller/error/TemplateContext2",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			w.Header().Set("x-JsonErrorResponseExtension", "TemplateContext2")
 			w.WriteHeader(statusCode)
 			json.NewEncoder(w).Encode(stdError)
 			return
 		}
-		// json response extension placeholder
+		w.Header().Set("x-JsonResponseExtension", "TemplateContext2")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(w, ctx); !continueOperation {
@@ -3174,16 +3222,16 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		w.Header().Set("x-AfterOperationRoutesExtension", "TemplateContext2")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(statusCode)
 		json.NewEncoder(w).Encode(value)
-		w.Header().Set("x-extended", "TemplateContext2")
+		w.Header().Set("x-RouteEndRoutesExtension", "TemplateContext2")
 		w.Header().Set("x-mode", "100")
 		w.Header().Set("x-level", "low")
 	})
 	engine.Post(toChiUrl("/e2e/form"), func(w http.ResponseWriter, ctx *http.Request) {
-		// route start routes extension placeholder
+		w.Header().Set("x-RouteStartRoutesExtension", "TestForm")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -3227,6 +3275,7 @@ func RegisterRoutes(engine *chi.Mux) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "item1"
 			validationError := wrapValidatorError(validatorErr, "TestForm", fieldName)
+			w.Header().Set("x-RunValidatorExtension", "TestForm")
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			json.NewEncoder(w).Encode(validationError)
 			return
@@ -3252,6 +3301,7 @@ func RegisterRoutes(engine *chi.Mux) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "item2"
 			validationError := wrapValidatorError(validatorErr, "TestForm", fieldName)
+			w.Header().Set("x-RunValidatorExtension", "TestForm")
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			json.NewEncoder(w).Encode(validationError)
 			return
@@ -3263,12 +3313,13 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		w.Header().Set("x-BeforeOperationRoutesExtension", "TestForm")
 		value, opError := controller.TestForm(*item1RawPtr, *item2RawPtr)
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
 		w.Header().Set("x-inject", "true")
+		w.Header().Set("x-ResponseHeadersExtension", "TestForm")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -3285,12 +3336,12 @@ func RegisterRoutes(engine *chi.Mux) {
 				Instance:   "/gleece/controller/error/TestForm",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			w.Header().Set("x-JsonErrorResponseExtension", "TestForm")
 			w.WriteHeader(statusCode)
 			json.NewEncoder(w).Encode(stdError)
 			return
 		}
-		// json response extension placeholder
+		w.Header().Set("x-JsonResponseExtension", "TestForm")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(w, ctx); !continueOperation {
@@ -3298,14 +3349,14 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		w.Header().Set("x-AfterOperationRoutesExtension", "TestForm")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(statusCode)
 		json.NewEncoder(w).Encode(value)
-		w.Header().Set("x-extended", "TestForm")
+		w.Header().Set("x-RouteEndRoutesExtension", "TestForm")
 	})
 	engine.Post(toChiUrl("/e2e/test-response-validation"), func(w http.ResponseWriter, ctx *http.Request) {
-		// route start routes extension placeholder
+		w.Header().Set("x-RouteStartRoutesExtension", "TestResponseValidation")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -3335,12 +3386,13 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		w.Header().Set("x-BeforeOperationRoutesExtension", "TestResponseValidation")
 		value, opError := controller.TestResponseValidation()
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
 		w.Header().Set("x-inject", "true")
+		w.Header().Set("x-ResponseHeadersExtension", "TestResponseValidation")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -3357,12 +3409,12 @@ func RegisterRoutes(engine *chi.Mux) {
 				Instance:   "/gleece/controller/error/TestResponseValidation",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			w.Header().Set("x-JsonErrorResponseExtension", "TestResponseValidation")
 			w.WriteHeader(statusCode)
 			json.NewEncoder(w).Encode(stdError)
 			return
 		}
-		// json response extension placeholder
+		w.Header().Set("x-JsonResponseExtension", "TestResponseValidation")
 		var outputValidationErr error
 		outputValidationErr = validatorInstance.Struct(value)
 		if outputValidationErr != nil {
@@ -3393,14 +3445,14 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		w.Header().Set("x-AfterOperationRoutesExtension", "TestResponseValidation")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(statusCode)
 		json.NewEncoder(w).Encode(value)
-		w.Header().Set("x-extended", "TestResponseValidation")
+		w.Header().Set("x-RouteEndRoutesExtension", "TestResponseValidation")
 	})
 	engine.Post(toChiUrl("/e2e/test-response-validation-ptr"), func(w http.ResponseWriter, ctx *http.Request) {
-		// route start routes extension placeholder
+		w.Header().Set("x-RouteStartRoutesExtension", "TestResponseValidationPtr")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -3430,12 +3482,13 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		w.Header().Set("x-BeforeOperationRoutesExtension", "TestResponseValidationPtr")
 		value, opError := controller.TestResponseValidationPtr()
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
 		w.Header().Set("x-inject", "true")
+		w.Header().Set("x-ResponseHeadersExtension", "TestResponseValidationPtr")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -3452,12 +3505,12 @@ func RegisterRoutes(engine *chi.Mux) {
 				Instance:   "/gleece/controller/error/TestResponseValidationPtr",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			w.Header().Set("x-JsonErrorResponseExtension", "TestResponseValidationPtr")
 			w.WriteHeader(statusCode)
 			json.NewEncoder(w).Encode(stdError)
 			return
 		}
-		// json response extension placeholder
+		w.Header().Set("x-JsonResponseExtension", "TestResponseValidationPtr")
 		var outputValidationErr error
 		if value == nil {
 			outputValidationErr = fmt.Errorf("Response payload is nil")
@@ -3492,14 +3545,14 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		w.Header().Set("x-AfterOperationRoutesExtension", "TestResponseValidationPtr")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(statusCode)
 		json.NewEncoder(w).Encode(value)
-		w.Header().Set("x-extended", "TestResponseValidationPtr")
+		w.Header().Set("x-RouteEndRoutesExtension", "TestResponseValidationPtr")
 	})
 	engine.Post(toChiUrl("/e2e/test-response-validation-null"), func(w http.ResponseWriter, ctx *http.Request) {
-		// route start routes extension placeholder
+		w.Header().Set("x-RouteStartRoutesExtension", "TestResponseValidationNull")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -3529,12 +3582,13 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		w.Header().Set("x-BeforeOperationRoutesExtension", "TestResponseValidationNull")
 		value, opError := controller.TestResponseValidationNull()
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
 		w.Header().Set("x-inject", "true")
+		w.Header().Set("x-ResponseHeadersExtension", "TestResponseValidationNull")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -3551,12 +3605,12 @@ func RegisterRoutes(engine *chi.Mux) {
 				Instance:   "/gleece/controller/error/TestResponseValidationNull",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			w.Header().Set("x-JsonErrorResponseExtension", "TestResponseValidationNull")
 			w.WriteHeader(statusCode)
 			json.NewEncoder(w).Encode(stdError)
 			return
 		}
-		// json response extension placeholder
+		w.Header().Set("x-JsonResponseExtension", "TestResponseValidationNull")
 		var outputValidationErr error
 		if value == nil {
 			outputValidationErr = fmt.Errorf("Response payload is nil")
@@ -3591,15 +3645,15 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		w.Header().Set("x-AfterOperationRoutesExtension", "TestResponseValidationNull")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(statusCode)
 		json.NewEncoder(w).Encode(value)
-		w.Header().Set("x-extended", "TestResponseValidationNull")
+		w.Header().Set("x-RouteEndRoutesExtension", "TestResponseValidationNull")
 	})
 	// E2EClassSecController
 	engine.Get(toChiUrl("/e2e/with-default-class-security"), func(w http.ResponseWriter, ctx *http.Request) {
-		// route start routes extension placeholder
+		w.Header().Set("x-RouteStartRoutesExtension", "WithDefaultClassSecurity")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -3644,6 +3698,7 @@ func RegisterRoutes(engine *chi.Mux) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "headerParam"
 			validationError := wrapValidatorError(validatorErr, "WithDefaultClassSecurity", fieldName)
+			w.Header().Set("x-RunValidatorExtension", "WithDefaultClassSecurity")
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			json.NewEncoder(w).Encode(validationError)
 			return
@@ -3655,12 +3710,13 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		w.Header().Set("x-BeforeOperationRoutesExtension", "WithDefaultClassSecurity")
 		value, opError := controller.WithDefaultClassSecurity(*headerParamRawPtr)
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
 		w.Header().Set("x-inject", "true")
+		w.Header().Set("x-ResponseHeadersExtension", "WithDefaultClassSecurity")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -3677,12 +3733,12 @@ func RegisterRoutes(engine *chi.Mux) {
 				Instance:   "/gleece/controller/error/WithDefaultClassSecurity",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			w.Header().Set("x-JsonErrorResponseExtension", "WithDefaultClassSecurity")
 			w.WriteHeader(statusCode)
 			json.NewEncoder(w).Encode(stdError)
 			return
 		}
-		// json response extension placeholder
+		w.Header().Set("x-JsonResponseExtension", "WithDefaultClassSecurity")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(w, ctx); !continueOperation {
@@ -3690,14 +3746,14 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		w.Header().Set("x-AfterOperationRoutesExtension", "WithDefaultClassSecurity")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(statusCode)
 		json.NewEncoder(w).Encode(value)
-		w.Header().Set("x-extended", "WithDefaultClassSecurity")
+		w.Header().Set("x-RouteEndRoutesExtension", "WithDefaultClassSecurity")
 	})
 	engine.Get(toChiUrl("/e2e/with-default-override-class-security"), func(w http.ResponseWriter, ctx *http.Request) {
-		// route start routes extension placeholder
+		w.Header().Set("x-RouteStartRoutesExtension", "WithOverrideClassSecurity")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -3742,6 +3798,7 @@ func RegisterRoutes(engine *chi.Mux) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "headerParam"
 			validationError := wrapValidatorError(validatorErr, "WithOverrideClassSecurity", fieldName)
+			w.Header().Set("x-RunValidatorExtension", "WithOverrideClassSecurity")
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			json.NewEncoder(w).Encode(validationError)
 			return
@@ -3753,12 +3810,13 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		w.Header().Set("x-BeforeOperationRoutesExtension", "WithOverrideClassSecurity")
 		value, opError := controller.WithOverrideClassSecurity(*headerParamRawPtr)
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
 		w.Header().Set("x-inject", "true")
+		w.Header().Set("x-ResponseHeadersExtension", "WithOverrideClassSecurity")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -3775,12 +3833,12 @@ func RegisterRoutes(engine *chi.Mux) {
 				Instance:   "/gleece/controller/error/WithOverrideClassSecurity",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			w.Header().Set("x-JsonErrorResponseExtension", "WithOverrideClassSecurity")
 			w.WriteHeader(statusCode)
 			json.NewEncoder(w).Encode(stdError)
 			return
 		}
-		// json response extension placeholder
+		w.Header().Set("x-JsonResponseExtension", "WithOverrideClassSecurity")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(w, ctx); !continueOperation {
@@ -3788,10 +3846,10 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		w.Header().Set("x-AfterOperationRoutesExtension", "WithOverrideClassSecurity")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(statusCode)
 		json.NewEncoder(w).Encode(value)
-		w.Header().Set("x-extended", "WithOverrideClassSecurity")
+		w.Header().Set("x-RouteEndRoutesExtension", "WithOverrideClassSecurity")
 	})
 }

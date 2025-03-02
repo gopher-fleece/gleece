@@ -11,5 +11,7 @@ validationError := runtime.Rfc7807Error{
 	Status:     http.StatusUnprocessableEntity,
 	Instance:   "/gleece/validation/error/{{{OperationId}}}",
 }
+
 {{> JsonBodyValidationErrorResponseExtension}}
+
 return ctx.JSON(http.StatusUnprocessableEntity, validationError)
