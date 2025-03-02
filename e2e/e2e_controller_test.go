@@ -10,15 +10,15 @@ var _ = Describe("E2E Controller Spec", func() {
 	It("Should return status code 200 for response with payload", func() {
 
 		RunRouterTest(common.RouterTest{
-			Name:            "Should return status code 200 for response with payload",
-			ExpectedStatus:  200,
-			ExpectedBody:    "\"works\"",
-			ExpendedHeaders: nil,
-			Path:            "/e2e/simple-get",
-			Method:          "GET",
-			Body:            nil,
-			Query:           nil,
-			Headers:         nil,
+			Name:                "Should return status code 200 for response with payload",
+			ExpectedStatus:      200,
+			ExpectedBodyContain: "\"works\"",
+			ExpendedHeaders:     map[string]string{"Content-Type": "application/json"},
+			Path:                "/e2e/simple-get",
+			Method:              "GET",
+			Body:                nil,
+			Query:               nil,
+			Headers:             nil,
 		})
 	})
 
@@ -27,7 +27,7 @@ var _ = Describe("E2E Controller Spec", func() {
 			Name:            "Should return status code 204 for with payload get",
 			ExpectedStatus:  204,
 			ExpectedBody:    "",
-			ExpendedHeaders: nil,
+			ExpendedHeaders: map[string]string{"Content-Type": ""},
 			Path:            "/e2e/simple-get-empty",
 			Method:          "GET",
 			Body:            nil,
@@ -186,7 +186,7 @@ var _ = Describe("E2E Controller Spec", func() {
 			Method:          "GET",
 			Body:            nil,
 			Query:           nil,
-			Headers:         nil,
+			Headers:         map[string]string{"x-return-null": "true"}, // Bypass the error of output validation using the middleware
 		})
 	})
 

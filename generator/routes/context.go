@@ -26,17 +26,22 @@ type PackageImport struct {
 }
 
 type RoutesContext struct {
-	PackageName    string
-	Controllers    []definitions.ControllerMetadata
-	GenerationDate string
-	AuthConfig     definitions.AuthorizationConfig
+	PackageName             string
+	Controllers             []definitions.ControllerMetadata
+	GenerationDate          string
+	AuthConfig              definitions.AuthorizationConfig
+	ValidateResponsePayload bool
 }
 
 func GetTemplateContext(
 	config definitions.RoutesConfig,
 	controllers []definitions.ControllerMetadata,
 ) (RoutesContext, error) {
-	ctx := RoutesContext{Controllers: controllers, AuthConfig: config.AuthorizationConfig}
+	ctx := RoutesContext{
+		Controllers:             controllers,
+		AuthConfig:              config.AuthorizationConfig,
+		ValidateResponsePayload: config.ValidateResponsePayload,
+	}
 	if len(config.PackageName) > 0 {
 		ctx.PackageName = config.PackageName
 	} else {

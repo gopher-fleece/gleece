@@ -18,7 +18,8 @@
 		},
 		"templateExtensions": {
 			"RouteEndRoutesExtension" : "./fiber/assets/fiber.end.route.extension.hbs"
-		}
+		},
+		"validateResponsePayload": true
 	},
 	"openapiGeneratorConfig": {
 		"openapi" : "3.0.0",

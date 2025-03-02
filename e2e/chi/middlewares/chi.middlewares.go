@@ -55,3 +55,44 @@ func MiddlewareOnError2(w http.ResponseWriter, r *http.Request, err error) bool 
 	w.Header().Set("X-pass-on-error-2", "true")
 	return true
 }
+
+func MiddlewareOnValidationError(w http.ResponseWriter, r *http.Request, err error) bool {
+	w.Header().Set("X-pass-error-validation", "true")
+
+	abortOnError := r.Header.Get("abort-on-error")
+	if abortOnError == "true" {
+		operationErr := ""
+		switch e := err.(type) {
+		case error:
+			operationErr = e.Error()
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "abort-on-error header is set to true " + operationErr})
+		return false
+	}
+	return true
+}
+
+func MiddlewareOnOutputValidationError(w http.ResponseWriter, r *http.Request, err error) bool {
+	w.Header().Set("X-pass-output-validation", "true")
+
+	returnNull := r.Header.Get("x-return-null")
+	if returnNull == "true" {
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(nil)
+		return false
+	}
+
+	abortOnError := r.Header.Get("abort-on-error")
+	if abortOnError == "true" {
+		operationErr := ""
+		switch e := err.(type) {
+		case error:
+			operationErr = e.Error()
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "abort-on-error header is set to true " + operationErr})
+		return false
+	}
+	return true
+}

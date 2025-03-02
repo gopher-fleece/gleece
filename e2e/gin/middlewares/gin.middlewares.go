@@ -1,6 +1,8 @@
 package middlewares
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gopher-fleece/gleece/e2e/assets"
 )
@@ -49,5 +51,42 @@ func MiddlewareOnError(ctx *gin.Context, err error) bool {
 
 func MiddlewareOnError2(ctx *gin.Context, err error) bool {
 	ctx.Header("X-pass-on-error-2", "true")
+	return true
+}
+
+func MiddlewareOnValidationError(ctx *gin.Context, err error) bool {
+	ctx.Header("X-pass-error-validation", "true")
+	abortOnError := ctx.GetHeader("abort-on-error")
+	if abortOnError == "true" {
+		operationErr := ""
+		switch err.(type) {
+		case error:
+			operationErr = err.Error()
+		}
+		ctx.JSON(400, gin.H{"error": "abort-on-error header is set to true " + operationErr})
+		return false
+	}
+	return true
+}
+
+func MiddlewareOnOutputValidationError(ctx *gin.Context, err error) bool {
+	ctx.Header("X-pass-output-validation", "true")
+	abortOnError := ctx.GetHeader("abort-on-error")
+
+	returnNull := ctx.GetHeader("x-return-null")
+	if returnNull == "true" {
+		ctx.JSON(http.StatusOK, nil)
+		return false
+	}
+
+	if abortOnError == "true" {
+		operationErr := ""
+		switch err.(type) {
+		case error:
+			operationErr = err.Error()
+		}
+		ctx.JSON(400, gin.H{"error": "abort-on-error header is set to true " + operationErr})
+		return false
+	}
 	return true
 }
