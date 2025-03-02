@@ -34,7 +34,7 @@ import (
 	Response62CustomError "github.com/gopher-fleece/gleece/e2e/assets"
 	Response65CustomError "github.com/gopher-fleece/gleece/e2e/assets"
 	E2EClassSecControllerImport "github.com/gopher-fleece/gleece/e2e/assets"
-	// import extension placeholder
+	// ImportsExtension - test
 )
 var validatorInstance = validator.New()
 var urlParamRegex *regexp.Regexp
@@ -46,7 +46,7 @@ type SecurityCheckList struct {
 	Checks   []runtime.SecurityCheck
 	Relation SecurityListRelation
 }
-// type declarations extension placeholder
+// TypeDeclarationsExtension - test
 func extractValidationErrorMessage(err error, fieldName *string) string {
 	if err == nil {
 		return ""
@@ -169,7 +169,7 @@ func wrapValidatorError(validatorErr error, operationId string, fieldName string
 		Instance: fmt.Sprintf("/gleece/validation/error/%s", operationId),
 	}
 }
-// function declarations extension placeholder
+// FunctionDeclarationsExtension - test
 type MiddlewareFunc func(ctx *gin.Context) bool
 type ErrorMiddlewareFunc func(ctx *gin.Context, err error) bool
 var beforeOperationMiddlewares []MiddlewareFunc
@@ -202,10 +202,10 @@ func RegisterCustomValidator(validateTagName string, validateFunc runtime.Valida
 }
 func RegisterRoutes(engine *gin.Engine) {
 	urlParamRegex = regexp.MustCompile(`\{([\w\d-_]+)\}`)
-	// register routes extension placeholder
+	// RegisterRoutesExtension - test
 	// E2EController
 	engine.GET(toGinUrl("/e2e/simple-get"), func(ctx *gin.Context) {
-		// route start routes extension placeholder
+		ctx.Header("x-RouteStartRoutesExtension", "SimpleGet")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -235,12 +235,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Header("x-BeforeOperationRoutesExtension", "SimpleGet")
 		value, opError := controller.SimpleGet()
 		for key, value := range controller.GetHeaders() {
 			ctx.Header(key, value)
 		}
 		ctx.Header("x-inject", "true")
+		ctx.Header("x-ResponseHeadersExtension", "SimpleGet")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -257,11 +258,11 @@ func RegisterRoutes(engine *gin.Engine) {
 				Instance:   "/gleece/controller/error/SimpleGet",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Header("x-JsonErrorResponseExtension", "SimpleGet")
 			ctx.JSON(statusCode, stdError)
 			return
 		}
-		// json response extension placeholder
+		ctx.Header("x-JsonResponseExtension", "SimpleGet")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -269,12 +270,12 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Header("x-AfterOperationRoutesExtension", "SimpleGet")
 		ctx.JSON(statusCode, value)
-		ctx.Header("x-extended", "SimpleGet")
+		ctx.Header("x-RouteEndRoutesExtension", "SimpleGet")
 	})
 	engine.GET(toGinUrl("/e2e/simple-get-empty-string"), func(ctx *gin.Context) {
-		// route start routes extension placeholder
+		ctx.Header("x-RouteStartRoutesExtension", "SimpleGetEmptyString")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -304,12 +305,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Header("x-BeforeOperationRoutesExtension", "SimpleGetEmptyString")
 		value, opError := controller.SimpleGetEmptyString()
 		for key, value := range controller.GetHeaders() {
 			ctx.Header(key, value)
 		}
 		ctx.Header("x-inject", "true")
+		ctx.Header("x-ResponseHeadersExtension", "SimpleGetEmptyString")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -326,11 +328,11 @@ func RegisterRoutes(engine *gin.Engine) {
 				Instance:   "/gleece/controller/error/SimpleGetEmptyString",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Header("x-JsonErrorResponseExtension", "SimpleGetEmptyString")
 			ctx.JSON(statusCode, stdError)
 			return
 		}
-		// json response extension placeholder
+		ctx.Header("x-JsonResponseExtension", "SimpleGetEmptyString")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -338,12 +340,12 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Header("x-AfterOperationRoutesExtension", "SimpleGetEmptyString")
 		ctx.JSON(statusCode, value)
-		ctx.Header("x-extended", "SimpleGetEmptyString")
+		ctx.Header("x-RouteEndRoutesExtension", "SimpleGetEmptyString")
 	})
 	engine.GET(toGinUrl("/e2e/simple-get-ptr-string"), func(ctx *gin.Context) {
-		// route start routes extension placeholder
+		ctx.Header("x-RouteStartRoutesExtension", "SimpleGetPtrString")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -373,12 +375,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Header("x-BeforeOperationRoutesExtension", "SimpleGetPtrString")
 		value, opError := controller.SimpleGetPtrString()
 		for key, value := range controller.GetHeaders() {
 			ctx.Header(key, value)
 		}
 		ctx.Header("x-inject", "true")
+		ctx.Header("x-ResponseHeadersExtension", "SimpleGetPtrString")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -395,11 +398,11 @@ func RegisterRoutes(engine *gin.Engine) {
 				Instance:   "/gleece/controller/error/SimpleGetPtrString",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Header("x-JsonErrorResponseExtension", "SimpleGetPtrString")
 			ctx.JSON(statusCode, stdError)
 			return
 		}
-		// json response extension placeholder
+		ctx.Header("x-JsonResponseExtension", "SimpleGetPtrString")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -407,12 +410,12 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Header("x-AfterOperationRoutesExtension", "SimpleGetPtrString")
 		ctx.JSON(statusCode, value)
-		ctx.Header("x-extended", "SimpleGetPtrString")
+		ctx.Header("x-RouteEndRoutesExtension", "SimpleGetPtrString")
 	})
 	engine.GET(toGinUrl("/e2e/simple-get-null-string"), func(ctx *gin.Context) {
-		// route start routes extension placeholder
+		ctx.Header("x-RouteStartRoutesExtension", "SimpleGetNullString")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -442,12 +445,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Header("x-BeforeOperationRoutesExtension", "SimpleGetNullString")
 		value, opError := controller.SimpleGetNullString()
 		for key, value := range controller.GetHeaders() {
 			ctx.Header(key, value)
 		}
 		ctx.Header("x-inject", "true")
+		ctx.Header("x-ResponseHeadersExtension", "SimpleGetNullString")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -464,11 +468,11 @@ func RegisterRoutes(engine *gin.Engine) {
 				Instance:   "/gleece/controller/error/SimpleGetNullString",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Header("x-JsonErrorResponseExtension", "SimpleGetNullString")
 			ctx.JSON(statusCode, stdError)
 			return
 		}
-		// json response extension placeholder
+		ctx.Header("x-JsonResponseExtension", "SimpleGetNullString")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -476,12 +480,12 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Header("x-AfterOperationRoutesExtension", "SimpleGetNullString")
 		ctx.JSON(statusCode, value)
-		ctx.Header("x-extended", "SimpleGetNullString")
+		ctx.Header("x-RouteEndRoutesExtension", "SimpleGetNullString")
 	})
 	engine.GET(toGinUrl("/e2e/simple-get-object"), func(ctx *gin.Context) {
-		// route start routes extension placeholder
+		ctx.Header("x-RouteStartRoutesExtension", "SimpleGetObject")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -511,12 +515,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Header("x-BeforeOperationRoutesExtension", "SimpleGetObject")
 		value, opError := controller.SimpleGetObject()
 		for key, value := range controller.GetHeaders() {
 			ctx.Header(key, value)
 		}
 		ctx.Header("x-inject", "true")
+		ctx.Header("x-ResponseHeadersExtension", "SimpleGetObject")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -533,11 +538,11 @@ func RegisterRoutes(engine *gin.Engine) {
 				Instance:   "/gleece/controller/error/SimpleGetObject",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Header("x-JsonErrorResponseExtension", "SimpleGetObject")
 			ctx.JSON(statusCode, stdError)
 			return
 		}
-		// json response extension placeholder
+		ctx.Header("x-JsonResponseExtension", "SimpleGetObject")
 		var outputValidationErr error
 		outputValidationErr = validatorInstance.Struct(value)
 		if outputValidationErr != nil {
@@ -566,12 +571,12 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Header("x-AfterOperationRoutesExtension", "SimpleGetObject")
 		ctx.JSON(statusCode, value)
-		ctx.Header("x-extended", "SimpleGetObject")
+		ctx.Header("x-RouteEndRoutesExtension", "SimpleGetObject")
 	})
 	engine.GET(toGinUrl("/e2e/simple-get-object-ptr"), func(ctx *gin.Context) {
-		// route start routes extension placeholder
+		ctx.Header("x-RouteStartRoutesExtension", "SimpleGetObjectPtr")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -601,12 +606,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Header("x-BeforeOperationRoutesExtension", "SimpleGetObjectPtr")
 		value, opError := controller.SimpleGetObjectPtr()
 		for key, value := range controller.GetHeaders() {
 			ctx.Header(key, value)
 		}
 		ctx.Header("x-inject", "true")
+		ctx.Header("x-ResponseHeadersExtension", "SimpleGetObjectPtr")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -623,11 +629,11 @@ func RegisterRoutes(engine *gin.Engine) {
 				Instance:   "/gleece/controller/error/SimpleGetObjectPtr",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Header("x-JsonErrorResponseExtension", "SimpleGetObjectPtr")
 			ctx.JSON(statusCode, stdError)
 			return
 		}
-		// json response extension placeholder
+		ctx.Header("x-JsonResponseExtension", "SimpleGetObjectPtr")
 		var outputValidationErr error
 		if value == nil {
 			outputValidationErr = fmt.Errorf("Response payload is nil")
@@ -660,12 +666,12 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Header("x-AfterOperationRoutesExtension", "SimpleGetObjectPtr")
 		ctx.JSON(statusCode, value)
-		ctx.Header("x-extended", "SimpleGetObjectPtr")
+		ctx.Header("x-RouteEndRoutesExtension", "SimpleGetObjectPtr")
 	})
 	engine.GET(toGinUrl("/e2e/simple-get-object-null"), func(ctx *gin.Context) {
-		// route start routes extension placeholder
+		ctx.Header("x-RouteStartRoutesExtension", "SimpleGetObjectNull")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -695,12 +701,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Header("x-BeforeOperationRoutesExtension", "SimpleGetObjectNull")
 		value, opError := controller.SimpleGetObjectNull()
 		for key, value := range controller.GetHeaders() {
 			ctx.Header(key, value)
 		}
 		ctx.Header("x-inject", "true")
+		ctx.Header("x-ResponseHeadersExtension", "SimpleGetObjectNull")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -717,11 +724,11 @@ func RegisterRoutes(engine *gin.Engine) {
 				Instance:   "/gleece/controller/error/SimpleGetObjectNull",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Header("x-JsonErrorResponseExtension", "SimpleGetObjectNull")
 			ctx.JSON(statusCode, stdError)
 			return
 		}
-		// json response extension placeholder
+		ctx.Header("x-JsonResponseExtension", "SimpleGetObjectNull")
 		var outputValidationErr error
 		if value == nil {
 			outputValidationErr = fmt.Errorf("Response payload is nil")
@@ -754,12 +761,12 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Header("x-AfterOperationRoutesExtension", "SimpleGetObjectNull")
 		ctx.JSON(statusCode, value)
-		ctx.Header("x-extended", "SimpleGetObjectNull")
+		ctx.Header("x-RouteEndRoutesExtension", "SimpleGetObjectNull")
 	})
 	engine.GET(toGinUrl("/e2e/simple-get-empty"), func(ctx *gin.Context) {
-		// route start routes extension placeholder
+		ctx.Header("x-RouteStartRoutesExtension", "SimpleGetEmpty")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -798,6 +805,7 @@ func RegisterRoutes(engine *gin.Engine) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "queryParam"
 			validationError := wrapValidatorError(validatorErr, "SimpleGetEmpty", fieldName)
+			ctx.Header("x-RunValidatorExtension", "SimpleGetEmpty")
 			ctx.JSON(http.StatusUnprocessableEntity, validationError)
 			return
 		}
@@ -808,12 +816,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Header("x-BeforeOperationRoutesExtension", "SimpleGetEmpty")
 		opError := controller.SimpleGetEmpty(*queryParamRawPtr)
 		for key, value := range controller.GetHeaders() {
 			ctx.Header(key, value)
 		}
 		ctx.Header("x-inject", "true")
+		ctx.Header("x-ResponseHeadersExtension", "SimpleGetEmpty")
 		statusCode := getStatusCode(&controller, false, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -830,11 +839,11 @@ func RegisterRoutes(engine *gin.Engine) {
 				Instance:   "/gleece/controller/error/SimpleGetEmpty",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Header("x-JsonErrorResponseExtension", "SimpleGetEmpty")
 			ctx.JSON(statusCode, stdError)
 			return
 		}
-		// json response extension placeholder
+		ctx.Header("x-JsonResponseExtension", "SimpleGetEmpty")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -842,12 +851,12 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Header("x-AfterOperationRoutesExtension", "SimpleGetEmpty")
 		ctx.Status(statusCode)
-		ctx.Header("x-extended", "SimpleGetEmpty")
+		ctx.Header("x-RouteEndRoutesExtension", "SimpleGetEmpty")
 	})
 	engine.GET(toGinUrl("/e2e/get-with-all-params/{pathParam}"), func(ctx *gin.Context) {
-		// route start routes extension placeholder
+		ctx.Header("x-RouteStartRoutesExtension", "GetWithAllParams")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -886,6 +895,7 @@ func RegisterRoutes(engine *gin.Engine) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "queryParam"
 			validationError := wrapValidatorError(validatorErr, "GetWithAllParams", fieldName)
+			ctx.Header("x-RunValidatorExtension", "GetWithAllParams")
 			ctx.JSON(http.StatusUnprocessableEntity, validationError)
 			return
 		}
@@ -905,6 +915,7 @@ func RegisterRoutes(engine *gin.Engine) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "pathParam"
 			validationError := wrapValidatorError(validatorErr, "GetWithAllParams", fieldName)
+			ctx.Header("x-RunValidatorExtension", "GetWithAllParams")
 			ctx.JSON(http.StatusUnprocessableEntity, validationError)
 			return
 		}
@@ -925,6 +936,7 @@ func RegisterRoutes(engine *gin.Engine) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "headerParam"
 			validationError := wrapValidatorError(validatorErr, "GetWithAllParams", fieldName)
+			ctx.Header("x-RunValidatorExtension", "GetWithAllParams")
 			ctx.JSON(http.StatusUnprocessableEntity, validationError)
 			return
 		}
@@ -935,12 +947,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Header("x-BeforeOperationRoutesExtension", "GetWithAllParams")
 		value, opError := controller.GetWithAllParams(*queryParamRawPtr, *pathParamRawPtr, *headerParamRawPtr)
 		for key, value := range controller.GetHeaders() {
 			ctx.Header(key, value)
 		}
 		ctx.Header("x-inject", "true")
+		ctx.Header("x-ResponseHeadersExtension", "GetWithAllParams")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -957,11 +970,11 @@ func RegisterRoutes(engine *gin.Engine) {
 				Instance:   "/gleece/controller/error/GetWithAllParams",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Header("x-JsonErrorResponseExtension", "GetWithAllParams")
 			ctx.JSON(statusCode, stdError)
 			return
 		}
-		// json response extension placeholder
+		ctx.Header("x-JsonResponseExtension", "GetWithAllParams")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -969,12 +982,12 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Header("x-AfterOperationRoutesExtension", "GetWithAllParams")
 		ctx.JSON(statusCode, value)
-		ctx.Header("x-extended", "GetWithAllParams")
+		ctx.Header("x-RouteEndRoutesExtension", "GetWithAllParams")
 	})
 	engine.GET(toGinUrl("/e2e/get-with-all-params-ptr/{pathParam}"), func(ctx *gin.Context) {
-		// route start routes extension placeholder
+		ctx.Header("x-RouteStartRoutesExtension", "GetWithAllParamsPtr")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -1019,6 +1032,7 @@ func RegisterRoutes(engine *gin.Engine) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "pathParam"
 			validationError := wrapValidatorError(validatorErr, "GetWithAllParamsPtr", fieldName)
+			ctx.Header("x-RunValidatorExtension", "GetWithAllParamsPtr")
 			ctx.JSON(http.StatusUnprocessableEntity, validationError)
 			return
 		}
@@ -1036,12 +1050,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Header("x-BeforeOperationRoutesExtension", "GetWithAllParamsPtr")
 		value, opError := controller.GetWithAllParamsPtr(queryParamRawPtr, pathParamRawPtr, headerParamRawPtr)
 		for key, value := range controller.GetHeaders() {
 			ctx.Header(key, value)
 		}
 		ctx.Header("x-inject", "true")
+		ctx.Header("x-ResponseHeadersExtension", "GetWithAllParamsPtr")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -1058,11 +1073,11 @@ func RegisterRoutes(engine *gin.Engine) {
 				Instance:   "/gleece/controller/error/GetWithAllParamsPtr",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Header("x-JsonErrorResponseExtension", "GetWithAllParamsPtr")
 			ctx.JSON(statusCode, stdError)
 			return
 		}
-		// json response extension placeholder
+		ctx.Header("x-JsonResponseExtension", "GetWithAllParamsPtr")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -1070,12 +1085,12 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Header("x-AfterOperationRoutesExtension", "GetWithAllParamsPtr")
 		ctx.JSON(statusCode, value)
-		ctx.Header("x-extended", "GetWithAllParamsPtr")
+		ctx.Header("x-RouteEndRoutesExtension", "GetWithAllParamsPtr")
 	})
 	engine.GET(toGinUrl("/e2e/get-with-all-params-required-ptr/{pathParam}"), func(ctx *gin.Context) {
-		// route start routes extension placeholder
+		ctx.Header("x-RouteStartRoutesExtension", "GetWithAllParamsRequiredPtr")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -1114,6 +1129,7 @@ func RegisterRoutes(engine *gin.Engine) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "queryParam"
 			validationError := wrapValidatorError(validatorErr, "GetWithAllParamsRequiredPtr", fieldName)
+			ctx.Header("x-RunValidatorExtension", "GetWithAllParamsRequiredPtr")
 			ctx.JSON(http.StatusUnprocessableEntity, validationError)
 			return
 		}
@@ -1133,6 +1149,7 @@ func RegisterRoutes(engine *gin.Engine) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "pathParam"
 			validationError := wrapValidatorError(validatorErr, "GetWithAllParamsRequiredPtr", fieldName)
+			ctx.Header("x-RunValidatorExtension", "GetWithAllParamsRequiredPtr")
 			ctx.JSON(http.StatusUnprocessableEntity, validationError)
 			return
 		}
@@ -1153,6 +1170,7 @@ func RegisterRoutes(engine *gin.Engine) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "headerParam"
 			validationError := wrapValidatorError(validatorErr, "GetWithAllParamsRequiredPtr", fieldName)
+			ctx.Header("x-RunValidatorExtension", "GetWithAllParamsRequiredPtr")
 			ctx.JSON(http.StatusUnprocessableEntity, validationError)
 			return
 		}
@@ -1163,12 +1181,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Header("x-BeforeOperationRoutesExtension", "GetWithAllParamsRequiredPtr")
 		value, opError := controller.GetWithAllParamsRequiredPtr(queryParamRawPtr, pathParamRawPtr, headerParamRawPtr)
 		for key, value := range controller.GetHeaders() {
 			ctx.Header(key, value)
 		}
 		ctx.Header("x-inject", "true")
+		ctx.Header("x-ResponseHeadersExtension", "GetWithAllParamsRequiredPtr")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -1185,11 +1204,11 @@ func RegisterRoutes(engine *gin.Engine) {
 				Instance:   "/gleece/controller/error/GetWithAllParamsRequiredPtr",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Header("x-JsonErrorResponseExtension", "GetWithAllParamsRequiredPtr")
 			ctx.JSON(statusCode, stdError)
 			return
 		}
-		// json response extension placeholder
+		ctx.Header("x-JsonResponseExtension", "GetWithAllParamsRequiredPtr")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -1197,12 +1216,12 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Header("x-AfterOperationRoutesExtension", "GetWithAllParamsRequiredPtr")
 		ctx.JSON(statusCode, value)
-		ctx.Header("x-extended", "GetWithAllParamsRequiredPtr")
+		ctx.Header("x-RouteEndRoutesExtension", "GetWithAllParamsRequiredPtr")
 	})
 	engine.POST(toGinUrl("/e2e/post-with-all-params-body"), func(ctx *gin.Context) {
-		// route start routes extension placeholder
+		ctx.Header("x-RouteStartRoutesExtension", "PostWithAllParamsWithBody")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -1242,6 +1261,7 @@ func RegisterRoutes(engine *gin.Engine) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "queryParam"
 			validationError := wrapValidatorError(validatorErr, "PostWithAllParamsWithBody", fieldName)
+			ctx.Header("x-RunValidatorExtension", "PostWithAllParamsWithBody")
 			ctx.JSON(http.StatusUnprocessableEntity, validationError)
 			return
 		}
@@ -1262,6 +1282,7 @@ func RegisterRoutes(engine *gin.Engine) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "headerParam"
 			validationError := wrapValidatorError(validatorErr, "PostWithAllParamsWithBody", fieldName)
+			ctx.Header("x-RunValidatorExtension", "PostWithAllParamsWithBody")
 			ctx.JSON(http.StatusUnprocessableEntity, validationError)
 			return
 		}
@@ -1286,7 +1307,7 @@ func RegisterRoutes(engine *gin.Engine) {
 				Status:   http.StatusUnprocessableEntity,
 				Instance: "/gleece/validation/error/PostWithAllParamsWithBody",
 			}
-			// json body validation error response extension placeholder
+			ctx.Header("x-JsonBodyValidationErrorResponseExtension", "PostWithAllParamsWithBody")
 			ctx.JSON(http.StatusUnprocessableEntity, validationError)
 			return
 		}
@@ -1297,12 +1318,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Header("x-BeforeOperationRoutesExtension", "PostWithAllParamsWithBody")
 		value, opError := controller.PostWithAllParamsWithBody(*queryParamRawPtr, *headerParamRawPtr, *theBodyRawPtr)
 		for key, value := range controller.GetHeaders() {
 			ctx.Header(key, value)
 		}
 		ctx.Header("x-inject", "true")
+		ctx.Header("x-ResponseHeadersExtension", "PostWithAllParamsWithBody")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -1319,11 +1341,11 @@ func RegisterRoutes(engine *gin.Engine) {
 				Instance:   "/gleece/controller/error/PostWithAllParamsWithBody",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Header("x-JsonErrorResponseExtension", "PostWithAllParamsWithBody")
 			ctx.JSON(statusCode, stdError)
 			return
 		}
-		// json response extension placeholder
+		ctx.Header("x-JsonResponseExtension", "PostWithAllParamsWithBody")
 		var outputValidationErr error
 		outputValidationErr = validatorInstance.Struct(value)
 		if outputValidationErr != nil {
@@ -1352,12 +1374,12 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Header("x-AfterOperationRoutesExtension", "PostWithAllParamsWithBody")
 		ctx.JSON(statusCode, value)
-		ctx.Header("x-extended", "PostWithAllParamsWithBody")
+		ctx.Header("x-RouteEndRoutesExtension", "PostWithAllParamsWithBody")
 	})
 	engine.POST(toGinUrl("/e2e/post-with-all-params-body-ptr"), func(ctx *gin.Context) {
-		// route start routes extension placeholder
+		ctx.Header("x-RouteStartRoutesExtension", "PostWithAllParamsWithBodyPtr")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -1415,7 +1437,7 @@ func RegisterRoutes(engine *gin.Engine) {
 				Status:   http.StatusUnprocessableEntity,
 				Instance: "/gleece/validation/error/PostWithAllParamsWithBodyPtr",
 			}
-			// json body validation error response extension placeholder
+			ctx.Header("x-JsonBodyValidationErrorResponseExtension", "PostWithAllParamsWithBodyPtr")
 			ctx.JSON(http.StatusUnprocessableEntity, validationError)
 			return
 		}
@@ -1426,12 +1448,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Header("x-BeforeOperationRoutesExtension", "PostWithAllParamsWithBodyPtr")
 		value, opError := controller.PostWithAllParamsWithBodyPtr(queryParamRawPtr, headerParamRawPtr, theBodyRawPtr)
 		for key, value := range controller.GetHeaders() {
 			ctx.Header(key, value)
 		}
 		ctx.Header("x-inject", "true")
+		ctx.Header("x-ResponseHeadersExtension", "PostWithAllParamsWithBodyPtr")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -1448,11 +1471,11 @@ func RegisterRoutes(engine *gin.Engine) {
 				Instance:   "/gleece/controller/error/PostWithAllParamsWithBodyPtr",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Header("x-JsonErrorResponseExtension", "PostWithAllParamsWithBodyPtr")
 			ctx.JSON(statusCode, stdError)
 			return
 		}
-		// json response extension placeholder
+		ctx.Header("x-JsonResponseExtension", "PostWithAllParamsWithBodyPtr")
 		var outputValidationErr error
 		if value == nil {
 			outputValidationErr = fmt.Errorf("Response payload is nil")
@@ -1485,12 +1508,12 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Header("x-AfterOperationRoutesExtension", "PostWithAllParamsWithBodyPtr")
 		ctx.JSON(statusCode, value)
-		ctx.Header("x-extended", "PostWithAllParamsWithBodyPtr")
+		ctx.Header("x-RouteEndRoutesExtension", "PostWithAllParamsWithBodyPtr")
 	})
 	engine.POST(toGinUrl("/e2e/post-with-all-params-body-required-ptr"), func(ctx *gin.Context) {
-		// route start routes extension placeholder
+		ctx.Header("x-RouteStartRoutesExtension", "PostWithAllParamsWithBodyRequiredPtr")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -1535,7 +1558,7 @@ func RegisterRoutes(engine *gin.Engine) {
 				Status:   http.StatusUnprocessableEntity,
 				Instance: "/gleece/validation/error/PostWithAllParamsWithBodyRequiredPtr",
 			}
-			// json body validation error response extension placeholder
+			ctx.Header("x-JsonBodyValidationErrorResponseExtension", "PostWithAllParamsWithBodyRequiredPtr")
 			ctx.JSON(http.StatusUnprocessableEntity, validationError)
 			return
 		}
@@ -1546,12 +1569,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Header("x-BeforeOperationRoutesExtension", "PostWithAllParamsWithBodyRequiredPtr")
 		value, opError := controller.PostWithAllParamsWithBodyRequiredPtr(theBodyRawPtr)
 		for key, value := range controller.GetHeaders() {
 			ctx.Header(key, value)
 		}
 		ctx.Header("x-inject", "true")
+		ctx.Header("x-ResponseHeadersExtension", "PostWithAllParamsWithBodyRequiredPtr")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -1568,11 +1592,11 @@ func RegisterRoutes(engine *gin.Engine) {
 				Instance:   "/gleece/controller/error/PostWithAllParamsWithBodyRequiredPtr",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Header("x-JsonErrorResponseExtension", "PostWithAllParamsWithBodyRequiredPtr")
 			ctx.JSON(statusCode, stdError)
 			return
 		}
-		// json response extension placeholder
+		ctx.Header("x-JsonResponseExtension", "PostWithAllParamsWithBodyRequiredPtr")
 		var outputValidationErr error
 		if value == nil {
 			outputValidationErr = fmt.Errorf("Response payload is nil")
@@ -1605,12 +1629,12 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Header("x-AfterOperationRoutesExtension", "PostWithAllParamsWithBodyRequiredPtr")
 		ctx.JSON(statusCode, value)
-		ctx.Header("x-extended", "PostWithAllParamsWithBodyRequiredPtr")
+		ctx.Header("x-RouteEndRoutesExtension", "PostWithAllParamsWithBodyRequiredPtr")
 	})
 	engine.GET(toGinUrl("/e2e/get-header-start-with-letter"), func(ctx *gin.Context) {
-		// route start routes extension placeholder
+		ctx.Header("x-RouteStartRoutesExtension", "GetHeaderStartWithLetter")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -1650,6 +1674,7 @@ func RegisterRoutes(engine *gin.Engine) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "headerParam"
 			validationError := wrapValidatorError(validatorErr, "GetHeaderStartWithLetter", fieldName)
+			ctx.Header("x-RunValidatorExtension", "GetHeaderStartWithLetter")
 			ctx.JSON(http.StatusUnprocessableEntity, validationError)
 			return
 		}
@@ -1660,12 +1685,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Header("x-BeforeOperationRoutesExtension", "GetHeaderStartWithLetter")
 		value, opError := controller.GetHeaderStartWithLetter(*headerParamRawPtr)
 		for key, value := range controller.GetHeaders() {
 			ctx.Header(key, value)
 		}
 		ctx.Header("x-inject", "true")
+		ctx.Header("x-ResponseHeadersExtension", "GetHeaderStartWithLetter")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -1682,11 +1708,11 @@ func RegisterRoutes(engine *gin.Engine) {
 				Instance:   "/gleece/controller/error/GetHeaderStartWithLetter",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Header("x-JsonErrorResponseExtension", "GetHeaderStartWithLetter")
 			ctx.JSON(statusCode, stdError)
 			return
 		}
-		// json response extension placeholder
+		ctx.Header("x-JsonResponseExtension", "GetHeaderStartWithLetter")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -1694,12 +1720,12 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Header("x-AfterOperationRoutesExtension", "GetHeaderStartWithLetter")
 		ctx.JSON(statusCode, value)
-		ctx.Header("x-extended", "GetHeaderStartWithLetter")
+		ctx.Header("x-RouteEndRoutesExtension", "GetHeaderStartWithLetter")
 	})
 	engine.GET(toGinUrl("/e2e/with-default-config-security"), func(ctx *gin.Context) {
-		// route start routes extension placeholder
+		ctx.Header("x-RouteStartRoutesExtension", "WithDefaultConfigSecurity")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -1739,6 +1765,7 @@ func RegisterRoutes(engine *gin.Engine) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "headerParam"
 			validationError := wrapValidatorError(validatorErr, "WithDefaultConfigSecurity", fieldName)
+			ctx.Header("x-RunValidatorExtension", "WithDefaultConfigSecurity")
 			ctx.JSON(http.StatusUnprocessableEntity, validationError)
 			return
 		}
@@ -1749,12 +1776,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Header("x-BeforeOperationRoutesExtension", "WithDefaultConfigSecurity")
 		value, opError := controller.WithDefaultConfigSecurity(*headerParamRawPtr)
 		for key, value := range controller.GetHeaders() {
 			ctx.Header(key, value)
 		}
 		ctx.Header("x-inject", "true")
+		ctx.Header("x-ResponseHeadersExtension", "WithDefaultConfigSecurity")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -1771,11 +1799,11 @@ func RegisterRoutes(engine *gin.Engine) {
 				Instance:   "/gleece/controller/error/WithDefaultConfigSecurity",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Header("x-JsonErrorResponseExtension", "WithDefaultConfigSecurity")
 			ctx.JSON(statusCode, stdError)
 			return
 		}
-		// json response extension placeholder
+		ctx.Header("x-JsonResponseExtension", "WithDefaultConfigSecurity")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -1783,12 +1811,12 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Header("x-AfterOperationRoutesExtension", "WithDefaultConfigSecurity")
 		ctx.JSON(statusCode, value)
-		ctx.Header("x-extended", "WithDefaultConfigSecurity")
+		ctx.Header("x-RouteEndRoutesExtension", "WithDefaultConfigSecurity")
 	})
 	engine.GET(toGinUrl("/e2e/with-one-security"), func(ctx *gin.Context) {
-		// route start routes extension placeholder
+		ctx.Header("x-RouteStartRoutesExtension", "WithOneSecurity")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -1828,6 +1856,7 @@ func RegisterRoutes(engine *gin.Engine) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "headerParam"
 			validationError := wrapValidatorError(validatorErr, "WithOneSecurity", fieldName)
+			ctx.Header("x-RunValidatorExtension", "WithOneSecurity")
 			ctx.JSON(http.StatusUnprocessableEntity, validationError)
 			return
 		}
@@ -1838,12 +1867,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Header("x-BeforeOperationRoutesExtension", "WithOneSecurity")
 		value, opError := controller.WithOneSecurity(*headerParamRawPtr)
 		for key, value := range controller.GetHeaders() {
 			ctx.Header(key, value)
 		}
 		ctx.Header("x-inject", "true")
+		ctx.Header("x-ResponseHeadersExtension", "WithOneSecurity")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -1860,11 +1890,11 @@ func RegisterRoutes(engine *gin.Engine) {
 				Instance:   "/gleece/controller/error/WithOneSecurity",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Header("x-JsonErrorResponseExtension", "WithOneSecurity")
 			ctx.JSON(statusCode, stdError)
 			return
 		}
-		// json response extension placeholder
+		ctx.Header("x-JsonResponseExtension", "WithOneSecurity")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -1872,12 +1902,12 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Header("x-AfterOperationRoutesExtension", "WithOneSecurity")
 		ctx.JSON(statusCode, value)
-		ctx.Header("x-extended", "WithOneSecurity")
+		ctx.Header("x-RouteEndRoutesExtension", "WithOneSecurity")
 	})
 	engine.GET(toGinUrl("/e2e/with-two-security"), func(ctx *gin.Context) {
-		// route start routes extension placeholder
+		ctx.Header("x-RouteStartRoutesExtension", "WithTwoSecurity")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -1929,6 +1959,7 @@ func RegisterRoutes(engine *gin.Engine) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "headerParam"
 			validationError := wrapValidatorError(validatorErr, "WithTwoSecurity", fieldName)
+			ctx.Header("x-RunValidatorExtension", "WithTwoSecurity")
 			ctx.JSON(http.StatusUnprocessableEntity, validationError)
 			return
 		}
@@ -1939,12 +1970,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Header("x-BeforeOperationRoutesExtension", "WithTwoSecurity")
 		value, opError := controller.WithTwoSecurity(*headerParamRawPtr)
 		for key, value := range controller.GetHeaders() {
 			ctx.Header(key, value)
 		}
 		ctx.Header("x-inject", "true")
+		ctx.Header("x-ResponseHeadersExtension", "WithTwoSecurity")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -1961,11 +1993,11 @@ func RegisterRoutes(engine *gin.Engine) {
 				Instance:   "/gleece/controller/error/WithTwoSecurity",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Header("x-JsonErrorResponseExtension", "WithTwoSecurity")
 			ctx.JSON(statusCode, stdError)
 			return
 		}
-		// json response extension placeholder
+		ctx.Header("x-JsonResponseExtension", "WithTwoSecurity")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -1973,12 +2005,12 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Header("x-AfterOperationRoutesExtension", "WithTwoSecurity")
 		ctx.JSON(statusCode, value)
-		ctx.Header("x-extended", "WithTwoSecurity")
+		ctx.Header("x-RouteEndRoutesExtension", "WithTwoSecurity")
 	})
 	engine.GET(toGinUrl("/e2e/with-two-security-same-method"), func(ctx *gin.Context) {
-		// route start routes extension placeholder
+		ctx.Header("x-RouteStartRoutesExtension", "WithTwoSecuritySameMethod")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -2030,6 +2062,7 @@ func RegisterRoutes(engine *gin.Engine) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "headerParam"
 			validationError := wrapValidatorError(validatorErr, "WithTwoSecuritySameMethod", fieldName)
+			ctx.Header("x-RunValidatorExtension", "WithTwoSecuritySameMethod")
 			ctx.JSON(http.StatusUnprocessableEntity, validationError)
 			return
 		}
@@ -2040,12 +2073,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Header("x-BeforeOperationRoutesExtension", "WithTwoSecuritySameMethod")
 		value, opError := controller.WithTwoSecuritySameMethod(*headerParamRawPtr)
 		for key, value := range controller.GetHeaders() {
 			ctx.Header(key, value)
 		}
 		ctx.Header("x-inject", "true")
+		ctx.Header("x-ResponseHeadersExtension", "WithTwoSecuritySameMethod")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -2062,11 +2096,11 @@ func RegisterRoutes(engine *gin.Engine) {
 				Instance:   "/gleece/controller/error/WithTwoSecuritySameMethod",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Header("x-JsonErrorResponseExtension", "WithTwoSecuritySameMethod")
 			ctx.JSON(statusCode, stdError)
 			return
 		}
-		// json response extension placeholder
+		ctx.Header("x-JsonResponseExtension", "WithTwoSecuritySameMethod")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -2074,12 +2108,12 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Header("x-AfterOperationRoutesExtension", "WithTwoSecuritySameMethod")
 		ctx.JSON(statusCode, value)
-		ctx.Header("x-extended", "WithTwoSecuritySameMethod")
+		ctx.Header("x-RouteEndRoutesExtension", "WithTwoSecuritySameMethod")
 	})
 	engine.GET(toGinUrl("/e2e/default-error"), func(ctx *gin.Context) {
-		// route start routes extension placeholder
+		ctx.Header("x-RouteStartRoutesExtension", "DefaultError")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -2109,12 +2143,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Header("x-BeforeOperationRoutesExtension", "DefaultError")
 		opError := controller.DefaultError()
 		for key, value := range controller.GetHeaders() {
 			ctx.Header(key, value)
 		}
 		ctx.Header("x-inject", "true")
+		ctx.Header("x-ResponseHeadersExtension", "DefaultError")
 		statusCode := getStatusCode(&controller, false, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -2131,11 +2166,11 @@ func RegisterRoutes(engine *gin.Engine) {
 				Instance:   "/gleece/controller/error/DefaultError",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Header("x-JsonErrorResponseExtension", "DefaultError")
 			ctx.JSON(statusCode, stdError)
 			return
 		}
-		// json response extension placeholder
+		ctx.Header("x-JsonResponseExtension", "DefaultError")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -2143,12 +2178,12 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Header("x-AfterOperationRoutesExtension", "DefaultError")
 		ctx.Status(statusCode)
-		ctx.Header("x-extended", "DefaultError")
+		ctx.Header("x-RouteEndRoutesExtension", "DefaultError")
 	})
 	engine.GET(toGinUrl("/e2e/default-error-with-payload"), func(ctx *gin.Context) {
-		// route start routes extension placeholder
+		ctx.Header("x-RouteStartRoutesExtension", "DefaultErrorWithPayload")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -2178,12 +2213,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Header("x-BeforeOperationRoutesExtension", "DefaultErrorWithPayload")
 		value, opError := controller.DefaultErrorWithPayload()
 		for key, value := range controller.GetHeaders() {
 			ctx.Header(key, value)
 		}
 		ctx.Header("x-inject", "true")
+		ctx.Header("x-ResponseHeadersExtension", "DefaultErrorWithPayload")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -2200,11 +2236,11 @@ func RegisterRoutes(engine *gin.Engine) {
 				Instance:   "/gleece/controller/error/DefaultErrorWithPayload",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Header("x-JsonErrorResponseExtension", "DefaultErrorWithPayload")
 			ctx.JSON(statusCode, stdError)
 			return
 		}
-		// json response extension placeholder
+		ctx.Header("x-JsonResponseExtension", "DefaultErrorWithPayload")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -2212,12 +2248,12 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Header("x-AfterOperationRoutesExtension", "DefaultErrorWithPayload")
 		ctx.JSON(statusCode, value)
-		ctx.Header("x-extended", "DefaultErrorWithPayload")
+		ctx.Header("x-RouteEndRoutesExtension", "DefaultErrorWithPayload")
 	})
 	engine.GET(toGinUrl("/e2e/custom-error"), func(ctx *gin.Context) {
-		// route start routes extension placeholder
+		ctx.Header("x-RouteStartRoutesExtension", "CustomError")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -2247,12 +2283,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Header("x-BeforeOperationRoutesExtension", "CustomError")
 		opError := controller.CustomError()
 		for key, value := range controller.GetHeaders() {
 			ctx.Header(key, value)
 		}
 		ctx.Header("x-inject", "true")
+		ctx.Header("x-ResponseHeadersExtension", "CustomError")
 		statusCode := getStatusCode(&controller, false, opError)
 		emptyErr := Response62CustomError.CustomError{}
 		if opError != emptyErr {
@@ -2266,7 +2303,7 @@ func RegisterRoutes(engine *gin.Engine) {
 			ctx.JSON(statusCode, opError)
 			return
 		}
-		// json response extension placeholder
+		ctx.Header("x-JsonResponseExtension", "CustomError")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -2274,12 +2311,12 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Header("x-AfterOperationRoutesExtension", "CustomError")
 		ctx.Status(statusCode)
-		ctx.Header("x-extended", "CustomError")
+		ctx.Header("x-RouteEndRoutesExtension", "CustomError")
 	})
 	engine.GET(toGinUrl("/e2e/custom-error-ptr"), func(ctx *gin.Context) {
-		// route start routes extension placeholder
+		ctx.Header("x-RouteStartRoutesExtension", "CustomPtrError")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -2309,12 +2346,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Header("x-BeforeOperationRoutesExtension", "CustomPtrError")
 		opError := controller.CustomPtrError()
 		for key, value := range controller.GetHeaders() {
 			ctx.Header(key, value)
 		}
 		ctx.Header("x-inject", "true")
+		ctx.Header("x-ResponseHeadersExtension", "CustomPtrError")
 		statusCode := getStatusCode(&controller, false, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -2327,7 +2365,7 @@ func RegisterRoutes(engine *gin.Engine) {
 			ctx.JSON(statusCode, opError)
 			return
 		}
-		// json response extension placeholder
+		ctx.Header("x-JsonResponseExtension", "CustomPtrError")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -2335,12 +2373,12 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Header("x-AfterOperationRoutesExtension", "CustomPtrError")
 		ctx.Status(statusCode)
-		ctx.Header("x-extended", "CustomPtrError")
+		ctx.Header("x-RouteEndRoutesExtension", "CustomPtrError")
 	})
 	engine.GET(toGinUrl("/e2e/503-error-code"), func(ctx *gin.Context) {
-		// route start routes extension placeholder
+		ctx.Header("x-RouteStartRoutesExtension", "Error503")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -2370,12 +2408,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Header("x-BeforeOperationRoutesExtension", "Error503")
 		opError := controller.Error503()
 		for key, value := range controller.GetHeaders() {
 			ctx.Header(key, value)
 		}
 		ctx.Header("x-inject", "true")
+		ctx.Header("x-ResponseHeadersExtension", "Error503")
 		statusCode := getStatusCode(&controller, false, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -2392,11 +2431,11 @@ func RegisterRoutes(engine *gin.Engine) {
 				Instance:   "/gleece/controller/error/Error503",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Header("x-JsonErrorResponseExtension", "Error503")
 			ctx.JSON(statusCode, stdError)
 			return
 		}
-		// json response extension placeholder
+		ctx.Header("x-JsonResponseExtension", "Error503")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -2404,12 +2443,12 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Header("x-AfterOperationRoutesExtension", "Error503")
 		ctx.Status(statusCode)
-		ctx.Header("x-extended", "Error503")
+		ctx.Header("x-RouteEndRoutesExtension", "Error503")
 	})
 	engine.GET(toGinUrl("/e2e/custom-error-503"), func(ctx *gin.Context) {
-		// route start routes extension placeholder
+		ctx.Header("x-RouteStartRoutesExtension", "CustomError503")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -2439,12 +2478,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Header("x-BeforeOperationRoutesExtension", "CustomError503")
 		opError := controller.CustomError503()
 		for key, value := range controller.GetHeaders() {
 			ctx.Header(key, value)
 		}
 		ctx.Header("x-inject", "true")
+		ctx.Header("x-ResponseHeadersExtension", "CustomError503")
 		statusCode := getStatusCode(&controller, false, opError)
 		emptyErr := Response65CustomError.CustomError{}
 		if opError != emptyErr {
@@ -2458,7 +2498,7 @@ func RegisterRoutes(engine *gin.Engine) {
 			ctx.JSON(statusCode, opError)
 			return
 		}
-		// json response extension placeholder
+		ctx.Header("x-JsonResponseExtension", "CustomError503")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -2466,12 +2506,12 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Header("x-AfterOperationRoutesExtension", "CustomError503")
 		ctx.Status(statusCode)
-		ctx.Header("x-extended", "CustomError503")
+		ctx.Header("x-RouteEndRoutesExtension", "CustomError503")
 	})
 	engine.GET(toGinUrl("/e2e/context-access"), func(ctx *gin.Context) {
-		// route start routes extension placeholder
+		ctx.Header("x-RouteStartRoutesExtension", "ContextAccess")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -2501,12 +2541,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Header("x-BeforeOperationRoutesExtension", "ContextAccess")
 		opError := controller.ContextAccess()
 		for key, value := range controller.GetHeaders() {
 			ctx.Header(key, value)
 		}
 		ctx.Header("x-inject", "true")
+		ctx.Header("x-ResponseHeadersExtension", "ContextAccess")
 		statusCode := getStatusCode(&controller, false, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -2523,11 +2564,11 @@ func RegisterRoutes(engine *gin.Engine) {
 				Instance:   "/gleece/controller/error/ContextAccess",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Header("x-JsonErrorResponseExtension", "ContextAccess")
 			ctx.JSON(statusCode, stdError)
 			return
 		}
-		// json response extension placeholder
+		ctx.Header("x-JsonResponseExtension", "ContextAccess")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -2535,12 +2576,12 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Header("x-AfterOperationRoutesExtension", "ContextAccess")
 		ctx.Status(statusCode)
-		ctx.Header("x-extended", "ContextAccess")
+		ctx.Header("x-RouteEndRoutesExtension", "ContextAccess")
 	})
 	engine.GET(toGinUrl("/e2e/http-method"), func(ctx *gin.Context) {
-		// route start routes extension placeholder
+		ctx.Header("x-RouteStartRoutesExtension", "Get")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -2570,12 +2611,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Header("x-BeforeOperationRoutesExtension", "Get")
 		opError := controller.Get()
 		for key, value := range controller.GetHeaders() {
 			ctx.Header(key, value)
 		}
 		ctx.Header("x-inject", "true")
+		ctx.Header("x-ResponseHeadersExtension", "Get")
 		statusCode := getStatusCode(&controller, false, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -2592,11 +2634,11 @@ func RegisterRoutes(engine *gin.Engine) {
 				Instance:   "/gleece/controller/error/Get",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Header("x-JsonErrorResponseExtension", "Get")
 			ctx.JSON(statusCode, stdError)
 			return
 		}
-		// json response extension placeholder
+		ctx.Header("x-JsonResponseExtension", "Get")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -2604,12 +2646,12 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Header("x-AfterOperationRoutesExtension", "Get")
 		ctx.Status(statusCode)
-		ctx.Header("x-extended", "Get")
+		ctx.Header("x-RouteEndRoutesExtension", "Get")
 	})
 	engine.POST(toGinUrl("/e2e/http-method"), func(ctx *gin.Context) {
-		// route start routes extension placeholder
+		ctx.Header("x-RouteStartRoutesExtension", "Post")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -2639,12 +2681,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Header("x-BeforeOperationRoutesExtension", "Post")
 		opError := controller.Post()
 		for key, value := range controller.GetHeaders() {
 			ctx.Header(key, value)
 		}
 		ctx.Header("x-inject", "true")
+		ctx.Header("x-ResponseHeadersExtension", "Post")
 		statusCode := getStatusCode(&controller, false, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -2661,11 +2704,11 @@ func RegisterRoutes(engine *gin.Engine) {
 				Instance:   "/gleece/controller/error/Post",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Header("x-JsonErrorResponseExtension", "Post")
 			ctx.JSON(statusCode, stdError)
 			return
 		}
-		// json response extension placeholder
+		ctx.Header("x-JsonResponseExtension", "Post")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -2673,12 +2716,12 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Header("x-AfterOperationRoutesExtension", "Post")
 		ctx.Status(statusCode)
-		ctx.Header("x-extended", "Post")
+		ctx.Header("x-RouteEndRoutesExtension", "Post")
 	})
 	engine.PUT(toGinUrl("/e2e/http-method"), func(ctx *gin.Context) {
-		// route start routes extension placeholder
+		ctx.Header("x-RouteStartRoutesExtension", "Put")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -2708,12 +2751,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Header("x-BeforeOperationRoutesExtension", "Put")
 		opError := controller.Put()
 		for key, value := range controller.GetHeaders() {
 			ctx.Header(key, value)
 		}
 		ctx.Header("x-inject", "true")
+		ctx.Header("x-ResponseHeadersExtension", "Put")
 		statusCode := getStatusCode(&controller, false, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -2730,11 +2774,11 @@ func RegisterRoutes(engine *gin.Engine) {
 				Instance:   "/gleece/controller/error/Put",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Header("x-JsonErrorResponseExtension", "Put")
 			ctx.JSON(statusCode, stdError)
 			return
 		}
-		// json response extension placeholder
+		ctx.Header("x-JsonResponseExtension", "Put")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -2742,12 +2786,12 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Header("x-AfterOperationRoutesExtension", "Put")
 		ctx.Status(statusCode)
-		ctx.Header("x-extended", "Put")
+		ctx.Header("x-RouteEndRoutesExtension", "Put")
 	})
 	engine.DELETE(toGinUrl("/e2e/http-method"), func(ctx *gin.Context) {
-		// route start routes extension placeholder
+		ctx.Header("x-RouteStartRoutesExtension", "Delete")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -2777,12 +2821,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Header("x-BeforeOperationRoutesExtension", "Delete")
 		opError := controller.Delete()
 		for key, value := range controller.GetHeaders() {
 			ctx.Header(key, value)
 		}
 		ctx.Header("x-inject", "true")
+		ctx.Header("x-ResponseHeadersExtension", "Delete")
 		statusCode := getStatusCode(&controller, false, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -2799,11 +2844,11 @@ func RegisterRoutes(engine *gin.Engine) {
 				Instance:   "/gleece/controller/error/Delete",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Header("x-JsonErrorResponseExtension", "Delete")
 			ctx.JSON(statusCode, stdError)
 			return
 		}
-		// json response extension placeholder
+		ctx.Header("x-JsonResponseExtension", "Delete")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -2811,12 +2856,12 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Header("x-AfterOperationRoutesExtension", "Delete")
 		ctx.Status(statusCode)
-		ctx.Header("x-extended", "Delete")
+		ctx.Header("x-RouteEndRoutesExtension", "Delete")
 	})
 	engine.PATCH(toGinUrl("/e2e/http-method"), func(ctx *gin.Context) {
-		// route start routes extension placeholder
+		ctx.Header("x-RouteStartRoutesExtension", "Patch")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -2846,12 +2891,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Header("x-BeforeOperationRoutesExtension", "Patch")
 		opError := controller.Patch()
 		for key, value := range controller.GetHeaders() {
 			ctx.Header(key, value)
 		}
 		ctx.Header("x-inject", "true")
+		ctx.Header("x-ResponseHeadersExtension", "Patch")
 		statusCode := getStatusCode(&controller, false, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -2868,11 +2914,11 @@ func RegisterRoutes(engine *gin.Engine) {
 				Instance:   "/gleece/controller/error/Patch",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Header("x-JsonErrorResponseExtension", "Patch")
 			ctx.JSON(statusCode, stdError)
 			return
 		}
-		// json response extension placeholder
+		ctx.Header("x-JsonResponseExtension", "Patch")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -2880,12 +2926,12 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Header("x-AfterOperationRoutesExtension", "Patch")
 		ctx.Status(statusCode)
-		ctx.Header("x-extended", "Patch")
+		ctx.Header("x-RouteEndRoutesExtension", "Patch")
 	})
 	engine.GET(toGinUrl("/e2e/template-context-1"), func(ctx *gin.Context) {
-		// route start routes extension placeholder
+		ctx.Header("x-RouteStartRoutesExtension", "TemplateContext1")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -2915,12 +2961,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Header("x-BeforeOperationRoutesExtension", "TemplateContext1")
 		value, opError := controller.TemplateContext1()
 		for key, value := range controller.GetHeaders() {
 			ctx.Header(key, value)
 		}
 		ctx.Header("x-inject", "true")
+		ctx.Header("x-ResponseHeadersExtension", "TemplateContext1")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -2937,11 +2984,11 @@ func RegisterRoutes(engine *gin.Engine) {
 				Instance:   "/gleece/controller/error/TemplateContext1",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Header("x-JsonErrorResponseExtension", "TemplateContext1")
 			ctx.JSON(statusCode, stdError)
 			return
 		}
-		// json response extension placeholder
+		ctx.Header("x-JsonResponseExtension", "TemplateContext1")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -2949,13 +2996,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Header("x-AfterOperationRoutesExtension", "TemplateContext1")
 		ctx.JSON(statusCode, value)
-		ctx.Header("x-extended", "TemplateContext1")
+		ctx.Header("x-RouteEndRoutesExtension", "TemplateContext1")
 		ctx.Header("x-level", "high")
 	})
 	engine.GET(toGinUrl("/e2e/template-context-2"), func(ctx *gin.Context) {
-		// route start routes extension placeholder
+		ctx.Header("x-RouteStartRoutesExtension", "TemplateContext2")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -2985,12 +3032,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Header("x-BeforeOperationRoutesExtension", "TemplateContext2")
 		value, opError := controller.TemplateContext2()
 		for key, value := range controller.GetHeaders() {
 			ctx.Header(key, value)
 		}
 		ctx.Header("x-inject", "true")
+		ctx.Header("x-ResponseHeadersExtension", "TemplateContext2")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -3007,11 +3055,11 @@ func RegisterRoutes(engine *gin.Engine) {
 				Instance:   "/gleece/controller/error/TemplateContext2",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Header("x-JsonErrorResponseExtension", "TemplateContext2")
 			ctx.JSON(statusCode, stdError)
 			return
 		}
-		// json response extension placeholder
+		ctx.Header("x-JsonResponseExtension", "TemplateContext2")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -3019,14 +3067,14 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Header("x-AfterOperationRoutesExtension", "TemplateContext2")
 		ctx.JSON(statusCode, value)
-		ctx.Header("x-extended", "TemplateContext2")
+		ctx.Header("x-RouteEndRoutesExtension", "TemplateContext2")
 		ctx.Header("x-mode", "100")
 		ctx.Header("x-level", "low")
 	})
 	engine.POST(toGinUrl("/e2e/form"), func(ctx *gin.Context) {
-		// route start routes extension placeholder
+		ctx.Header("x-RouteStartRoutesExtension", "TestForm")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -3065,6 +3113,7 @@ func RegisterRoutes(engine *gin.Engine) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "item1"
 			validationError := wrapValidatorError(validatorErr, "TestForm", fieldName)
+			ctx.Header("x-RunValidatorExtension", "TestForm")
 			ctx.JSON(http.StatusUnprocessableEntity, validationError)
 			return
 		}
@@ -3084,6 +3133,7 @@ func RegisterRoutes(engine *gin.Engine) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "item2"
 			validationError := wrapValidatorError(validatorErr, "TestForm", fieldName)
+			ctx.Header("x-RunValidatorExtension", "TestForm")
 			ctx.JSON(http.StatusUnprocessableEntity, validationError)
 			return
 		}
@@ -3094,12 +3144,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Header("x-BeforeOperationRoutesExtension", "TestForm")
 		value, opError := controller.TestForm(*item1RawPtr, *item2RawPtr)
 		for key, value := range controller.GetHeaders() {
 			ctx.Header(key, value)
 		}
 		ctx.Header("x-inject", "true")
+		ctx.Header("x-ResponseHeadersExtension", "TestForm")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -3116,11 +3167,11 @@ func RegisterRoutes(engine *gin.Engine) {
 				Instance:   "/gleece/controller/error/TestForm",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Header("x-JsonErrorResponseExtension", "TestForm")
 			ctx.JSON(statusCode, stdError)
 			return
 		}
-		// json response extension placeholder
+		ctx.Header("x-JsonResponseExtension", "TestForm")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -3128,12 +3179,12 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Header("x-AfterOperationRoutesExtension", "TestForm")
 		ctx.JSON(statusCode, value)
-		ctx.Header("x-extended", "TestForm")
+		ctx.Header("x-RouteEndRoutesExtension", "TestForm")
 	})
 	engine.POST(toGinUrl("/e2e/test-response-validation"), func(ctx *gin.Context) {
-		// route start routes extension placeholder
+		ctx.Header("x-RouteStartRoutesExtension", "TestResponseValidation")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -3163,12 +3214,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Header("x-BeforeOperationRoutesExtension", "TestResponseValidation")
 		value, opError := controller.TestResponseValidation()
 		for key, value := range controller.GetHeaders() {
 			ctx.Header(key, value)
 		}
 		ctx.Header("x-inject", "true")
+		ctx.Header("x-ResponseHeadersExtension", "TestResponseValidation")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -3185,11 +3237,11 @@ func RegisterRoutes(engine *gin.Engine) {
 				Instance:   "/gleece/controller/error/TestResponseValidation",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Header("x-JsonErrorResponseExtension", "TestResponseValidation")
 			ctx.JSON(statusCode, stdError)
 			return
 		}
-		// json response extension placeholder
+		ctx.Header("x-JsonResponseExtension", "TestResponseValidation")
 		var outputValidationErr error
 		outputValidationErr = validatorInstance.Struct(value)
 		if outputValidationErr != nil {
@@ -3218,12 +3270,12 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Header("x-AfterOperationRoutesExtension", "TestResponseValidation")
 		ctx.JSON(statusCode, value)
-		ctx.Header("x-extended", "TestResponseValidation")
+		ctx.Header("x-RouteEndRoutesExtension", "TestResponseValidation")
 	})
 	engine.POST(toGinUrl("/e2e/test-response-validation-ptr"), func(ctx *gin.Context) {
-		// route start routes extension placeholder
+		ctx.Header("x-RouteStartRoutesExtension", "TestResponseValidationPtr")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -3253,12 +3305,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Header("x-BeforeOperationRoutesExtension", "TestResponseValidationPtr")
 		value, opError := controller.TestResponseValidationPtr()
 		for key, value := range controller.GetHeaders() {
 			ctx.Header(key, value)
 		}
 		ctx.Header("x-inject", "true")
+		ctx.Header("x-ResponseHeadersExtension", "TestResponseValidationPtr")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -3275,11 +3328,11 @@ func RegisterRoutes(engine *gin.Engine) {
 				Instance:   "/gleece/controller/error/TestResponseValidationPtr",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Header("x-JsonErrorResponseExtension", "TestResponseValidationPtr")
 			ctx.JSON(statusCode, stdError)
 			return
 		}
-		// json response extension placeholder
+		ctx.Header("x-JsonResponseExtension", "TestResponseValidationPtr")
 		var outputValidationErr error
 		if value == nil {
 			outputValidationErr = fmt.Errorf("Response payload is nil")
@@ -3312,12 +3365,12 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Header("x-AfterOperationRoutesExtension", "TestResponseValidationPtr")
 		ctx.JSON(statusCode, value)
-		ctx.Header("x-extended", "TestResponseValidationPtr")
+		ctx.Header("x-RouteEndRoutesExtension", "TestResponseValidationPtr")
 	})
 	engine.POST(toGinUrl("/e2e/test-response-validation-null"), func(ctx *gin.Context) {
-		// route start routes extension placeholder
+		ctx.Header("x-RouteStartRoutesExtension", "TestResponseValidationNull")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -3347,12 +3400,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Header("x-BeforeOperationRoutesExtension", "TestResponseValidationNull")
 		value, opError := controller.TestResponseValidationNull()
 		for key, value := range controller.GetHeaders() {
 			ctx.Header(key, value)
 		}
 		ctx.Header("x-inject", "true")
+		ctx.Header("x-ResponseHeadersExtension", "TestResponseValidationNull")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -3369,11 +3423,11 @@ func RegisterRoutes(engine *gin.Engine) {
 				Instance:   "/gleece/controller/error/TestResponseValidationNull",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Header("x-JsonErrorResponseExtension", "TestResponseValidationNull")
 			ctx.JSON(statusCode, stdError)
 			return
 		}
-		// json response extension placeholder
+		ctx.Header("x-JsonResponseExtension", "TestResponseValidationNull")
 		var outputValidationErr error
 		if value == nil {
 			outputValidationErr = fmt.Errorf("Response payload is nil")
@@ -3406,13 +3460,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Header("x-AfterOperationRoutesExtension", "TestResponseValidationNull")
 		ctx.JSON(statusCode, value)
-		ctx.Header("x-extended", "TestResponseValidationNull")
+		ctx.Header("x-RouteEndRoutesExtension", "TestResponseValidationNull")
 	})
 	// E2EClassSecController
 	engine.GET(toGinUrl("/e2e/with-default-class-security"), func(ctx *gin.Context) {
-		// route start routes extension placeholder
+		ctx.Header("x-RouteStartRoutesExtension", "WithDefaultClassSecurity")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -3452,6 +3506,7 @@ func RegisterRoutes(engine *gin.Engine) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "headerParam"
 			validationError := wrapValidatorError(validatorErr, "WithDefaultClassSecurity", fieldName)
+			ctx.Header("x-RunValidatorExtension", "WithDefaultClassSecurity")
 			ctx.JSON(http.StatusUnprocessableEntity, validationError)
 			return
 		}
@@ -3462,12 +3517,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Header("x-BeforeOperationRoutesExtension", "WithDefaultClassSecurity")
 		value, opError := controller.WithDefaultClassSecurity(*headerParamRawPtr)
 		for key, value := range controller.GetHeaders() {
 			ctx.Header(key, value)
 		}
 		ctx.Header("x-inject", "true")
+		ctx.Header("x-ResponseHeadersExtension", "WithDefaultClassSecurity")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -3484,11 +3540,11 @@ func RegisterRoutes(engine *gin.Engine) {
 				Instance:   "/gleece/controller/error/WithDefaultClassSecurity",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Header("x-JsonErrorResponseExtension", "WithDefaultClassSecurity")
 			ctx.JSON(statusCode, stdError)
 			return
 		}
-		// json response extension placeholder
+		ctx.Header("x-JsonResponseExtension", "WithDefaultClassSecurity")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -3496,12 +3552,12 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Header("x-AfterOperationRoutesExtension", "WithDefaultClassSecurity")
 		ctx.JSON(statusCode, value)
-		ctx.Header("x-extended", "WithDefaultClassSecurity")
+		ctx.Header("x-RouteEndRoutesExtension", "WithDefaultClassSecurity")
 	})
 	engine.GET(toGinUrl("/e2e/with-default-override-class-security"), func(ctx *gin.Context) {
-		// route start routes extension placeholder
+		ctx.Header("x-RouteStartRoutesExtension", "WithOverrideClassSecurity")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -3541,6 +3597,7 @@ func RegisterRoutes(engine *gin.Engine) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "headerParam"
 			validationError := wrapValidatorError(validatorErr, "WithOverrideClassSecurity", fieldName)
+			ctx.Header("x-RunValidatorExtension", "WithOverrideClassSecurity")
 			ctx.JSON(http.StatusUnprocessableEntity, validationError)
 			return
 		}
@@ -3551,12 +3608,13 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Header("x-BeforeOperationRoutesExtension", "WithOverrideClassSecurity")
 		value, opError := controller.WithOverrideClassSecurity(*headerParamRawPtr)
 		for key, value := range controller.GetHeaders() {
 			ctx.Header(key, value)
 		}
 		ctx.Header("x-inject", "true")
+		ctx.Header("x-ResponseHeadersExtension", "WithOverrideClassSecurity")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -3573,11 +3631,11 @@ func RegisterRoutes(engine *gin.Engine) {
 				Instance:   "/gleece/controller/error/WithOverrideClassSecurity",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Header("x-JsonErrorResponseExtension", "WithOverrideClassSecurity")
 			ctx.JSON(statusCode, stdError)
 			return
 		}
-		// json response extension placeholder
+		ctx.Header("x-JsonResponseExtension", "WithOverrideClassSecurity")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -3585,8 +3643,8 @@ func RegisterRoutes(engine *gin.Engine) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Header("x-AfterOperationRoutesExtension", "WithOverrideClassSecurity")
 		ctx.JSON(statusCode, value)
-		ctx.Header("x-extended", "WithOverrideClassSecurity")
+		ctx.Header("x-RouteEndRoutesExtension", "WithOverrideClassSecurity")
 	})
 }

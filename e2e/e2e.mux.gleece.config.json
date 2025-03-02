@@ -17,7 +17,19 @@
 			"ResponseHeaders" : "./mux/assets/mux.custom.response.headers.hbs"
 		},
 		"templateExtensions": {
-			"RouteEndRoutesExtension" : "./mux/assets/mux.end.route.extension.hbs"
+			"RegisterRoutesExtension" : "./mux/assets/RegisterRoutesExtension.hbs",
+			"RouteStartRoutesExtension" : "./mux/assets/RouteStartRoutesExtension.hbs",
+			"BeforeOperationRoutesExtension" : "./mux/assets/BeforeOperationRoutesExtension.hbs",
+			"AfterOperationRoutesExtension" : "./mux/assets/AfterOperationRoutesExtension.hbs",
+			"RouteEndRoutesExtension" : "./mux/assets/RouteEndRoutesExtension.hbs",
+			"ImportsExtension" : "./mux/assets/ImportsExtension.hbs",
+			"TypeDeclarationsExtension" : "./mux/assets/TypeDeclarationsExtension.hbs",
+			"FunctionDeclarationsExtension" : "./mux/assets/FunctionDeclarationsExtension.hbs",
+			"JsonResponseExtension" : "./mux/assets/JsonResponseExtension.hbs",
+			"RunValidatorExtension" : "./mux/assets/RunValidatorExtension.hbs",
+			"JsonBodyValidationErrorResponseExtension" : "./mux/assets/JsonBodyValidationErrorResponseExtension.hbs",
+			"JsonErrorResponseExtension" : "./mux/assets/JsonErrorResponseExtension.hbs",
+			"ResponseHeadersExtension" : "./mux/assets/ResponseHeadersExtension.hbs"
 		},
 		"validateResponsePayload": true
 	},

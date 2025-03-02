@@ -17,7 +17,19 @@
 			"ResponseHeaders" : "./fiber/assets/fiber.custom.response.headers.hbs"
 		},
 		"templateExtensions": {
-			"RouteEndRoutesExtension" : "./fiber/assets/fiber.end.route.extension.hbs"
+			"RegisterRoutesExtension" : "./fiber/assets/RegisterRoutesExtension.hbs",
+			"RouteStartRoutesExtension" : "./fiber/assets/RouteStartRoutesExtension.hbs",
+			"BeforeOperationRoutesExtension" : "./fiber/assets/BeforeOperationRoutesExtension.hbs",
+			"AfterOperationRoutesExtension" : "./fiber/assets/AfterOperationRoutesExtension.hbs",
+			"RouteEndRoutesExtension" : "./fiber/assets/RouteEndRoutesExtension.hbs",
+			"ImportsExtension" : "./fiber/assets/ImportsExtension.hbs",
+			"TypeDeclarationsExtension" : "./fiber/assets/TypeDeclarationsExtension.hbs",
+			"FunctionDeclarationsExtension" : "./fiber/assets/FunctionDeclarationsExtension.hbs",
+			"JsonResponseExtension" : "./fiber/assets/JsonResponseExtension.hbs",
+			"RunValidatorExtension" : "./fiber/assets/RunValidatorExtension.hbs",
+			"JsonBodyValidationErrorResponseExtension" : "./fiber/assets/JsonBodyValidationErrorResponseExtension.hbs",
+			"JsonErrorResponseExtension" : "./fiber/assets/JsonErrorResponseExtension.hbs",
+			"ResponseHeadersExtension" : "./fiber/assets/ResponseHeadersExtension.hbs"
 		},
 		"validateResponsePayload": true
 	},

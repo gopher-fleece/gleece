@@ -1,5 +1,3 @@
 for key, value := range controller.GetHeaders() {
 	w.Header().Set(key, value)
 }
-
-{{> ResponseHeadersExtension}}

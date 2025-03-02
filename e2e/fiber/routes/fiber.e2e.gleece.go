@@ -32,7 +32,7 @@ import (
 	Response62CustomError "github.com/gopher-fleece/gleece/e2e/assets"
 	Response65CustomError "github.com/gopher-fleece/gleece/e2e/assets"
 	E2EClassSecControllerImport "github.com/gopher-fleece/gleece/e2e/assets"
-	// import extension placeholder
+	// ImportsExtension - test
 )
 var validatorInstance = validator.New()
 var urlParamRegex *regexp.Regexp
@@ -44,7 +44,7 @@ type SecurityCheckList struct {
 	Checks   []runtime.SecurityCheck
 	Relation SecurityListRelation
 }
-// type declarations extension placeholder
+// TypeDeclarationsExtension - test
 func extractValidationErrorMessage(err error, fieldName *string) string {
 	if err == nil {
 		return ""
@@ -166,7 +166,7 @@ func wrapValidatorError(validatorErr error, operationId string, fieldName string
 		Instance: fmt.Sprintf("/gleece/validation/error/%s", operationId),
 	}
 }
-// function declarations extension placeholder
+// FunctionDeclarationsExtension - test
 type MiddlewareFunc func(ctx *fiber.Ctx) bool
 type ErrorMiddlewareFunc func(ctx *fiber.Ctx, err error) bool
 var beforeOperationMiddlewares []MiddlewareFunc
@@ -199,10 +199,10 @@ func RegisterCustomValidator(validateTagName string, validateFunc runtime.Valida
 }
 func RegisterRoutes(engine *fiber.App) {
 	urlParamRegex = regexp.MustCompile(`\{([\w\d-_]+)\}`)
-	// register routes extension placeholder
+	// RegisterRoutesExtension - test
 	// E2EController
 	engine.Get(toFiberUrl("/e2e/simple-get"), func(ctx *fiber.Ctx) error {
-		// route start routes extension placeholder
+		ctx.Set("x-RouteStartRoutesExtension", "SimpleGet")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -231,12 +231,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Set("x-BeforeOperationRoutesExtension", "SimpleGet")
 		value, opError := controller.SimpleGet()
 		for key, value := range controller.GetHeaders() {
 			ctx.Set(key, value)
 		}
 		ctx.Set("x-inject", "true")
+		ctx.Set("x-ResponseHeadersExtension", "SimpleGet")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -253,10 +254,10 @@ func RegisterRoutes(engine *fiber.App) {
 				Instance:   "/gleece/controller/error/SimpleGet",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Set("x-JsonErrorResponseExtension", "SimpleGet")
 			return ctx.Status(statusCode).JSON(stdError)
 		}
-		// json response extension placeholder
+		ctx.Set("x-JsonResponseExtension", "SimpleGet")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -264,13 +265,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Set("x-AfterOperationRoutesExtension", "SimpleGet")
 		ctx.Status(statusCode).JSON(value)
-		ctx.Set("x-extended", "SimpleGet")
+		ctx.Set("x-RouteEndRoutesExtension", "SimpleGet")
 		return nil
 	})
 	engine.Get(toFiberUrl("/e2e/simple-get-empty-string"), func(ctx *fiber.Ctx) error {
-		// route start routes extension placeholder
+		ctx.Set("x-RouteStartRoutesExtension", "SimpleGetEmptyString")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -299,12 +300,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Set("x-BeforeOperationRoutesExtension", "SimpleGetEmptyString")
 		value, opError := controller.SimpleGetEmptyString()
 		for key, value := range controller.GetHeaders() {
 			ctx.Set(key, value)
 		}
 		ctx.Set("x-inject", "true")
+		ctx.Set("x-ResponseHeadersExtension", "SimpleGetEmptyString")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -321,10 +323,10 @@ func RegisterRoutes(engine *fiber.App) {
 				Instance:   "/gleece/controller/error/SimpleGetEmptyString",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Set("x-JsonErrorResponseExtension", "SimpleGetEmptyString")
 			return ctx.Status(statusCode).JSON(stdError)
 		}
-		// json response extension placeholder
+		ctx.Set("x-JsonResponseExtension", "SimpleGetEmptyString")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -332,13 +334,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Set("x-AfterOperationRoutesExtension", "SimpleGetEmptyString")
 		ctx.Status(statusCode).JSON(value)
-		ctx.Set("x-extended", "SimpleGetEmptyString")
+		ctx.Set("x-RouteEndRoutesExtension", "SimpleGetEmptyString")
 		return nil
 	})
 	engine.Get(toFiberUrl("/e2e/simple-get-ptr-string"), func(ctx *fiber.Ctx) error {
-		// route start routes extension placeholder
+		ctx.Set("x-RouteStartRoutesExtension", "SimpleGetPtrString")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -367,12 +369,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Set("x-BeforeOperationRoutesExtension", "SimpleGetPtrString")
 		value, opError := controller.SimpleGetPtrString()
 		for key, value := range controller.GetHeaders() {
 			ctx.Set(key, value)
 		}
 		ctx.Set("x-inject", "true")
+		ctx.Set("x-ResponseHeadersExtension", "SimpleGetPtrString")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -389,10 +392,10 @@ func RegisterRoutes(engine *fiber.App) {
 				Instance:   "/gleece/controller/error/SimpleGetPtrString",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Set("x-JsonErrorResponseExtension", "SimpleGetPtrString")
 			return ctx.Status(statusCode).JSON(stdError)
 		}
-		// json response extension placeholder
+		ctx.Set("x-JsonResponseExtension", "SimpleGetPtrString")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -400,13 +403,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Set("x-AfterOperationRoutesExtension", "SimpleGetPtrString")
 		ctx.Status(statusCode).JSON(value)
-		ctx.Set("x-extended", "SimpleGetPtrString")
+		ctx.Set("x-RouteEndRoutesExtension", "SimpleGetPtrString")
 		return nil
 	})
 	engine.Get(toFiberUrl("/e2e/simple-get-null-string"), func(ctx *fiber.Ctx) error {
-		// route start routes extension placeholder
+		ctx.Set("x-RouteStartRoutesExtension", "SimpleGetNullString")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -435,12 +438,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Set("x-BeforeOperationRoutesExtension", "SimpleGetNullString")
 		value, opError := controller.SimpleGetNullString()
 		for key, value := range controller.GetHeaders() {
 			ctx.Set(key, value)
 		}
 		ctx.Set("x-inject", "true")
+		ctx.Set("x-ResponseHeadersExtension", "SimpleGetNullString")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -457,10 +461,10 @@ func RegisterRoutes(engine *fiber.App) {
 				Instance:   "/gleece/controller/error/SimpleGetNullString",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Set("x-JsonErrorResponseExtension", "SimpleGetNullString")
 			return ctx.Status(statusCode).JSON(stdError)
 		}
-		// json response extension placeholder
+		ctx.Set("x-JsonResponseExtension", "SimpleGetNullString")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -468,13 +472,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Set("x-AfterOperationRoutesExtension", "SimpleGetNullString")
 		ctx.Status(statusCode).JSON(value)
-		ctx.Set("x-extended", "SimpleGetNullString")
+		ctx.Set("x-RouteEndRoutesExtension", "SimpleGetNullString")
 		return nil
 	})
 	engine.Get(toFiberUrl("/e2e/simple-get-object"), func(ctx *fiber.Ctx) error {
-		// route start routes extension placeholder
+		ctx.Set("x-RouteStartRoutesExtension", "SimpleGetObject")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -503,12 +507,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Set("x-BeforeOperationRoutesExtension", "SimpleGetObject")
 		value, opError := controller.SimpleGetObject()
 		for key, value := range controller.GetHeaders() {
 			ctx.Set(key, value)
 		}
 		ctx.Set("x-inject", "true")
+		ctx.Set("x-ResponseHeadersExtension", "SimpleGetObject")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -525,10 +530,10 @@ func RegisterRoutes(engine *fiber.App) {
 				Instance:   "/gleece/controller/error/SimpleGetObject",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Set("x-JsonErrorResponseExtension", "SimpleGetObject")
 			return ctx.Status(statusCode).JSON(stdError)
 		}
-		// json response extension placeholder
+		ctx.Set("x-JsonResponseExtension", "SimpleGetObject")
 		var outputValidationErr error
 		outputValidationErr = validatorInstance.Struct(value)
 		if outputValidationErr != nil {
@@ -556,13 +561,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Set("x-AfterOperationRoutesExtension", "SimpleGetObject")
 		ctx.Status(statusCode).JSON(value)
-		ctx.Set("x-extended", "SimpleGetObject")
+		ctx.Set("x-RouteEndRoutesExtension", "SimpleGetObject")
 		return nil
 	})
 	engine.Get(toFiberUrl("/e2e/simple-get-object-ptr"), func(ctx *fiber.Ctx) error {
-		// route start routes extension placeholder
+		ctx.Set("x-RouteStartRoutesExtension", "SimpleGetObjectPtr")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -591,12 +596,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Set("x-BeforeOperationRoutesExtension", "SimpleGetObjectPtr")
 		value, opError := controller.SimpleGetObjectPtr()
 		for key, value := range controller.GetHeaders() {
 			ctx.Set(key, value)
 		}
 		ctx.Set("x-inject", "true")
+		ctx.Set("x-ResponseHeadersExtension", "SimpleGetObjectPtr")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -613,10 +619,10 @@ func RegisterRoutes(engine *fiber.App) {
 				Instance:   "/gleece/controller/error/SimpleGetObjectPtr",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Set("x-JsonErrorResponseExtension", "SimpleGetObjectPtr")
 			return ctx.Status(statusCode).JSON(stdError)
 		}
-		// json response extension placeholder
+		ctx.Set("x-JsonResponseExtension", "SimpleGetObjectPtr")
 		var outputValidationErr error
 		if value == nil {
 			outputValidationErr = fmt.Errorf("Response payload is nil")
@@ -648,13 +654,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Set("x-AfterOperationRoutesExtension", "SimpleGetObjectPtr")
 		ctx.Status(statusCode).JSON(value)
-		ctx.Set("x-extended", "SimpleGetObjectPtr")
+		ctx.Set("x-RouteEndRoutesExtension", "SimpleGetObjectPtr")
 		return nil
 	})
 	engine.Get(toFiberUrl("/e2e/simple-get-object-null"), func(ctx *fiber.Ctx) error {
-		// route start routes extension placeholder
+		ctx.Set("x-RouteStartRoutesExtension", "SimpleGetObjectNull")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -683,12 +689,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Set("x-BeforeOperationRoutesExtension", "SimpleGetObjectNull")
 		value, opError := controller.SimpleGetObjectNull()
 		for key, value := range controller.GetHeaders() {
 			ctx.Set(key, value)
 		}
 		ctx.Set("x-inject", "true")
+		ctx.Set("x-ResponseHeadersExtension", "SimpleGetObjectNull")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -705,10 +712,10 @@ func RegisterRoutes(engine *fiber.App) {
 				Instance:   "/gleece/controller/error/SimpleGetObjectNull",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Set("x-JsonErrorResponseExtension", "SimpleGetObjectNull")
 			return ctx.Status(statusCode).JSON(stdError)
 		}
-		// json response extension placeholder
+		ctx.Set("x-JsonResponseExtension", "SimpleGetObjectNull")
 		var outputValidationErr error
 		if value == nil {
 			outputValidationErr = fmt.Errorf("Response payload is nil")
@@ -740,13 +747,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Set("x-AfterOperationRoutesExtension", "SimpleGetObjectNull")
 		ctx.Status(statusCode).JSON(value)
-		ctx.Set("x-extended", "SimpleGetObjectNull")
+		ctx.Set("x-RouteEndRoutesExtension", "SimpleGetObjectNull")
 		return nil
 	})
 	engine.Get(toFiberUrl("/e2e/simple-get-empty"), func(ctx *fiber.Ctx) error {
-		// route start routes extension placeholder
+		ctx.Set("x-RouteStartRoutesExtension", "SimpleGetEmpty")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -785,6 +792,7 @@ func RegisterRoutes(engine *fiber.App) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "queryParam"
 			validationError := wrapValidatorError(validatorErr, "SimpleGetEmpty", fieldName)
+			ctx.Set("x-RunValidatorExtension", "SimpleGetEmpty")
 			return ctx.Status(http.StatusUnprocessableEntity).JSON(validationError)
 		}
 		// Middlewares beforeOperationMiddlewares section
@@ -794,12 +802,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Set("x-BeforeOperationRoutesExtension", "SimpleGetEmpty")
 		opError := controller.SimpleGetEmpty(*queryParamRawPtr)
 		for key, value := range controller.GetHeaders() {
 			ctx.Set(key, value)
 		}
 		ctx.Set("x-inject", "true")
+		ctx.Set("x-ResponseHeadersExtension", "SimpleGetEmpty")
 		statusCode := getStatusCode(&controller, false, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -816,10 +825,10 @@ func RegisterRoutes(engine *fiber.App) {
 				Instance:   "/gleece/controller/error/SimpleGetEmpty",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Set("x-JsonErrorResponseExtension", "SimpleGetEmpty")
 			return ctx.Status(statusCode).JSON(stdError)
 		}
-		// json response extension placeholder
+		ctx.Set("x-JsonResponseExtension", "SimpleGetEmpty")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -827,13 +836,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Set("x-AfterOperationRoutesExtension", "SimpleGetEmpty")
 		ctx.Status(statusCode)
-		ctx.Set("x-extended", "SimpleGetEmpty")
+		ctx.Set("x-RouteEndRoutesExtension", "SimpleGetEmpty")
 		return nil
 	})
 	engine.Get(toFiberUrl("/e2e/get-with-all-params/{pathParam}"), func(ctx *fiber.Ctx) error {
-		// route start routes extension placeholder
+		ctx.Set("x-RouteStartRoutesExtension", "GetWithAllParams")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -872,6 +881,7 @@ func RegisterRoutes(engine *fiber.App) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "queryParam"
 			validationError := wrapValidatorError(validatorErr, "GetWithAllParams", fieldName)
+			ctx.Set("x-RunValidatorExtension", "GetWithAllParams")
 			return ctx.Status(http.StatusUnprocessableEntity).JSON(validationError)
 		}
 		var pathParamRawPtr *string = nil
@@ -891,6 +901,7 @@ func RegisterRoutes(engine *fiber.App) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "pathParam"
 			validationError := wrapValidatorError(validatorErr, "GetWithAllParams", fieldName)
+			ctx.Set("x-RunValidatorExtension", "GetWithAllParams")
 			return ctx.Status(http.StatusUnprocessableEntity).JSON(validationError)
 		}
 		var headerParamRawPtr *string = nil
@@ -910,6 +921,7 @@ func RegisterRoutes(engine *fiber.App) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "headerParam"
 			validationError := wrapValidatorError(validatorErr, "GetWithAllParams", fieldName)
+			ctx.Set("x-RunValidatorExtension", "GetWithAllParams")
 			return ctx.Status(http.StatusUnprocessableEntity).JSON(validationError)
 		}
 		// Middlewares beforeOperationMiddlewares section
@@ -919,12 +931,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Set("x-BeforeOperationRoutesExtension", "GetWithAllParams")
 		value, opError := controller.GetWithAllParams(*queryParamRawPtr, *pathParamRawPtr, *headerParamRawPtr)
 		for key, value := range controller.GetHeaders() {
 			ctx.Set(key, value)
 		}
 		ctx.Set("x-inject", "true")
+		ctx.Set("x-ResponseHeadersExtension", "GetWithAllParams")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -941,10 +954,10 @@ func RegisterRoutes(engine *fiber.App) {
 				Instance:   "/gleece/controller/error/GetWithAllParams",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Set("x-JsonErrorResponseExtension", "GetWithAllParams")
 			return ctx.Status(statusCode).JSON(stdError)
 		}
-		// json response extension placeholder
+		ctx.Set("x-JsonResponseExtension", "GetWithAllParams")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -952,13 +965,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Set("x-AfterOperationRoutesExtension", "GetWithAllParams")
 		ctx.Status(statusCode).JSON(value)
-		ctx.Set("x-extended", "GetWithAllParams")
+		ctx.Set("x-RouteEndRoutesExtension", "GetWithAllParams")
 		return nil
 	})
 	engine.Get(toFiberUrl("/e2e/get-with-all-params-ptr/{pathParam}"), func(ctx *fiber.Ctx) error {
-		// route start routes extension placeholder
+		ctx.Set("x-RouteStartRoutesExtension", "GetWithAllParamsPtr")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -1004,6 +1017,7 @@ func RegisterRoutes(engine *fiber.App) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "pathParam"
 			validationError := wrapValidatorError(validatorErr, "GetWithAllParamsPtr", fieldName)
+			ctx.Set("x-RunValidatorExtension", "GetWithAllParamsPtr")
 			return ctx.Status(http.StatusUnprocessableEntity).JSON(validationError)
 		}
 		var headerParamRawPtr *string = nil
@@ -1020,12 +1034,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Set("x-BeforeOperationRoutesExtension", "GetWithAllParamsPtr")
 		value, opError := controller.GetWithAllParamsPtr(queryParamRawPtr, pathParamRawPtr, headerParamRawPtr)
 		for key, value := range controller.GetHeaders() {
 			ctx.Set(key, value)
 		}
 		ctx.Set("x-inject", "true")
+		ctx.Set("x-ResponseHeadersExtension", "GetWithAllParamsPtr")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -1042,10 +1057,10 @@ func RegisterRoutes(engine *fiber.App) {
 				Instance:   "/gleece/controller/error/GetWithAllParamsPtr",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Set("x-JsonErrorResponseExtension", "GetWithAllParamsPtr")
 			return ctx.Status(statusCode).JSON(stdError)
 		}
-		// json response extension placeholder
+		ctx.Set("x-JsonResponseExtension", "GetWithAllParamsPtr")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -1053,13 +1068,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Set("x-AfterOperationRoutesExtension", "GetWithAllParamsPtr")
 		ctx.Status(statusCode).JSON(value)
-		ctx.Set("x-extended", "GetWithAllParamsPtr")
+		ctx.Set("x-RouteEndRoutesExtension", "GetWithAllParamsPtr")
 		return nil
 	})
 	engine.Get(toFiberUrl("/e2e/get-with-all-params-required-ptr/{pathParam}"), func(ctx *fiber.Ctx) error {
-		// route start routes extension placeholder
+		ctx.Set("x-RouteStartRoutesExtension", "GetWithAllParamsRequiredPtr")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -1098,6 +1113,7 @@ func RegisterRoutes(engine *fiber.App) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "queryParam"
 			validationError := wrapValidatorError(validatorErr, "GetWithAllParamsRequiredPtr", fieldName)
+			ctx.Set("x-RunValidatorExtension", "GetWithAllParamsRequiredPtr")
 			return ctx.Status(http.StatusUnprocessableEntity).JSON(validationError)
 		}
 		var pathParamRawPtr *string = nil
@@ -1117,6 +1133,7 @@ func RegisterRoutes(engine *fiber.App) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "pathParam"
 			validationError := wrapValidatorError(validatorErr, "GetWithAllParamsRequiredPtr", fieldName)
+			ctx.Set("x-RunValidatorExtension", "GetWithAllParamsRequiredPtr")
 			return ctx.Status(http.StatusUnprocessableEntity).JSON(validationError)
 		}
 		var headerParamRawPtr *string = nil
@@ -1136,6 +1153,7 @@ func RegisterRoutes(engine *fiber.App) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "headerParam"
 			validationError := wrapValidatorError(validatorErr, "GetWithAllParamsRequiredPtr", fieldName)
+			ctx.Set("x-RunValidatorExtension", "GetWithAllParamsRequiredPtr")
 			return ctx.Status(http.StatusUnprocessableEntity).JSON(validationError)
 		}
 		// Middlewares beforeOperationMiddlewares section
@@ -1145,12 +1163,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Set("x-BeforeOperationRoutesExtension", "GetWithAllParamsRequiredPtr")
 		value, opError := controller.GetWithAllParamsRequiredPtr(queryParamRawPtr, pathParamRawPtr, headerParamRawPtr)
 		for key, value := range controller.GetHeaders() {
 			ctx.Set(key, value)
 		}
 		ctx.Set("x-inject", "true")
+		ctx.Set("x-ResponseHeadersExtension", "GetWithAllParamsRequiredPtr")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -1167,10 +1186,10 @@ func RegisterRoutes(engine *fiber.App) {
 				Instance:   "/gleece/controller/error/GetWithAllParamsRequiredPtr",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Set("x-JsonErrorResponseExtension", "GetWithAllParamsRequiredPtr")
 			return ctx.Status(statusCode).JSON(stdError)
 		}
-		// json response extension placeholder
+		ctx.Set("x-JsonResponseExtension", "GetWithAllParamsRequiredPtr")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -1178,13 +1197,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Set("x-AfterOperationRoutesExtension", "GetWithAllParamsRequiredPtr")
 		ctx.Status(statusCode).JSON(value)
-		ctx.Set("x-extended", "GetWithAllParamsRequiredPtr")
+		ctx.Set("x-RouteEndRoutesExtension", "GetWithAllParamsRequiredPtr")
 		return nil
 	})
 	engine.Post(toFiberUrl("/e2e/post-with-all-params-body"), func(ctx *fiber.Ctx) error {
-		// route start routes extension placeholder
+		ctx.Set("x-RouteStartRoutesExtension", "PostWithAllParamsWithBody")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -1224,6 +1243,7 @@ func RegisterRoutes(engine *fiber.App) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "queryParam"
 			validationError := wrapValidatorError(validatorErr, "PostWithAllParamsWithBody", fieldName)
+			ctx.Set("x-RunValidatorExtension", "PostWithAllParamsWithBody")
 			return ctx.Status(http.StatusUnprocessableEntity).JSON(validationError)
 		}
 		var headerParamRawPtr *string = nil
@@ -1243,6 +1263,7 @@ func RegisterRoutes(engine *fiber.App) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "headerParam"
 			validationError := wrapValidatorError(validatorErr, "PostWithAllParamsWithBody", fieldName)
+			ctx.Set("x-RunValidatorExtension", "PostWithAllParamsWithBody")
 			return ctx.Status(http.StatusUnprocessableEntity).JSON(validationError)
 		}
 		var theBodyRawPtr *Param33theBody.BodyInfo = nil
@@ -1266,7 +1287,7 @@ func RegisterRoutes(engine *fiber.App) {
 				Status:   http.StatusUnprocessableEntity,
 				Instance: "/gleece/validation/error/PostWithAllParamsWithBody",
 			}
-			// json body validation error response extension placeholder
+			ctx.Set("x-JsonBodyValidationErrorResponseExtension", "PostWithAllParamsWithBody")
 			return ctx.Status(http.StatusUnprocessableEntity).JSON(validationError)
 		}
 		// Middlewares beforeOperationMiddlewares section
@@ -1276,12 +1297,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Set("x-BeforeOperationRoutesExtension", "PostWithAllParamsWithBody")
 		value, opError := controller.PostWithAllParamsWithBody(*queryParamRawPtr, *headerParamRawPtr, *theBodyRawPtr)
 		for key, value := range controller.GetHeaders() {
 			ctx.Set(key, value)
 		}
 		ctx.Set("x-inject", "true")
+		ctx.Set("x-ResponseHeadersExtension", "PostWithAllParamsWithBody")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -1298,10 +1320,10 @@ func RegisterRoutes(engine *fiber.App) {
 				Instance:   "/gleece/controller/error/PostWithAllParamsWithBody",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Set("x-JsonErrorResponseExtension", "PostWithAllParamsWithBody")
 			return ctx.Status(statusCode).JSON(stdError)
 		}
-		// json response extension placeholder
+		ctx.Set("x-JsonResponseExtension", "PostWithAllParamsWithBody")
 		var outputValidationErr error
 		outputValidationErr = validatorInstance.Struct(value)
 		if outputValidationErr != nil {
@@ -1329,13 +1351,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Set("x-AfterOperationRoutesExtension", "PostWithAllParamsWithBody")
 		ctx.Status(statusCode).JSON(value)
-		ctx.Set("x-extended", "PostWithAllParamsWithBody")
+		ctx.Set("x-RouteEndRoutesExtension", "PostWithAllParamsWithBody")
 		return nil
 	})
 	engine.Post(toFiberUrl("/e2e/post-with-all-params-body-ptr"), func(ctx *fiber.Ctx) error {
-		// route start routes extension placeholder
+		ctx.Set("x-RouteStartRoutesExtension", "PostWithAllParamsWithBodyPtr")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -1393,7 +1415,7 @@ func RegisterRoutes(engine *fiber.App) {
 				Status:   http.StatusUnprocessableEntity,
 				Instance: "/gleece/validation/error/PostWithAllParamsWithBodyPtr",
 			}
-			// json body validation error response extension placeholder
+			ctx.Set("x-JsonBodyValidationErrorResponseExtension", "PostWithAllParamsWithBodyPtr")
 			return ctx.Status(http.StatusUnprocessableEntity).JSON(validationError)
 		}
 		// Middlewares beforeOperationMiddlewares section
@@ -1403,12 +1425,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Set("x-BeforeOperationRoutesExtension", "PostWithAllParamsWithBodyPtr")
 		value, opError := controller.PostWithAllParamsWithBodyPtr(queryParamRawPtr, headerParamRawPtr, theBodyRawPtr)
 		for key, value := range controller.GetHeaders() {
 			ctx.Set(key, value)
 		}
 		ctx.Set("x-inject", "true")
+		ctx.Set("x-ResponseHeadersExtension", "PostWithAllParamsWithBodyPtr")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -1425,10 +1448,10 @@ func RegisterRoutes(engine *fiber.App) {
 				Instance:   "/gleece/controller/error/PostWithAllParamsWithBodyPtr",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Set("x-JsonErrorResponseExtension", "PostWithAllParamsWithBodyPtr")
 			return ctx.Status(statusCode).JSON(stdError)
 		}
-		// json response extension placeholder
+		ctx.Set("x-JsonResponseExtension", "PostWithAllParamsWithBodyPtr")
 		var outputValidationErr error
 		if value == nil {
 			outputValidationErr = fmt.Errorf("Response payload is nil")
@@ -1460,13 +1483,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Set("x-AfterOperationRoutesExtension", "PostWithAllParamsWithBodyPtr")
 		ctx.Status(statusCode).JSON(value)
-		ctx.Set("x-extended", "PostWithAllParamsWithBodyPtr")
+		ctx.Set("x-RouteEndRoutesExtension", "PostWithAllParamsWithBodyPtr")
 		return nil
 	})
 	engine.Post(toFiberUrl("/e2e/post-with-all-params-body-required-ptr"), func(ctx *fiber.Ctx) error {
-		// route start routes extension placeholder
+		ctx.Set("x-RouteStartRoutesExtension", "PostWithAllParamsWithBodyRequiredPtr")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -1510,7 +1533,7 @@ func RegisterRoutes(engine *fiber.App) {
 				Status:   http.StatusUnprocessableEntity,
 				Instance: "/gleece/validation/error/PostWithAllParamsWithBodyRequiredPtr",
 			}
-			// json body validation error response extension placeholder
+			ctx.Set("x-JsonBodyValidationErrorResponseExtension", "PostWithAllParamsWithBodyRequiredPtr")
 			return ctx.Status(http.StatusUnprocessableEntity).JSON(validationError)
 		}
 		// Middlewares beforeOperationMiddlewares section
@@ -1520,12 +1543,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Set("x-BeforeOperationRoutesExtension", "PostWithAllParamsWithBodyRequiredPtr")
 		value, opError := controller.PostWithAllParamsWithBodyRequiredPtr(theBodyRawPtr)
 		for key, value := range controller.GetHeaders() {
 			ctx.Set(key, value)
 		}
 		ctx.Set("x-inject", "true")
+		ctx.Set("x-ResponseHeadersExtension", "PostWithAllParamsWithBodyRequiredPtr")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -1542,10 +1566,10 @@ func RegisterRoutes(engine *fiber.App) {
 				Instance:   "/gleece/controller/error/PostWithAllParamsWithBodyRequiredPtr",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Set("x-JsonErrorResponseExtension", "PostWithAllParamsWithBodyRequiredPtr")
 			return ctx.Status(statusCode).JSON(stdError)
 		}
-		// json response extension placeholder
+		ctx.Set("x-JsonResponseExtension", "PostWithAllParamsWithBodyRequiredPtr")
 		var outputValidationErr error
 		if value == nil {
 			outputValidationErr = fmt.Errorf("Response payload is nil")
@@ -1577,13 +1601,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Set("x-AfterOperationRoutesExtension", "PostWithAllParamsWithBodyRequiredPtr")
 		ctx.Status(statusCode).JSON(value)
-		ctx.Set("x-extended", "PostWithAllParamsWithBodyRequiredPtr")
+		ctx.Set("x-RouteEndRoutesExtension", "PostWithAllParamsWithBodyRequiredPtr")
 		return nil
 	})
 	engine.Get(toFiberUrl("/e2e/get-header-start-with-letter"), func(ctx *fiber.Ctx) error {
-		// route start routes extension placeholder
+		ctx.Set("x-RouteStartRoutesExtension", "GetHeaderStartWithLetter")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -1622,6 +1646,7 @@ func RegisterRoutes(engine *fiber.App) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "headerParam"
 			validationError := wrapValidatorError(validatorErr, "GetHeaderStartWithLetter", fieldName)
+			ctx.Set("x-RunValidatorExtension", "GetHeaderStartWithLetter")
 			return ctx.Status(http.StatusUnprocessableEntity).JSON(validationError)
 		}
 		// Middlewares beforeOperationMiddlewares section
@@ -1631,12 +1656,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Set("x-BeforeOperationRoutesExtension", "GetHeaderStartWithLetter")
 		value, opError := controller.GetHeaderStartWithLetter(*headerParamRawPtr)
 		for key, value := range controller.GetHeaders() {
 			ctx.Set(key, value)
 		}
 		ctx.Set("x-inject", "true")
+		ctx.Set("x-ResponseHeadersExtension", "GetHeaderStartWithLetter")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -1653,10 +1679,10 @@ func RegisterRoutes(engine *fiber.App) {
 				Instance:   "/gleece/controller/error/GetHeaderStartWithLetter",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Set("x-JsonErrorResponseExtension", "GetHeaderStartWithLetter")
 			return ctx.Status(statusCode).JSON(stdError)
 		}
-		// json response extension placeholder
+		ctx.Set("x-JsonResponseExtension", "GetHeaderStartWithLetter")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -1664,13 +1690,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Set("x-AfterOperationRoutesExtension", "GetHeaderStartWithLetter")
 		ctx.Status(statusCode).JSON(value)
-		ctx.Set("x-extended", "GetHeaderStartWithLetter")
+		ctx.Set("x-RouteEndRoutesExtension", "GetHeaderStartWithLetter")
 		return nil
 	})
 	engine.Get(toFiberUrl("/e2e/with-default-config-security"), func(ctx *fiber.Ctx) error {
-		// route start routes extension placeholder
+		ctx.Set("x-RouteStartRoutesExtension", "WithDefaultConfigSecurity")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -1709,6 +1735,7 @@ func RegisterRoutes(engine *fiber.App) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "headerParam"
 			validationError := wrapValidatorError(validatorErr, "WithDefaultConfigSecurity", fieldName)
+			ctx.Set("x-RunValidatorExtension", "WithDefaultConfigSecurity")
 			return ctx.Status(http.StatusUnprocessableEntity).JSON(validationError)
 		}
 		// Middlewares beforeOperationMiddlewares section
@@ -1718,12 +1745,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Set("x-BeforeOperationRoutesExtension", "WithDefaultConfigSecurity")
 		value, opError := controller.WithDefaultConfigSecurity(*headerParamRawPtr)
 		for key, value := range controller.GetHeaders() {
 			ctx.Set(key, value)
 		}
 		ctx.Set("x-inject", "true")
+		ctx.Set("x-ResponseHeadersExtension", "WithDefaultConfigSecurity")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -1740,10 +1768,10 @@ func RegisterRoutes(engine *fiber.App) {
 				Instance:   "/gleece/controller/error/WithDefaultConfigSecurity",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Set("x-JsonErrorResponseExtension", "WithDefaultConfigSecurity")
 			return ctx.Status(statusCode).JSON(stdError)
 		}
-		// json response extension placeholder
+		ctx.Set("x-JsonResponseExtension", "WithDefaultConfigSecurity")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -1751,13 +1779,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Set("x-AfterOperationRoutesExtension", "WithDefaultConfigSecurity")
 		ctx.Status(statusCode).JSON(value)
-		ctx.Set("x-extended", "WithDefaultConfigSecurity")
+		ctx.Set("x-RouteEndRoutesExtension", "WithDefaultConfigSecurity")
 		return nil
 	})
 	engine.Get(toFiberUrl("/e2e/with-one-security"), func(ctx *fiber.Ctx) error {
-		// route start routes extension placeholder
+		ctx.Set("x-RouteStartRoutesExtension", "WithOneSecurity")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -1796,6 +1824,7 @@ func RegisterRoutes(engine *fiber.App) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "headerParam"
 			validationError := wrapValidatorError(validatorErr, "WithOneSecurity", fieldName)
+			ctx.Set("x-RunValidatorExtension", "WithOneSecurity")
 			return ctx.Status(http.StatusUnprocessableEntity).JSON(validationError)
 		}
 		// Middlewares beforeOperationMiddlewares section
@@ -1805,12 +1834,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Set("x-BeforeOperationRoutesExtension", "WithOneSecurity")
 		value, opError := controller.WithOneSecurity(*headerParamRawPtr)
 		for key, value := range controller.GetHeaders() {
 			ctx.Set(key, value)
 		}
 		ctx.Set("x-inject", "true")
+		ctx.Set("x-ResponseHeadersExtension", "WithOneSecurity")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -1827,10 +1857,10 @@ func RegisterRoutes(engine *fiber.App) {
 				Instance:   "/gleece/controller/error/WithOneSecurity",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Set("x-JsonErrorResponseExtension", "WithOneSecurity")
 			return ctx.Status(statusCode).JSON(stdError)
 		}
-		// json response extension placeholder
+		ctx.Set("x-JsonResponseExtension", "WithOneSecurity")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -1838,13 +1868,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Set("x-AfterOperationRoutesExtension", "WithOneSecurity")
 		ctx.Status(statusCode).JSON(value)
-		ctx.Set("x-extended", "WithOneSecurity")
+		ctx.Set("x-RouteEndRoutesExtension", "WithOneSecurity")
 		return nil
 	})
 	engine.Get(toFiberUrl("/e2e/with-two-security"), func(ctx *fiber.Ctx) error {
-		// route start routes extension placeholder
+		ctx.Set("x-RouteStartRoutesExtension", "WithTwoSecurity")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -1895,6 +1925,7 @@ func RegisterRoutes(engine *fiber.App) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "headerParam"
 			validationError := wrapValidatorError(validatorErr, "WithTwoSecurity", fieldName)
+			ctx.Set("x-RunValidatorExtension", "WithTwoSecurity")
 			return ctx.Status(http.StatusUnprocessableEntity).JSON(validationError)
 		}
 		// Middlewares beforeOperationMiddlewares section
@@ -1904,12 +1935,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Set("x-BeforeOperationRoutesExtension", "WithTwoSecurity")
 		value, opError := controller.WithTwoSecurity(*headerParamRawPtr)
 		for key, value := range controller.GetHeaders() {
 			ctx.Set(key, value)
 		}
 		ctx.Set("x-inject", "true")
+		ctx.Set("x-ResponseHeadersExtension", "WithTwoSecurity")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -1926,10 +1958,10 @@ func RegisterRoutes(engine *fiber.App) {
 				Instance:   "/gleece/controller/error/WithTwoSecurity",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Set("x-JsonErrorResponseExtension", "WithTwoSecurity")
 			return ctx.Status(statusCode).JSON(stdError)
 		}
-		// json response extension placeholder
+		ctx.Set("x-JsonResponseExtension", "WithTwoSecurity")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -1937,13 +1969,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Set("x-AfterOperationRoutesExtension", "WithTwoSecurity")
 		ctx.Status(statusCode).JSON(value)
-		ctx.Set("x-extended", "WithTwoSecurity")
+		ctx.Set("x-RouteEndRoutesExtension", "WithTwoSecurity")
 		return nil
 	})
 	engine.Get(toFiberUrl("/e2e/with-two-security-same-method"), func(ctx *fiber.Ctx) error {
-		// route start routes extension placeholder
+		ctx.Set("x-RouteStartRoutesExtension", "WithTwoSecuritySameMethod")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -1994,6 +2026,7 @@ func RegisterRoutes(engine *fiber.App) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "headerParam"
 			validationError := wrapValidatorError(validatorErr, "WithTwoSecuritySameMethod", fieldName)
+			ctx.Set("x-RunValidatorExtension", "WithTwoSecuritySameMethod")
 			return ctx.Status(http.StatusUnprocessableEntity).JSON(validationError)
 		}
 		// Middlewares beforeOperationMiddlewares section
@@ -2003,12 +2036,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Set("x-BeforeOperationRoutesExtension", "WithTwoSecuritySameMethod")
 		value, opError := controller.WithTwoSecuritySameMethod(*headerParamRawPtr)
 		for key, value := range controller.GetHeaders() {
 			ctx.Set(key, value)
 		}
 		ctx.Set("x-inject", "true")
+		ctx.Set("x-ResponseHeadersExtension", "WithTwoSecuritySameMethod")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -2025,10 +2059,10 @@ func RegisterRoutes(engine *fiber.App) {
 				Instance:   "/gleece/controller/error/WithTwoSecuritySameMethod",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Set("x-JsonErrorResponseExtension", "WithTwoSecuritySameMethod")
 			return ctx.Status(statusCode).JSON(stdError)
 		}
-		// json response extension placeholder
+		ctx.Set("x-JsonResponseExtension", "WithTwoSecuritySameMethod")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -2036,13 +2070,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Set("x-AfterOperationRoutesExtension", "WithTwoSecuritySameMethod")
 		ctx.Status(statusCode).JSON(value)
-		ctx.Set("x-extended", "WithTwoSecuritySameMethod")
+		ctx.Set("x-RouteEndRoutesExtension", "WithTwoSecuritySameMethod")
 		return nil
 	})
 	engine.Get(toFiberUrl("/e2e/default-error"), func(ctx *fiber.Ctx) error {
-		// route start routes extension placeholder
+		ctx.Set("x-RouteStartRoutesExtension", "DefaultError")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -2071,12 +2105,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Set("x-BeforeOperationRoutesExtension", "DefaultError")
 		opError := controller.DefaultError()
 		for key, value := range controller.GetHeaders() {
 			ctx.Set(key, value)
 		}
 		ctx.Set("x-inject", "true")
+		ctx.Set("x-ResponseHeadersExtension", "DefaultError")
 		statusCode := getStatusCode(&controller, false, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -2093,10 +2128,10 @@ func RegisterRoutes(engine *fiber.App) {
 				Instance:   "/gleece/controller/error/DefaultError",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Set("x-JsonErrorResponseExtension", "DefaultError")
 			return ctx.Status(statusCode).JSON(stdError)
 		}
-		// json response extension placeholder
+		ctx.Set("x-JsonResponseExtension", "DefaultError")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -2104,13 +2139,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Set("x-AfterOperationRoutesExtension", "DefaultError")
 		ctx.Status(statusCode)
-		ctx.Set("x-extended", "DefaultError")
+		ctx.Set("x-RouteEndRoutesExtension", "DefaultError")
 		return nil
 	})
 	engine.Get(toFiberUrl("/e2e/default-error-with-payload"), func(ctx *fiber.Ctx) error {
-		// route start routes extension placeholder
+		ctx.Set("x-RouteStartRoutesExtension", "DefaultErrorWithPayload")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -2139,12 +2174,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Set("x-BeforeOperationRoutesExtension", "DefaultErrorWithPayload")
 		value, opError := controller.DefaultErrorWithPayload()
 		for key, value := range controller.GetHeaders() {
 			ctx.Set(key, value)
 		}
 		ctx.Set("x-inject", "true")
+		ctx.Set("x-ResponseHeadersExtension", "DefaultErrorWithPayload")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -2161,10 +2197,10 @@ func RegisterRoutes(engine *fiber.App) {
 				Instance:   "/gleece/controller/error/DefaultErrorWithPayload",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Set("x-JsonErrorResponseExtension", "DefaultErrorWithPayload")
 			return ctx.Status(statusCode).JSON(stdError)
 		}
-		// json response extension placeholder
+		ctx.Set("x-JsonResponseExtension", "DefaultErrorWithPayload")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -2172,13 +2208,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Set("x-AfterOperationRoutesExtension", "DefaultErrorWithPayload")
 		ctx.Status(statusCode).JSON(value)
-		ctx.Set("x-extended", "DefaultErrorWithPayload")
+		ctx.Set("x-RouteEndRoutesExtension", "DefaultErrorWithPayload")
 		return nil
 	})
 	engine.Get(toFiberUrl("/e2e/custom-error"), func(ctx *fiber.Ctx) error {
-		// route start routes extension placeholder
+		ctx.Set("x-RouteStartRoutesExtension", "CustomError")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -2207,12 +2243,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Set("x-BeforeOperationRoutesExtension", "CustomError")
 		opError := controller.CustomError()
 		for key, value := range controller.GetHeaders() {
 			ctx.Set(key, value)
 		}
 		ctx.Set("x-inject", "true")
+		ctx.Set("x-ResponseHeadersExtension", "CustomError")
 		statusCode := getStatusCode(&controller, false, opError)
 		emptyErr := Response62CustomError.CustomError{}
 		if opError != emptyErr {
@@ -2225,7 +2262,7 @@ func RegisterRoutes(engine *fiber.App) {
 			// End middlewares onErrorMiddlewares section
 			return ctx.Status(statusCode).JSON(opError)
 		}
-		// json response extension placeholder
+		ctx.Set("x-JsonResponseExtension", "CustomError")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -2233,13 +2270,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Set("x-AfterOperationRoutesExtension", "CustomError")
 		ctx.Status(statusCode)
-		ctx.Set("x-extended", "CustomError")
+		ctx.Set("x-RouteEndRoutesExtension", "CustomError")
 		return nil
 	})
 	engine.Get(toFiberUrl("/e2e/custom-error-ptr"), func(ctx *fiber.Ctx) error {
-		// route start routes extension placeholder
+		ctx.Set("x-RouteStartRoutesExtension", "CustomPtrError")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -2268,12 +2305,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Set("x-BeforeOperationRoutesExtension", "CustomPtrError")
 		opError := controller.CustomPtrError()
 		for key, value := range controller.GetHeaders() {
 			ctx.Set(key, value)
 		}
 		ctx.Set("x-inject", "true")
+		ctx.Set("x-ResponseHeadersExtension", "CustomPtrError")
 		statusCode := getStatusCode(&controller, false, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -2285,7 +2323,7 @@ func RegisterRoutes(engine *fiber.App) {
 			// End middlewares onErrorMiddlewares section
 			return ctx.Status(statusCode).JSON(opError)
 		}
-		// json response extension placeholder
+		ctx.Set("x-JsonResponseExtension", "CustomPtrError")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -2293,13 +2331,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Set("x-AfterOperationRoutesExtension", "CustomPtrError")
 		ctx.Status(statusCode)
-		ctx.Set("x-extended", "CustomPtrError")
+		ctx.Set("x-RouteEndRoutesExtension", "CustomPtrError")
 		return nil
 	})
 	engine.Get(toFiberUrl("/e2e/503-error-code"), func(ctx *fiber.Ctx) error {
-		// route start routes extension placeholder
+		ctx.Set("x-RouteStartRoutesExtension", "Error503")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -2328,12 +2366,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Set("x-BeforeOperationRoutesExtension", "Error503")
 		opError := controller.Error503()
 		for key, value := range controller.GetHeaders() {
 			ctx.Set(key, value)
 		}
 		ctx.Set("x-inject", "true")
+		ctx.Set("x-ResponseHeadersExtension", "Error503")
 		statusCode := getStatusCode(&controller, false, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -2350,10 +2389,10 @@ func RegisterRoutes(engine *fiber.App) {
 				Instance:   "/gleece/controller/error/Error503",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Set("x-JsonErrorResponseExtension", "Error503")
 			return ctx.Status(statusCode).JSON(stdError)
 		}
-		// json response extension placeholder
+		ctx.Set("x-JsonResponseExtension", "Error503")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -2361,13 +2400,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Set("x-AfterOperationRoutesExtension", "Error503")
 		ctx.Status(statusCode)
-		ctx.Set("x-extended", "Error503")
+		ctx.Set("x-RouteEndRoutesExtension", "Error503")
 		return nil
 	})
 	engine.Get(toFiberUrl("/e2e/custom-error-503"), func(ctx *fiber.Ctx) error {
-		// route start routes extension placeholder
+		ctx.Set("x-RouteStartRoutesExtension", "CustomError503")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -2396,12 +2435,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Set("x-BeforeOperationRoutesExtension", "CustomError503")
 		opError := controller.CustomError503()
 		for key, value := range controller.GetHeaders() {
 			ctx.Set(key, value)
 		}
 		ctx.Set("x-inject", "true")
+		ctx.Set("x-ResponseHeadersExtension", "CustomError503")
 		statusCode := getStatusCode(&controller, false, opError)
 		emptyErr := Response65CustomError.CustomError{}
 		if opError != emptyErr {
@@ -2414,7 +2454,7 @@ func RegisterRoutes(engine *fiber.App) {
 			// End middlewares onErrorMiddlewares section
 			return ctx.Status(statusCode).JSON(opError)
 		}
-		// json response extension placeholder
+		ctx.Set("x-JsonResponseExtension", "CustomError503")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -2422,13 +2462,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Set("x-AfterOperationRoutesExtension", "CustomError503")
 		ctx.Status(statusCode)
-		ctx.Set("x-extended", "CustomError503")
+		ctx.Set("x-RouteEndRoutesExtension", "CustomError503")
 		return nil
 	})
 	engine.Get(toFiberUrl("/e2e/context-access"), func(ctx *fiber.Ctx) error {
-		// route start routes extension placeholder
+		ctx.Set("x-RouteStartRoutesExtension", "ContextAccess")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -2457,12 +2497,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Set("x-BeforeOperationRoutesExtension", "ContextAccess")
 		opError := controller.ContextAccess()
 		for key, value := range controller.GetHeaders() {
 			ctx.Set(key, value)
 		}
 		ctx.Set("x-inject", "true")
+		ctx.Set("x-ResponseHeadersExtension", "ContextAccess")
 		statusCode := getStatusCode(&controller, false, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -2479,10 +2520,10 @@ func RegisterRoutes(engine *fiber.App) {
 				Instance:   "/gleece/controller/error/ContextAccess",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Set("x-JsonErrorResponseExtension", "ContextAccess")
 			return ctx.Status(statusCode).JSON(stdError)
 		}
-		// json response extension placeholder
+		ctx.Set("x-JsonResponseExtension", "ContextAccess")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -2490,13 +2531,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Set("x-AfterOperationRoutesExtension", "ContextAccess")
 		ctx.Status(statusCode)
-		ctx.Set("x-extended", "ContextAccess")
+		ctx.Set("x-RouteEndRoutesExtension", "ContextAccess")
 		return nil
 	})
 	engine.Get(toFiberUrl("/e2e/http-method"), func(ctx *fiber.Ctx) error {
-		// route start routes extension placeholder
+		ctx.Set("x-RouteStartRoutesExtension", "Get")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -2525,12 +2566,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Set("x-BeforeOperationRoutesExtension", "Get")
 		opError := controller.Get()
 		for key, value := range controller.GetHeaders() {
 			ctx.Set(key, value)
 		}
 		ctx.Set("x-inject", "true")
+		ctx.Set("x-ResponseHeadersExtension", "Get")
 		statusCode := getStatusCode(&controller, false, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -2547,10 +2589,10 @@ func RegisterRoutes(engine *fiber.App) {
 				Instance:   "/gleece/controller/error/Get",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Set("x-JsonErrorResponseExtension", "Get")
 			return ctx.Status(statusCode).JSON(stdError)
 		}
-		// json response extension placeholder
+		ctx.Set("x-JsonResponseExtension", "Get")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -2558,13 +2600,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Set("x-AfterOperationRoutesExtension", "Get")
 		ctx.Status(statusCode)
-		ctx.Set("x-extended", "Get")
+		ctx.Set("x-RouteEndRoutesExtension", "Get")
 		return nil
 	})
 	engine.Post(toFiberUrl("/e2e/http-method"), func(ctx *fiber.Ctx) error {
-		// route start routes extension placeholder
+		ctx.Set("x-RouteStartRoutesExtension", "Post")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -2593,12 +2635,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Set("x-BeforeOperationRoutesExtension", "Post")
 		opError := controller.Post()
 		for key, value := range controller.GetHeaders() {
 			ctx.Set(key, value)
 		}
 		ctx.Set("x-inject", "true")
+		ctx.Set("x-ResponseHeadersExtension", "Post")
 		statusCode := getStatusCode(&controller, false, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -2615,10 +2658,10 @@ func RegisterRoutes(engine *fiber.App) {
 				Instance:   "/gleece/controller/error/Post",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Set("x-JsonErrorResponseExtension", "Post")
 			return ctx.Status(statusCode).JSON(stdError)
 		}
-		// json response extension placeholder
+		ctx.Set("x-JsonResponseExtension", "Post")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -2626,13 +2669,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Set("x-AfterOperationRoutesExtension", "Post")
 		ctx.Status(statusCode)
-		ctx.Set("x-extended", "Post")
+		ctx.Set("x-RouteEndRoutesExtension", "Post")
 		return nil
 	})
 	engine.Put(toFiberUrl("/e2e/http-method"), func(ctx *fiber.Ctx) error {
-		// route start routes extension placeholder
+		ctx.Set("x-RouteStartRoutesExtension", "Put")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -2661,12 +2704,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Set("x-BeforeOperationRoutesExtension", "Put")
 		opError := controller.Put()
 		for key, value := range controller.GetHeaders() {
 			ctx.Set(key, value)
 		}
 		ctx.Set("x-inject", "true")
+		ctx.Set("x-ResponseHeadersExtension", "Put")
 		statusCode := getStatusCode(&controller, false, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -2683,10 +2727,10 @@ func RegisterRoutes(engine *fiber.App) {
 				Instance:   "/gleece/controller/error/Put",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Set("x-JsonErrorResponseExtension", "Put")
 			return ctx.Status(statusCode).JSON(stdError)
 		}
-		// json response extension placeholder
+		ctx.Set("x-JsonResponseExtension", "Put")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -2694,13 +2738,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Set("x-AfterOperationRoutesExtension", "Put")
 		ctx.Status(statusCode)
-		ctx.Set("x-extended", "Put")
+		ctx.Set("x-RouteEndRoutesExtension", "Put")
 		return nil
 	})
 	engine.Delete(toFiberUrl("/e2e/http-method"), func(ctx *fiber.Ctx) error {
-		// route start routes extension placeholder
+		ctx.Set("x-RouteStartRoutesExtension", "Delete")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -2729,12 +2773,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Set("x-BeforeOperationRoutesExtension", "Delete")
 		opError := controller.Delete()
 		for key, value := range controller.GetHeaders() {
 			ctx.Set(key, value)
 		}
 		ctx.Set("x-inject", "true")
+		ctx.Set("x-ResponseHeadersExtension", "Delete")
 		statusCode := getStatusCode(&controller, false, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -2751,10 +2796,10 @@ func RegisterRoutes(engine *fiber.App) {
 				Instance:   "/gleece/controller/error/Delete",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Set("x-JsonErrorResponseExtension", "Delete")
 			return ctx.Status(statusCode).JSON(stdError)
 		}
-		// json response extension placeholder
+		ctx.Set("x-JsonResponseExtension", "Delete")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -2762,13 +2807,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Set("x-AfterOperationRoutesExtension", "Delete")
 		ctx.Status(statusCode)
-		ctx.Set("x-extended", "Delete")
+		ctx.Set("x-RouteEndRoutesExtension", "Delete")
 		return nil
 	})
 	engine.Patch(toFiberUrl("/e2e/http-method"), func(ctx *fiber.Ctx) error {
-		// route start routes extension placeholder
+		ctx.Set("x-RouteStartRoutesExtension", "Patch")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -2797,12 +2842,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Set("x-BeforeOperationRoutesExtension", "Patch")
 		opError := controller.Patch()
 		for key, value := range controller.GetHeaders() {
 			ctx.Set(key, value)
 		}
 		ctx.Set("x-inject", "true")
+		ctx.Set("x-ResponseHeadersExtension", "Patch")
 		statusCode := getStatusCode(&controller, false, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -2819,10 +2865,10 @@ func RegisterRoutes(engine *fiber.App) {
 				Instance:   "/gleece/controller/error/Patch",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Set("x-JsonErrorResponseExtension", "Patch")
 			return ctx.Status(statusCode).JSON(stdError)
 		}
-		// json response extension placeholder
+		ctx.Set("x-JsonResponseExtension", "Patch")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -2830,13 +2876,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Set("x-AfterOperationRoutesExtension", "Patch")
 		ctx.Status(statusCode)
-		ctx.Set("x-extended", "Patch")
+		ctx.Set("x-RouteEndRoutesExtension", "Patch")
 		return nil
 	})
 	engine.Get(toFiberUrl("/e2e/template-context-1"), func(ctx *fiber.Ctx) error {
-		// route start routes extension placeholder
+		ctx.Set("x-RouteStartRoutesExtension", "TemplateContext1")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -2865,12 +2911,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Set("x-BeforeOperationRoutesExtension", "TemplateContext1")
 		value, opError := controller.TemplateContext1()
 		for key, value := range controller.GetHeaders() {
 			ctx.Set(key, value)
 		}
 		ctx.Set("x-inject", "true")
+		ctx.Set("x-ResponseHeadersExtension", "TemplateContext1")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -2887,10 +2934,10 @@ func RegisterRoutes(engine *fiber.App) {
 				Instance:   "/gleece/controller/error/TemplateContext1",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Set("x-JsonErrorResponseExtension", "TemplateContext1")
 			return ctx.Status(statusCode).JSON(stdError)
 		}
-		// json response extension placeholder
+		ctx.Set("x-JsonResponseExtension", "TemplateContext1")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -2898,14 +2945,14 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Set("x-AfterOperationRoutesExtension", "TemplateContext1")
 		ctx.Status(statusCode).JSON(value)
-		ctx.Set("x-extended", "TemplateContext1")
+		ctx.Set("x-RouteEndRoutesExtension", "TemplateContext1")
 		ctx.Set("x-level", "high")
 		return nil
 	})
 	engine.Get(toFiberUrl("/e2e/template-context-2"), func(ctx *fiber.Ctx) error {
-		// route start routes extension placeholder
+		ctx.Set("x-RouteStartRoutesExtension", "TemplateContext2")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -2934,12 +2981,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Set("x-BeforeOperationRoutesExtension", "TemplateContext2")
 		value, opError := controller.TemplateContext2()
 		for key, value := range controller.GetHeaders() {
 			ctx.Set(key, value)
 		}
 		ctx.Set("x-inject", "true")
+		ctx.Set("x-ResponseHeadersExtension", "TemplateContext2")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -2956,10 +3004,10 @@ func RegisterRoutes(engine *fiber.App) {
 				Instance:   "/gleece/controller/error/TemplateContext2",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Set("x-JsonErrorResponseExtension", "TemplateContext2")
 			return ctx.Status(statusCode).JSON(stdError)
 		}
-		// json response extension placeholder
+		ctx.Set("x-JsonResponseExtension", "TemplateContext2")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -2967,15 +3015,15 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Set("x-AfterOperationRoutesExtension", "TemplateContext2")
 		ctx.Status(statusCode).JSON(value)
-		ctx.Set("x-extended", "TemplateContext2")
+		ctx.Set("x-RouteEndRoutesExtension", "TemplateContext2")
 		ctx.Set("x-mode", "100")
 		ctx.Set("x-level", "low")
 		return nil
 	})
 	engine.Post(toFiberUrl("/e2e/form"), func(ctx *fiber.Ctx) error {
-		// route start routes extension placeholder
+		ctx.Set("x-RouteStartRoutesExtension", "TestForm")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -3014,6 +3062,7 @@ func RegisterRoutes(engine *fiber.App) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "item1"
 			validationError := wrapValidatorError(validatorErr, "TestForm", fieldName)
+			ctx.Set("x-RunValidatorExtension", "TestForm")
 			return ctx.Status(http.StatusUnprocessableEntity).JSON(validationError)
 		}
 		var item2RawPtr *string = nil
@@ -3033,6 +3082,7 @@ func RegisterRoutes(engine *fiber.App) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "item2"
 			validationError := wrapValidatorError(validatorErr, "TestForm", fieldName)
+			ctx.Set("x-RunValidatorExtension", "TestForm")
 			return ctx.Status(http.StatusUnprocessableEntity).JSON(validationError)
 		}
 		// Middlewares beforeOperationMiddlewares section
@@ -3042,12 +3092,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Set("x-BeforeOperationRoutesExtension", "TestForm")
 		value, opError := controller.TestForm(*item1RawPtr, *item2RawPtr)
 		for key, value := range controller.GetHeaders() {
 			ctx.Set(key, value)
 		}
 		ctx.Set("x-inject", "true")
+		ctx.Set("x-ResponseHeadersExtension", "TestForm")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -3064,10 +3115,10 @@ func RegisterRoutes(engine *fiber.App) {
 				Instance:   "/gleece/controller/error/TestForm",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Set("x-JsonErrorResponseExtension", "TestForm")
 			return ctx.Status(statusCode).JSON(stdError)
 		}
-		// json response extension placeholder
+		ctx.Set("x-JsonResponseExtension", "TestForm")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -3075,13 +3126,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Set("x-AfterOperationRoutesExtension", "TestForm")
 		ctx.Status(statusCode).JSON(value)
-		ctx.Set("x-extended", "TestForm")
+		ctx.Set("x-RouteEndRoutesExtension", "TestForm")
 		return nil
 	})
 	engine.Post(toFiberUrl("/e2e/test-response-validation"), func(ctx *fiber.Ctx) error {
-		// route start routes extension placeholder
+		ctx.Set("x-RouteStartRoutesExtension", "TestResponseValidation")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -3110,12 +3161,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Set("x-BeforeOperationRoutesExtension", "TestResponseValidation")
 		value, opError := controller.TestResponseValidation()
 		for key, value := range controller.GetHeaders() {
 			ctx.Set(key, value)
 		}
 		ctx.Set("x-inject", "true")
+		ctx.Set("x-ResponseHeadersExtension", "TestResponseValidation")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -3132,10 +3184,10 @@ func RegisterRoutes(engine *fiber.App) {
 				Instance:   "/gleece/controller/error/TestResponseValidation",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Set("x-JsonErrorResponseExtension", "TestResponseValidation")
 			return ctx.Status(statusCode).JSON(stdError)
 		}
-		// json response extension placeholder
+		ctx.Set("x-JsonResponseExtension", "TestResponseValidation")
 		var outputValidationErr error
 		outputValidationErr = validatorInstance.Struct(value)
 		if outputValidationErr != nil {
@@ -3163,13 +3215,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Set("x-AfterOperationRoutesExtension", "TestResponseValidation")
 		ctx.Status(statusCode).JSON(value)
-		ctx.Set("x-extended", "TestResponseValidation")
+		ctx.Set("x-RouteEndRoutesExtension", "TestResponseValidation")
 		return nil
 	})
 	engine.Post(toFiberUrl("/e2e/test-response-validation-ptr"), func(ctx *fiber.Ctx) error {
-		// route start routes extension placeholder
+		ctx.Set("x-RouteStartRoutesExtension", "TestResponseValidationPtr")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -3198,12 +3250,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Set("x-BeforeOperationRoutesExtension", "TestResponseValidationPtr")
 		value, opError := controller.TestResponseValidationPtr()
 		for key, value := range controller.GetHeaders() {
 			ctx.Set(key, value)
 		}
 		ctx.Set("x-inject", "true")
+		ctx.Set("x-ResponseHeadersExtension", "TestResponseValidationPtr")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -3220,10 +3273,10 @@ func RegisterRoutes(engine *fiber.App) {
 				Instance:   "/gleece/controller/error/TestResponseValidationPtr",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Set("x-JsonErrorResponseExtension", "TestResponseValidationPtr")
 			return ctx.Status(statusCode).JSON(stdError)
 		}
-		// json response extension placeholder
+		ctx.Set("x-JsonResponseExtension", "TestResponseValidationPtr")
 		var outputValidationErr error
 		if value == nil {
 			outputValidationErr = fmt.Errorf("Response payload is nil")
@@ -3255,13 +3308,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Set("x-AfterOperationRoutesExtension", "TestResponseValidationPtr")
 		ctx.Status(statusCode).JSON(value)
-		ctx.Set("x-extended", "TestResponseValidationPtr")
+		ctx.Set("x-RouteEndRoutesExtension", "TestResponseValidationPtr")
 		return nil
 	})
 	engine.Post(toFiberUrl("/e2e/test-response-validation-null"), func(ctx *fiber.Ctx) error {
-		// route start routes extension placeholder
+		ctx.Set("x-RouteStartRoutesExtension", "TestResponseValidationNull")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -3290,12 +3343,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Set("x-BeforeOperationRoutesExtension", "TestResponseValidationNull")
 		value, opError := controller.TestResponseValidationNull()
 		for key, value := range controller.GetHeaders() {
 			ctx.Set(key, value)
 		}
 		ctx.Set("x-inject", "true")
+		ctx.Set("x-ResponseHeadersExtension", "TestResponseValidationNull")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -3312,10 +3366,10 @@ func RegisterRoutes(engine *fiber.App) {
 				Instance:   "/gleece/controller/error/TestResponseValidationNull",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Set("x-JsonErrorResponseExtension", "TestResponseValidationNull")
 			return ctx.Status(statusCode).JSON(stdError)
 		}
-		// json response extension placeholder
+		ctx.Set("x-JsonResponseExtension", "TestResponseValidationNull")
 		var outputValidationErr error
 		if value == nil {
 			outputValidationErr = fmt.Errorf("Response payload is nil")
@@ -3347,14 +3401,14 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Set("x-AfterOperationRoutesExtension", "TestResponseValidationNull")
 		ctx.Status(statusCode).JSON(value)
-		ctx.Set("x-extended", "TestResponseValidationNull")
+		ctx.Set("x-RouteEndRoutesExtension", "TestResponseValidationNull")
 		return nil
 	})
 	// E2EClassSecController
 	engine.Get(toFiberUrl("/e2e/with-default-class-security"), func(ctx *fiber.Ctx) error {
-		// route start routes extension placeholder
+		ctx.Set("x-RouteStartRoutesExtension", "WithDefaultClassSecurity")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -3393,6 +3447,7 @@ func RegisterRoutes(engine *fiber.App) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "headerParam"
 			validationError := wrapValidatorError(validatorErr, "WithDefaultClassSecurity", fieldName)
+			ctx.Set("x-RunValidatorExtension", "WithDefaultClassSecurity")
 			return ctx.Status(http.StatusUnprocessableEntity).JSON(validationError)
 		}
 		// Middlewares beforeOperationMiddlewares section
@@ -3402,12 +3457,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Set("x-BeforeOperationRoutesExtension", "WithDefaultClassSecurity")
 		value, opError := controller.WithDefaultClassSecurity(*headerParamRawPtr)
 		for key, value := range controller.GetHeaders() {
 			ctx.Set(key, value)
 		}
 		ctx.Set("x-inject", "true")
+		ctx.Set("x-ResponseHeadersExtension", "WithDefaultClassSecurity")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -3424,10 +3480,10 @@ func RegisterRoutes(engine *fiber.App) {
 				Instance:   "/gleece/controller/error/WithDefaultClassSecurity",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Set("x-JsonErrorResponseExtension", "WithDefaultClassSecurity")
 			return ctx.Status(statusCode).JSON(stdError)
 		}
-		// json response extension placeholder
+		ctx.Set("x-JsonResponseExtension", "WithDefaultClassSecurity")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -3435,13 +3491,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Set("x-AfterOperationRoutesExtension", "WithDefaultClassSecurity")
 		ctx.Status(statusCode).JSON(value)
-		ctx.Set("x-extended", "WithDefaultClassSecurity")
+		ctx.Set("x-RouteEndRoutesExtension", "WithDefaultClassSecurity")
 		return nil
 	})
 	engine.Get(toFiberUrl("/e2e/with-default-override-class-security"), func(ctx *fiber.Ctx) error {
-		// route start routes extension placeholder
+		ctx.Set("x-RouteStartRoutesExtension", "WithOverrideClassSecurity")
 		authErr := authorize(
 			ctx,
 			[]SecurityCheckList{
@@ -3480,6 +3536,7 @@ func RegisterRoutes(engine *fiber.App) {
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "headerParam"
 			validationError := wrapValidatorError(validatorErr, "WithOverrideClassSecurity", fieldName)
+			ctx.Set("x-RunValidatorExtension", "WithOverrideClassSecurity")
 			return ctx.Status(http.StatusUnprocessableEntity).JSON(validationError)
 		}
 		// Middlewares beforeOperationMiddlewares section
@@ -3489,12 +3546,13 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
+		ctx.Set("x-BeforeOperationRoutesExtension", "WithOverrideClassSecurity")
 		value, opError := controller.WithOverrideClassSecurity(*headerParamRawPtr)
 		for key, value := range controller.GetHeaders() {
 			ctx.Set(key, value)
 		}
 		ctx.Set("x-inject", "true")
+		ctx.Set("x-ResponseHeadersExtension", "WithOverrideClassSecurity")
 		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
@@ -3511,10 +3569,10 @@ func RegisterRoutes(engine *fiber.App) {
 				Instance:   "/gleece/controller/error/WithOverrideClassSecurity",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
-			// json error response extension placeholder
+			ctx.Set("x-JsonErrorResponseExtension", "WithOverrideClassSecurity")
 			return ctx.Status(statusCode).JSON(stdError)
 		}
-		// json response extension placeholder
+		ctx.Set("x-JsonResponseExtension", "WithOverrideClassSecurity")
 		// Middlewares afterOperationSuccessMiddlewares section
 		for _, middleware := range afterOperationSuccessMiddlewares {
 			if continueOperation := middleware(ctx); !continueOperation {
@@ -3522,9 +3580,9 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
+		ctx.Set("x-AfterOperationRoutesExtension", "WithOverrideClassSecurity")
 		ctx.Status(statusCode).JSON(value)
-		ctx.Set("x-extended", "WithOverrideClassSecurity")
+		ctx.Set("x-RouteEndRoutesExtension", "WithOverrideClassSecurity")
 		return nil
 	})
 }

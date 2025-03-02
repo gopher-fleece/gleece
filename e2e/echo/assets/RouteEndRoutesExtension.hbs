@@ -1,4 +1,4 @@
-ctx.Response().Header().Set("x-extended", "{{{ OperationId }}}")
+ctx.Response().Header().Set("x-RouteEndRoutesExtension", "{{{ OperationId }}}")
 
 {{#if TemplateContext.MODE }}
         ctx.Response().Header().Set("x-mode", "{{{ TemplateContext.MODE.Options.mode }}}")

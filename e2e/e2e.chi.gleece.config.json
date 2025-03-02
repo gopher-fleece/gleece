@@ -17,7 +17,19 @@
 			"ResponseHeaders" : "./chi/assets/chi.custom.response.headers.hbs"
 		},
 		"templateExtensions": {
-			"RouteEndRoutesExtension" : "./chi/assets/chi.end.route.extension.hbs"
+			"RegisterRoutesExtension" : "./chi/assets/RegisterRoutesExtension.hbs",
+			"RouteStartRoutesExtension" : "./chi/assets/RouteStartRoutesExtension.hbs",
+			"BeforeOperationRoutesExtension" : "./chi/assets/BeforeOperationRoutesExtension.hbs",
+			"AfterOperationRoutesExtension" : "./chi/assets/AfterOperationRoutesExtension.hbs",
+			"RouteEndRoutesExtension" : "./chi/assets/RouteEndRoutesExtension.hbs",
+			"ImportsExtension" : "./chi/assets/ImportsExtension.hbs",
+			"TypeDeclarationsExtension" : "./chi/assets/TypeDeclarationsExtension.hbs",
+			"FunctionDeclarationsExtension" : "./chi/assets/FunctionDeclarationsExtension.hbs",
+			"JsonResponseExtension" : "./chi/assets/JsonResponseExtension.hbs",
+			"RunValidatorExtension" : "./chi/assets/RunValidatorExtension.hbs",
+			"JsonBodyValidationErrorResponseExtension" : "./chi/assets/JsonBodyValidationErrorResponseExtension.hbs",
+			"JsonErrorResponseExtension" : "./chi/assets/JsonErrorResponseExtension.hbs",
+			"ResponseHeadersExtension" : "./chi/assets/ResponseHeadersExtension.hbs"
 		},
 		"validateResponsePayload": true
 	},
