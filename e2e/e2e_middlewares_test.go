@@ -239,6 +239,34 @@ var _ = Describe("E2E Middlewares Spec", func() {
 				"headerparam": "1headerParam",
 			},
 		})
+
+		RunRouterTest(common.RouterTest{
+			Name:                "Should pass thro validation error middleware for string param - primitive number conversion",
+			ExpectedStatus:      422,
+			ExpectedBodyContain: "A request was made to operation 'TestPrimitiveConversions' but parameter 'value3' was not properly sent - Expected int but got string",
+			ExpendedHeaders: map[string]string{
+				"X-pass-error-validation":        "true",
+				"X-pass-after-succeed-operation": "",
+			},
+			Path:    "/e2e/test-primitive-conversions",
+			Method:  "POST",
+			Query:   map[string]string{"value1": "60", "value2": "true", "value3": "10.6", "value4": "3"},
+			Headers: map[string]string{},
+		})
+
+		RunRouterTest(common.RouterTest{
+			Name:                "Should pass thro validation error middleware for string param - primitive bool conversion",
+			ExpectedStatus:      422,
+			ExpectedBodyContain: "A request was made to operation 'TestPrimitiveConversions' but parameter 'value2' was not properly sent - Expected bool but got string",
+			ExpendedHeaders: map[string]string{
+				"X-pass-error-validation":        "true",
+				"X-pass-after-succeed-operation": "",
+			},
+			Path:    "/e2e/test-primitive-conversions",
+			Method:  "POST",
+			Query:   map[string]string{"value1": "60", "value2": "true65", "value3": "10", "value4": "3"},
+			Headers: map[string]string{},
+		})
 	})
 
 	It("Should pass thro validation error middleware for struct param", func() {

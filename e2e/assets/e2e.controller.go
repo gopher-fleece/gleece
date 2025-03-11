@@ -384,7 +384,7 @@ type ResponseTest struct {
 
 // @Method(POST)
 // @Route(/test-response-validation)
-// @Response(200) 
+// @Response(200)
 // @ErrorResponse(500)
 func (ec *E2EController) TestResponseValidation() (ResponseTest, error) {
 	return ResponseTest{
@@ -393,9 +393,7 @@ func (ec *E2EController) TestResponseValidation() (ResponseTest, error) {
 	}, nil
 }
 
-
-
-// @Method(POST)	
+// @Method(POST)
 // @Route(/test-response-validation-ptr)
 // @Response(200) The ID of the newly created user
 // @ErrorResponse(500) The error when process failed
@@ -406,7 +404,7 @@ func (ec *E2EController) TestResponseValidationPtr() (*ResponseTest, error) {
 	}, nil
 }
 
-// @Method(POST)	
+// @Method(POST)
 // @Route(/test-response-validation-null)
 // @Response(200) The ID of the newly created user
 // @ErrorResponse(500) The error when process failed
@@ -414,4 +412,14 @@ func (ec *E2EController) TestResponseValidationNull() (*ResponseTest, error) {
 	return nil, nil
 }
 
-
+// @Method(POST)
+// @Route(/test-primitive-conversions)
+// @Query(value1)
+// @Query(value2)
+// @Query(value3)
+// @Query(value4)
+// @Response(200) The ID of the newly created user
+// @ErrorResponse(500) The error when process failed
+func (ec *E2EController) TestPrimitiveConversions(value1 int64, value2 bool, value3 int, value4 float64) (string, error) {
+	return fmt.Sprintf("%d %t %d %f", value1, value2, value3, value4), nil
+}

@@ -14,27 +14,28 @@
 			"enforceSecurityOnAllRoutes": true
 		},
 		"templateOverrides": {
-			"ResponseHeaders" : "./mux/assets/mux.custom.response.headers.hbs"
+			"ResponseHeaders": "./mux/assets/mux.custom.response.headers.hbs"
 		},
 		"templateExtensions": {
-			"RegisterRoutesExtension" : "./mux/assets/RegisterRoutesExtension.hbs",
-			"RouteStartRoutesExtension" : "./mux/assets/RouteStartRoutesExtension.hbs",
-			"BeforeOperationRoutesExtension" : "./mux/assets/BeforeOperationRoutesExtension.hbs",
-			"AfterOperationRoutesExtension" : "./mux/assets/AfterOperationRoutesExtension.hbs",
-			"RouteEndRoutesExtension" : "./mux/assets/RouteEndRoutesExtension.hbs",
-			"ImportsExtension" : "./mux/assets/ImportsExtension.hbs",
-			"TypeDeclarationsExtension" : "./mux/assets/TypeDeclarationsExtension.hbs",
-			"FunctionDeclarationsExtension" : "./mux/assets/FunctionDeclarationsExtension.hbs",
-			"JsonResponseExtension" : "./mux/assets/JsonResponseExtension.hbs",
-			"RunValidatorExtension" : "./mux/assets/RunValidatorExtension.hbs",
-			"JsonBodyValidationErrorResponseExtension" : "./mux/assets/JsonBodyValidationErrorResponseExtension.hbs",
-			"JsonErrorResponseExtension" : "./mux/assets/JsonErrorResponseExtension.hbs",
-			"ResponseHeadersExtension" : "./mux/assets/ResponseHeadersExtension.hbs"
+			"RegisterRoutesExtension": "./mux/assets/RegisterRoutesExtension.hbs",
+			"RouteStartRoutesExtension": "./mux/assets/RouteStartRoutesExtension.hbs",
+			"BeforeOperationRoutesExtension": "./mux/assets/BeforeOperationRoutesExtension.hbs",
+			"AfterOperationRoutesExtension": "./mux/assets/AfterOperationRoutesExtension.hbs",
+			"RouteEndRoutesExtension": "./mux/assets/RouteEndRoutesExtension.hbs",
+			"ImportsExtension": "./mux/assets/ImportsExtension.hbs",
+			"TypeDeclarationsExtension": "./mux/assets/TypeDeclarationsExtension.hbs",
+			"FunctionDeclarationsExtension": "./mux/assets/FunctionDeclarationsExtension.hbs",
+			"JsonResponseExtension": "./mux/assets/JsonResponseExtension.hbs",
+			"RunValidatorExtension": "./mux/assets/RunValidatorExtension.hbs",
+			"JsonBodyValidationErrorResponseExtension": "./mux/assets/JsonBodyValidationErrorResponseExtension.hbs",
+			"ParamsValidationErrorResponseExtension": "./mux/assets/ParamsValidationErrorResponseExtension.hbs",
+			"JsonErrorResponseExtension": "./mux/assets/JsonErrorResponseExtension.hbs",
+			"ResponseHeadersExtension": "./mux/assets/ResponseHeadersExtension.hbs"
 		},
 		"validateResponsePayload": true
 	},
 	"openapiGeneratorConfig": {
-		"openapi" : "3.0.0",
+		"openapi": "3.0.0",
 		"info": {
 			"title": "Sample API",
 			"description": "This is a sample API",

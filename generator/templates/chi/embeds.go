@@ -40,6 +40,9 @@ var JsonResponse string
 //go:embed partials/json.body.validation.error.response.hbs
 var JsonBodyValidationErrorResponse string
 
+//go:embed partials/params.validation.error.response.hbs
+var ParamsValidationErrorResponse string
+
 //go:embed partials/response.headers.hbs
 var ResponseHeaders string
 
@@ -71,6 +74,7 @@ var TemplateExtensions = map[string]string{
 	"JsonResponseExtension":                    "// json response extension placeholder \n",
 	"RunValidatorExtension":                    "// validation error response extension placeholder \n",
 	"JsonBodyValidationErrorResponseExtension": "// json body validation error response extension placeholder \n",
+	"ParamsValidationErrorResponseExtension":   "// params validation error response extension placeholder \n",
 	"JsonErrorResponseExtension":               "// json error response extension placeholder \n",
 	"ResponseHeadersExtension":                 "// response headers extension placeholder \n",
 }
@@ -83,6 +87,7 @@ var Partials = map[string]string{
 	"RequestArgsParsing":              RequestArgsParsing,
 	"JsonResponse":                    JsonResponse,
 	"JsonBodyValidationErrorResponse": JsonBodyValidationErrorResponse,
+	"ParamsValidationErrorResponse":   ParamsValidationErrorResponse,
 	"JsonErrorResponse":               JsonErrorResponse,
 	"ReplyResponse":                   ReplyResponse,
 	"ResponseHeaders":                 ResponseHeaders,
