@@ -1,0 +1,16 @@
+{{> Middleware isErrorMiddleware=true middlewares="onInputValidationMiddlewares" errorName="conversionErr" }}
+
+validationError := runtime.Rfc7807Error{
+	Type:       http.StatusText(http.StatusUnprocessableEntity),
+	Detail:     fmt.Sprintf(
+		"A request was made to operation '{{{OperationId}}}' but parameter '%s' was not properly sent - Expected %s but got %s",
+		"{{ToLowerCamel Name}}",
+		"{{{TypeMeta.Name}}}",
+		reflect.TypeOf({{ToLowerCamel Name}}{{#ifEqual PassedIn "Body"}}{{else}}Raw{{/ifEqual}}).String(),
+	),
+	Status:     http.StatusUnprocessableEntity,
+	Instance:   "/gleece/validation/error/{{{OperationId}}}",
+	Extensions: map[string]string{"error": conversionErr.Error()},
+}
+{{> ParamsValidationErrorResponseExtension}}
+return ctx.Status(http.StatusUnprocessableEntity).JSON(validationError)

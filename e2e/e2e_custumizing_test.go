@@ -63,7 +63,33 @@ var _ = Describe("E2E Customizing Spec", func() {
 		})
 
 		RunRouterTest(common.RouterTest{
-			Name:                "Should set custom header by template extension - invalid http param case",
+			Name:                "Should set custom header by template extension - invalid bool primitive case",
+			ExpectedStatus:      422,
+			ExpectedBodyContain: "",
+			ExpendedHeaders: map[string]string{
+				"x-ParamsValidationErrorResponseExtension": "TestPrimitiveConversions",
+			},
+			Path:    "/e2e/test-primitive-conversions",
+			Method:  "POST",
+			Query:   map[string]string{"value1": "60", "value2": "true65", "value3": "10", "value4": "3"},
+			Headers: map[string]string{},
+		})
+
+		RunRouterTest(common.RouterTest{
+			Name:                "Should set custom header by template extension - invalid int primitive case",
+			ExpectedStatus:      422,
+			ExpectedBodyContain: "",
+			ExpendedHeaders: map[string]string{
+				"x-ParamsValidationErrorResponseExtension": "TestPrimitiveConversions",
+			},
+			Path:    "/e2e/test-primitive-conversions",
+			Method:  "POST",
+			Query:   map[string]string{"value1": "60fff", "value2": "true", "value3": "10", "value4": "3"},
+			Headers: map[string]string{},
+		})
+
+		RunRouterTest(common.RouterTest{
+			Name:                "Should set custom header by template extension - invalid http string case",
 			ExpectedStatus:      422,
 			ExpectedBodyContain: "",
 			ExpendedHeaders: map[string]string{

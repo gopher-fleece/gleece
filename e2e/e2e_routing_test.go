@@ -363,4 +363,63 @@ var _ = Describe("E2E Routing Spec", func() {
 			Headers:             map[string]string{},
 		})
 	})
+
+	It("Should return status code 200 for primitive parameters", func() {
+		RunRouterTest(common.RouterTest{
+			Name:                "Should return status code 200 for primitive parameters",
+			ExpectedStatus:      200,
+			ExpectedBodyContain: "60 true 10 3.14",
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/test-primitive-conversions",
+			Method:              "POST",
+			Query:               map[string]string{"value1": "60", "value2": "true", "value3": "10", "value4": "3.14"},
+			Headers:             map[string]string{},
+		})
+	})
+
+	It("Should return status code 422 for primitive wrong parameters", func() {
+		RunRouterTest(common.RouterTest{
+			Name:                "Should return status code 200 for primitive parameters",
+			ExpectedStatus:      422,
+			ExpectedBodyContain: "A request was made to operation 'TestPrimitiveConversions' but parameter 'value1' was not properly sent - Expected int64 but got string",
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/test-primitive-conversions",
+			Method:              "POST",
+			Query:               map[string]string{"value1": "sixty", "value2": "true", "value3": "10", "value4": "3.14"},
+			Headers:             map[string]string{},
+		})
+
+		RunRouterTest(common.RouterTest{
+			Name:                "Should return status code 200 for primitive parameters",
+			ExpectedStatus:      422,
+			ExpectedBodyContain: "A request was made to operation 'TestPrimitiveConversions' but parameter 'value2' was not properly sent - Expected bool but got string",
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/test-primitive-conversions",
+			Method:              "POST",
+			Query:               map[string]string{"value1": "60", "value2": "p1", "value3": "10", "value4": "3.14"},
+			Headers:             map[string]string{},
+		})
+
+		RunRouterTest(common.RouterTest{
+			Name:                "Should return status code 200 for primitive parameters",
+			ExpectedStatus:      422,
+			ExpectedBodyContain: "A request was made to operation 'TestPrimitiveConversions' but parameter 'value3' was not properly sent - Expected int but got string",
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/test-primitive-conversions",
+			Method:              "POST",
+			Query:               map[string]string{"value1": "60", "value2": "true", "value3": "10.6", "value4": "3"},
+			Headers:             map[string]string{},
+		})
+
+		RunRouterTest(common.RouterTest{
+			Name:                "Should return status code 200 for primitive parameters",
+			ExpectedStatus:      422,
+			ExpectedBodyContain: "A request was made to operation 'TestPrimitiveConversions' but parameter 'value4' was not properly sent - Expected float64 but got string",
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/test-primitive-conversions",
+			Method:              "POST",
+			Query:               map[string]string{"value1": "60", "value2": "true", "value3": "10", "value4": "3true"},
+			Headers:             map[string]string{},
+		})
+	})
 })
