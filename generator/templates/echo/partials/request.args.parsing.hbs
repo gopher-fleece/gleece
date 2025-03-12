@@ -1,6 +1,6 @@
 
 {{#equal PassedIn "Path"}}
-	var {{ToLowerCamel Name}}RawPtr *{{{TypeMeta.Name}}} = nil
+	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
 	{{ToLowerCamel Name}}Raw := ctx.Param("{{{NameInSchema}}}")
 	is{{Name}}Exists := true // if parameter is in route but not provided, it won't reach this handler
 	{{> RequestSwitchParamType}}
@@ -8,7 +8,7 @@
 {{/equal}}
 
 {{#equal PassedIn "Query"}}
-	var {{ToLowerCamel Name}}RawPtr *{{{TypeMeta.Name}}} = nil
+	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
 	{{ToLowerCamel Name}}Raw := ctx.QueryParam("{{{NameInSchema}}}")
 	is{{Name}}Exists := ctx.Request().URL.Query().Has("{{{NameInSchema}}}")
 	{{> RequestSwitchParamType}}
@@ -16,7 +16,7 @@
 {{/equal}}
 
 {{#equal PassedIn "Header"}}
-	var {{ToLowerCamel Name}}RawPtr *{{{TypeMeta.Name}}} = nil
+	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
 	{{ToLowerCamel Name}}Raw := ctx.Request().Header.Get("{{{NameInSchema}}}")
 	_, is{{Name}}Exists := ctx.Request().Header["{{{NameInSchema}}}"]
 	if !is{{Name}}Exists {
@@ -30,7 +30,7 @@
 
 {{#equal PassedIn "Form"}}
 	ctx.Request().ParseForm()
-	var {{ToLowerCamel Name}}RawPtr *{{{TypeMeta.Name}}} = nil
+	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
 	{{ToLowerCamel Name}}RawArr, is{{Name}}Exists := ctx.Request().PostForm["{{{NameInSchema}}}"]
 	{{ToLowerCamel Name}}Raw := ""
 	if is{{Name}}Exists {

@@ -423,3 +423,54 @@ func (ec *E2EController) TestResponseValidationNull() (*ResponseTest, error) {
 func (ec *E2EController) TestPrimitiveConversions(value1 int64, value2 bool, value3 int, value4 float64) (string, error) {
 	return fmt.Sprintf("%d %t %d %f", value1, value2, value3, value4), nil
 }
+
+type StatusEnumeration string
+
+const (
+	StatusEnumerationActive   StatusEnumeration = "active"
+	StatusEnumerationInactive StatusEnumeration = "inactive"
+)
+
+type NumberEnumeration int
+
+const (
+	NumberEnumerationOne NumberEnumeration = 1
+	NumberEnumerationTwo NumberEnumeration = 2
+)
+
+type ObjectWithEnum struct {
+	Value    string              `json:"value"`
+	Values   []string            `json:"values"`
+	Status   StatusEnumeration   `json:"status"`
+	Statuses []StatusEnumeration `json:"statuses"`
+}
+
+// @Method(POST)
+// @Route(/test-enums)
+// @Query(value1)
+// @Query(value2)
+// @Body(value3)
+// @Response(200) The ID of the newly created user
+// @ErrorResponse(500) The error when process failed
+func (ec *E2EController) TestEnums(value1 StatusEnumeration, value2 NumberEnumeration, value3 ObjectWithEnum) (ObjectWithEnum, error) {
+	return ObjectWithEnum{
+		Value: string(fmt.Sprintf("%s %d", value1, value2)),
+		Values: []string{
+			string(value1),
+			string(fmt.Sprintf("%d", value2)),
+		},
+		Status:   value3.Status,
+		Statuses: value3.Statuses,
+	}, nil
+}
+
+// @Method(POST)
+// @Route(/test-enums-in-all/{value1})
+// @Path(value1)
+// @Header(value2)
+// @FormField(value3)
+// @Response(200) The ID of the newly created user
+// @ErrorResponse(500) The error when process failed
+func (ec *E2EController) TestEnumsInAll(value1 StatusEnumeration, value2 NumberEnumeration, value3 StatusEnumeration) (string, error) {
+	return fmt.Sprintf("%s %d %s", value1, value2, value3), nil
+}

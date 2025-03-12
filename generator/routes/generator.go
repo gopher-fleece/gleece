@@ -63,7 +63,7 @@ func registerHelpers() {
 
 	raymond.RegisterHelper("ifAnyParamRequiresConversion", func(params []definitions.FuncParam, options *raymond.Options) string {
 		for _, param := range params {
-			if param.TypeMeta.Name != "string" && param.TypeMeta.FullyQualifiedPackage != "" {
+			if param.TypeMeta.Name != "string" && param.TypeMeta.FullyQualifiedPackage != "" && param.TypeMeta.EntityKind != definitions.AstNodeKindAlias {
 				// Currently, only 'string' parameters don't undergo any validation
 				return options.Fn()
 			}
@@ -91,6 +91,12 @@ func registerHelpers() {
 
 		last := types[len(types)-1]
 		return fmt.Sprintf("Response%d%s.%s", last.UniqueImportSerial, last.Name, last.Name)
+	})
+
+	raymond.RegisterHelper("OrEqual", func(val1, comp1, val2, comp2 interface{}) bool {
+		isEqual1 := (val1 == comp1)
+		isEqual2 := (val2 == comp2)
+		return isEqual1 || isEqual2
 	})
 
 	helpersRegistered = true

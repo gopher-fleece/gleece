@@ -10,12 +10,12 @@ import (
 var _ = Describe("Spec Helpers", func() {
 
 	It("Should add Rfc7807Error when default error in use", func() {
-		models := []definitions.ModelMetadata{}
+		models := []definitions.StructMetadata{}
 		AppendErrorSchema(&models, true)
 		Expect(len(models)).To(Equal(1))
 	})
 	It("Should not add error when default error not in use", func() {
-		models := []definitions.ModelMetadata{}
+		models := []definitions.StructMetadata{}
 		AppendErrorSchema(&models, false)
 		Expect(len(models)).To(Equal(0))
 	})

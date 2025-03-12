@@ -422,4 +422,70 @@ var _ = Describe("E2E Routing Spec", func() {
 			Headers:             map[string]string{},
 		})
 	})
+
+	It("Should return status code 200 for enums", func() {
+		RunRouterTest(common.RouterTest{
+			Name:            "Should return status code 200 for enum - queries & body",
+			ExpectedStatus:  200,
+			ExpectedBody:    "{\"value\":\"active 2\",\"values\":[\"active\",\"2\"],\"status\":\"active\",\"statuses\":[\"inactive\"]}",
+			ExpendedHeaders: nil,
+			Path:            "/e2e/test-enums",
+			Method:          "POST",
+			Query:           map[string]string{"value1": "active", "value2": "2"},
+			Body: assets.ObjectWithEnum{
+				Value:    "some value",
+				Values:   []string{"some", "values"},
+				Status:   assets.StatusEnumerationActive,
+				Statuses: []assets.StatusEnumeration{assets.StatusEnumerationInactive},
+			},
+			Headers: map[string]string{},
+		})
+
+		RunRouterTest(common.RouterTest{
+			Name:                "Should return status code 200 for enum - header, path & forms",
+			ExpectedStatus:      200,
+			ExpectedBodyContain: "active 1 inactive",
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/test-enums-in-all/active",
+			Method:              "POST",
+			Form:                map[string]string{"value3": "inactive"},
+			Headers:             map[string]string{"value2": "1"},
+		})
+	})
+
+	It("Should return status code 422 for wrong enum prams and body", func() {
+		RunRouterTest(common.RouterTest{
+			Name:            "Should return status code 200 for enum prams and body - wrong direct string enum",
+			ExpectedStatus:  422,
+			ExpectedBody:    "{\"type\":\"Unprocessable Entity\",\"title\":\"\",\"detail\":\"A request was made to operation 'TestEnums' but parameter 'value1' was not properly sent - Expected StatusEnumeration but got string\",\"status\":422,\"instance\":\"/gleece/validation/error/TestEnums\",\"extensions\":{\"error\":\"value1 must be one of \\\"active, inactive\\\" options only but got blabla\"}}",
+			ExpendedHeaders: nil,
+			Path:            "/e2e/test-enums",
+			Method:          "POST",
+			Query:           map[string]string{"value1": "blabla", "value2": "2"},
+			Body: assets.ObjectWithEnum{
+				Value:    "some value",
+				Values:   []string{"some", "values"},
+				Status:   assets.StatusEnumerationActive,
+				Statuses: []assets.StatusEnumeration{assets.StatusEnumerationInactive},
+			},
+			Headers: map[string]string{},
+		})
+
+		RunRouterTest(common.RouterTest{
+			Name:            "Should return status code 200 for enum prams and body - wrong direct number enum",
+			ExpectedStatus:  422,
+			ExpectedBody:    "{\"type\":\"Unprocessable Entity\",\"title\":\"\",\"detail\":\"A request was made to operation 'TestEnums' but parameter 'value2' was not properly sent - Expected NumberEnumeration but got string\",\"status\":422,\"instance\":\"/gleece/validation/error/TestEnums\",\"extensions\":{\"error\":\"value2 must be one of \\\"1, 2\\\" options only but got 4\"}}",
+			ExpendedHeaders: nil,
+			Path:            "/e2e/test-enums",
+			Method:          "POST",
+			Query:           map[string]string{"value1": "active", "value2": "4"},
+			Body: assets.ObjectWithEnum{
+				Value:    "some value",
+				Values:   []string{"some", "values"},
+				Status:   assets.StatusEnumerationActive,
+				Statuses: []assets.StatusEnumeration{assets.StatusEnumerationInactive},
+			},
+			Headers: map[string]string{},
+		})
+	})
 })

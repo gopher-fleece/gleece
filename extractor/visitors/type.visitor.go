@@ -26,7 +26,7 @@ type StructInfo struct {
 
 type TypeVisitor struct {
 	packages    []*packages.Package
-	typesByName map[string]*definitions.ModelMetadata
+	typesByName map[string]*definitions.StructMetadata
 }
 
 type StructAttributeHolders struct {
@@ -37,7 +37,7 @@ type StructAttributeHolders struct {
 func NewTypeVisitor(packages []*packages.Package) *TypeVisitor {
 	return &TypeVisitor{
 		packages:    packages,
-		typesByName: make(map[string]*definitions.ModelMetadata),
+		typesByName: make(map[string]*definitions.StructMetadata),
 	}
 }
 
@@ -52,7 +52,7 @@ func (v *TypeVisitor) VisitStruct(fullPackageName string, structName string, str
 		return err
 	}
 
-	structInfo := definitions.ModelMetadata{
+	structInfo := definitions.StructMetadata{
 		Name:                  structName,
 		FullyQualifiedPackage: fullPackageName,
 		Description:           attributeHolders.StructHolder.GetDescription(),
@@ -75,6 +75,23 @@ func (v *TypeVisitor) VisitStruct(fullPackageName string, structName string, str
 		case *types.Pointer:
 			// Raise error for pointer fields.
 			return fmt.Errorf("field %q in struct %q is a pointer, which is not allowed", field.Name(), structName)
+		case *types.Array, *types.Slice:
+			// Handle array or slice types
+			var elemType types.Type
+			if arr, ok := t.(*types.Array); ok {
+				elemType = arr.Elem()
+			} else if slice, ok := t.(*types.Slice); ok {
+				elemType = slice.Elem()
+			}
+
+			// Check if the element type is a named type (enum/alias)
+			if named, ok := elemType.(*types.Named); ok {
+				// For arrays of named types, format as []TypeName
+				fieldTypeString = "[]" + named.Obj().Name()
+			} else {
+				// For arrays of primitive types
+				fieldTypeString = fieldType.String()
+			}
 		case *types.Named:
 			// Check if the named type is a struct.
 			if underlying, ok := t.Underlying().(*types.Struct); ok {
@@ -177,8 +194,8 @@ func (v *TypeVisitor) getAttributeHolders(fullPackageName string, structName str
 }
 
 // GetStructs returns the list of processed structs.
-func (v *TypeVisitor) GetStructs() []definitions.ModelMetadata {
-	models := []definitions.ModelMetadata{}
+func (v *TypeVisitor) GetStructs() []definitions.StructMetadata {
+	models := []definitions.StructMetadata{}
 	for _, value := range v.typesByName {
 		models = append(models, *value)
 	}

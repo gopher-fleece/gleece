@@ -12,7 +12,7 @@ import (
 	"github.com/pb33f/libopenapi/orderedmap"
 )
 
-func GenerateSpec(config *definitions.OpenAPIGeneratorConfig, defs []definitions.ControllerMetadata, models []definitions.ModelMetadata) ([]byte, error) {
+func GenerateSpec(config *definitions.OpenAPIGeneratorConfig, defs []definitions.ControllerMetadata, models *definitions.Models) ([]byte, error) {
 	// Create an OpenAPI 3.1 document
 	doc := &v3.Document{
 		Version: "3.1.0",

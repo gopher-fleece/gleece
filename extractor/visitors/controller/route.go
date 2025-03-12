@@ -155,7 +155,8 @@ func (v *ControllerVisitor) validatePrimitiveParam(param definitions.FuncParam) 
 	// need to fully integrate the EntityKind field..
 	isErrType := param.TypeMeta.FullyQualifiedPackage == "" && param.TypeMeta.Name == "error"
 	isMapType := param.TypeMeta.FullyQualifiedPackage == "" && strings.HasPrefix(param.TypeMeta.Name, "map[")
-	if !param.TypeMeta.IsUniverseType || isErrType || isMapType {
+	isAliasType := param.TypeMeta.EntityKind == definitions.AstNodeKindAlias
+	if (!param.TypeMeta.IsUniverseType && !isAliasType) || isErrType || isMapType {
 		return v.getFrozenError(
 			"header, path and query parameters are currently limited to primitives only but "+
 				"%s parameter '%s' (schema name '%s', type '%s') is of kind '%s'",

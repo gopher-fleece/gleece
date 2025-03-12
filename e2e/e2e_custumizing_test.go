@@ -119,6 +119,25 @@ var _ = Describe("E2E Customizing Spec", func() {
 				"headerParam": "headerParam",
 			},
 		})
+
+		RunRouterTest(common.RouterTest{
+			Name:                "Should set custom header by template extension - invalid http enum case",
+			ExpectedStatus:      422,
+			ExpectedBodyContain: "",
+			ExpendedHeaders: map[string]string{
+				"x-ParamsValidationErrorResponseExtension": "TestEnums",
+			},
+			Path:   "/e2e/test-enums",
+			Method: "POST",
+			Query:  map[string]string{"value1": "activerrrr", "value2": "2"},
+			Body: assets.ObjectWithEnum{
+				Value:    "some value",
+				Values:   []string{"some", "values"},
+				Status:   assets.StatusEnumerationActive,
+				Statuses: []assets.StatusEnumeration{assets.StatusEnumerationInactive},
+			},
+			Headers: map[string]string{},
+		})
 	})
 
 	It("Should pass and use custom context from route declaration", func() {

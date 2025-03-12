@@ -6,11 +6,11 @@ import (
 	"github.com/gopher-fleece/gleece/definitions"
 )
 
-func AppendErrorSchema(models *[]definitions.ModelMetadata, hasAnyErrorTypes bool) {
+func AppendErrorSchema(models *[]definitions.StructMetadata, hasAnyErrorTypes bool) {
 	if !hasAnyErrorTypes {
 		return
 	}
-	(*models) = append((*models), definitions.ModelMetadata{
+	(*models) = append((*models), definitions.StructMetadata{
 		Name:        definitions.Rfc7807ErrorName,
 		Description: "A standard RFC-7807 error",
 		Fields: []definitions.FieldMetadata{

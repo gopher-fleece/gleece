@@ -65,9 +65,9 @@ func (v *ControllerVisitor) Visit(node ast.Node) ast.Visitor {
 	return v
 }
 
-func (v *ControllerVisitor) GetModelsFlat() ([]definitions.ModelMetadata, bool, error) {
+func (v *ControllerVisitor) GetModelsFlat() (*definitions.Models, bool, error) {
 	if len(v.controllers) <= 0 {
-		return []definitions.ModelMetadata{}, false, nil
+		return nil, false, nil
 	}
 
 	existingTypesMap := make(map[string]string)
@@ -78,13 +78,15 @@ func (v *ControllerVisitor) GetModelsFlat() ([]definitions.ModelMetadata, bool, 
 		for _, route := range controller.Routes {
 			encounteredErrorType, err := v.insertRouteTypeList(&existingTypesMap, &models, &route)
 			if err != nil {
-				return []definitions.ModelMetadata{}, false, v.frozenError(err)
+				return nil, false, v.frozenError(err)
 			}
 			if encounteredErrorType {
 				hasAnyErrorTypes = true
 			}
 		}
 	}
+
+	enums := []definitions.EnumMetadata{}
 
 	typeVisitor := visitors.NewTypeVisitor(v.packages)
 	for _, model := range models {
@@ -96,6 +98,19 @@ func (v *ControllerVisitor) GetModelsFlat() ([]definitions.ModelMetadata, bool, 
 				model.FullyQualifiedPackage,
 				model.Name,
 			)
+		}
+
+		// Enums are handled separately
+		if model.EntityKind == definitions.AstNodeKindAlias {
+			enums = append(enums, definitions.EnumMetadata{
+				Name:                  model.Name,
+				FullyQualifiedPackage: model.FullyQualifiedPackage,
+				Description:           model.Description,
+				Values:                model.AliasMetadata.Values,
+				Type:                  model.AliasMetadata.AliasType,
+				// Deprecation         ?
+			})
+			continue
 		}
 
 		structNode, err := extractor.FindTypesStructInPackage(pkg, model.Name)
@@ -113,5 +128,9 @@ func (v *ControllerVisitor) GetModelsFlat() ([]definitions.ModelMetadata, bool, 
 		}
 	}
 
-	return typeVisitor.GetStructs(), hasAnyErrorTypes, nil
+	flatModels := &definitions.Models{
+		Structs: typeVisitor.GetStructs(),
+		Enums:   enums,
+	}
+	return flatModels, hasAnyErrorTypes, nil
 }

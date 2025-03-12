@@ -20,7 +20,7 @@ var _ = Describe("Swagen", func() {
 
 	Describe("GenerateSchemaSpec", func() {
 		It("should generate a model specification correctly", func() {
-			model := definitions.ModelMetadata{
+			model := definitions.StructMetadata{
 				Name:        "TestModel",
 				Description: "A test model",
 				Fields: []definitions.FieldMetadata{
@@ -39,7 +39,7 @@ var _ = Describe("Swagen", func() {
 				},
 			}
 
-			generateModelSpec(openapi, model)
+			generateStructSpec(openapi, model)
 
 			schemaRef := openapi.Components.Schemas["TestModel"]
 			Expect(schemaRef).NotTo(BeNil())
@@ -57,7 +57,7 @@ var _ = Describe("Swagen", func() {
 		})
 
 		It("should generate a model with references to other models", func() {
-			model1 := definitions.ModelMetadata{
+			model1 := definitions.StructMetadata{
 				Name:        "ModelA",
 				Description: "Model A",
 				Fields: []definitions.FieldMetadata{
@@ -65,7 +65,7 @@ var _ = Describe("Swagen", func() {
 				},
 			}
 
-			model2 := definitions.ModelMetadata{
+			model2 := definitions.StructMetadata{
 				Name:        "ModelB",
 				Description: "Model B",
 				Fields: []definitions.FieldMetadata{
@@ -73,8 +73,8 @@ var _ = Describe("Swagen", func() {
 				},
 			}
 
-			generateModelSpec(openapi, model1)
-			generateModelSpec(openapi, model2)
+			generateStructSpec(openapi, model1)
+			generateStructSpec(openapi, model2)
 
 			schemaRef1 := openapi.Components.Schemas["ModelA"]
 			Expect(schemaRef1).NotTo(BeNil())
@@ -88,9 +88,101 @@ var _ = Describe("Swagen", func() {
 		})
 	})
 
+	Describe("GenerateEnumSpec", func() {
+		It("should generate a string enum specification correctly", func() {
+			enumModel := definitions.EnumMetadata{
+				Name:        "StringEnum",
+				Description: "A string enum",
+				Type:        "string",
+				Values:      []string{"VALUE1", "VALUE2", "VALUE3"},
+			}
+
+			generateEnumSpec(openapi, enumModel)
+
+			schemaRef := openapi.Components.Schemas["StringEnum"]
+			Expect(schemaRef).NotTo(BeNil())
+			Expect(schemaRef.Value.Title).To(Equal("StringEnum"))
+			Expect(schemaRef.Value.Description).To(Equal("A string enum"))
+			Expect(schemaRef.Value.Type).To(Equal(&openapi3.Types{"string"}))
+			Expect(schemaRef.Value.Deprecated).To(BeFalse())
+			Expect(schemaRef.Value.Enum).To(HaveLen(3))
+			Expect(schemaRef.Value.Enum).To(ContainElements("VALUE1", "VALUE2", "VALUE3"))
+		})
+
+		It("should generate an integer enum specification correctly", func() {
+			enumModel := definitions.EnumMetadata{
+				Name:        "IntEnum",
+				Description: "An integer enum",
+				Type:        "int",
+				Values:      []string{"1", "2", "3"},
+			}
+
+			generateEnumSpec(openapi, enumModel)
+
+			schemaRef := openapi.Components.Schemas["IntEnum"]
+			Expect(schemaRef).NotTo(BeNil())
+			Expect(schemaRef.Value.Title).To(Equal("IntEnum"))
+			Expect(schemaRef.Value.Description).To(Equal("An integer enum"))
+			// Note: The actual output type depends on swagtool.ToOpenApiType implementation
+			// Assuming it maps "int" to "integer" for OpenAPI spec
+			Expect(schemaRef.Value.Enum).To(HaveLen(3))
+			Expect(schemaRef.Value.Enum).To(ContainElements("1", "2", "3"))
+		})
+
+		It("should set deprecation flag correctly for enum", func() {
+			deprecationInfo := "Deprecated since v2.0.0"
+			enumModel := definitions.EnumMetadata{
+				Name:        "DeprecatedEnum",
+				Description: "A deprecated enum",
+				Type:        "string",
+				Values:      []string{"OLD_VALUE1", "OLD_VALUE2"},
+				Deprecation: definitions.DeprecationOptions{
+					Deprecated:  true,
+					Description: deprecationInfo,
+				},
+			}
+
+			generateEnumSpec(openapi, enumModel)
+
+			schemaRef := openapi.Components.Schemas["DeprecatedEnum"]
+			Expect(schemaRef).NotTo(BeNil())
+			Expect(schemaRef.Value.Deprecated).To(BeTrue())
+		})
+
+		It("should handle empty enum values", func() {
+			enumModel := definitions.EnumMetadata{
+				Name:        "EmptyEnum",
+				Description: "An enum with no values",
+				Type:        "string",
+				Values:      []string{},
+			}
+
+			generateEnumSpec(openapi, enumModel)
+
+			schemaRef := openapi.Components.Schemas["EmptyEnum"]
+			Expect(schemaRef).NotTo(BeNil())
+			Expect(schemaRef.Value.Enum).To(HaveLen(0))
+		})
+
+		It("should handle non-primitive types correctly", func() {
+			enumModel := definitions.EnumMetadata{
+				Name:        "ComplexEnum",
+				Description: "An enum with complex type",
+				Type:        "customType",
+				Values:      []string{"CUSTOM1", "CUSTOM2"},
+			}
+
+			generateEnumSpec(openapi, enumModel)
+
+			schemaRef := openapi.Components.Schemas["ComplexEnum"]
+			Expect(schemaRef).NotTo(BeNil())
+			// The actual type conversion depends on swagtool.ToOpenApiType implementation
+		})
+	})
+
 	Describe("GenerateModelsSpec", func() {
 		It("should generate specifications for multiple models", func() {
-			models := []definitions.ModelMetadata{
+			models := []definitions.StructMetadata{
 				{
 					Name:        "TestModel1",
 					Description: "First test model",
@@ -117,7 +209,9 @@ var _ = Describe("Swagen", func() {
 				},
 			}
 
-			err := GenerateModelsSpec(openapi, models)
+			err := GenerateModelsSpec(openapi, &definitions.Models{
+				Structs: models,
+			})
 			Expect(err).To(BeNil())
 
 			schemaRef1 := openapi.Components.Schemas["TestModel1"]
@@ -130,7 +224,7 @@ var _ = Describe("Swagen", func() {
 		})
 
 		It("should generate specifications for models with references", func() {
-			models := []definitions.ModelMetadata{
+			models := []definitions.StructMetadata{
 				{
 					Name:        "ModelC",
 					Description: "Model C",
@@ -147,7 +241,9 @@ var _ = Describe("Swagen", func() {
 				},
 			}
 
-			err := GenerateModelsSpec(openapi, models)
+			err := GenerateModelsSpec(openapi, &definitions.Models{
+				Structs: models,
+			})
 			Expect(err).To(BeNil())
 
 			schemaRefC := openapi.Components.Schemas["ModelC"]
@@ -162,7 +258,7 @@ var _ = Describe("Swagen", func() {
 		})
 
 		It("should load ref schema value from cache", func() {
-			models := []definitions.ModelMetadata{
+			models := []definitions.StructMetadata{
 				{
 					Name:        "ModelC",
 					Description: "Model C",
@@ -179,13 +275,53 @@ var _ = Describe("Swagen", func() {
 				},
 			}
 
-			err := GenerateModelsSpec(openapi, models)
+			err := GenerateModelsSpec(openapi, &definitions.Models{
+				Structs: models,
+			})
 			Expect(err).To(BeNil())
 
 			schemaRefC := openapi.Components.Schemas["ModelC"]
 			Expect(schemaRefC.Value.Properties["refD"].Ref).To(Equal("#/components/schemas/ModelD"))
 			Expect(schemaRefC.Value.Properties["refD"].Value).ToNot(BeNil())
 			Expect(schemaRefC.Value.Properties["refD"].Value.Properties["fieldD"].Value.Description).To(Equal("some field"))
+		})
+
+		It("should generate specifications for both structs and enums", func() {
+			structs := []definitions.StructMetadata{
+				{
+					Name:        "User",
+					Description: "User model",
+					Fields: []definitions.FieldMetadata{
+						{Name: "id", Type: "string", Description: "User ID", Tag: ""},
+						{Name: "status", Type: "Status", Description: "User status", Tag: ""},
+					},
+				},
+			}
+
+			enums := []definitions.EnumMetadata{
+				{
+					Name:        "Status",
+					Description: "User status enum",
+					Type:        "string",
+					Values:      []string{"ACTIVE", "INACTIVE", "SUSPENDED"},
+				},
+			}
+
+			err := GenerateModelsSpec(openapi, &definitions.Models{
+				Structs: structs,
+				Enums:   enums,
+			})
+			Expect(err).To(BeNil())
+
+			userSchema := openapi.Components.Schemas["User"]
+			Expect(userSchema).NotTo(BeNil())
+			Expect(userSchema.Value.Title).To(Equal("User"))
+
+			statusSchema := openapi.Components.Schemas["Status"]
+			Expect(statusSchema).NotTo(BeNil())
+			Expect(statusSchema.Value.Title).To(Equal("Status"))
+			Expect(statusSchema.Value.Enum).To(HaveLen(3))
+			Expect(statusSchema.Value.Enum).To(ContainElements("ACTIVE", "INACTIVE", "SUSPENDED"))
 		})
 	})
 })
