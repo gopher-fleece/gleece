@@ -1,123 +1,134 @@
 if is{{Name}}Exists {
-  {{#equal TypeMeta.Name "string"}}
+  {{#if (OrEqual TypeMeta.Name "string" TypeMeta.AliasMetadata.AliasType "string")}}
   {{ToLowerCamel Name}} := {{ToLowerCamel Name}}Raw
-  
-  {{/equal}}
-  
-  {{#equal TypeMeta.Name "int"}}
+  {{/if}}
+
+  {{#if (OrEqual TypeMeta.Name "int" TypeMeta.AliasMetadata.AliasType "int")}}
     {{ToLowerCamel Name}}Uint64, conversionErr := strconv.Atoi({{ToLowerCamel Name}}Raw)
     if conversionErr != nil {
   	{{> ParamsValidationErrorResponse }}
     }
     {{ToLowerCamel Name}} := int({{ToLowerCamel Name}}Uint64)
     
-  {{/equal}}
+  {{/if}}
   
-  {{#equal TypeMeta.Name "int8"}}
+  {{#if (OrEqual TypeMeta.Name "int8" TypeMeta.AliasMetadata.AliasType "int8")}}
     {{ToLowerCamel Name}}Uint64, conversionErr := strconv.ParseInt({{ToLowerCamel Name}}Raw, 10, 8)
     if conversionErr != nil {
   	{{> ParamsValidationErrorResponse }}
     }
     {{ToLowerCamel Name}} := int8({{ToLowerCamel Name}}Uint64)
     
-  {{/equal}}
+  {{/if}}
   
-  {{#equal TypeMeta.Name "int16"}}
+  {{#if (OrEqual TypeMeta.Name "int16" TypeMeta.AliasMetadata.AliasType "int16")}}
     {{ToLowerCamel Name}}Uint64, conversionErr := strconv.ParseInt({{ToLowerCamel Name}}Raw, 10, 16)
     if conversionErr != nil {
   	{{> ParamsValidationErrorResponse }}
     }
     {{ToLowerCamel Name}} := int16({{ToLowerCamel Name}}Uint64)
     
-  {{/equal}}
+  {{/if}}
   
-  {{#equal TypeMeta.Name "int32"}}
+  {{#if (OrEqual TypeMeta.Name "int32" TypeMeta.AliasMetadata.AliasType "int32")}}
     {{ToLowerCamel Name}}Uint64, conversionErr := strconv.ParseInt({{ToLowerCamel Name}}Raw, 10, 32)
     if conversionErr != nil {
   	{{> ParamsValidationErrorResponse }}
     }
     {{ToLowerCamel Name}} := int32({{ToLowerCamel Name}}Uint64)
     
-  {{/equal}}
+  {{/if}}
   
-  {{#equal TypeMeta.Name "int64"}}
+  {{#if (OrEqual TypeMeta.Name "int64" TypeMeta.AliasMetadata.AliasType "int64")}}
     {{ToLowerCamel Name}}Uint64, conversionErr := strconv.ParseInt({{ToLowerCamel Name}}Raw, 10, 64)
     if conversionErr != nil {
   	{{> ParamsValidationErrorResponse }}
     }
     {{ToLowerCamel Name}} := int64({{ToLowerCamel Name}}Uint64)
     
-  {{/equal}}
+  {{/if}}
   
-  {{#equal TypeMeta.Name "uint"}}
+  {{#if (OrEqual TypeMeta.Name "uint" TypeMeta.AliasMetadata.AliasType "uint")}}
     {{ToLowerCamel Name}}Uint64, conversionErr := strconv.ParseUint({{ToLowerCamel Name}}Raw, 10, 32)
     if conversionErr != nil {
   	{{> ParamsValidationErrorResponse }}
     }
     {{ToLowerCamel Name}} := uint({{ToLowerCamel Name}}Uint64)
     
-  {{/equal}}
+  {{/if}}
   
-  {{#equal TypeMeta.Name "uint8"}}
+  {{#if (OrEqual TypeMeta.Name "uint8" TypeMeta.AliasMetadata.AliasType "uint8")}}
     {{ToLowerCamel Name}}Uint64, conversionErr := strconv.ParseUint({{ToLowerCamel Name}}Raw, 10, 8)
     if conversionErr != nil {
   	{{> ParamsValidationErrorResponse }}
     }
     {{ToLowerCamel Name}} := uint8({{ToLowerCamel Name}}Uint64)
     
-  {{/equal}}
+  {{/if}}
   
-  {{#equal TypeMeta.Name "uint16"}}
+  {{#if (OrEqual TypeMeta.Name "uint16" TypeMeta.AliasMetadata.AliasType "uint16")}}
     {{ToLowerCamel Name}}Uint64, conversionErr := strconv.ParseUint({{ToLowerCamel Name}}Raw, 10, 16)
     if conversionErr != nil {
   	{{> ParamsValidationErrorResponse }}
     }
     {{ToLowerCamel Name}} := uint16({{ToLowerCamel Name}}Uint64)
     
-  {{/equal}}
+  {{/if}}
   
-  {{#equal TypeMeta.Name "uint32"}}
+  {{#if (OrEqual TypeMeta.Name "uint32" TypeMeta.AliasMetadata.AliasType "uint32")}}
     {{ToLowerCamel Name}}Uint64, conversionErr := strconv.ParseUint({{ToLowerCamel Name}}Raw, 10, 32)
     if conversionErr != nil {
   	{{> ParamsValidationErrorResponse }}
     }
     {{ToLowerCamel Name}} := uint32({{ToLowerCamel Name}}Uint64)
     
-  {{/equal}}
+  {{/if}}
   
-  {{#equal TypeMeta.Name "uint64"}}
+  {{#if (OrEqual TypeMeta.Name "uint64" TypeMeta.AliasMetadata.AliasType "uint64")}}
     {{ToLowerCamel Name}}, conversionErr := strconv.ParseUint({{ToLowerCamel Name}}Raw, 10, 64)
     if conversionErr != nil {
   	{{> ParamsValidationErrorResponse }}
     }
     
-  {{/equal}}
+  {{/if}}
   
-  {{#equal TypeMeta.Name "bool"}}
+  {{#if (OrEqual TypeMeta.Name "bool" TypeMeta.AliasMetadata.AliasType "bool")}}
     {{ToLowerCamel Name}}, conversionErr := strconv.ParseBool({{ToLowerCamel Name}}Raw)
     if conversionErr != nil {
   	{{> ParamsValidationErrorResponse }}
     }
     
-  {{/equal}}
+  {{/if}}
   
-  {{#equal TypeMeta.Name "float32"}}
+  {{#if (OrEqual TypeMeta.Name "float32" TypeMeta.AliasMetadata.AliasType "float32")}}
     {{ToLowerCamel Name}}Float64, conversionErr := strconv.ParseFloat({{ToLowerCamel Name}}Raw, 32)
     if conversionErr != nil {
   	{{> ParamsValidationErrorResponse }}
     }
     {{ToLowerCamel Name}} := float32({{ToLowerCamel Name}}Float64)
     
-  {{/equal}}
+  {{/if}}
   
-  {{#equal TypeMeta.Name "float64"}}
+  {{#if (OrEqual TypeMeta.Name "float64" TypeMeta.AliasMetadata.AliasType "float64")}}
     {{ToLowerCamel Name}}, conversionErr := strconv.ParseFloat({{ToLowerCamel Name}}Raw, 64)
     if conversionErr != nil {
   	{{> ParamsValidationErrorResponse }}
     }
     
-  {{/equal}}
+  {{/if}}
 
-  {{ToLowerCamel Name}}RawPtr = &{{ToLowerCamel Name}}
+  {{!-- Case of alias --}}
+  {{#ifEqual TypeMeta.EntityKind "Alias"}}
+    switch {{ToLowerCamel Name}}Raw {
+    case {{#each TypeMeta.AliasMetadata.Values}}"{{this}}"{{#unless @last}}, {{/unless}}{{/each}}:
+      {{ToLowerCamel Name}}Var := Param{{{UniqueImportSerial}}}{{{Name}}}.{{{TypeMeta.Name}}}({{ToLowerCamel Name}})
+      {{ToLowerCamel Name}}RawPtr = &{{ToLowerCamel Name}}Var
+		default:
+      conversionErr := fmt.Errorf("{{ToLowerCamel Name}} must be one of \"{{#each TypeMeta.AliasMetadata.Values}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}\" options only but got %s", {{ToLowerCamel Name}}Raw)
+      {{> ParamsValidationErrorResponse }}
+		}
+  {{else}}
+    {{ToLowerCamel Name}}RawPtr = &{{ToLowerCamel Name}}
+  {{/ifEqual}}
 
 }

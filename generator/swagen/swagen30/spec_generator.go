@@ -10,7 +10,7 @@ import (
 )
 
 // GenerateSpec generates the OpenAPI specification
-func GenerateSpec(config *definitions.OpenAPIGeneratorConfig, defs []definitions.ControllerMetadata, models []definitions.ModelMetadata) ([]byte, error) {
+func GenerateSpec(config *definitions.OpenAPIGeneratorConfig, defs []definitions.ControllerMetadata, models *definitions.Models) ([]byte, error) {
 
 	// Create a new OpenAPI specification using 3.0.0
 	openapi := &openapi3.T{

@@ -13,9 +13,9 @@ import (
 )
 
 // GenerateSpec generates the OpenAPI specification
-func GenerateSpec(config *definitions.OpenAPIGeneratorConfig, defs []definitions.ControllerMetadata, models []definitions.ModelMetadata, hasAnyErrorTypes bool) ([]byte, error) {
+func GenerateSpec(config *definitions.OpenAPIGeneratorConfig, defs []definitions.ControllerMetadata, models *definitions.Models, hasAnyErrorTypes bool) ([]byte, error) {
 	// In case of a default error in use, add the RFC-7807, otherwise skip and assume the user define it using structs by themselves
-	swagtool.AppendErrorSchema(&models, hasAnyErrorTypes)
+	swagtool.AppendErrorSchema(&models.Structs, hasAnyErrorTypes)
 
 	// Since the tools and validation are WAY better for 3.0.0,
 	// And our logic his focusing in 3.0 and not feature will be added if not can be support in it too,
@@ -37,7 +37,7 @@ func GenerateSpec(config *definitions.OpenAPIGeneratorConfig, defs []definitions
 	}
 }
 
-func GenerateAndOutputSpec(config *definitions.OpenAPIGeneratorConfig, defs []definitions.ControllerMetadata, models []definitions.ModelMetadata, hasAnyErrorTypes bool) error {
+func GenerateAndOutputSpec(config *definitions.OpenAPIGeneratorConfig, defs []definitions.ControllerMetadata, models *definitions.Models, hasAnyErrorTypes bool) error {
 	jsonBytes, err := GenerateSpec(config, defs, models, hasAnyErrorTypes)
 
 	if err != nil {

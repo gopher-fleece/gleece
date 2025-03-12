@@ -11,7 +11,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 )
 
-func GetControllersAndModels() ([]definitions.ControllerMetadata, []definitions.ModelMetadata, bool) {
+func GetControllersAndModels() ([]definitions.ControllerMetadata, []definitions.StructMetadata, bool) {
 	cwd, err := os.Getwd()
 	if err != nil {
 		Fail(fmt.Sprintf("Could not determine process working directory - %v", err))
@@ -22,7 +22,7 @@ func GetControllersAndModels() ([]definitions.ControllerMetadata, []definitions.
 	if err != nil {
 		Fail(fmt.Sprintf("Could not generate routes - %v", err))
 	}
-	return controllers, flatModels, hasStdError
+	return controllers, flatModels.Structs, hasStdError
 }
 
 func GetAbsPathByRelative(relativePath string) string {

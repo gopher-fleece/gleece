@@ -11,7 +11,7 @@ import (
 )
 
 var metadata []definitions.ControllerMetadata
-var models []definitions.ModelMetadata
+var models []definitions.StructMetadata
 
 var _ = BeforeSuite(func() {
 	controllers, flatModels, _ := utils.GetControllersAndModels()
