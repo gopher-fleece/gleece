@@ -3,6 +3,7 @@ package routes
 import (
 	"encoding/json"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
 	"strings"
@@ -23,7 +24,7 @@ import (
 var RoutesTemplateName = "Routes"
 
 var helpersRegistered bool
-var lastEngine *definitions.RoutingEngineType
+var partialsRegistered bool
 
 // dumpContext Dumps the routes context to the log for debugging purposes
 func dumpContext(ctx any) {
@@ -33,6 +34,11 @@ func dumpContext(ctx any) {
 }
 
 func registerHelpers() {
+
+	raymond.RegisterHelper("ToSnakeCase", func(arg string) string {
+		return strcase.ToSnake(arg)
+	})
+
 	raymond.RegisterHelper("ToLowerCamel", func(arg string) string {
 		return strcase.ToLowerCamel(arg)
 	})
@@ -216,6 +222,10 @@ func registerPartials(config *definitions.GleeceConfig) error {
 		panic(fmt.Sprintf("Unknown routing engine type '%v'", engine))
 	}
 
+	// Make sure to work on a clone, to not apply changes on the code's map
+	extensions = maps.Clone(extensions)
+	partials = maps.Clone(partials)
+
 	if err := overrideTemplates(config, partials); err != nil {
 		return err
 	}
@@ -228,13 +238,8 @@ func registerPartials(config *definitions.GleeceConfig) error {
 	// Will likely need to find a way to register on the template level.
 	//
 	// Note that registering the same partials twice causes a panic.
-	if lastEngine != nil {
-		if *lastEngine == config.RoutesConfig.Engine {
-			logger.Debug("Last engine is %v, partials are already registered", *lastEngine)
-			return nil
-		}
-
-		logger.Debug("Last used engine was %v, removing all partials before re-registration'", *lastEngine)
+	if partialsRegistered {
+		logger.Debug("Removing all partials before re-registering")
 		raymond.RemoveAllPartials()
 	}
 
@@ -243,7 +248,7 @@ func registerPartials(config *definitions.GleeceConfig) error {
 	logger.Debug("Registering extensions for '%v'", config.RoutesConfig.Engine)
 	raymond.RegisterPartials(extensions)
 
-	lastEngine = &engine
+	partialsRegistered = true
 	return nil
 }
 
@@ -261,7 +266,8 @@ func getOutputFileMod(requestedPermissions string) os.FileMode {
 
 }
 
-func GenerateRoutes(config *definitions.GleeceConfig, controllerMeta []definitions.ControllerMetadata) error {
+func GenerateRoutes(config *definitions.GleeceConfig, controllerMeta []definitions.ControllerMetadata, models *definitions.Models) error {
+
 	args := (*config).RoutesConfig
 
 	if err := registerPartials(config); err != nil {
@@ -272,7 +278,7 @@ func GenerateRoutes(config *definitions.GleeceConfig, controllerMeta []definitio
 		registerHelpers()
 	}
 
-	ctx, err := GetTemplateContext(args, controllerMeta)
+	ctx, err := GetTemplateContext(models, config, controllerMeta)
 
 	if err != nil {
 		logger.Fatal("Could not create a context for the template rendering process")

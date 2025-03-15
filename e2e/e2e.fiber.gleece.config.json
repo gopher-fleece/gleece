@@ -1,8 +1,7 @@
 {
 	"commonConfig": {
 		"controllerGlobs": [
-			"./*.go",
-			"./**/*.go"
+			"./assets/e2e.controller.go"
 		]
 	},
 	"routesConfig": {
@@ -77,5 +76,9 @@
 		"specGeneratorConfig": {
 			"outputPath": "./fiber/dist/swagger.json"
 		}
+	},
+	"experimentalConfig": {
+		"validateTopLevelOnlyEnum": true,
+		"generateEnumValidator": true
 	}
 }

@@ -1,3 +1,18 @@
+func registerEnumValidation(validate *validator.Validate, validationName string, allowedValues []string) {
+	// Convert the array to a map for O(1) lookup
+	lookup := make(map[string]struct{})
+	for _, val := range allowedValues {
+		lookup[val] = struct{}{}
+	}
+	
+	// Register the custom validation
+	validate.RegisterValidation(validationName, func(fl validator.FieldLevel) bool {
+		field := fl.Field().String()
+		_, exists := lookup[field]
+		return exists
+	})
+}
+
 func extractValidationErrorMessage(err error, fieldName *string) string {
 	if err == nil {
 		return ""

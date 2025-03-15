@@ -441,7 +441,7 @@ const (
 type ObjectWithEnum struct {
 	Value    string              `json:"value"`
 	Values   []string            `json:"values"`
-	Status   StatusEnumeration   `json:"status"`
+	Status   StatusEnumeration   `json:"status" validate:"required,status_enumeration_enum"`
 	Statuses []StatusEnumeration `json:"statuses"`
 }
 
@@ -473,4 +473,16 @@ func (ec *E2EController) TestEnums(value1 StatusEnumeration, value2 NumberEnumer
 // @ErrorResponse(500) The error when process failed
 func (ec *E2EController) TestEnumsInAll(value1 StatusEnumeration, value2 NumberEnumeration, value3 StatusEnumeration) (string, error) {
 	return fmt.Sprintf("%s %d %s", value1, value2, value3), nil
+}
+
+// @Method(POST)
+// @Route(/test-enums-optional)
+// @Header(value1)
+// @Response(200) The ID of the newly created user
+// @ErrorResponse(500) The error when process failed
+func (ec *E2EController) TestEnumsOptional(value1 *StatusEnumeration) (string, error) {
+	if value1 == nil {
+		return "nil", nil
+	}
+	return string(*value1), nil
 }

@@ -112,12 +112,12 @@ func GenerateSpec(args arguments.CliArguments) error {
 
 func GenerateRoutes(args arguments.CliArguments) error {
 	logger.Info("Generating routes")
-	config, meta, _, _, err := GetConfigAndMetadata(args)
+	config, meta, models, _, err := GetConfigAndMetadata(args)
 	if err != nil {
 		return err
 	}
 
-	if err := routes.GenerateRoutes(config, meta); err != nil {
+	if err := routes.GenerateRoutes(config, meta, models); err != nil {
 		logger.Fatal("Failed to generate routing file - %v", err)
 		return err
 	}
@@ -134,7 +134,7 @@ func GenerateSpecAndRoutes(args arguments.CliArguments) error {
 	}
 
 	// Generate the routes first
-	if err := routes.GenerateRoutes(config, meta); err != nil {
+	if err := routes.GenerateRoutes(config, meta, models); err != nil {
 		logger.Fatal("Failed to generate routes - %v", err)
 		return err
 	}

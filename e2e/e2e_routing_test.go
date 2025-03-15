@@ -34,6 +34,7 @@ var _ = Describe("E2E Routing Spec", func() {
 			Headers: map[string]string{
 				"headerparam": "headerParam",
 			},
+			RoutesFlavor: &fullyFeatured,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -48,6 +49,7 @@ var _ = Describe("E2E Routing Spec", func() {
 			Headers: map[string]string{
 				"headerparam": "1headerParam",
 			},
+			RoutesFlavor: &fullyFeatured,
 		})
 	})
 
@@ -438,7 +440,8 @@ var _ = Describe("E2E Routing Spec", func() {
 				Status:   assets.StatusEnumerationActive,
 				Statuses: []assets.StatusEnumeration{assets.StatusEnumerationInactive},
 			},
-			Headers: map[string]string{},
+			Headers:      map[string]string{},
+			RoutesFlavor: &fullyFeatured,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -450,12 +453,75 @@ var _ = Describe("E2E Routing Spec", func() {
 			Method:              "POST",
 			Form:                map[string]string{"value3": "inactive"},
 			Headers:             map[string]string{"value2": "1"},
+			RoutesFlavor:        &fullyFeatured,
+		})
+
+		RunRouterTest(common.RouterTest{
+			Name:                "Should return status code 200 for enum - optional param sent",
+			ExpectedStatus:      200,
+			ExpectedBodyContain: "active",
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/test-enums-optional",
+			Method:              "POST",
+			Form:                map[string]string{},
+			Headers:             map[string]string{"value1": "active"},
+			RoutesFlavor:        &fullyFeatured,
+		})
+
+		RunRouterTest(common.RouterTest{
+			Name:                "Should return status code 200 for enum - optional param not sent",
+			ExpectedStatus:      200,
+			ExpectedBodyContain: "nil",
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/test-enums-optional",
+			Method:              "POST",
+			Form:                map[string]string{},
+			Headers:             map[string]string{},
+			RoutesFlavor:        &fullyFeatured,
+		})
+	})
+
+	It("Should NOT return status code 200 for enums", func() {
+		RunRouterTest(common.RouterTest{
+			Name:                "Should NOT return status code 200 for enum - header, path & forms",
+			ExpectedStatus:      200,
+			ExpectedBodyContain: "active 1 inactive",
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/test-enums-in-all/active",
+			Method:              "POST",
+			Form:                map[string]string{"value3": "inactive"},
+			Headers:             map[string]string{"value2": "1"},
+			RoutesFlavor:        &exExtra,
+		})
+
+		RunRouterTest(common.RouterTest{
+			Name:                "Should NOT return status code 200 for enum - optional param sent",
+			ExpectedStatus:      200,
+			ExpectedBodyContain: "active",
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/test-enums-optional",
+			Method:              "POST",
+			Form:                map[string]string{},
+			Headers:             map[string]string{"value1": "active"},
+			RoutesFlavor:        &exExtra,
+		})
+
+		RunRouterTest(common.RouterTest{
+			Name:                "Should NOT return status code 200 for enum - optional param not sent",
+			ExpectedStatus:      200,
+			ExpectedBodyContain: "nil",
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/test-enums-optional",
+			Method:              "POST",
+			Form:                map[string]string{},
+			Headers:             map[string]string{},
+			RoutesFlavor:        &exExtra,
 		})
 	})
 
 	It("Should return status code 422 for wrong enum prams and body", func() {
 		RunRouterTest(common.RouterTest{
-			Name:            "Should return status code 200 for enum prams and body - wrong direct string enum",
+			Name:            "Should return status code 422 for enum prams and body - wrong direct string enum",
 			ExpectedStatus:  422,
 			ExpectedBody:    "{\"type\":\"Unprocessable Entity\",\"title\":\"\",\"detail\":\"A request was made to operation 'TestEnums' but parameter 'value1' was not properly sent - Expected StatusEnumeration but got string\",\"status\":422,\"instance\":\"/gleece/validation/error/TestEnums\",\"extensions\":{\"error\":\"value1 must be one of \\\"active, inactive\\\" options only but got blabla\"}}",
 			ExpendedHeaders: nil,
@@ -468,11 +534,12 @@ var _ = Describe("E2E Routing Spec", func() {
 				Status:   assets.StatusEnumerationActive,
 				Statuses: []assets.StatusEnumeration{assets.StatusEnumerationInactive},
 			},
-			Headers: map[string]string{},
+			Headers:      map[string]string{},
+			RoutesFlavor: &fullyFeatured,
 		})
 
 		RunRouterTest(common.RouterTest{
-			Name:            "Should return status code 200 for enum prams and body - wrong direct number enum",
+			Name:            "Should return status code 422 for enum prams and body - wrong direct number enum",
 			ExpectedStatus:  422,
 			ExpectedBody:    "{\"type\":\"Unprocessable Entity\",\"title\":\"\",\"detail\":\"A request was made to operation 'TestEnums' but parameter 'value2' was not properly sent - Expected NumberEnumeration but got string\",\"status\":422,\"instance\":\"/gleece/validation/error/TestEnums\",\"extensions\":{\"error\":\"value2 must be one of \\\"1, 2\\\" options only but got 4\"}}",
 			ExpendedHeaders: nil,
@@ -485,7 +552,64 @@ var _ = Describe("E2E Routing Spec", func() {
 				Status:   assets.StatusEnumerationActive,
 				Statuses: []assets.StatusEnumeration{assets.StatusEnumerationInactive},
 			},
-			Headers: map[string]string{},
+			Headers:      map[string]string{},
+			RoutesFlavor: &fullyFeatured,
+		})
+
+		RunRouterTest(common.RouterTest{
+			Name:            "Should return status code 422 for enum prams and body - wrong in struct enum validated by generated validator",
+			ExpectedStatus:  422,
+			ExpectedBody:    "{\"type\":\"Unprocessable Entity\",\"title\":\"\",\"detail\":\"A request was made to operation 'TestEnums' but body parameter 'value3' did not pass validation of 'ObjectWithEnum' - Field 'Status' failed validation with tag 'status_enumeration_enum'. \",\"status\":422,\"instance\":\"/gleece/validation/error/TestEnums\",\"extensions\":null}",
+			ExpendedHeaders: nil,
+			Path:            "/e2e/test-enums",
+			Method:          "POST",
+			Query:           map[string]string{"value1": "active", "value2": "2"},
+			Body: assets.ObjectWithEnum{
+				Value:    "some value",
+				Values:   []string{"some", "values"},
+				Status:   "blabla",
+				Statuses: []assets.StatusEnumeration{assets.StatusEnumerationInactive},
+			},
+			Headers:      map[string]string{},
+			RoutesFlavor: &fullyFeatured,
+		})
+
+		RunRouterTest(common.RouterTest{
+			Name:            "Should return status code 422 for enum prams and body - wrong enum in optional param",
+			ExpectedStatus:  422,
+			ExpectedBody:    "{\"type\":\"Unprocessable Entity\",\"title\":\"\",\"detail\":\"A request was made to operation 'TestEnumsOptional' but parameter 'value1' was not properly sent - Expected StatusEnumeration but got string\",\"status\":422,\"instance\":\"/gleece/validation/error/TestEnumsOptional\",\"extensions\":{\"error\":\"value1 must be one of \\\"active, inactive\\\" options only but got active222\"}}",
+			ExpendedHeaders: nil,
+			Path:            "/e2e/test-enums-optional",
+			Method:          "POST",
+			Form:            map[string]string{},
+			Headers:         map[string]string{"value1": "active222"},
+			RoutesFlavor:    &fullyFeatured,
+		})
+	})
+
+	It("Should NOT return status code 422 for wrong enum prams and body", func() {
+		RunRouterTest(common.RouterTest{
+			Name:                "Should NOT return status code 422 for enum prams and body - wrong direct number enum",
+			ExpectedStatus:      200,
+			ExpectedBodyContain: "active 10 inactive",
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/test-enums-in-all/active",
+			Method:              "POST",
+			Form:                map[string]string{"value3": "inactive"},
+			Headers:             map[string]string{"value2": "10"},
+			RoutesFlavor:        &exExtra,
+		})
+
+		RunRouterTest(common.RouterTest{
+			Name:            "Should NOT return status code 422 for enum prams and body - wrong enum in optional param",
+			ExpectedStatus:  200,
+			ExpectedBody:    "",
+			ExpendedHeaders: nil,
+			Path:            "/e2e/test-enums-optional",
+			Method:          "POST",
+			Form:            map[string]string{},
+			Headers:         map[string]string{"value1": "active222"},
+			RoutesFlavor:    &exExtra,
 		})
 	})
 })

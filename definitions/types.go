@@ -350,10 +350,16 @@ type CommonConfig struct {
 	ControllerGlobs []string `json:"controllerGlobs" validate:"omitempty,min=1"`
 }
 
+type ExperimentalConfig struct {
+	ValidateTopLevelOnlyEnum bool `json:"validateTopLevelOnlyEnum"`
+	GenerateEnumValidator    bool `json:"generateEnumValidator"`
+}
+
 type GleeceConfig struct {
 	CommonConfig           CommonConfig           `json:"commonConfig" validate:"required"`
 	RoutesConfig           RoutesConfig           `json:"routesConfig" validate:"required"`
 	OpenAPIGeneratorConfig OpenAPIGeneratorConfig `json:"openapiGeneratorConfig" validate:"required"`
+	ExperimentalConfig     ExperimentalConfig     `json:"experimentalConfig"` // TODO add docs
 }
 
 type AstNodeKind string

@@ -119,14 +119,20 @@ if is{{Name}}Exists {
 
   {{!-- Case of alias --}}
   {{#ifEqual TypeMeta.EntityKind "Alias"}}
-    switch {{ToLowerCamel Name}}Raw {
-    case {{#each TypeMeta.AliasMetadata.Values}}"{{this}}"{{#unless @last}}, {{/unless}}{{/each}}:
+    {{!-- An experimental feature to validate top-level (only) enums --}}
+    {{#if ExperimentalConfig.ValidateTopLevelOnlyEnum}}
+      switch {{ToLowerCamel Name}}Raw {
+      case {{#each TypeMeta.AliasMetadata.Values}}"{{this}}"{{#unless @last}}, {{/unless}}{{/each}}:
+        {{ToLowerCamel Name}}Var := Param{{{UniqueImportSerial}}}{{{Name}}}.{{{TypeMeta.Name}}}({{ToLowerCamel Name}})
+        {{ToLowerCamel Name}}RawPtr = &{{ToLowerCamel Name}}Var
+		  default:
+        conversionErr := fmt.Errorf("{{ToLowerCamel Name}} must be one of \"{{#each TypeMeta.AliasMetadata.Values}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}\" options only but got %s", {{ToLowerCamel Name}}Raw)
+        {{> ParamsValidationErrorResponse }}
+		  }
+    {{else}}
       {{ToLowerCamel Name}}Var := Param{{{UniqueImportSerial}}}{{{Name}}}.{{{TypeMeta.Name}}}({{ToLowerCamel Name}})
       {{ToLowerCamel Name}}RawPtr = &{{ToLowerCamel Name}}Var
-		default:
-      conversionErr := fmt.Errorf("{{ToLowerCamel Name}} must be one of \"{{#each TypeMeta.AliasMetadata.Values}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}\" options only but got %s", {{ToLowerCamel Name}}Raw)
-      {{> ParamsValidationErrorResponse }}
-		}
+    {{/if}}
   {{else}}
     {{ToLowerCamel Name}}RawPtr = &{{ToLowerCamel Name}}
   {{/ifEqual}}

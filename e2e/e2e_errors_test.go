@@ -88,6 +88,22 @@ var _ = Describe("E2E Errors Spec", func() {
 			Body:            nil,
 			Query:           nil,
 			Headers:         nil,
+			RoutesFlavor:    &fullyFeatured,
+		})
+	})
+
+	It("Should NOT set validation error for invalid response payload", func() {
+		RunRouterTest(common.RouterTest{
+			Name:            "Should NOT set validation error for invalid response payload",
+			ExpectedStatus:  200,
+			ExpectedBody:    "{\"success\":\"success\",\"index\":-1}",
+			ExpendedHeaders: nil,
+			Path:            "/e2e/test-response-validation",
+			Method:          "POST",
+			Body:            nil,
+			Query:           nil,
+			Headers:         nil,
+			RoutesFlavor:    &exExtra,
 		})
 	})
 
@@ -102,6 +118,22 @@ var _ = Describe("E2E Errors Spec", func() {
 			Body:            nil,
 			Query:           nil,
 			Headers:         nil,
+			RoutesFlavor:    &fullyFeatured,
+		})
+	})
+
+	It("Should NOT set validation error for invalid response payload pointer", func() {
+		RunRouterTest(common.RouterTest{
+			Name:            "Should NOT set validation error for invalid response payload pointer",
+			ExpectedStatus:  200,
+			ExpectedBody:    "",
+			ExpendedHeaders: nil,
+			Path:            "/e2e/test-response-validation-ptr",
+			Method:          "POST",
+			Body:            nil,
+			Query:           nil,
+			Headers:         nil,
+			RoutesFlavor:    &exExtra,
 		})
 	})
 
@@ -116,6 +148,22 @@ var _ = Describe("E2E Errors Spec", func() {
 			Body:            nil,
 			Query:           nil,
 			Headers:         nil,
+			RoutesFlavor:    &fullyFeatured,
+		})
+	})
+
+	It("Should NOT set validation error for empty response payload pointer", func() {
+		RunRouterTest(common.RouterTest{
+			Name:            "Should NOT set validation error for empty response payload pointer",
+			ExpectedStatus:  200,
+			ExpectedBody:    "",
+			ExpendedHeaders: nil,
+			Path:            "/e2e/test-response-validation-null",
+			Method:          "POST",
+			Body:            nil,
+			Query:           nil,
+			Headers:         nil,
+			RoutesFlavor:    &exExtra,
 		})
 	})
 })

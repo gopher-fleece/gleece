@@ -1,5 +1,13 @@
 package common
 
+type RoutesFlavor string
+
+const (
+	FullyFeatured RoutesFlavor = "FullyFeatured"
+	ExExtra       RoutesFlavor = "ExExtra"
+	Any           RoutesFlavor = "Any" // The default flavor, all...
+)
+
 type RouterTest struct {
 	Name                string
 	Path                string
@@ -12,6 +20,7 @@ type RouterTest struct {
 	ExpectedBody        string
 	ExpectedBodyContain string
 	ExpendedHeaders     map[string]string
+	RoutesFlavor        *RoutesFlavor
 }
 
 type RouterTestResult struct {

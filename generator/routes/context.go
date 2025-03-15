@@ -31,19 +31,32 @@ type RoutesContext struct {
 	GenerationDate          string
 	AuthConfig              definitions.AuthorizationConfig
 	ValidateResponsePayload bool
+	ExperimentalConfig      definitions.ExperimentalConfig
+	Models                  definitions.Models
 }
 
 func GetTemplateContext(
-	config definitions.RoutesConfig,
+	models *definitions.Models,
+	config *definitions.GleeceConfig,
 	controllers []definitions.ControllerMetadata,
 ) (RoutesContext, error) {
+
+	if models == nil {
+		models = &definitions.Models{
+			Structs: make([]definitions.StructMetadata, 0),
+			Enums:   make([]definitions.EnumMetadata, 0),
+		}
+	}
+
 	ctx := RoutesContext{
 		Controllers:             controllers,
-		AuthConfig:              config.AuthorizationConfig,
-		ValidateResponsePayload: config.ValidateResponsePayload,
+		AuthConfig:              config.RoutesConfig.AuthorizationConfig,
+		ValidateResponsePayload: config.RoutesConfig.ValidateResponsePayload,
+		ExperimentalConfig:      config.ExperimentalConfig,
+		Models:                  *models,
 	}
-	if len(config.PackageName) > 0 {
-		ctx.PackageName = config.PackageName
+	if len(config.RoutesConfig.PackageName) > 0 {
+		ctx.PackageName = config.RoutesConfig.PackageName
 	} else {
 		ctx.PackageName = "routes"
 	}
