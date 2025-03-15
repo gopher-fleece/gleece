@@ -55,6 +55,7 @@ func (v *ControllerVisitor) visitController(controllerNode *ast.TypeSpec) (defin
 	return controller, nil
 }
 
+// createControllerMetadata Creates a standard ControllerMetadata struct for the given node
 func (v *ControllerVisitor) createControllerMetadata(controllerNode *ast.TypeSpec) (definitions.ControllerMetadata, error) {
 	fullPackageName, fullNameErr := extractor.GetFullPackageName(v.currentSourceFile, v.fileSet)
 	packageAlias, aliasErr := extractor.GetDefaultPackageAlias(v.currentSourceFile)
@@ -65,6 +66,7 @@ func (v *ControllerVisitor) createControllerMetadata(controllerNode *ast.TypeSpe
 		)
 	}
 
+	// Start off by filling the name and package
 	meta := definitions.ControllerMetadata{
 		Name:                  controllerNode.Name.Name,
 		FullyQualifiedPackage: fullPackageName,
@@ -87,11 +89,13 @@ func (v *ControllerVisitor) createControllerMetadata(controllerNode *ast.TypeSpe
 			return meta, v.frozenError(err)
 		}
 
+		// Parse any explicit Security annotations
 		security, err := v.getSecurityFromContext(holder)
 		if err != nil {
 			return meta, v.frozenError(err)
 		}
 
+		// If there are no explicitly defined securities, check for inherited ones
 		if len(security) <= 0 {
 			logger.Debug("Controller %s does not have explicit security; Using user-defined defaults", meta.Name)
 			security = v.getDefaultSecurity()

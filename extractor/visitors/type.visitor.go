@@ -44,7 +44,7 @@ func NewTypeVisitor(packages []*packages.Package) *TypeVisitor {
 func (v *TypeVisitor) VisitStruct(fullPackageName string, structName string, structType *types.Struct) error {
 	fullName := fmt.Sprintf("%s.%s", fullPackageName, structName)
 	if v.typesByName[fullName] != nil {
-		return fmt.Errorf("struct %q has already been processed", fullName)
+		return nil // Already processed, ignore
 	}
 
 	attributeHolders, err := v.getAttributeHolders(fullPackageName, structName)
@@ -76,29 +76,25 @@ func (v *TypeVisitor) VisitStruct(fullPackageName string, structName string, str
 			// Raise error for pointer fields.
 			return fmt.Errorf("field %q in struct %q is a pointer, which is not allowed", field.Name(), structName)
 		case *types.Array, *types.Slice:
-			// Handle array or slice types
-			var elemType types.Type
-			if arr, ok := t.(*types.Array); ok {
-				elemType = arr.Elem()
-			} else if slice, ok := t.(*types.Slice); ok {
-				elemType = slice.Elem()
-			}
-
-			// Check if the element type is a named type (enum/alias)
-			if named, ok := elemType.(*types.Named); ok {
-				// For arrays of named types, format as []TypeName
-				fieldTypeString = "[]" + named.Obj().Name()
-			} else {
-				// For arrays of primitive types
-				fieldTypeString = fieldType.String()
-			}
+			fieldTypeString = extractor.GetIterableElementType(t)
 		case *types.Named:
-			// Check if the named type is a struct.
-			if underlying, ok := t.Underlying().(*types.Struct); ok {
-				// Recursively process the nested struct.
-				err := v.VisitStruct(fullPackageName, t.Obj().Name(), underlying)
-				if err != nil {
-					return err
+			if extractor.IsAliasType(t) {
+				aliasModel := createAliasModel(t, tag)
+				structInfo.Fields = append(structInfo.Fields, aliasModel)
+				continue // A bit ugly. Need to clean this up...
+			} else {
+				// Check if the named type is a struct.
+				if underlying, ok := t.Underlying().(*types.Struct); ok {
+					// Recursively process the nested struct.
+					err := v.VisitStruct(fullPackageName, t.Obj().Name(), underlying)
+					if err != nil {
+						return err
+					}
+				} else {
+					return fmt.Errorf(
+						"node '%s' is of kind 'Named' but is neither an alias-like nor struct and cannot be used",
+						t.Obj().Name(),
+					)
 				}
 			}
 
@@ -211,5 +207,13 @@ func getDeprecationOpts(attributes annotations.AnnotationHolder) definitions.Dep
 	return definitions.DeprecationOptions{
 		Deprecated:  true,
 		Description: deprecationAttr.Description,
+	}
+}
+
+func createAliasModel(node *types.Named, tag string) definitions.FieldMetadata {
+	return definitions.FieldMetadata{
+		Name: node.Obj().Name(),
+		Type: extractor.GetUnderlyingTypeName(node.Underlying()),
+		Tag:  tag,
 	}
 }

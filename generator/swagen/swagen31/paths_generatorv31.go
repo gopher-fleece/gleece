@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/generator/swagen/swagtool"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
@@ -118,7 +119,8 @@ func generateOperationSecurity(operation *v3.Operation, config *definitions.Open
 
 func setNewRouteOperation(doc *v3.Document, def definitions.ControllerMetadata, route definitions.RouteMetadata, operation *v3.Operation) {
 	// Set the operation in the path item
-	routePath := def.RestMetadata.Path + route.RestMetadata.Path
+
+	routePath := common.RemoveDuplicateSlash(def.RestMetadata.Path + route.RestMetadata.Path)
 
 	// Ensure Paths exists
 	if doc.Paths == nil {
