@@ -2,10 +2,12 @@ package controller
 
 import (
 	"encoding/json"
+	"fmt"
 	"go/ast"
 	"slices"
 	"strings"
 
+	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/extractor"
 	"github.com/gopher-fleece/gleece/extractor/visitors"
@@ -66,6 +68,9 @@ func (v *ControllerVisitor) Visit(node ast.Node) ast.Visitor {
 }
 
 func (v *ControllerVisitor) GetModelsFlat() (*definitions.Models, bool, error) {
+	v.enter(fmt.Sprintf("%d controllers", len(v.controllers)))
+	defer v.exit()
+
 	if len(v.controllers) <= 0 {
 		return nil, false, nil
 	}
@@ -88,9 +93,9 @@ func (v *ControllerVisitor) GetModelsFlat() (*definitions.Models, bool, error) {
 
 	enums := []definitions.EnumMetadata{}
 
-	typeVisitor := visitors.NewTypeVisitor(v.packages)
+	typeVisitor := visitors.NewTypeVisitor(v.packagesFacade.GetAllPackages())
 	for _, model := range models {
-		pkg := extractor.FilterPackageByFullName(v.packages, model.FullyQualifiedPackage)
+		pkg := extractor.FilterPackageByFullName(v.packagesFacade.GetAllPackages(), model.FullyQualifiedPackage)
 		if pkg == nil {
 			return nil, hasAnyErrorTypes, v.getFrozenError(
 				"could locate packages.Package '%s' whilst looking for type '%s'.\n"+
@@ -113,16 +118,26 @@ func (v *ControllerVisitor) GetModelsFlat() (*definitions.Models, bool, error) {
 			continue
 		}
 
-		structNode, err := extractor.FindTypesStructInPackage(pkg, model.Name)
+		// Currently, Name includes a "[]" prefix if the type is an array.
+		// Need to remove it so lookup can actually succeed.
+		// Might move to an "IsArray" field in the near future.
+		cleanedName := common.UnwrapArrayTypeString(model.Name)
+		structNode, err := extractor.FindTypesStructInPackage(pkg, cleanedName)
 		if err != nil {
 			return nil, hasAnyErrorTypes, v.frozenError(err)
 		}
 
 		if structNode == nil {
-			return nil, hasAnyErrorTypes, v.getFrozenError("could not find struct '%s' in package '%s'", model.Name, model.FullyQualifiedPackage)
+			return nil,
+				hasAnyErrorTypes,
+				v.getFrozenError(
+					"could not find struct '%s' in package '%s'",
+					cleanedName,
+					model.FullyQualifiedPackage,
+				)
 		}
 
-		err = typeVisitor.VisitStruct(model.FullyQualifiedPackage, model.Name, structNode)
+		err = typeVisitor.VisitStruct(model.FullyQualifiedPackage, cleanedName, structNode)
 		if err != nil {
 			return nil, hasAnyErrorTypes, v.frozenError(err)
 		}

@@ -35,7 +35,7 @@ func (v ControllerVisitor) isAnErrorEmbeddingType(meta definitions.TypeMetadata)
 		return true, nil
 	}
 
-	pkg := extractor.FilterPackageByFullName(v.packages, meta.FullyQualifiedPackage)
+	pkg := extractor.FilterPackageByFullName(v.packagesFacade.GetAllPackages(), meta.FullyQualifiedPackage)
 	embeds, err := extractor.DoesStructEmbedType(pkg, meta.Name, "", "error")
 	if err != nil {
 		return false, err

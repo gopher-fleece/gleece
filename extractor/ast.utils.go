@@ -129,7 +129,16 @@ func IsAliasDefault(fullPackageName string, alias string) bool {
 
 func GetDefaultAlias(fullyQualifiedPackage string) string {
 	segments := strings.Split(fullyQualifiedPackage, "/")
-	return segments[len(segments)-1]
+	last := segments[len(segments)-1]
+
+	// Check if last segment is a version (v2, v3, etc.)
+	if strings.HasPrefix(last, "v") && len(last) > 1 && last[1] >= '0' && last[1] <= '9' {
+		// If so, take the second-last segment
+		if len(segments) > 1 {
+			return segments[len(segments)-2]
+		}
+	}
+	return last
 }
 
 func GetDotImportedPackageNames(file *ast.File) []string {
@@ -644,7 +653,7 @@ func GetStructFromGenDecl(decl *ast.GenDecl) *ast.StructType {
 
 func FindTypesStructInPackage(pkg *packages.Package, structName string) (*types.Struct, error) {
 	typeName, err := LookupTypeName(pkg, structName)
-	if err != nil {
+	if typeName == nil || err != nil {
 		return nil, err
 	}
 
@@ -683,6 +692,10 @@ func TryGetStructOrInterfaceKind(pkg *packages.Package, name string) (definition
 		return definitions.AstNodeKindNone, err
 	}
 
+	if typeName == nil {
+		return definitions.AstNodeKindUnknown, fmt.Errorf("type '%s' was not found in package %s", name, pkg.Name)
+	}
+
 	if _, isStruct := typeName.Type().Underlying().(*types.Struct); isStruct {
 		return definitions.AstNodeKindStruct, nil
 	}
@@ -693,6 +706,29 @@ func TryGetStructOrInterfaceKind(pkg *packages.Package, name string) (definition
 	}
 
 	return definitions.AstNodeKindUnknown, nil
+}
+
+func GetUnderlyingTypeName(t types.Type) string {
+	switch underlying := t.(type) {
+	case *types.Basic:
+		return underlying.Name() // e.g., "int64", "string"
+	case *types.Named:
+		return underlying.Obj().Name() // e.g., another named type
+	case *types.Pointer:
+		return "*" + GetUnderlyingTypeName(underlying.Elem()) // Handle pointer types
+	case *types.Slice:
+		return "[]" + GetUnderlyingTypeName(underlying.Elem()) // Handle slices
+	case *types.Array:
+		return fmt.Sprintf("[%d]%s", underlying.Len(), GetUnderlyingTypeName(underlying.Elem())) // Handle arrays
+	case *types.Map:
+		return fmt.Sprintf("map[%s]%s", GetUnderlyingTypeName(underlying.Key()), GetUnderlyingTypeName(underlying.Elem())) // Handle maps
+	case *types.Chan:
+		return "chan " + GetUnderlyingTypeName(underlying.Elem()) // Handle channels
+	case *types.Signature:
+		return "func(...)"
+	default:
+		return t.String() // Fallback
+	}
 }
 
 func GetFieldTypeString(fieldType ast.Expr) string {
@@ -770,4 +806,39 @@ func GetNodeKind(fieldType ast.Expr) definitions.AstNodeKind {
 	default:
 		return definitions.AstNodeKindUnknown
 	}
+}
+
+func IsAliasType(named *types.Named) bool {
+	// First, check if it was declared using the alias syntax.
+	if named.Obj().IsAlias() {
+		return true
+	}
+	// For our purposes, if the underlying type is not a struct or interface,
+	// we might want to treat it as an alias-like type.
+	switch named.Underlying().(type) {
+	case *types.Struct, *types.Interface:
+		return false
+	default:
+		return true
+	}
+}
+
+func GetIterableElementType(iterable types.Type) string {
+	// Handle array or slice types
+	var elemType types.Type
+	if arr, ok := iterable.(*types.Array); ok {
+		elemType = arr.Elem()
+	} else if slice, ok := iterable.(*types.Slice); ok {
+		elemType = slice.Elem()
+	}
+
+	// Check if the element type is a named type (enum/alias)
+	if named, ok := elemType.(*types.Named); ok {
+		// For arrays of named types, format as []TypeName
+		return "[]" + named.Obj().Name()
+	}
+
+	// For arrays of primitive types
+	return iterable.String() // <<< CHECK THIS WORKS!
+
 }
