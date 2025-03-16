@@ -36,6 +36,11 @@ func (facade *PackagesFacade) GetPackage(packageExpression string) (*packages.Pa
 }
 
 func (facade *PackagesFacade) LoadPackages(packageExpressions []string) error {
+
+	if len(packageExpressions) <= 0 {
+		return nil
+	}
+
 	expressionsToLookup := packageExpressions[:]
 
 	for idx, expr := range packageExpressions {
@@ -54,9 +59,7 @@ func (facade *PackagesFacade) LoadPackages(packageExpressions []string) error {
 	}
 
 	for idx, pkg := range matchingPackages {
-		if idx < len(packageExpressions) { // TODO: add tests
-			facade.packagesCache[packageExpressions[idx]] = pkg
-		}
+		facade.packagesCache[packageExpressions[idx]] = pkg
 	}
 
 	return err
