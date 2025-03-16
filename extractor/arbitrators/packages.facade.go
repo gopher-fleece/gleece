@@ -54,7 +54,9 @@ func (facade *PackagesFacade) LoadPackages(packageExpressions []string) error {
 	}
 
 	for idx, pkg := range matchingPackages {
-		facade.packagesCache[packageExpressions[idx]] = pkg
+		if idx < len(packageExpressions) { // TODO: add tests
+			facade.packagesCache[packageExpressions[idx]] = pkg
+		}
 	}
 
 	return err

@@ -239,11 +239,29 @@ func GetTypeMetaByIdent(
 		meta.Import = definitions.ImportTypeDot
 		meta.FullyQualifiedPackage = relevantPkg.PkgPath
 		meta.DefaultPackageAlias = relevantPkg.Name
+
+		typeName, err := LookupTypeName(relevantPkg, ident.Name)
+		if err != nil {
+			return meta, err
+		}
+
+		if typeName == nil {
+			return meta, fmt.Errorf("type '%s' was not found in package %s", ident.Name, relevantPkg.Name)
+		}
+
 		kind, err := TryGetStructOrInterfaceKind(relevantPkg, ident.Name)
 		if err != nil {
 			return meta, err
 		}
 		meta.EntityKind = kind
+		if meta.EntityKind == definitions.AstNodeKindAlias {
+			aliasMetadata, err := ExtractAliasType(relevantPkg, typeName, ident)
+			if err != nil {
+				return meta, err
+			}
+			meta.AliasMetadata = aliasMetadata
+		}
+
 	} else {
 		// If we've gotten here, the ident is a locally defined entity;
 		//
@@ -703,6 +721,15 @@ func TryGetStructOrInterfaceKind(pkg *packages.Package, name string) (definition
 	// Get the underlying type and check if it's an interface.
 	if _, isInterface := typeName.Type().Underlying().(*types.Interface); isInterface {
 		return definitions.AstNodeKindInterface, nil
+	}
+
+	// Check if that is an alias of a basic type (string, int, bool, etc.)
+	if typeName.IsAlias() {
+		return definitions.AstNodeKindAlias, nil
+	}
+
+	if _, isBasicType := typeName.Type().Underlying().(*types.Basic); isBasicType {
+		return definitions.AstNodeKindAlias, nil
 	}
 
 	return definitions.AstNodeKindUnknown, nil

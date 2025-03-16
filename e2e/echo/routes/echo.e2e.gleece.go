@@ -41,6 +41,10 @@ import (
 	Param98value2 "github.com/gopher-fleece/gleece/e2e/assets"
 	Param99value3 "github.com/gopher-fleece/gleece/e2e/assets"
 	Param102value1 "github.com/gopher-fleece/gleece/e2e/assets"
+	Param105unit "github.com/haimkastner/unitsnet-go/units"
+	Param106data "github.com/haimkastner/unitsnet-go/units"
+	Param110data "github.com/gopher-fleece/gleece/e2e/assets"
+	Param109unit "github.com/haimkastner/unitsnet-go/units"
 	E2EClassSecControllerImport "github.com/gopher-fleece/gleece/e2e/assets"
 	// ImportsExtension - test
 )
@@ -224,6 +228,7 @@ func RegisterRoutes(engine *echo.Echo) {
 	urlParamRegex = regexp.MustCompile(`\{([\w\d-_]+)\}`)
 	registerEnumValidation(validatorInstance, "status_enumeration_enum", []string{"active", "inactive"})
 	registerEnumValidation(validatorInstance, "number_enumeration_enum", []string{"1", "2"})
+	registerEnumValidation(validatorInstance, "length_units_enum", []string{"Angstrom", "AstronomicalUnit", "Centimeter", "Chain", "DataMile", "Decameter", "Decimeter", "DtpPica", "DtpPoint", "Fathom", "Femtometer", "Foot", "Gigameter", "Hand", "Hectometer", "Inch", "Kilofoot", "KilolightYear", "Kilometer", "Kiloparsec", "Kiloyard", "LightYear", "MegalightYear", "Megameter", "Megaparsec", "Meter", "Microinch", "Micrometer", "Mil", "Mile", "Millimeter", "Nanometer", "NauticalMile", "Parsec", "Picometer", "PrinterPica", "PrinterPoint", "Shackle", "SolarRadius", "Twip", "UsSurveyFoot", "Yard"})
 	// RegisterRoutesExtension - test
 	// E2EController
 	engine.GET(toEchoUrl("/e2e/simple-get"), func(ctx echo.Context) error {
@@ -4313,6 +4318,302 @@ func RegisterRoutes(engine *echo.Echo) {
 		ctx.Response().Header().Set("x-AfterOperationRoutesExtension", "TestEnumsOptional")
 		ctx.JSON(statusCode, value)
 		ctx.Response().Header().Set("x-RouteEndRoutesExtension", "TestEnumsOptional")
+		return nil
+	})
+	engine.POST(toEchoUrl("/e2e/external-packages"), func(ctx echo.Context) error {
+		ctx.Response().Header().Set("x-RouteStartRoutesExtension", "ExternalPackages")
+		authErr := authorize(
+			ctx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(ctx, authErr, "ExternalPackages")
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(ctx)
+		var conversionErr error
+		var unitRawPtr *Param105unit.LengthUnits = nil
+		unitRaw := ctx.QueryParam("unit")
+		isunitExists := ctx.Request().URL.Query().Has("unit")
+		if isunitExists {
+			unit := unitRaw
+			switch unitRaw {
+			case "Angstrom", "AstronomicalUnit", "Centimeter", "Chain", "DataMile", "Decameter", "Decimeter", "DtpPica", "DtpPoint", "Fathom", "Femtometer", "Foot", "Gigameter", "Hand", "Hectometer", "Inch", "Kilofoot", "KilolightYear", "Kilometer", "Kiloparsec", "Kiloyard", "LightYear", "MegalightYear", "Megameter", "Megaparsec", "Meter", "Microinch", "Micrometer", "Mil", "Mile", "Millimeter", "Nanometer", "NauticalMile", "Parsec", "Picometer", "PrinterPica", "PrinterPoint", "Shackle", "SolarRadius", "Twip", "UsSurveyFoot", "Yard":
+				unitVar := Param105unit.LengthUnits(unit)
+				unitRawPtr = &unitVar
+			default:
+				conversionErr := fmt.Errorf("unit must be one of \"Angstrom, AstronomicalUnit, Centimeter, Chain, DataMile, Decameter, Decimeter, DtpPica, DtpPoint, Fathom, Femtometer, Foot, Gigameter, Hand, Hectometer, Inch, Kilofoot, KilolightYear, Kilometer, Kiloparsec, Kiloyard, LightYear, MegalightYear, Megameter, Megaparsec, Meter, Microinch, Micrometer, Mil, Mile, Millimeter, Nanometer, NauticalMile, Parsec, Picometer, PrinterPica, PrinterPoint, Shackle, SolarRadius, Twip, UsSurveyFoot, Yard\" options only but got %s", unitRaw)
+				// Middlewares onInputValidationMiddlewares section
+				for _, middleware := range onInputValidationMiddlewares {
+					if continueOperation := middleware(ctx, conversionErr); !continueOperation {
+						return nil
+					}
+				}
+				// End middlewares onInputValidationMiddlewares section
+				validationError := runtime.Rfc7807Error{
+					Type: http.StatusText(http.StatusUnprocessableEntity),
+					Detail: fmt.Sprintf(
+						"A request was made to operation 'ExternalPackages' but parameter '%s' was not properly sent - Expected %s but got %s",
+						"unit",
+						"LengthUnits",
+						reflect.TypeOf(unitRaw).String(),
+					),
+					Status:     http.StatusUnprocessableEntity,
+					Instance:   "/gleece/validation/error/ExternalPackages",
+					Extensions: map[string]string{"error": conversionErr.Error()},
+				}
+				ctx.Response().Header().Set("x-ParamsValidationErrorResponseExtension", "ExternalPackages")
+				return ctx.JSON(http.StatusUnprocessableEntity, validationError)
+			}
+		}
+		var dataRawPtr *Param106data.LengthDto = nil
+		conversionErr = bindAndValidateBody(ctx, "application/json", "required", &dataRawPtr)
+		if conversionErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				if continueOperation := middleware(ctx, conversionErr); !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			validationError := runtime.Rfc7807Error{
+				Type: http.StatusText(http.StatusUnprocessableEntity),
+				Detail: fmt.Sprintf(
+					"A request was made to operation 'ExternalPackages' but body parameter '%s' did not pass validation of '%s' - %s",
+					"data",
+					"LengthDto",
+					extractValidationErrorMessage(conversionErr, nil),
+				),
+				Status:   http.StatusUnprocessableEntity,
+				Instance: "/gleece/validation/error/ExternalPackages",
+			}
+			ctx.Response().Header().Set("x-JsonBodyValidationErrorResponseExtension", "ExternalPackages")
+			return ctx.JSON(http.StatusUnprocessableEntity, validationError)
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			if continueOperation := middleware(ctx); !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		ctx.Response().Header().Set("x-BeforeOperationRoutesExtension", "ExternalPackages")
+		value, opError := controller.ExternalPackages(unitRawPtr, *dataRawPtr)
+		for key, value := range controller.GetHeaders() {
+			ctx.Response().Header().Set(key, value)
+		}
+		ctx.Response().Header().Set("x-inject", "true")
+		ctx.Response().Header().Set("x-ResponseHeadersExtension", "ExternalPackages")
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				if continueOperation := middleware(ctx, opError); !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'ExternalPackages'",
+				Status:     statusCode,
+				Instance:   "/gleece/controller/error/ExternalPackages",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			ctx.Response().Header().Set("x-JsonErrorResponseExtension", "ExternalPackages")
+			return ctx.JSON(statusCode, stdError)
+		}
+		ctx.Response().Header().Set("x-JsonResponseExtension", "ExternalPackages")
+		var outputValidationErr error
+		outputValidationErr = validatorInstance.Struct(value)
+		if outputValidationErr != nil {
+			// Middlewares onOutputValidationMiddlewares section
+			for _, middleware := range onOutputValidationMiddlewares {
+				if continueOperation := middleware(ctx, outputValidationErr); !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onOutputValidationMiddlewares section
+			outputValidationStatusCode := http.StatusInternalServerError
+			outputValidationRfc7807Error := runtime.Rfc7807Error{
+				Type:       http.StatusText(outputValidationStatusCode),
+				Detail:     "Encountered an error during operation 'ExternalPackages'",
+				Status:     outputValidationStatusCode,
+				Instance:   "/gleece/controller/error/ExternalPackages",
+				Extensions: map[string]string{},
+			}
+			return ctx.JSON(outputValidationStatusCode, outputValidationRfc7807Error)
+		}
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			if continueOperation := middleware(ctx); !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		ctx.Response().Header().Set("x-AfterOperationRoutesExtension", "ExternalPackages")
+		ctx.JSON(statusCode, value)
+		ctx.Response().Header().Set("x-RouteEndRoutesExtension", "ExternalPackages")
+		return nil
+	})
+	engine.POST(toEchoUrl("/e2e/external-packages-validation"), func(ctx echo.Context) error {
+		ctx.Response().Header().Set("x-RouteStartRoutesExtension", "ExternalPackagesValidation")
+		authErr := authorize(
+			ctx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(ctx, authErr, "ExternalPackagesValidation")
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(ctx)
+		var conversionErr error
+		var unitRawPtr *Param109unit.LengthUnits = nil
+		unitRaw := ctx.QueryParam("unit")
+		isunitExists := ctx.Request().URL.Query().Has("unit")
+		if isunitExists {
+			unit := unitRaw
+			switch unitRaw {
+			case "Angstrom", "AstronomicalUnit", "Centimeter", "Chain", "DataMile", "Decameter", "Decimeter", "DtpPica", "DtpPoint", "Fathom", "Femtometer", "Foot", "Gigameter", "Hand", "Hectometer", "Inch", "Kilofoot", "KilolightYear", "Kilometer", "Kiloparsec", "Kiloyard", "LightYear", "MegalightYear", "Megameter", "Megaparsec", "Meter", "Microinch", "Micrometer", "Mil", "Mile", "Millimeter", "Nanometer", "NauticalMile", "Parsec", "Picometer", "PrinterPica", "PrinterPoint", "Shackle", "SolarRadius", "Twip", "UsSurveyFoot", "Yard":
+				unitVar := Param109unit.LengthUnits(unit)
+				unitRawPtr = &unitVar
+			default:
+				conversionErr := fmt.Errorf("unit must be one of \"Angstrom, AstronomicalUnit, Centimeter, Chain, DataMile, Decameter, Decimeter, DtpPica, DtpPoint, Fathom, Femtometer, Foot, Gigameter, Hand, Hectometer, Inch, Kilofoot, KilolightYear, Kilometer, Kiloparsec, Kiloyard, LightYear, MegalightYear, Megameter, Megaparsec, Meter, Microinch, Micrometer, Mil, Mile, Millimeter, Nanometer, NauticalMile, Parsec, Picometer, PrinterPica, PrinterPoint, Shackle, SolarRadius, Twip, UsSurveyFoot, Yard\" options only but got %s", unitRaw)
+				// Middlewares onInputValidationMiddlewares section
+				for _, middleware := range onInputValidationMiddlewares {
+					if continueOperation := middleware(ctx, conversionErr); !continueOperation {
+						return nil
+					}
+				}
+				// End middlewares onInputValidationMiddlewares section
+				validationError := runtime.Rfc7807Error{
+					Type: http.StatusText(http.StatusUnprocessableEntity),
+					Detail: fmt.Sprintf(
+						"A request was made to operation 'ExternalPackagesValidation' but parameter '%s' was not properly sent - Expected %s but got %s",
+						"unit",
+						"LengthUnits",
+						reflect.TypeOf(unitRaw).String(),
+					),
+					Status:     http.StatusUnprocessableEntity,
+					Instance:   "/gleece/validation/error/ExternalPackagesValidation",
+					Extensions: map[string]string{"error": conversionErr.Error()},
+				}
+				ctx.Response().Header().Set("x-ParamsValidationErrorResponseExtension", "ExternalPackagesValidation")
+				return ctx.JSON(http.StatusUnprocessableEntity, validationError)
+			}
+		}
+		var dataRawPtr *Param110data.LengthDtoWithValidation = nil
+		conversionErr = bindAndValidateBody(ctx, "application/json", "required", &dataRawPtr)
+		if conversionErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				if continueOperation := middleware(ctx, conversionErr); !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			validationError := runtime.Rfc7807Error{
+				Type: http.StatusText(http.StatusUnprocessableEntity),
+				Detail: fmt.Sprintf(
+					"A request was made to operation 'ExternalPackagesValidation' but body parameter '%s' did not pass validation of '%s' - %s",
+					"data",
+					"LengthDtoWithValidation",
+					extractValidationErrorMessage(conversionErr, nil),
+				),
+				Status:   http.StatusUnprocessableEntity,
+				Instance: "/gleece/validation/error/ExternalPackagesValidation",
+			}
+			ctx.Response().Header().Set("x-JsonBodyValidationErrorResponseExtension", "ExternalPackagesValidation")
+			return ctx.JSON(http.StatusUnprocessableEntity, validationError)
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			if continueOperation := middleware(ctx); !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		ctx.Response().Header().Set("x-BeforeOperationRoutesExtension", "ExternalPackagesValidation")
+		value, opError := controller.ExternalPackagesValidation(unitRawPtr, *dataRawPtr)
+		for key, value := range controller.GetHeaders() {
+			ctx.Response().Header().Set(key, value)
+		}
+		ctx.Response().Header().Set("x-inject", "true")
+		ctx.Response().Header().Set("x-ResponseHeadersExtension", "ExternalPackagesValidation")
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				if continueOperation := middleware(ctx, opError); !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'ExternalPackagesValidation'",
+				Status:     statusCode,
+				Instance:   "/gleece/controller/error/ExternalPackagesValidation",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			ctx.Response().Header().Set("x-JsonErrorResponseExtension", "ExternalPackagesValidation")
+			return ctx.JSON(statusCode, stdError)
+		}
+		ctx.Response().Header().Set("x-JsonResponseExtension", "ExternalPackagesValidation")
+		var outputValidationErr error
+		outputValidationErr = validatorInstance.Struct(value)
+		if outputValidationErr != nil {
+			// Middlewares onOutputValidationMiddlewares section
+			for _, middleware := range onOutputValidationMiddlewares {
+				if continueOperation := middleware(ctx, outputValidationErr); !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onOutputValidationMiddlewares section
+			outputValidationStatusCode := http.StatusInternalServerError
+			outputValidationRfc7807Error := runtime.Rfc7807Error{
+				Type:       http.StatusText(outputValidationStatusCode),
+				Detail:     "Encountered an error during operation 'ExternalPackagesValidation'",
+				Status:     outputValidationStatusCode,
+				Instance:   "/gleece/controller/error/ExternalPackagesValidation",
+				Extensions: map[string]string{},
+			}
+			return ctx.JSON(outputValidationStatusCode, outputValidationRfc7807Error)
+		}
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			if continueOperation := middleware(ctx); !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		ctx.Response().Header().Set("x-AfterOperationRoutesExtension", "ExternalPackagesValidation")
+		ctx.JSON(statusCode, value)
+		ctx.Response().Header().Set("x-RouteEndRoutesExtension", "ExternalPackagesValidation")
 		return nil
 	})
 	// E2EClassSecController

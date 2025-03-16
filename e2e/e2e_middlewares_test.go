@@ -23,7 +23,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 				"X-pass-on-error":                "",
 				"X-pass-after-succeed-operation": "true",
 			},
-			RoutesFlavor: &fullyFeatured,
+			RoutesFlavor: &fullyFeaturedRouting,
 		})
 	})
 
@@ -42,7 +42,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 				"X-pass-on-error":                "",
 				"X-pass-after-succeed-operation": "",
 			},
-			RoutesFlavor: &exExtra,
+			RoutesFlavor: &exExtraRouting,
 		})
 	})
 
@@ -61,7 +61,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 				"X-pass-on-error":                "true",
 				"X-pass-after-succeed-operation": "",
 			},
-			RoutesFlavor: &fullyFeatured,
+			RoutesFlavor: &fullyFeaturedRouting,
 		})
 	})
 
@@ -80,7 +80,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 				"X-pass-on-error":                "",
 				"X-pass-after-succeed-operation": "",
 			},
-			RoutesFlavor: &exExtra,
+			RoutesFlavor: &exExtraRouting,
 		})
 	})
 
@@ -99,7 +99,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 				"X-pass-on-error":                "true",
 				"X-pass-after-succeed-operation": "",
 			},
-			RoutesFlavor: &fullyFeatured,
+			RoutesFlavor: &fullyFeaturedRouting,
 		})
 	})
 
@@ -118,7 +118,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 				"X-pass-on-error":                "",
 				"X-pass-after-succeed-operation": "",
 			},
-			RoutesFlavor: &exExtra,
+			RoutesFlavor: &exExtraRouting,
 		})
 	})
 
@@ -137,7 +137,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 				"X-pass-on-error":                "true",
 				"X-pass-after-succeed-operation": "",
 			},
-			RoutesFlavor: &fullyFeatured,
+			RoutesFlavor: &fullyFeaturedRouting,
 		})
 	})
 
@@ -156,7 +156,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 				"X-pass-on-error":                "",
 				"X-pass-after-succeed-operation": "",
 			},
-			RoutesFlavor: &exExtra,
+			RoutesFlavor: &exExtraRouting,
 		})
 	})
 
@@ -175,7 +175,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 				"X-pass-on-error":                "",
 				"X-pass-after-succeed-operation": "",
 			},
-			RoutesFlavor: &fullyFeatured,
+			RoutesFlavor: &fullyFeaturedRouting,
 		})
 	})
 
@@ -194,7 +194,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 				"X-pass-on-error":                "",
 				"X-pass-after-succeed-operation": "",
 			},
-			RoutesFlavor: &exExtra,
+			RoutesFlavor: &exExtraRouting,
 		})
 	})
 
@@ -213,7 +213,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 				"X-pass-on-error":                "",
 				"X-pass-after-succeed-operation": "true",
 			},
-			RoutesFlavor: &fullyFeatured,
+			RoutesFlavor: &fullyFeaturedRouting,
 		})
 	})
 
@@ -232,7 +232,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 				"X-pass-on-error":                "",
 				"X-pass-after-succeed-operation": "",
 			},
-			RoutesFlavor: &exExtra,
+			RoutesFlavor: &exExtraRouting,
 		})
 	})
 
@@ -251,7 +251,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 				"X-pass-on-error":                "true",
 				"X-pass-after-succeed-operation": "",
 			},
-			RoutesFlavor: &fullyFeatured,
+			RoutesFlavor: &fullyFeaturedRouting,
 		})
 	})
 
@@ -270,7 +270,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 				"X-pass-on-error":                "",
 				"X-pass-after-succeed-operation": "",
 			},
-			RoutesFlavor: &exExtra,
+			RoutesFlavor: &exExtraRouting,
 		})
 	})
 
@@ -289,7 +289,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 				"X-pass-on-error":                "true",
 				"X-pass-after-succeed-operation": "",
 			},
-			RoutesFlavor: &fullyFeatured,
+			RoutesFlavor: &fullyFeaturedRouting,
 		})
 	})
 
@@ -308,7 +308,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 				"X-pass-on-error":                "",
 				"X-pass-after-succeed-operation": "",
 			},
-			RoutesFlavor: &exExtra,
+			RoutesFlavor: &exExtraRouting,
 		})
 	})
 
@@ -328,7 +328,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 				"X-pass-on-error-2":              "true",
 				"X-pass-after-succeed-operation": "",
 			},
-			RoutesFlavor: &fullyFeatured,
+			RoutesFlavor: &fullyFeaturedRouting,
 		})
 	})
 
@@ -348,7 +348,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 				"X-pass-on-error-2":              "",
 				"X-pass-after-succeed-operation": "",
 			},
-			RoutesFlavor: &exExtra,
+			RoutesFlavor: &exExtraRouting,
 		})
 	})
 
@@ -368,7 +368,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 				"X-pass-after-succeed-operation": "true",
 				"X-pass-on-error-2":              "",
 			},
-			RoutesFlavor: &fullyFeatured,
+			RoutesFlavor: &fullyFeaturedRouting,
 		})
 	})
 
@@ -388,7 +388,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 				"X-pass-after-succeed-operation": "",
 				"X-pass-on-error-2":              "",
 			},
-			RoutesFlavor: &exExtra,
+			RoutesFlavor: &exExtraRouting,
 		})
 	})
 
@@ -406,7 +406,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 			Body:         nil,
 			Query:        map[string]string{"queryParam": "queryParam"},
 			Headers:      nil,
-			RoutesFlavor: &fullyFeatured,
+			RoutesFlavor: &fullyFeaturedRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -424,7 +424,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 			Headers: map[string]string{
 				"headerParam": "headerParam",
 			},
-			RoutesFlavor: &fullyFeatured,
+			RoutesFlavor: &fullyFeaturedRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -442,7 +442,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 			Headers: map[string]string{
 				"headerparam": "1headerParam",
 			},
-			RoutesFlavor: &fullyFeatured,
+			RoutesFlavor: &fullyFeaturedRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -457,7 +457,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 			Method:       "POST",
 			Query:        map[string]string{"value1": "60", "value2": "true", "value3": "10.6", "value4": "3"},
 			Headers:      map[string]string{},
-			RoutesFlavor: &fullyFeatured,
+			RoutesFlavor: &fullyFeaturedRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -472,7 +472,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 			Method:       "POST",
 			Query:        map[string]string{"value1": "60", "value2": "true65", "value3": "10", "value4": "3"},
 			Headers:      map[string]string{},
-			RoutesFlavor: &fullyFeatured,
+			RoutesFlavor: &fullyFeaturedRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -493,7 +493,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 				Statuses: []assets.StatusEnumeration{assets.StatusEnumerationInactive},
 			},
 			Headers:      map[string]string{},
-			RoutesFlavor: &fullyFeatured,
+			RoutesFlavor: &fullyFeaturedRouting,
 		})
 	})
 
@@ -511,7 +511,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 			Body:         nil,
 			Query:        map[string]string{"queryParam": "queryParam"},
 			Headers:      nil,
-			RoutesFlavor: &exExtra,
+			RoutesFlavor: &exExtraRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -529,7 +529,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 			Headers: map[string]string{
 				"headerParam": "headerParam",
 			},
-			RoutesFlavor: &exExtra,
+			RoutesFlavor: &exExtraRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -544,7 +544,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 			Method:       "POST",
 			Query:        map[string]string{"value1": "60", "value2": "true", "value3": "10.6", "value4": "3"},
 			Headers:      map[string]string{},
-			RoutesFlavor: &exExtra,
+			RoutesFlavor: &exExtraRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -559,7 +559,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 			Method:       "POST",
 			Query:        map[string]string{"value1": "60", "value2": "true65", "value3": "10", "value4": "3"},
 			Headers:      map[string]string{},
-			RoutesFlavor: &exExtra,
+			RoutesFlavor: &exExtraRouting,
 		})
 	})
 
@@ -579,7 +579,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 			Headers: map[string]string{
 				"headerParam": "headerParam",
 			},
-			RoutesFlavor: &fullyFeatured,
+			RoutesFlavor: &fullyFeaturedRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -597,7 +597,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 			Headers: map[string]string{
 				"headerParam": "headerParam",
 			},
-			RoutesFlavor: &fullyFeatured,
+			RoutesFlavor: &fullyFeaturedRouting,
 		})
 	})
 
@@ -617,7 +617,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 			Headers: map[string]string{
 				"headerParam": "headerParam",
 			},
-			RoutesFlavor: &exExtra,
+			RoutesFlavor: &exExtraRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -635,7 +635,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 			Headers: map[string]string{
 				"headerParam": "headerParam",
 			},
-			RoutesFlavor: &exExtra,
+			RoutesFlavor: &exExtraRouting,
 		})
 	})
 
@@ -653,7 +653,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 			Body:         nil,
 			Query:        map[string]string{"queryParam": "queryParam"},
 			Headers:      map[string]string{"abort-on-error": "true"},
-			RoutesFlavor: &fullyFeatured,
+			RoutesFlavor: &fullyFeaturedRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -672,7 +672,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 				"headerParam":    "headerParam",
 				"abort-on-error": "true",
 			},
-			RoutesFlavor: &fullyFeatured,
+			RoutesFlavor: &fullyFeaturedRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -691,7 +691,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 				"headerparam":    "1headerParam",
 				"abort-on-error": "true",
 			},
-			RoutesFlavor: &fullyFeatured,
+			RoutesFlavor: &fullyFeaturedRouting,
 		})
 	})
 
@@ -709,7 +709,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 			Body:         nil,
 			Query:        map[string]string{"queryParam": "queryParam"},
 			Headers:      map[string]string{"abort-on-error": "true"},
-			RoutesFlavor: &exExtra,
+			RoutesFlavor: &exExtraRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -728,7 +728,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 				"headerParam":    "headerParam",
 				"abort-on-error": "true",
 			},
-			RoutesFlavor: &exExtra,
+			RoutesFlavor: &exExtraRouting,
 		})
 	})
 
@@ -749,7 +749,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 				"headerParam":    "headerParam",
 				"abort-on-error": "true",
 			},
-			RoutesFlavor: &fullyFeatured,
+			RoutesFlavor: &fullyFeaturedRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -768,7 +768,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 				"headerParam":    "headerParam",
 				"abort-on-error": "true",
 			},
-			RoutesFlavor: &fullyFeatured,
+			RoutesFlavor: &fullyFeaturedRouting,
 		})
 	})
 
@@ -789,7 +789,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 				"headerParam":    "headerParam",
 				"abort-on-error": "true",
 			},
-			RoutesFlavor: &exExtra,
+			RoutesFlavor: &exExtraRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -808,7 +808,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 				"headerParam":    "headerParam",
 				"abort-on-error": "true",
 			},
-			RoutesFlavor: &exExtra,
+			RoutesFlavor: &exExtraRouting,
 		})
 	})
 
@@ -826,7 +826,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 			Body:         nil,
 			Query:        nil,
 			Headers:      nil,
-			RoutesFlavor: &fullyFeatured,
+			RoutesFlavor: &fullyFeaturedRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -842,7 +842,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 			Body:         nil,
 			Query:        nil,
 			Headers:      nil,
-			RoutesFlavor: &fullyFeatured,
+			RoutesFlavor: &fullyFeaturedRouting,
 		})
 	})
 
@@ -860,7 +860,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 			Body:         nil,
 			Query:        nil,
 			Headers:      nil,
-			RoutesFlavor: &exExtra,
+			RoutesFlavor: &exExtraRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -876,7 +876,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 			Body:         nil,
 			Query:        nil,
 			Headers:      nil,
-			RoutesFlavor: &exExtra,
+			RoutesFlavor: &exExtraRouting,
 		})
 	})
 
@@ -897,7 +897,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 				"abort-on-error":                 "true",
 				"X-pass-after-succeed-operation": "true",
 			},
-			RoutesFlavor: &fullyFeatured,
+			RoutesFlavor: &fullyFeaturedRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -915,7 +915,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 			Headers: map[string]string{
 				"abort-on-error": "true",
 			},
-			RoutesFlavor: &fullyFeatured,
+			RoutesFlavor: &fullyFeaturedRouting,
 		})
 	})
 
@@ -936,7 +936,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 				"abort-on-error":                 "",
 				"X-pass-after-succeed-operation": "",
 			},
-			RoutesFlavor: &exExtra,
+			RoutesFlavor: &exExtraRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -954,7 +954,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 			Headers: map[string]string{
 				"abort-on-error": "",
 			},
-			RoutesFlavor: &exExtra,
+			RoutesFlavor: &exExtraRouting,
 		})
 	})
 })

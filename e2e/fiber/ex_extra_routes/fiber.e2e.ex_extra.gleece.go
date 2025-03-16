@@ -40,6 +40,10 @@ import (
 	Param98value2 "github.com/gopher-fleece/gleece/e2e/assets"
 	Param99value3 "github.com/gopher-fleece/gleece/e2e/assets"
 	Param102value1 "github.com/gopher-fleece/gleece/e2e/assets"
+	Param105unit "github.com/haimkastner/unitsnet-go/units"
+	Param106data "github.com/haimkastner/unitsnet-go/units"
+	Param110data "github.com/gopher-fleece/gleece/e2e/assets"
+	Param109unit "github.com/haimkastner/unitsnet-go/units"
 	E2EClassSecControllerImport "github.com/gopher-fleece/gleece/e2e/assets"
 	// import extension placeholder
 )
@@ -3798,6 +3802,208 @@ func RegisterRoutes(engine *fiber.App) {
 				Detail:     "Encountered an error during operation 'TestEnumsOptional'",
 				Status:     statusCode,
 				Instance:   "/gleece/controller/error/TestEnumsOptional",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			return ctx.Status(statusCode).JSON(stdError)
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			if continueOperation := middleware(ctx); !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		ctx.Status(statusCode).JSON(value)
+		// route end routes extension placeholder
+		return nil
+	})
+	engine.Post(toFiberUrl("/e2e/external-packages"), func(ctx *fiber.Ctx) error {
+		// route start routes extension placeholder
+		authErr := authorize(
+			ctx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(ctx, authErr, "ExternalPackages")
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(ctx)
+		var conversionErr error
+		var unitRawPtr *Param105unit.LengthUnits = nil
+		unitRaw := ctx.Query("unit")
+		isunitExists := ctx.Context().QueryArgs().Has("unit")
+		if isunitExists {
+			unit := unitRaw
+			unitVar := Param105unit.LengthUnits(unit)
+			unitRawPtr = &unitVar
+		}
+		var dataRawPtr *Param106data.LengthDto = nil
+		conversionErr = bindAndValidateBody(ctx, "application/json", "required", &dataRawPtr)
+		if conversionErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				if continueOperation := middleware(ctx, conversionErr); !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			validationError := runtime.Rfc7807Error{
+				Type: http.StatusText(http.StatusUnprocessableEntity),
+				Detail: fmt.Sprintf(
+					"A request was made to operation 'ExternalPackages' but body parameter '%s' did not pass validation of '%s' - %s",
+					"data",
+					"LengthDto",
+					extractValidationErrorMessage(conversionErr, nil),
+				),
+				Status:   http.StatusUnprocessableEntity,
+				Instance: "/gleece/validation/error/ExternalPackages",
+			}
+			// json body validation error response extension placeholder
+			return ctx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			if continueOperation := middleware(ctx); !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.ExternalPackages(unitRawPtr, *dataRawPtr)
+		for key, value := range controller.GetHeaders() {
+			ctx.Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				if continueOperation := middleware(ctx, opError); !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'ExternalPackages'",
+				Status:     statusCode,
+				Instance:   "/gleece/controller/error/ExternalPackages",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			return ctx.Status(statusCode).JSON(stdError)
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			if continueOperation := middleware(ctx); !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		ctx.Status(statusCode).JSON(value)
+		// route end routes extension placeholder
+		return nil
+	})
+	engine.Post(toFiberUrl("/e2e/external-packages-validation"), func(ctx *fiber.Ctx) error {
+		// route start routes extension placeholder
+		authErr := authorize(
+			ctx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(ctx, authErr, "ExternalPackagesValidation")
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(ctx)
+		var conversionErr error
+		var unitRawPtr *Param109unit.LengthUnits = nil
+		unitRaw := ctx.Query("unit")
+		isunitExists := ctx.Context().QueryArgs().Has("unit")
+		if isunitExists {
+			unit := unitRaw
+			unitVar := Param109unit.LengthUnits(unit)
+			unitRawPtr = &unitVar
+		}
+		var dataRawPtr *Param110data.LengthDtoWithValidation = nil
+		conversionErr = bindAndValidateBody(ctx, "application/json", "required", &dataRawPtr)
+		if conversionErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				if continueOperation := middleware(ctx, conversionErr); !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			validationError := runtime.Rfc7807Error{
+				Type: http.StatusText(http.StatusUnprocessableEntity),
+				Detail: fmt.Sprintf(
+					"A request was made to operation 'ExternalPackagesValidation' but body parameter '%s' did not pass validation of '%s' - %s",
+					"data",
+					"LengthDtoWithValidation",
+					extractValidationErrorMessage(conversionErr, nil),
+				),
+				Status:   http.StatusUnprocessableEntity,
+				Instance: "/gleece/validation/error/ExternalPackagesValidation",
+			}
+			// json body validation error response extension placeholder
+			return ctx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			if continueOperation := middleware(ctx); !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.ExternalPackagesValidation(unitRawPtr, *dataRawPtr)
+		for key, value := range controller.GetHeaders() {
+			ctx.Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				if continueOperation := middleware(ctx, opError); !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'ExternalPackagesValidation'",
+				Status:     statusCode,
+				Instance:   "/gleece/controller/error/ExternalPackagesValidation",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			// json error response extension placeholder

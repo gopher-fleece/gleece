@@ -24,7 +24,7 @@ var _ = Describe("E2E Customizing Spec", func() {
 			Body:         nil,
 			Query:        nil,
 			Headers:      nil,
-			RoutesFlavor: &fullyFeatured,
+			RoutesFlavor: &fullyFeaturedRouting,
 		})
 	})
 
@@ -42,7 +42,7 @@ var _ = Describe("E2E Customizing Spec", func() {
 			Body:         nil,
 			Query:        nil,
 			Headers:      nil,
-			RoutesFlavor: &exExtra,
+			RoutesFlavor: &exExtraRouting,
 		})
 	})
 
@@ -65,7 +65,7 @@ var _ = Describe("E2E Customizing Spec", func() {
 			Body:         nil,
 			Query:        nil,
 			Headers:      nil,
-			RoutesFlavor: &fullyFeatured,
+			RoutesFlavor: &fullyFeaturedRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -80,7 +80,7 @@ var _ = Describe("E2E Customizing Spec", func() {
 			Body:         nil,
 			Query:        nil,
 			Headers:      nil,
-			RoutesFlavor: &fullyFeatured,
+			RoutesFlavor: &fullyFeaturedRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -94,7 +94,7 @@ var _ = Describe("E2E Customizing Spec", func() {
 			Method:       "POST",
 			Query:        map[string]string{"value1": "60", "value2": "true65", "value3": "10", "value4": "3"},
 			Headers:      map[string]string{},
-			RoutesFlavor: &fullyFeatured,
+			RoutesFlavor: &fullyFeaturedRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -108,7 +108,7 @@ var _ = Describe("E2E Customizing Spec", func() {
 			Method:       "POST",
 			Query:        map[string]string{"value1": "60fff", "value2": "true", "value3": "10", "value4": "3"},
 			Headers:      map[string]string{},
-			RoutesFlavor: &fullyFeatured,
+			RoutesFlavor: &fullyFeaturedRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -125,7 +125,7 @@ var _ = Describe("E2E Customizing Spec", func() {
 			Headers: map[string]string{
 				"headerparam": "1headerParam",
 			},
-			RoutesFlavor: &fullyFeatured,
+			RoutesFlavor: &fullyFeaturedRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -142,7 +142,7 @@ var _ = Describe("E2E Customizing Spec", func() {
 			Headers: map[string]string{
 				"headerParam": "headerParam",
 			},
-			RoutesFlavor: &fullyFeatured,
+			RoutesFlavor: &fullyFeaturedRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -162,7 +162,7 @@ var _ = Describe("E2E Customizing Spec", func() {
 				Statuses: []assets.StatusEnumeration{assets.StatusEnumerationInactive},
 			},
 			Headers:      map[string]string{},
-			RoutesFlavor: &fullyFeatured,
+			RoutesFlavor: &fullyFeaturedRouting,
 		})
 	})
 
@@ -185,7 +185,7 @@ var _ = Describe("E2E Customizing Spec", func() {
 			Body:         nil,
 			Query:        nil,
 			Headers:      nil,
-			RoutesFlavor: &exExtra,
+			RoutesFlavor: &exExtraRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -200,7 +200,7 @@ var _ = Describe("E2E Customizing Spec", func() {
 			Body:         nil,
 			Query:        nil,
 			Headers:      nil,
-			RoutesFlavor: &exExtra,
+			RoutesFlavor: &exExtraRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -214,7 +214,7 @@ var _ = Describe("E2E Customizing Spec", func() {
 			Method:       "POST",
 			Query:        map[string]string{"value1": "60", "value2": "true65", "value3": "10", "value4": "3"},
 			Headers:      map[string]string{},
-			RoutesFlavor: &exExtra,
+			RoutesFlavor: &exExtraRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -228,7 +228,7 @@ var _ = Describe("E2E Customizing Spec", func() {
 			Method:       "POST",
 			Query:        map[string]string{"value1": "60fff", "value2": "true", "value3": "10", "value4": "3"},
 			Headers:      map[string]string{},
-			RoutesFlavor: &exExtra,
+			RoutesFlavor: &exExtraRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -245,7 +245,7 @@ var _ = Describe("E2E Customizing Spec", func() {
 			Headers: map[string]string{
 				"headerParam": "headerParam",
 			},
-			RoutesFlavor: &exExtra,
+			RoutesFlavor: &exExtraRouting,
 		})
 	})
 
@@ -262,7 +262,7 @@ var _ = Describe("E2E Customizing Spec", func() {
 			Body:         nil,
 			Query:        nil,
 			Headers:      nil,
-			RoutesFlavor: &fullyFeatured,
+			RoutesFlavor: &fullyFeaturedRouting,
 		})
 	})
 
@@ -279,7 +279,7 @@ var _ = Describe("E2E Customizing Spec", func() {
 			Body:         nil,
 			Query:        nil,
 			Headers:      nil,
-			RoutesFlavor: &exExtra,
+			RoutesFlavor: &exExtraRouting,
 		})
 	})
 
@@ -297,7 +297,7 @@ var _ = Describe("E2E Customizing Spec", func() {
 			Body:         nil,
 			Query:        nil,
 			Headers:      nil,
-			RoutesFlavor: &fullyFeatured,
+			RoutesFlavor: &fullyFeaturedRouting,
 		})
 	})
 
@@ -315,7 +315,7 @@ var _ = Describe("E2E Customizing Spec", func() {
 			Body:         nil,
 			Query:        nil,
 			Headers:      nil,
-			RoutesFlavor: &exExtra,
+			RoutesFlavor: &exExtraRouting,
 		})
 	})
 

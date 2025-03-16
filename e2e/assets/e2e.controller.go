@@ -1,12 +1,15 @@
 package assets
 
 import (
+	"encoding/json"
 	"fmt"
+	"math"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gopher-fleece/runtime"
+	"github.com/haimkastner/unitsnet-go/units"
 	"github.com/labstack/echo/v4"
 )
 
@@ -485,4 +488,49 @@ func (ec *E2EController) TestEnumsOptional(value1 *StatusEnumeration) (string, e
 		return "nil", nil
 	}
 	return string(*value1), nil
+}
+
+// @Method(POST)
+// @Route(/external-packages)
+// @Query(unit)
+// @Body(data)
+// @Response(200)
+// @ErrorResponse(500)
+func (ec *E2EController) ExternalPackages(unit *units.LengthUnits, data units.LengthDto) (units.LengthDto, error) {
+	lf := units.LengthFactory{}
+	unitData, _ := lf.FromDto(data)
+
+	// Broken unit body
+	if math.IsNaN(unitData.BaseValue()) {
+		unitData, _ = lf.FromMeters(9992)
+	}
+
+	returnDto := unitData.ToDto(unit)
+
+	// Broken unit param
+	if math.IsNaN(returnDto.Value) {
+		returnDto.Value = 9991
+	}
+
+	return returnDto, nil
+}
+
+type LengthDtoWithValidation struct {
+	// units.LengthDto
+	Value float64           `json:"value"`
+	Unit  units.LengthUnits `json:"unit" validate:"required,length_units_enum"` // Extend it, to add the validation for the enum
+}
+
+// @Method(POST)
+// @Route(/external-packages-validation)
+// @Query(unit)
+// @Body(data)
+// @Response(200)
+// @ErrorResponse(500)
+func (ec *E2EController) ExternalPackagesValidation(unit *units.LengthUnits, data LengthDtoWithValidation) (units.LengthDto, error) {
+	lf := units.LengthFactory{}
+	// Dump to json
+	dataJson, _ := json.Marshal(data)
+	unitData, _ := lf.FromDtoJSON(dataJson)
+	return unitData.ToDto(unit), nil
 }

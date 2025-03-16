@@ -3,8 +3,10 @@ package arbitrators
 import (
 	"fmt"
 	"go/ast"
+	"go/constant"
 	"go/token"
 	"go/types"
+	"strconv"
 
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/extractor"
@@ -120,9 +122,23 @@ func (arb *AstArbitrator) GetTypeMetaByIdent(file *ast.File, ident *ast.Ident) (
 			return meta, err
 		}
 
+		pkg := extractor.FilterPackageByFullName(arb.pkgFacade.GetAllPackages(), currentPackageName)
+		if pkg == nil {
+			return meta, fmt.Errorf("could not find package '%s' in the given list of packages", currentPackageName)
+		}
+
+		typeName, err := extractor.LookupTypeName(pkg, ident.Name)
+		if err != nil {
+			return meta, err
+		}
+
+		if (typeName == nil) || (typeName.Type() == nil) {
+			return meta, fmt.Errorf("could not find type '%s' in package '%s', are you sure it's included in the 'commonConfig->controllerGlobs' search paths?", ident.Name, currentPackageName)
+		}
+
 		// Verify the identifier does in fact exist in the current package.
 		// Not strictly needed but helps with safety.
-		exists, entityKind, err := arb.TypeOrInterfaceExistsIn(currentPackageName, ident)
+		exists, entityKind, err := arb.TypeOrInterfaceExistsIn(typeName, ident)
 		if err != nil {
 			return meta, err
 		}
@@ -135,6 +151,14 @@ func (arb *AstArbitrator) GetTypeMetaByIdent(file *ast.File, ident *ast.Ident) (
 		meta.FullyQualifiedPackage = currentPackageName
 		meta.DefaultPackageAlias = extractor.GetDefaultAlias(currentPackageName)
 		meta.EntityKind = entityKind
+
+		if entityKind == definitions.AstNodeKindAlias {
+			aliasMetadata, err := arb.ExtractAliasType(pkg, typeName)
+			if err != nil {
+				return meta, err
+			}
+			meta.AliasMetadata = aliasMetadata
+		}
 	}
 
 	return meta, nil
@@ -196,6 +220,22 @@ func (arb *AstArbitrator) GetTypeMetaBySelectorExpr(file *ast.File, selector *as
 	}
 
 	meta.EntityKind = kind
+
+	if kind == definitions.AstNodeKindAlias {
+		typeName, err := extractor.LookupTypeName(pkg, typeOrInterfaceName)
+		if err != nil {
+			return meta, err
+		}
+
+		if typeName == nil {
+			return meta, fmt.Errorf("type '%s' was not found in package %s", typeOrInterfaceName, pkg.Name)
+		}
+		aliasMetadata, err := arb.ExtractAliasType(pkg, typeName)
+		if err != nil {
+			return meta, err
+		}
+		meta.AliasMetadata = aliasMetadata
+	}
 	return meta, nil
 }
 
@@ -213,22 +253,10 @@ func (arb *AstArbitrator) IsIdentFromDotImportedPackage(file *ast.File, ident *a
 }
 
 func (arb *AstArbitrator) TypeOrInterfaceExistsIn(
-	packageFullName string,
+	typeName *types.TypeName,
 	ident *ast.Ident,
 ) (bool, definitions.AstNodeKind, error) {
-	pkg := extractor.FilterPackageByFullName(arb.pkgFacade.GetAllPackages(), packageFullName)
-	if pkg == nil {
-		return false, definitions.AstNodeKindNone, fmt.Errorf("could not find package '%s' in the given list of packages", packageFullName)
-	}
 
-	typeName, err := extractor.LookupTypeName(pkg, ident.Name)
-	if err != nil {
-		return false, definitions.AstNodeKindNone, err
-	}
-
-	if (typeName == nil) || (typeName.Type() == nil) {
-		return false, definitions.AstNodeKindNone, fmt.Errorf("could not find type '%s' in package '%s', are you sure it's included in the 'commonConfig->controllerGlobs' search paths?", ident.Name, packageFullName)
-	}
 	if _, isStruct := typeName.Type().Underlying().(*types.Struct); isStruct {
 		return true, definitions.AstNodeKindStruct, nil
 	}
@@ -248,4 +276,64 @@ func (arb *AstArbitrator) TypeOrInterfaceExistsIn(
 	}
 
 	return true, definitions.AstNodeKindUnknown, nil
+}
+
+func (arb *AstArbitrator) ExtractAliasType(pkg *packages.Package, typeName *types.TypeName) (*definitions.AliasMetadata, error) {
+
+	basic, isBasicType := typeName.Type().Underlying().(*types.Basic)
+
+	if !isBasicType {
+		return nil, fmt.Errorf("type %s is not a basic type", typeName.Name())
+	}
+
+	aliasMetadata := definitions.AliasMetadata{
+		Name:      typeName.Name(),
+		AliasType: basic.String(),
+		Values:    []string{},
+	}
+
+	// Iterate through all objects in package scope
+	scope := pkg.Types.Scope()
+	for _, name := range scope.Names() {
+		obj := scope.Lookup(name)
+		if obj == nil {
+			continue
+		}
+
+		// Check if it's a constant
+		constVal, isConst := obj.(*types.Const)
+		if !isConst {
+			continue
+		}
+
+		// Check if this constant has the enum type we're looking for
+		if !types.Identical(constVal.Type(), typeName.Type()) {
+			continue
+		}
+
+		// Extract the value based on the basic kind
+		val := ""
+		switch basic.Kind() {
+		case types.String:
+			val = constant.StringVal(constVal.Val())
+		case types.Int, types.Int8, types.Int16, types.Int32, types.Int64,
+			types.Uint, types.Uint8, types.Uint16, types.Uint32, types.Uint64:
+			if intVal, ok := constant.Int64Val(constVal.Val()); ok {
+				val = strconv.FormatInt(intVal, 10)
+			}
+		case types.Float32, types.Float64:
+			if floatVal, ok := constant.Float64Val(constVal.Val()); ok {
+				val = strconv.FormatFloat(floatVal, 'f', -1, 64)
+			}
+		case types.Bool:
+			boolVal := constant.BoolVal(constVal.Val())
+			val = strconv.FormatBool(boolVal)
+		default:
+			return nil, fmt.Errorf("unsupported alias to basic type %s", basic.String())
+		}
+
+		aliasMetadata.Values = append(aliasMetadata.Values, val)
+	}
+
+	return &aliasMetadata, nil
 }

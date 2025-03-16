@@ -211,9 +211,21 @@ func getDeprecationOpts(attributes annotations.AnnotationHolder) definitions.Dep
 }
 
 func createAliasModel(node *types.Named, tag string) definitions.FieldMetadata {
+	name := node.Obj().Name()
+
+	underlying := node.Underlying()
+
+	typeName := extractor.GetUnderlyingTypeName(underlying)
+
+	// In case of an alias to a primitive type, we need to use the alias name.
+	_, isBasic := underlying.(*types.Basic)
+	if isBasic && name != typeName {
+		typeName = name
+	}
+
 	return definitions.FieldMetadata{
-		Name: node.Obj().Name(),
-		Type: extractor.GetUnderlyingTypeName(node.Underlying()),
+		Name: name,
+		Type: typeName,
 		Tag:  tag,
 	}
 }

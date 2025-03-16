@@ -3,10 +3,22 @@ package e2e
 import (
 	"github.com/gopher-fleece/gleece/e2e/assets"
 	"github.com/gopher-fleece/gleece/e2e/common"
+	"github.com/haimkastner/unitsnet-go/units"
 	. "github.com/onsi/ginkgo/v2"
 )
 
 var _ = Describe("E2E Routing Spec", func() {
+	lf := units.LengthFactory{}
+	length, _ := lf.FromMeters(1000)
+	cm := units.LengthCentimeter
+	km := units.LengthKilometer
+	m := units.LengthMeter
+	dtoInCm := length.ToDto(&cm)
+	dtoInBroken := length.ToDto(&cm)
+	dtoInBroken.Unit = "KiloBoom" // Set invalid value
+	dtoInKMJson, _ := length.ToDtoJSON(&km)
+	dtoInMJson, _ := length.ToDtoJSON(&m)
+
 	It("Should return status code 200 for simple get", func() {
 		RunRouterTest(common.RouterTest{
 			Name:            "Should return status code 200 for simple get",
@@ -34,7 +46,7 @@ var _ = Describe("E2E Routing Spec", func() {
 			Headers: map[string]string{
 				"headerparam": "headerParam",
 			},
-			RoutesFlavor: &fullyFeatured,
+			RoutesFlavor: &fullyFeaturedRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -49,7 +61,36 @@ var _ = Describe("E2E Routing Spec", func() {
 			Headers: map[string]string{
 				"headerparam": "1headerParam",
 			},
-			RoutesFlavor: &fullyFeatured,
+			RoutesFlavor: &fullyFeaturedRouting,
+		})
+	})
+
+	It("Should return status code 200 for external packages models", func() {
+
+		RunRouterTest(common.RouterTest{
+			Name:            "Should return status code 200 for external packages models - with all options",
+			ExpectedStatus:  200,
+			ExpectedBody:    string(dtoInKMJson),
+			ExpendedHeaders: nil,
+			Path:            "/e2e/external-packages",
+			Method:          "POST",
+			Body:            dtoInCm,
+			Query:           map[string]string{"unit": "Kilometer"},
+			Headers:         map[string]string{},
+			RoutesFlavor:    &allRouting,
+		})
+
+		RunRouterTest(common.RouterTest{
+			Name:            "Should return status code 200 for external packages models - with default options",
+			ExpectedStatus:  200,
+			ExpectedBody:    string(dtoInMJson),
+			ExpendedHeaders: nil,
+			Path:            "/e2e/external-packages",
+			Method:          "POST",
+			Body:            dtoInCm,
+			Query:           map[string]string{},
+			Headers:         map[string]string{},
+			RoutesFlavor:    &allRouting,
 		})
 	})
 
@@ -441,7 +482,7 @@ var _ = Describe("E2E Routing Spec", func() {
 				Statuses: []assets.StatusEnumeration{assets.StatusEnumerationInactive},
 			},
 			Headers:      map[string]string{},
-			RoutesFlavor: &fullyFeatured,
+			RoutesFlavor: &fullyFeaturedRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -453,7 +494,7 @@ var _ = Describe("E2E Routing Spec", func() {
 			Method:              "POST",
 			Form:                map[string]string{"value3": "inactive"},
 			Headers:             map[string]string{"value2": "1"},
-			RoutesFlavor:        &fullyFeatured,
+			RoutesFlavor:        &fullyFeaturedRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -465,7 +506,7 @@ var _ = Describe("E2E Routing Spec", func() {
 			Method:              "POST",
 			Form:                map[string]string{},
 			Headers:             map[string]string{"value1": "active"},
-			RoutesFlavor:        &fullyFeatured,
+			RoutesFlavor:        &fullyFeaturedRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -477,7 +518,7 @@ var _ = Describe("E2E Routing Spec", func() {
 			Method:              "POST",
 			Form:                map[string]string{},
 			Headers:             map[string]string{},
-			RoutesFlavor:        &fullyFeatured,
+			RoutesFlavor:        &fullyFeaturedRouting,
 		})
 	})
 
@@ -491,7 +532,7 @@ var _ = Describe("E2E Routing Spec", func() {
 			Method:              "POST",
 			Form:                map[string]string{"value3": "inactive"},
 			Headers:             map[string]string{"value2": "1"},
-			RoutesFlavor:        &exExtra,
+			RoutesFlavor:        &exExtraRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -503,7 +544,7 @@ var _ = Describe("E2E Routing Spec", func() {
 			Method:              "POST",
 			Form:                map[string]string{},
 			Headers:             map[string]string{"value1": "active"},
-			RoutesFlavor:        &exExtra,
+			RoutesFlavor:        &exExtraRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -515,7 +556,7 @@ var _ = Describe("E2E Routing Spec", func() {
 			Method:              "POST",
 			Form:                map[string]string{},
 			Headers:             map[string]string{},
-			RoutesFlavor:        &exExtra,
+			RoutesFlavor:        &exExtraRouting,
 		})
 	})
 
@@ -535,7 +576,7 @@ var _ = Describe("E2E Routing Spec", func() {
 				Statuses: []assets.StatusEnumeration{assets.StatusEnumerationInactive},
 			},
 			Headers:      map[string]string{},
-			RoutesFlavor: &fullyFeatured,
+			RoutesFlavor: &fullyFeaturedRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -553,7 +594,7 @@ var _ = Describe("E2E Routing Spec", func() {
 				Statuses: []assets.StatusEnumeration{assets.StatusEnumerationInactive},
 			},
 			Headers:      map[string]string{},
-			RoutesFlavor: &fullyFeatured,
+			RoutesFlavor: &fullyFeaturedRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -571,7 +612,7 @@ var _ = Describe("E2E Routing Spec", func() {
 				Statuses: []assets.StatusEnumeration{assets.StatusEnumerationInactive},
 			},
 			Headers:      map[string]string{},
-			RoutesFlavor: &fullyFeatured,
+			RoutesFlavor: &fullyFeaturedRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -583,7 +624,31 @@ var _ = Describe("E2E Routing Spec", func() {
 			Method:          "POST",
 			Form:            map[string]string{},
 			Headers:         map[string]string{"value1": "active222"},
-			RoutesFlavor:    &fullyFeatured,
+			RoutesFlavor:    &fullyFeaturedRouting,
+		})
+
+		RunRouterTest(common.RouterTest{
+			Name:                "Should return status code 422 for enum prams and body - wrong enum param external package",
+			ExpectedStatus:      422,
+			ExpectedBodyContain: "options only but got KiloBoom",
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/external-packages",
+			Method:              "POST",
+			Body:                dtoInCm,
+			Query:               map[string]string{"unit": "KiloBoom"},
+			RoutesFlavor:        &fullyFeaturedRouting,
+		})
+
+		RunRouterTest(common.RouterTest{
+			Name:                "Should return status code 422 for enum prams and body - wrong enum param external package",
+			ExpectedStatus:      422,
+			ExpectedBodyContain: "Field 'Unit' failed validation with tag 'length_units_enum'",
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/external-packages-validation",
+			Method:              "POST",
+			Body:                dtoInBroken,
+			Query:               map[string]string{"unit": "Kilometer"},
+			RoutesFlavor:        &fullyFeaturedRouting,
 		})
 	})
 
@@ -597,7 +662,7 @@ var _ = Describe("E2E Routing Spec", func() {
 			Method:              "POST",
 			Form:                map[string]string{"value3": "inactive"},
 			Headers:             map[string]string{"value2": "10"},
-			RoutesFlavor:        &exExtra,
+			RoutesFlavor:        &exExtraRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -609,7 +674,31 @@ var _ = Describe("E2E Routing Spec", func() {
 			Method:          "POST",
 			Form:            map[string]string{},
 			Headers:         map[string]string{"value1": "active222"},
-			RoutesFlavor:    &exExtra,
+			RoutesFlavor:    &exExtraRouting,
+		})
+
+		RunRouterTest(common.RouterTest{
+			Name:                "Should NOT return status code 422 for enum prams and body - wrong enum param external package",
+			ExpectedStatus:      200,
+			ExpectedBodyContain: "{\"value\":9991,\"unit\":\"KiloBoom\"}",
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/external-packages",
+			Method:              "POST",
+			Body:                dtoInCm,
+			Query:               map[string]string{"unit": "KiloBoom"},
+			RoutesFlavor:        &exExtraRouting,
+		})
+
+		RunRouterTest(common.RouterTest{
+			Name:                "Should NOT return status code 422 for enum prams and body - wrong enum param external package",
+			ExpectedStatus:      200,
+			ExpectedBodyContain: "{\"value\":9.992,\"unit\":\"Kilometer\"}",
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/external-packages",
+			Method:              "POST",
+			Body:                dtoInBroken,
+			Query:               map[string]string{"unit": "Kilometer"},
+			RoutesFlavor:        &exExtraRouting,
 		})
 	})
 })

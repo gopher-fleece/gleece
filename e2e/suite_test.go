@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-chi/chi/v5"
@@ -56,14 +57,32 @@ import (
 	"github.com/gopher-fleece/gleece/generator/swagen"
 )
 
-var exExtra = common.ExExtra
-var fullyFeatured = common.FullyFeatured
+var exExtraRouting = common.ExExtra
+var fullyFeaturedRouting = common.FullyFeatured
+var allRouting = common.Any
+
+func init() {
+	// Force-set the test timeout via environment variable
+	// This affects the Go test runtime directly
+	os.Setenv("GO_TEST_TIMEOUT", "5m")
+
+	// Set up a failsafe timer that will force-exit if tests take too long
+	go func() {
+		time.Sleep(5 * time.Minute)
+		fmt.Println("⚠️ Test exceeded 5-minute timeout - force terminating")
+		os.Exit(1)
+	}()
+}
 
 func TestGleeceE2E(t *testing.T) {
-	// Disable logging to reduce clutter.
 	logger.SetLogLevel(logger.LogLevelNone)
+
+	// Configure Ginkgo with a longer default timeout
+	suiteConfig, reporterConfig := GinkgoConfiguration()
+	suiteConfig.Timeout = 5 * time.Minute
+
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Gleece E2E Suite")
+	RunSpecs(t, "Gleece E2E Suite", suiteConfig, reporterConfig)
 }
 
 func GenerateE2ERoutes(args arguments.CliArguments, engineName string) error {
@@ -88,7 +107,6 @@ func GenerateE2ERoutes(args arguments.CliArguments, engineName string) error {
 	config.RoutesConfig.ValidateResponsePayload = false
 
 	config.OpenAPIGeneratorConfig.DefaultRouteSecurity = nil
-	config.OpenAPIGeneratorConfig.SpecGeneratorConfig.OutputPath = fmt.Sprintf("./%s/dist/ex_extra_swagger.json", engineName)
 
 	config.RoutesConfig.OutputPath = fmt.Sprintf("./%s/ex_extra_routes/%s.e2e.ex_extra.gleece.go", engineName, engineName)
 	config.RoutesConfig.PackageName = "ex_extra_routes"
@@ -99,8 +117,16 @@ func GenerateE2ERoutes(args arguments.CliArguments, engineName string) error {
 		return err
 	}
 
-	// Generate the OpenAPI spec
+	// Generate the OpenAPI 3.0.0 spec
+	config.OpenAPIGeneratorConfig.SpecGeneratorConfig.OutputPath = fmt.Sprintf("./%s/openapi/openapi3.0.0.json", engineName)
+	if err := swagen.GenerateAndOutputSpec(&config.OpenAPIGeneratorConfig, meta, models, hasAnyErrorTypes); err != nil {
+		logger.Fatal("Failed to generate OpenAPI spec - %v", err)
+		return err
+	}
 
+	// Generate the OpenAPI 3.1.0 spec
+	config.OpenAPIGeneratorConfig.Info.Version = "3.1.0"
+	config.OpenAPIGeneratorConfig.SpecGeneratorConfig.OutputPath = fmt.Sprintf("./%s/openapi/openapi3.1.0.json", engineName)
 	if err := swagen.GenerateAndOutputSpec(&config.OpenAPIGeneratorConfig, meta, models, hasAnyErrorTypes); err != nil {
 		logger.Fatal("Failed to generate OpenAPI spec - %v", err)
 		return err
@@ -151,8 +177,10 @@ func RegenerateRoutes() {
 }
 
 var _ = BeforeSuite(func() {
+	// Generate routes
 	RegenerateRoutes()
-	// Init routes
+
+	// Init routers
 
 	// Set Gin
 	gin.SetMode(gin.TestMode)
