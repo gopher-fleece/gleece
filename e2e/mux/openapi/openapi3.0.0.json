@@ -1,6 +1,31 @@
 {
   "components": {
     "schemas": {
+      "BlaBla": {
+        "properties": {
+          "listOfLength": {
+            "items": {
+              "$ref": "#/components/schemas/LengthDto"
+            },
+            "type": "array"
+          }
+        },
+        "title": "BlaBla",
+        "type": "object"
+      },
+      "BlaBla2": {
+        "properties": {
+          "value": {
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "value"
+        ],
+        "title": "BlaBla2",
+        "type": "object"
+      },
       "BodyInfo": {
         "properties": {
           "bodyParam": {
@@ -264,6 +289,117 @@
         ]
       }
     },
+    "/e2e/arrays-in-body-and-res": {
+      "post": {
+        "operationId": "ArraysInBodyAndRes",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "$ref": "#/components/schemas/LengthDto"
+                },
+                "type": "array"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LengthDto"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rfc7807Error"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          ""
+        ]
+      }
+    },
+    "/e2e/arrays-inside-body-and-res": {
+      "post": {
+        "operationId": "ArraysInsideBodyAndRes",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "$ref": "#/components/schemas/BlaBla"
+                },
+                "type": "array"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/BlaBla"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rfc7807Error"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          ""
+        ]
+      }
+    },
     "/e2e/context-access": {
       "get": {
         "operationId": "ContextAccess",
@@ -338,6 +474,71 @@
         "operationId": "CustomPtrError",
         "responses": {
           "204": {
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          ""
+        ]
+      }
+    },
+    "/e2e/deep-arrays-with-validation": {
+      "post": {
+        "operationId": "DeepArraysWithValidation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "items": {
+                    "$ref": "#/components/schemas/BlaBla2"
+                  },
+                  "type": "array"
+                },
+                "type": "array"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "items": {
+                      "items": {
+                        "$ref": "#/components/schemas/BlaBla2"
+                      },
+                      "type": "array"
+                    },
+                    "type": "array"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rfc7807Error"
+                }
+              }
+            },
             "description": ""
           },
           "default": {

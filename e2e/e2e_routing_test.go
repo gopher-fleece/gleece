@@ -46,7 +46,7 @@ var _ = Describe("E2E Routing Spec", func() {
 			Headers: map[string]string{
 				"headerparam": "headerParam",
 			},
-			RoutesFlavor: &fullyFeaturedRouting,
+			RunningMode: &fullyFeaturedRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -61,7 +61,7 @@ var _ = Describe("E2E Routing Spec", func() {
 			Headers: map[string]string{
 				"headerparam": "1headerParam",
 			},
-			RoutesFlavor: &fullyFeaturedRouting,
+			RunningMode: &fullyFeaturedRouting,
 		})
 	})
 
@@ -77,7 +77,7 @@ var _ = Describe("E2E Routing Spec", func() {
 			Body:            dtoInCm,
 			Query:           map[string]string{"unit": "Kilometer"},
 			Headers:         map[string]string{},
-			RoutesFlavor:    &allRouting,
+			RunningMode:     &allRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -90,7 +90,115 @@ var _ = Describe("E2E Routing Spec", func() {
 			Body:            dtoInCm,
 			Query:           map[string]string{},
 			Headers:         map[string]string{},
-			RoutesFlavor:    &allRouting,
+			RunningMode:     &allRouting,
+		})
+	})
+
+	It("Should return status code 200 for arrays in body and response", func() {
+		RunRouterTest(common.RouterTest{
+			Name:            "Should return status code 200 for arrays in body and response - in body",
+			ExpectedStatus:  200,
+			ExpectedBody:    "[{\"value\":100000,\"unit\":\"Centimeter\"}]",
+			ExpendedHeaders: nil,
+			Path:            "/e2e/arrays-in-body-and-res",
+			Method:          "POST",
+			Body:            []units.LengthDto{dtoInCm},
+			Query:           map[string]string{},
+			Headers:         map[string]string{},
+			RunningMode:     &allRouting,
+		})
+	})
+
+	It("Should return status code 200 for arrays inside body and response", func() {
+		RunRouterTest(common.RouterTest{
+			Name:            "Should return status code 200 for arrays in body and response - in body",
+			ExpectedStatus:  200,
+			ExpectedBody:    "[{\"listOfLength\":[{\"value\":100000,\"unit\":\"Centimeter\"}]}]",
+			ExpendedHeaders: nil,
+			Path:            "/e2e/arrays-inside-body-and-res",
+			Method:          "POST",
+			Body: []assets.BlaBla{{
+				ListOfLength: []units.LengthDto{dtoInCm},
+			}},
+			Query:       map[string]string{},
+			Headers:     map[string]string{},
+			RunningMode: &allRouting,
+		})
+	})
+
+	It("Should return status code 200 for deep arrays", func() {
+		RunRouterTest(common.RouterTest{
+			Name:            "Should return status code 200 for arrays in body and response - in body",
+			ExpectedStatus:  200,
+			ExpectedBody:    "[[[{\"value\":10}]]]",
+			ExpendedHeaders: nil,
+			Path:            "/e2e/deep-arrays-with-validation",
+			Method:          "POST",
+			Body: [][]assets.BlaBla2{{{
+				Value: 10,
+			}}},
+			Query:       map[string]string{},
+			Headers:     map[string]string{},
+			RunningMode: &allRouting,
+		})
+	})
+
+	It("Should return status code 422 for deep arrays", func() {
+		RunRouterTest(common.RouterTest{
+			Name:            "Should return status code 200 for arrays in body and response - empty body",
+			ExpectedStatus:  422,
+			ExpectedBody:    "",
+			ExpendedHeaders: nil,
+			Path:            "/e2e/deep-arrays-with-validation",
+			Method:          "POST",
+			Query:           map[string]string{},
+			Headers:         map[string]string{},
+			RunningMode:     &allRouting,
+		})
+
+		RunRouterTest(common.RouterTest{
+			Name:            "Should return status code 200 for arrays in body and response - deeper from needed",
+			ExpectedStatus:  422,
+			ExpectedBody:    "",
+			ExpendedHeaders: nil,
+			Path:            "/e2e/deep-arrays-with-validation",
+			Method:          "POST",
+			Body: [][][]assets.BlaBla2{{{{
+				Value: 10,
+			}}}},
+			Query:       map[string]string{},
+			Headers:     map[string]string{},
+			RunningMode: &allRouting,
+		})
+
+		RunRouterTest(common.RouterTest{
+			Name:            "Should return status code 200 for arrays in body and response - not deeper as needed",
+			ExpectedStatus:  422,
+			ExpectedBody:    "",
+			ExpendedHeaders: nil,
+			Path:            "/e2e/deep-arrays-with-validation",
+			Method:          "POST",
+			Body: []assets.BlaBla2{{
+				Value: 10,
+			}},
+			Query:       map[string]string{},
+			Headers:     map[string]string{},
+			RunningMode: &allRouting,
+		})
+
+		RunRouterTest(common.RouterTest{
+			Name:            "Should return status code 200 for arrays in body and response - internal validation not passed",
+			ExpectedStatus:  422,
+			ExpectedBody:    "",
+			ExpendedHeaders: nil,
+			Path:            "/e2e/deep-arrays-with-validation",
+			Method:          "POST",
+			Body: [][]assets.BlaBla2{{{
+				Value: -1,
+			}}},
+			Query:       map[string]string{},
+			Headers:     map[string]string{},
+			RunningMode: &allRouting,
 		})
 	})
 
@@ -481,8 +589,8 @@ var _ = Describe("E2E Routing Spec", func() {
 				Status:   assets.StatusEnumerationActive,
 				Statuses: []assets.StatusEnumeration{assets.StatusEnumerationInactive},
 			},
-			Headers:      map[string]string{},
-			RoutesFlavor: &fullyFeaturedRouting,
+			Headers:     map[string]string{},
+			RunningMode: &fullyFeaturedRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -494,7 +602,7 @@ var _ = Describe("E2E Routing Spec", func() {
 			Method:              "POST",
 			Form:                map[string]string{"value3": "inactive"},
 			Headers:             map[string]string{"value2": "1"},
-			RoutesFlavor:        &fullyFeaturedRouting,
+			RunningMode:         &fullyFeaturedRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -506,7 +614,7 @@ var _ = Describe("E2E Routing Spec", func() {
 			Method:              "POST",
 			Form:                map[string]string{},
 			Headers:             map[string]string{"value1": "active"},
-			RoutesFlavor:        &fullyFeaturedRouting,
+			RunningMode:         &fullyFeaturedRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -518,7 +626,7 @@ var _ = Describe("E2E Routing Spec", func() {
 			Method:              "POST",
 			Form:                map[string]string{},
 			Headers:             map[string]string{},
-			RoutesFlavor:        &fullyFeaturedRouting,
+			RunningMode:         &fullyFeaturedRouting,
 		})
 	})
 
@@ -532,7 +640,7 @@ var _ = Describe("E2E Routing Spec", func() {
 			Method:              "POST",
 			Form:                map[string]string{"value3": "inactive"},
 			Headers:             map[string]string{"value2": "1"},
-			RoutesFlavor:        &exExtraRouting,
+			RunningMode:         &exExtraRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -544,7 +652,7 @@ var _ = Describe("E2E Routing Spec", func() {
 			Method:              "POST",
 			Form:                map[string]string{},
 			Headers:             map[string]string{"value1": "active"},
-			RoutesFlavor:        &exExtraRouting,
+			RunningMode:         &exExtraRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -556,7 +664,7 @@ var _ = Describe("E2E Routing Spec", func() {
 			Method:              "POST",
 			Form:                map[string]string{},
 			Headers:             map[string]string{},
-			RoutesFlavor:        &exExtraRouting,
+			RunningMode:         &exExtraRouting,
 		})
 	})
 
@@ -575,8 +683,8 @@ var _ = Describe("E2E Routing Spec", func() {
 				Status:   assets.StatusEnumerationActive,
 				Statuses: []assets.StatusEnumeration{assets.StatusEnumerationInactive},
 			},
-			Headers:      map[string]string{},
-			RoutesFlavor: &fullyFeaturedRouting,
+			Headers:     map[string]string{},
+			RunningMode: &fullyFeaturedRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -593,8 +701,8 @@ var _ = Describe("E2E Routing Spec", func() {
 				Status:   assets.StatusEnumerationActive,
 				Statuses: []assets.StatusEnumeration{assets.StatusEnumerationInactive},
 			},
-			Headers:      map[string]string{},
-			RoutesFlavor: &fullyFeaturedRouting,
+			Headers:     map[string]string{},
+			RunningMode: &fullyFeaturedRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -611,8 +719,8 @@ var _ = Describe("E2E Routing Spec", func() {
 				Status:   "blabla",
 				Statuses: []assets.StatusEnumeration{assets.StatusEnumerationInactive},
 			},
-			Headers:      map[string]string{},
-			RoutesFlavor: &fullyFeaturedRouting,
+			Headers:     map[string]string{},
+			RunningMode: &fullyFeaturedRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -624,7 +732,7 @@ var _ = Describe("E2E Routing Spec", func() {
 			Method:          "POST",
 			Form:            map[string]string{},
 			Headers:         map[string]string{"value1": "active222"},
-			RoutesFlavor:    &fullyFeaturedRouting,
+			RunningMode:     &fullyFeaturedRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -636,7 +744,7 @@ var _ = Describe("E2E Routing Spec", func() {
 			Method:              "POST",
 			Body:                dtoInCm,
 			Query:               map[string]string{"unit": "KiloBoom"},
-			RoutesFlavor:        &fullyFeaturedRouting,
+			RunningMode:         &fullyFeaturedRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -648,7 +756,7 @@ var _ = Describe("E2E Routing Spec", func() {
 			Method:              "POST",
 			Body:                dtoInBroken,
 			Query:               map[string]string{"unit": "Kilometer"},
-			RoutesFlavor:        &fullyFeaturedRouting,
+			RunningMode:         &fullyFeaturedRouting,
 		})
 	})
 
@@ -662,7 +770,7 @@ var _ = Describe("E2E Routing Spec", func() {
 			Method:              "POST",
 			Form:                map[string]string{"value3": "inactive"},
 			Headers:             map[string]string{"value2": "10"},
-			RoutesFlavor:        &exExtraRouting,
+			RunningMode:         &exExtraRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -674,7 +782,7 @@ var _ = Describe("E2E Routing Spec", func() {
 			Method:          "POST",
 			Form:            map[string]string{},
 			Headers:         map[string]string{"value1": "active222"},
-			RoutesFlavor:    &exExtraRouting,
+			RunningMode:     &exExtraRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -686,7 +794,7 @@ var _ = Describe("E2E Routing Spec", func() {
 			Method:              "POST",
 			Body:                dtoInCm,
 			Query:               map[string]string{"unit": "KiloBoom"},
-			RoutesFlavor:        &exExtraRouting,
+			RunningMode:         &exExtraRouting,
 		})
 
 		RunRouterTest(common.RouterTest{
@@ -698,7 +806,7 @@ var _ = Describe("E2E Routing Spec", func() {
 			Method:              "POST",
 			Body:                dtoInBroken,
 			Query:               map[string]string{"unit": "Kilometer"},
-			RoutesFlavor:        &exExtraRouting,
+			RunningMode:         &exExtraRouting,
 		})
 	})
 })

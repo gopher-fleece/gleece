@@ -88,7 +88,7 @@ var _ = Describe("E2E Errors Spec", func() {
 			Body:            nil,
 			Query:           nil,
 			Headers:         nil,
-			RoutesFlavor:    &fullyFeaturedRouting,
+			RunningMode:     &fullyFeaturedRouting,
 		})
 	})
 
@@ -103,7 +103,7 @@ var _ = Describe("E2E Errors Spec", func() {
 			Body:            nil,
 			Query:           nil,
 			Headers:         nil,
-			RoutesFlavor:    &exExtraRouting,
+			RunningMode:     &exExtraRouting,
 		})
 	})
 
@@ -118,7 +118,7 @@ var _ = Describe("E2E Errors Spec", func() {
 			Body:            nil,
 			Query:           nil,
 			Headers:         nil,
-			RoutesFlavor:    &fullyFeaturedRouting,
+			RunningMode:     &fullyFeaturedRouting,
 		})
 	})
 
@@ -133,7 +133,7 @@ var _ = Describe("E2E Errors Spec", func() {
 			Body:            nil,
 			Query:           nil,
 			Headers:         nil,
-			RoutesFlavor:    &exExtraRouting,
+			RunningMode:     &exExtraRouting,
 		})
 	})
 
@@ -148,7 +148,7 @@ var _ = Describe("E2E Errors Spec", func() {
 			Body:            nil,
 			Query:           nil,
 			Headers:         nil,
-			RoutesFlavor:    &fullyFeaturedRouting,
+			RunningMode:     &fullyFeaturedRouting,
 		})
 	})
 
@@ -163,7 +163,7 @@ var _ = Describe("E2E Errors Spec", func() {
 			Body:            nil,
 			Query:           nil,
 			Headers:         nil,
-			RoutesFlavor:    &exExtraRouting,
+			RunningMode:     &exExtraRouting,
 		})
 	})
 })

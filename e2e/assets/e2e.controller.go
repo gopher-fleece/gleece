@@ -534,3 +534,38 @@ func (ec *E2EController) ExternalPackagesValidation(unit *units.LengthUnits, dat
 	unitData, _ := lf.FromDtoJSON(dataJson)
 	return unitData.ToDto(unit), nil
 }
+
+type BlaBla struct {
+	ListOfLength []units.LengthDto `json:"listOfLength"`
+}
+
+// @Method(POST)
+// @Route(/arrays-in-body-and-res)
+// @Body(data)
+// @Response(200)
+// @ErrorResponse(500)
+func (ec *E2EController) ArraysInBodyAndRes(data []units.LengthDto) ([]units.LengthDto, error) {
+	return data, nil
+}
+
+// @Method(POST)
+// @Route(/arrays-inside-body-and-res)
+// @Body(data)
+// @Response(200)
+// @ErrorResponse(500)
+func (ec *E2EController) ArraysInsideBodyAndRes(data *[]BlaBla) (*[]BlaBla, error) {
+	return data, nil
+}
+
+type BlaBla2 struct {
+	Value int `json:"value" validate:"required,gte=0"`
+}
+
+// @Method(POST)
+// @Route(/deep-arrays-with-validation)
+// @Body(data)
+// @Response(200)
+// @ErrorResponse(500)
+func (ec *E2EController) DeepArraysWithValidation(data [][]BlaBla2) ([][][]BlaBla2, error) {
+	return [][][]BlaBla2{data}, nil
+}

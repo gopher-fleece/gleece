@@ -130,7 +130,7 @@ if is{{Name}}Exists {
         {{> ParamsValidationErrorResponse }}
 		  }
     {{else}}
-      {{ToLowerCamel Name}}Var := Param{{{UniqueImportSerial}}}{{{Name}}}.{{{TypeMeta.Name}}}({{ToLowerCamel Name}})
+      {{ToLowerCamel Name}}Var := {{SlicePrefix TypeMeta.Name}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{SliceSlice TypeMeta.Name}}({{ToLowerCamel Name}})
       {{ToLowerCamel Name}}RawPtr = &{{ToLowerCamel Name}}Var
     {{/if}}
   {{else}}

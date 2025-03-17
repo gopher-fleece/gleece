@@ -10,7 +10,7 @@
 			outputValidationErr = fmt.Errorf("Response payload is nil")
 		} else {
 		{{/if}}
-			outputValidationErr = validatorInstance.Struct(value)
+			outputValidationErr = validateDataRecursive(value, "")
 		{{#if Responses.[0].IsByAddress}}
 		}
 		{{/if}}

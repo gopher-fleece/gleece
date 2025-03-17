@@ -9,7 +9,34 @@ import (
 	"github.com/iancoleman/strcase"
 )
 
+// SplitBracketName splits a string into brackets part and name part
+// Example: "[][][]Name" -> "[][][]", "Name"
+func splitSliceBracket(input string) (brackets string, name string) {
+	// Find the position where brackets end
+	pos := 0
+	for pos+1 < len(input) {
+		if input[pos] == '[' && input[pos+1] == ']' {
+			pos += 2
+		} else {
+			break
+		}
+	}
+
+	// Split the string
+	return input[:pos], input[pos:]
+}
+
 func registerHandlebarsHelpers() {
+	raymond.RegisterHelper("SlicePrefix", func(arg string) string {
+		brackets, _ := splitSliceBracket(arg)
+		return brackets
+	})
+
+	raymond.RegisterHelper("SliceSlice", func(arg string) string {
+		_, name := splitSliceBracket(arg)
+		return name
+	})
+
 	raymond.RegisterHelper("ToSnakeCase", func(arg string) string {
 		return strcase.ToSnake(arg)
 	})

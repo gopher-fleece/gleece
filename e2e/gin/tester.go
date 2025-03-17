@@ -59,10 +59,10 @@ func GinRouterTest(routerTest common.RouterTest) common.RouterTestResult {
 		}
 	}
 
-	switch *routerTest.RoutesFlavor {
-	case common.ExExtra:
+	switch *routerTest.RunningMode {
+	case common.RunOnVanillaRoutes:
 		GinExExtraRouter.ServeHTTP(w, req)
-	case common.FullyFeatured:
+	case common.RunOnFullyFeaturedRoutes:
 		GinRouter.ServeHTTP(w, req)
 	default:
 		return common.RouterTestResult{}

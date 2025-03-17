@@ -63,10 +63,10 @@ func ChiRouterTest(routerTest common.RouterTest) common.RouterTestResult {
 	}
 
 	// Use Chi router to serve the request
-	switch *routerTest.RoutesFlavor {
-	case common.ExExtra:
+	switch *routerTest.RunningMode {
+	case common.RunOnVanillaRoutes:
 		ChiExExtraRouter.ServeHTTP(w, req)
-	case common.FullyFeatured:
+	case common.RunOnFullyFeaturedRoutes:
 		ChiRouter.ServeHTTP(w, req)
 	default:
 		return common.RouterTestResult{}

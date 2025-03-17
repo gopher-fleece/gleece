@@ -66,10 +66,10 @@ func FiberRouterTest(routerTest common.RouterTest) common.RouterTestResult {
 	var resp *http.Response
 	var err error
 
-	switch *routerTest.RoutesFlavor {
-	case common.ExExtra:
+	switch *routerTest.RunningMode {
+	case common.RunOnVanillaRoutes:
 		resp, err = FiberExExtraRouter.Test(req, -1)
-	case common.FullyFeatured:
+	case common.RunOnFullyFeaturedRoutes:
 		resp, err = FiberRouter.Test(req, -1)
 	default:
 		return common.RouterTestResult{}

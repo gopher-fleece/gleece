@@ -62,10 +62,10 @@ func MuxRouterTest(routerTest common.RouterTest) common.RouterTestResult {
 	}
 
 	// Use Mux router to serve the request
-	switch *routerTest.RoutesFlavor {
-	case common.ExExtra:
+	switch *routerTest.RunningMode {
+	case common.RunOnVanillaRoutes:
 		MuxExExtraRouter.ServeHTTP(w, req)
-	case common.FullyFeatured:
+	case common.RunOnFullyFeaturedRoutes:
 		MuxRouter.ServeHTTP(w, req)
 	default:
 		return common.RouterTestResult{}

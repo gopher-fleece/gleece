@@ -57,9 +57,9 @@ import (
 	"github.com/gopher-fleece/gleece/generator/swagen"
 )
 
-var exExtraRouting = common.ExExtra
-var fullyFeaturedRouting = common.FullyFeatured
-var allRouting = common.Any
+var exExtraRouting = common.RunOnVanillaRoutes
+var fullyFeaturedRouting = common.RunOnFullyFeaturedRoutes
+var allRouting = common.RunOnAllRoutes
 
 func init() {
 	// Force-set the test timeout via environment variable
@@ -105,8 +105,6 @@ func GenerateE2ERoutes(args arguments.CliArguments, engineName string) error {
 	config.RoutesConfig.TemplateExtensions = nil
 	config.RoutesConfig.AuthorizationConfig.EnforceSecurityOnAllRoutes = false
 	config.RoutesConfig.ValidateResponsePayload = false
-
-	config.OpenAPIGeneratorConfig.DefaultRouteSecurity = nil
 
 	config.RoutesConfig.OutputPath = fmt.Sprintf("./%s/ex_extra_routes/%s.e2e.ex_extra.gleece.go", engineName, engineName)
 	config.RoutesConfig.PackageName = "ex_extra_routes"
@@ -290,23 +288,23 @@ func runTest(routerTest common.RouterTest) {
 }
 
 func RunRouterTest(routerTest common.RouterTest) {
-	routesFlavors := []common.RoutesFlavor{}
+	routesFlavors := []common.RunningMode{}
 
-	if routerTest.RoutesFlavor == nil {
-		routesFlavors = []common.RoutesFlavor{common.ExExtra, common.FullyFeatured}
+	if routerTest.RunningMode == nil {
+		routesFlavors = []common.RunningMode{common.RunOnVanillaRoutes, common.RunOnFullyFeaturedRoutes}
 	} else {
-		switch *routerTest.RoutesFlavor {
-		case common.FullyFeatured:
-			routesFlavors = []common.RoutesFlavor{common.FullyFeatured}
-		case common.ExExtra:
-			routesFlavors = []common.RoutesFlavor{common.ExExtra}
-		case common.Any:
-			routesFlavors = []common.RoutesFlavor{common.FullyFeatured, common.ExExtra}
+		switch *routerTest.RunningMode {
+		case common.RunOnFullyFeaturedRoutes:
+			routesFlavors = []common.RunningMode{common.RunOnFullyFeaturedRoutes}
+		case common.RunOnVanillaRoutes:
+			routesFlavors = []common.RunningMode{common.RunOnVanillaRoutes}
+		case common.RunOnAllRoutes:
+			routesFlavors = []common.RunningMode{common.RunOnFullyFeaturedRoutes, common.RunOnVanillaRoutes}
 		}
 	}
 
 	for _, flavor := range routesFlavors {
-		routerTest.RoutesFlavor = &flavor
+		routerTest.RunningMode = &flavor
 		runTest(routerTest)
 	}
 }

@@ -64,22 +64,95 @@ func bindAndValidateBody[TOutput any](ctx *gin.Context, contentType string, vali
 
 	var deserializedOutput TOutput
 
-			switch contentType {
-		case "application/json":
-			err = json.Unmarshal(bodyBytes, &deserializedOutput)
-		default:
-			return fmt.Errorf("content-type %s is not currently supported by the validation subsystem", contentType)
-		}
-		
-		if err != nil {
-			return err
-			}
+	switch contentType {
+	case "application/json":
+		err = json.Unmarshal(bodyBytes, &deserializedOutput)
+	default:
+		return fmt.Errorf("content-type %s is not currently supported by the validation subsystem", contentType)
+	}
 
-		if err = validatorInstance.Struct(&deserializedOutput); err != nil {
+	if err != nil {
+		return err
+	}
+
+	// Validate the unmarshaled data recursively
+	if err = validateDataRecursive(deserializedOutput, ""); err != nil {
 		return err
 	}
 	*output = &deserializedOutput
 	return nil
+}
+func validateDataRecursive(data interface{}, path string) error {
+	val := reflect.ValueOf(data)
+
+	// Handle pointers by dereferencing
+	if val.Kind() == reflect.Ptr {
+		if val.IsNil() {
+			return nil
+		}
+		return validateDataRecursive(val.Elem().Interface(), path)
+	}
+
+	// Handle different types
+	switch val.Kind() {
+	case reflect.Slice, reflect.Array:
+		// For slices/arrays, validate each element recursively
+		for i := 0; i < val.Len(); i++ {
+			elemPath := path
+			if path != "" {
+				elemPath = fmt.Sprintf("%s[%d]", path, i)
+			} else {
+				elemPath = fmt.Sprintf("[%d]", i)
+			}
+
+			// Get the element - handle case where element might be nil
+			elem := val.Index(i)
+			if elem.Kind() == reflect.Ptr && elem.IsNil() {
+				continue
+			}
+
+			// Validate the element recursively
+			if err := validateDataRecursive(elem.Interface(), elemPath); err != nil {
+				return err
+			}
+		}
+		return nil
+
+	case reflect.Map:
+		// For maps, validate each value recursively
+		for _, key := range val.MapKeys() {
+			elemPath := path
+			if path != "" {
+				elemPath = fmt.Sprintf("%s.%v", path, key.Interface())
+			} else {
+				elemPath = fmt.Sprintf("%v", key.Interface())
+			}
+
+			elemVal := val.MapIndex(key)
+			if elemVal.Kind() == reflect.Ptr && elemVal.IsNil() {
+				continue
+			}
+
+			if err := validateDataRecursive(elemVal.Interface(), elemPath); err != nil {
+				return err
+			}
+		}
+		return nil
+
+	case reflect.Struct:
+		// Validate structs with the validator
+		if err := validatorInstance.Struct(data); err != nil {
+			if path != "" {
+				return fmt.Errorf("validation error at %s: %w", path, err)
+			}
+			return err
+		}
+		return nil
+
+	default:
+		// Primitive types don't need validation
+		return nil
+	}
 }
 
 func toGinUrl(url string) string {
