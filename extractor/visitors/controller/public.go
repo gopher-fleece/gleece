@@ -91,8 +91,6 @@ func (v *ControllerVisitor) GetModelsFlat() (*definitions.Models, bool, error) {
 		}
 	}
 
-	enums := []definitions.EnumMetadata{}
-
 	typeVisitor := visitors.NewTypeVisitor(v.packagesFacade.GetAllPackages())
 	for _, model := range models {
 		pkg := extractor.FilterPackageByFullName(v.packagesFacade.GetAllPackages(), model.FullyQualifiedPackage)
@@ -105,23 +103,20 @@ func (v *ControllerVisitor) GetModelsFlat() (*definitions.Models, bool, error) {
 			)
 		}
 
-		// Enums are handled separately
-		if model.EntityKind == definitions.AstNodeKindAlias {
-			enums = append(enums, definitions.EnumMetadata{
-				Name:                  model.Name,
-				FullyQualifiedPackage: model.FullyQualifiedPackage,
-				Description:           model.Description,
-				Values:                model.AliasMetadata.Values,
-				Type:                  model.AliasMetadata.AliasType,
-				// Deprecation         ?
-			})
-			continue
-		}
-
 		// Currently, Name includes a "[]" prefix if the type is an array.
 		// Need to remove it so lookup can actually succeed.
 		// Might move to an "IsArray" field in the near future.
 		cleanedName := common.UnwrapArrayTypeString(model.Name)
+
+		// Enums are handled separately
+		if model.EntityKind == definitions.AstNodeKindAlias {
+			err := typeVisitor.VisitEnum(cleanedName, model)
+			if err != nil {
+				return nil, hasAnyErrorTypes, v.frozenError(err)
+			}
+			continue
+		}
+
 		structNode, err := extractor.FindTypesStructInPackage(pkg, cleanedName)
 		if err != nil {
 			return nil, hasAnyErrorTypes, v.frozenError(err)
@@ -145,7 +140,7 @@ func (v *ControllerVisitor) GetModelsFlat() (*definitions.Models, bool, error) {
 
 	flatModels := &definitions.Models{
 		Structs: typeVisitor.GetStructs(),
-		Enums:   enums,
+		Enums:   typeVisitor.GetEnums(),
 	}
 	return flatModels, hasAnyErrorTypes, nil
 }

@@ -13,6 +13,27 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+type StatusEnumeration string
+
+const (
+	StatusEnumerationActive   StatusEnumeration = "active"
+	StatusEnumerationInactive StatusEnumeration = "inactive"
+)
+
+type NumberEnumeration int
+
+const (
+	NumberEnumerationOne NumberEnumeration = 1
+	NumberEnumerationTwo NumberEnumeration = 2
+)
+
+type ObjectWithEnum struct {
+	Value    string              `json:"value"`
+	Values   []string            `json:"values"`
+	Status   StatusEnumeration   `json:"status" validate:"required,status_enumeration_enum"`
+	Statuses []StatusEnumeration `json:"statuses"`
+}
+
 // @Route(/e2e)
 type E2EController struct {
 	runtime.GleeceController // Embedding the GleeceController to inherit its methods
@@ -64,6 +85,38 @@ func (ec *E2EController) SimpleGetObjectPtr() (*BodyResponse, error) {
 // @Route(/simple-get-object-null)
 func (ec *E2EController) SimpleGetObjectNull() (*BodyResponse, error) {
 	return nil, nil
+}
+
+// @Method(GET)
+// @Route(/primitive-return-type)
+// @Response(200)
+// @ErrorResponse(500)
+func (ec *E2EController) PrimitiveReturnType() (int, error) {
+	return 20, nil
+}
+
+// @Method(GET)
+// @Route(/primitive-array-return-type)
+// @Response(200)
+// @ErrorResponse(500)
+func (ec *E2EController) PrimitiveArrayReturnType() ([]int, error) {
+	return []int{20}, nil
+}
+
+// @Method(GET)
+// @Route(/primitive-alias-return-type)
+// @Response(200)
+// @ErrorResponse(500)
+func (ec *E2EController) PrimitiveAliasReturnType() (NumberEnumeration, error) {
+	return NumberEnumerationOne, nil
+}
+
+// @Method(GET)
+// @Route(/primitive-alias-array-return-type)
+// @Response(200)
+// @ErrorResponse(500)
+func (ec *E2EController) PrimitiveAliasArrayReturnType() ([]NumberEnumeration, error) {
+	return []NumberEnumeration{NumberEnumerationOne}, nil
 }
 
 // @Method(GET)
@@ -425,27 +478,6 @@ func (ec *E2EController) TestResponseValidationNull() (*ResponseTest, error) {
 // @ErrorResponse(500) The error when process failed
 func (ec *E2EController) TestPrimitiveConversions(value1 int64, value2 bool, value3 int, value4 float64) (string, error) {
 	return fmt.Sprintf("%d %t %d %f", value1, value2, value3, value4), nil
-}
-
-type StatusEnumeration string
-
-const (
-	StatusEnumerationActive   StatusEnumeration = "active"
-	StatusEnumerationInactive StatusEnumeration = "inactive"
-)
-
-type NumberEnumeration int
-
-const (
-	NumberEnumerationOne NumberEnumeration = 1
-	NumberEnumerationTwo NumberEnumeration = 2
-)
-
-type ObjectWithEnum struct {
-	Value    string              `json:"value"`
-	Values   []string            `json:"values"`
-	Status   StatusEnumeration   `json:"status" validate:"required,status_enumeration_enum"`
-	Statuses []StatusEnumeration `json:"statuses"`
 }
 
 // @Method(POST)

@@ -173,6 +173,67 @@ var _ = Describe("E2E Controller Spec", func() {
 			Body:            nil,
 			Query:           nil,
 			Headers:         nil,
+			RunningMode:     &allRouting,
+		})
+	})
+
+	It("Should response non-string primitive", func() {
+		RunRouterTest(common.RouterTest{
+			Name:            "Should response non-string primitive - int",
+			ExpectedStatus:  200,
+			ExpectedBody:    "20",
+			ExpendedHeaders: nil,
+			Path:            "/e2e/primitive-return-type",
+			Method:          "GET",
+			Body:            nil,
+			Query:           nil,
+			Headers:         nil,
+			RunningMode:     &allRouting,
+		})
+	})
+
+	It("Should response slice of primitive", func() {
+		RunRouterTest(common.RouterTest{
+			Name:            "Should response non-string primitive - int array",
+			ExpectedStatus:  200,
+			ExpectedBody:    "[20]",
+			ExpendedHeaders: nil,
+			Path:            "/e2e/primitive-array-return-type",
+			Method:          "GET",
+			Body:            nil,
+			Query:           nil,
+			Headers:         nil,
+			RunningMode:     &allRouting,
+		})
+	})
+
+	It("Should response non-string alias primitive", func() {
+		RunRouterTest(common.RouterTest{
+			Name:            "Should response non-string alias primitive - int",
+			ExpectedStatus:  200,
+			ExpectedBody:    "1",
+			ExpendedHeaders: nil,
+			Path:            "/e2e/primitive-alias-return-type",
+			Method:          "GET",
+			Body:            nil,
+			Query:           nil,
+			Headers:         nil,
+			RunningMode:     &allRouting,
+		})
+	})
+
+	It("Should response slice of alias primitive", func() {
+		RunRouterTest(common.RouterTest{
+			Name:            "Should response slice of alias primitive- int array",
+			ExpectedStatus:  200,
+			ExpectedBody:    "[1]",
+			ExpendedHeaders: nil,
+			Path:            "/e2e/primitive-alias-array-return-type",
+			Method:          "GET",
+			Body:            nil,
+			Query:           nil,
+			Headers:         nil,
+			RunningMode:     &allRouting,
 		})
 	})
 

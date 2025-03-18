@@ -27,6 +27,7 @@ type StructInfo struct {
 type TypeVisitor struct {
 	packages    []*packages.Package
 	typesByName map[string]*definitions.StructMetadata
+	enumByName  map[string]*definitions.EnumMetadata
 }
 
 type StructAttributeHolders struct {
@@ -38,6 +39,7 @@ func NewTypeVisitor(packages []*packages.Package) *TypeVisitor {
 	return &TypeVisitor{
 		packages:    packages,
 		typesByName: make(map[string]*definitions.StructMetadata),
+		enumByName:  make(map[string]*definitions.EnumMetadata),
 	}
 }
 
@@ -125,6 +127,24 @@ func (v *TypeVisitor) VisitStruct(fullPackageName string, structName string, str
 	return nil
 }
 
+func (v *TypeVisitor) VisitEnum(enumName string, model definitions.TypeMetadata) error {
+	if v.enumByName[enumName] != nil {
+		return nil // Already processed, ignore
+	}
+
+	enumModel := &definitions.EnumMetadata{
+		Name:                  model.Name,
+		FullyQualifiedPackage: model.FullyQualifiedPackage,
+		Description:           model.Description,
+		Values:                model.AliasMetadata.Values,
+		Type:                  model.AliasMetadata.AliasType,
+		// Deprecation         ?
+	}
+
+	v.enumByName[enumName] = enumModel
+	return nil
+}
+
 func (v *TypeVisitor) getAttributeHolders(fullPackageName string, structName string) (StructAttributeHolders, error) {
 	holders := StructAttributeHolders{FieldHolders: make(map[string]*annotations.AnnotationHolder)}
 
@@ -193,6 +213,14 @@ func (v *TypeVisitor) getAttributeHolders(fullPackageName string, structName str
 func (v *TypeVisitor) GetStructs() []definitions.StructMetadata {
 	models := []definitions.StructMetadata{}
 	for _, value := range v.typesByName {
+		models = append(models, *value)
+	}
+	return models
+}
+
+func (v *TypeVisitor) GetEnums() []definitions.EnumMetadata {
+	models := []definitions.EnumMetadata{}
+	for _, value := range v.enumByName {
 		models = append(models, *value)
 	}
 	return models

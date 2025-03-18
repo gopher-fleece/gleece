@@ -1257,6 +1257,172 @@
         ]
       }
     },
+    "/e2e/primitive-alias-array-return-type": {
+      "get": {
+        "operationId": "PrimitiveAliasArrayReturnType",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/NumberEnumeration"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rfc7807Error"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          ""
+        ]
+      }
+    },
+    "/e2e/primitive-alias-return-type": {
+      "get": {
+        "operationId": "PrimitiveAliasReturnType",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NumberEnumeration"
+                }
+              }
+            },
+            "description": ""
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rfc7807Error"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          ""
+        ]
+      }
+    },
+    "/e2e/primitive-array-return-type": {
+      "get": {
+        "operationId": "PrimitiveArrayReturnType",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "type": "integer"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rfc7807Error"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          ""
+        ]
+      }
+    },
+    "/e2e/primitive-return-type": {
+      "get": {
+        "operationId": "PrimitiveReturnType",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "description": ""
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rfc7807Error"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          ""
+        ]
+      }
+    },
     "/e2e/simple-get": {
       "get": {
         "operationId": "SimpleGet",
