@@ -3,14 +3,11 @@ package extractor
 import (
 	"fmt"
 	"go/ast"
-	"go/constant"
 	"go/token"
 	"go/types"
 	"path/filepath"
-	"strconv"
 	"strings"
 
-	MapSet "github.com/deckarep/golang-set/v2"
 	"github.com/gopher-fleece/gleece/definitions"
 	"golang.org/x/tools/go/packages"
 )
@@ -66,7 +63,7 @@ func DoesStructEmbedStruct(
 
 func GetDefaultPackageAlias(file *ast.File) (string, error) {
 	if file.Name != nil {
-		return file.Name.Name, nil
+		return GetDefaultAlias(file.Name.Name), nil
 	}
 	return "", fmt.Errorf("source file does not have a name")
 }
@@ -167,19 +164,6 @@ func GetImportAliases(file *ast.File) map[string]string {
 	return aliases
 }
 
-func isIdentFromDotImportedPackage(file *ast.File, packages []*packages.Package, ident *ast.Ident) *packages.Package {
-	dotImports := GetDotImportedPackageNames(file)
-	for _, dotImport := range dotImports {
-		pkg := FilterPackageByFullName(packages, dotImport)
-		if pkg != nil {
-			if IsIdentInPackage(pkg, ident) {
-				return pkg
-			}
-		}
-	}
-	return nil
-}
-
 func GetCommentsFromIdent(files *token.FileSet, file *ast.File, ident *ast.Ident) []string {
 	if ident.Obj == nil || ident.Obj.Decl == nil {
 		return []string{}
@@ -211,385 +195,8 @@ func GetCommentsFromIdent(files *token.FileSet, file *ast.File, ident *ast.Ident
 	return nil
 }
 
-func GetTypeMetaByIdent(
-	file *ast.File,
-	fileSet *token.FileSet,
-	packages []*packages.Package,
-	ident *ast.Ident,
-) (definitions.TypeMetadata, error) {
-	comments := GetCommentsFromIdent(fileSet, file, ident)
-
-	meta := definitions.TypeMetadata{
-		Name:        ident.Name,
-		Description: FindAndExtract(comments, "@Description"),
-	}
-
-	if IsUniverseType(ident.Name) {
-		// The identifier is a member of the universe, e.g. 'error'.
-		// Nothing to do here. Leave the package empty so the downstream generator knows no import/alias is needed
-		meta.IsUniverseType = true
-		meta.Import = definitions.ImportTypeNone
-		meta.EntityKind = definitions.AstNodeKindUnknown
-		return meta, nil
-	}
-
-	relevantPkg := isIdentFromDotImportedPackage(file, packages, ident)
-	if relevantPkg != nil {
-		// The identifier is a type from a dot imported package
-		meta.Import = definitions.ImportTypeDot
-		meta.FullyQualifiedPackage = relevantPkg.PkgPath
-		meta.DefaultPackageAlias = relevantPkg.Name
-
-		typeName, err := LookupTypeName(relevantPkg, ident.Name)
-		if err != nil {
-			return meta, err
-		}
-
-		if typeName == nil {
-			return meta, fmt.Errorf("type '%s' was not found in package %s", ident.Name, relevantPkg.Name)
-		}
-
-		kind, err := TryGetStructOrInterfaceKind(relevantPkg, ident.Name)
-		if err != nil {
-			return meta, err
-		}
-		meta.EntityKind = kind
-		if meta.EntityKind == definitions.AstNodeKindAlias {
-			aliasMetadata, err := ExtractAliasType(relevantPkg, typeName, ident)
-			if err != nil {
-				return meta, err
-			}
-			meta.AliasMetadata = aliasMetadata
-		}
-
-	} else {
-		// If we've gotten here, the ident is a locally defined entity;
-		//
-		// Were it a an aliased import, it've been resolved by GetTypeMetaBySelectorExpr.
-		// For dot-imports, we'd have flowed to the above 'if'.
-		currentPackageName, err := GetFullPackageName(file, fileSet)
-		if err != nil {
-			return meta, err
-		}
-
-		pkg := FilterPackageByFullName(packages, currentPackageName)
-		if pkg == nil {
-			return meta, fmt.Errorf("could not find package '%s' in the given list of packages", currentPackageName)
-		}
-
-		typeName, err := LookupTypeName(pkg, ident.Name)
-		if err != nil {
-			return meta, err
-		}
-
-		if (typeName == nil) || (typeName.Type() == nil) {
-			return meta, fmt.Errorf("could not find type '%s' in package '%s', are you sure it's included in the 'commonConfig->controllerGlobs' search paths?", ident.Name, currentPackageName)
-		}
-
-		// Verify the identifier does in fact exist in the current package.
-		// Not strictly needed but helps with safety.
-		exists, entityKind, err := DoesTypeOrInterfaceExistInPackage(typeName, ident)
-		if err != nil {
-			return meta, err
-		}
-
-		if !exists {
-			return meta, fmt.Errorf("identifier %s does not correlate to a type or interface in package %s", ident.Name, currentPackageName)
-		}
-
-		meta.Import = definitions.ImportTypeNone
-		meta.FullyQualifiedPackage = currentPackageName
-		meta.DefaultPackageAlias = GetDefaultAlias(currentPackageName)
-		meta.EntityKind = entityKind
-
-		if entityKind == definitions.AstNodeKindAlias {
-			aliasMetadata, err := ExtractAliasType(pkg, typeName, ident)
-			if err != nil {
-				return meta, err
-			}
-			meta.AliasMetadata = aliasMetadata
-		}
-	}
-
-	return meta, nil
-}
-
-func GetTypeMetaBySelectorExpr(
-	file *ast.File,
-	fileSet *token.FileSet,
-	packages []*packages.Package,
-	selector *ast.SelectorExpr,
-) (definitions.TypeMetadata, error) {
-	aliasedImports := GetImportAliases(file)
-
-	typeOrInterfaceName := selector.Sel.Name
-
-	comments := GetCommentsFromIdent(fileSet, file, selector.Sel)
-	meta := definitions.TypeMetadata{
-		Name:        typeOrInterfaceName,
-		Description: FindAndExtract(comments, "@Description"),
-		Import:      definitions.ImportTypeAlias,
-	}
-
-	// Resolve the importAlias part to a full package
-	importAlias, ok := selector.X.(*ast.Ident)
-	if !ok {
-		return meta, fmt.Errorf("could not convert a selector expression's 'X' to an identifier. Sel name: %s", typeOrInterfaceName)
-	}
-
-	var realFullPackageName string
-
-	aliasedFullName := aliasedImports[importAlias.Name]
-	if len(aliasedFullName) == 0 { // If there's no alias, the string will be empty
-		for maybeFullPackageName, fullPackageName := range aliasedImports {
-			if maybeFullPackageName == fullPackageName && IsAliasDefault(maybeFullPackageName, importAlias.Name) {
-				// A reverse check - if the import uses a default alias, we look in the map in reverse;
-				// Since the SelectorExpr's X is the default alias, we can check each import to see if its default alias matches the X.
-				// If it does, it's a match.
-				// The secondary 'maybeFullPackageName == fullPackageName' check is mostly just-in-case - for default aliases
-				// we expect the the mapped key to equal the mapped value.
-				realFullPackageName = fullPackageName
-				break
-			}
-		}
-	} else {
-		// Imported with a custom alias
-		realFullPackageName = aliasedFullName
-	}
-
-	meta.FullyQualifiedPackage = realFullPackageName
-	meta.DefaultPackageAlias = GetDefaultAlias(realFullPackageName)
-
-	pkg := FilterPackageByFullName(packages, realFullPackageName)
-	if pkg == nil {
-		return meta, fmt.Errorf("could not get *packages.Package for '%s' whilst processing '%s'", realFullPackageName, typeOrInterfaceName)
-	}
-
-	kind, err := TryGetStructOrInterfaceKind(pkg, typeOrInterfaceName)
-	if err != nil {
-		return meta, fmt.Errorf("could not determine entity type whilst processing '%s'", typeOrInterfaceName)
-	}
-
-	meta.EntityKind = kind
-	return meta, nil
-}
-
-func GetFieldMetadata(
-	file *ast.File,
-	fileSet *token.FileSet,
-	packages []*packages.Package,
-	value *ast.Field,
-) (definitions.TypeMetadata, error) {
-	switch fieldType := value.Type.(type) {
-	case *ast.Ident:
-		return GetTypeMetaByIdent(file, fileSet, packages, fieldType)
-	case *ast.SelectorExpr:
-		return GetTypeMetaBySelectorExpr(file, fileSet, packages, fieldType)
-	case *ast.StarExpr:
-		meta, err := GetFieldMetadata(file, fileSet, packages, &ast.Field{Type: fieldType.X})
-		if err == nil {
-			meta.IsByAddress = true
-		}
-		return meta, err
-	default:
-		fieldTypeString := GetFieldTypeString(fieldType)
-		return definitions.TypeMetadata{}, fmt.Errorf("field type '%s' is not currently supported", fieldTypeString)
-	}
-}
-
-func GetFuncParameterTypeList(
-	file *ast.File,
-	fileSet *token.FileSet,
-	packages []*packages.Package,
-	funcDecl *ast.FuncDecl,
-) ([]definitions.ParamMeta, error) {
-	paramTypes := []definitions.ParamMeta{}
-
-	if funcDecl.Type.Params == nil || funcDecl.Type.Params.List == nil {
-		return paramTypes, nil
-	}
-
-	for _, field := range funcDecl.Type.Params.List {
-		meta, err := GetFieldMetadata(file, fileSet, packages, field)
-		if err != nil {
-			return paramTypes, err
-		}
-		paramTypes = append(paramTypes, definitions.ParamMeta{Name: field.Names[0].Name, TypeMeta: meta})
-	}
-
-	return paramTypes, nil
-}
-
-func GetFuncReturnTypeList(
-	file *ast.File,
-	fileSet *token.FileSet,
-	packages []*packages.Package,
-	funcDecl *ast.FuncDecl,
-) ([]definitions.TypeMetadata, error) {
-	returnTypes := []definitions.TypeMetadata{}
-
-	if funcDecl.Type.Results == nil {
-		return returnTypes, nil
-	}
-
-	for _, field := range funcDecl.Type.Results.List {
-		meta, err := GetFieldMetadata(file, fileSet, packages, field)
-		if err != nil {
-			return returnTypes, err
-		}
-		returnTypes = append(returnTypes, meta)
-	}
-	return returnTypes, nil
-}
-
-func GetAllPackageFiles(codeFiles []*ast.File, fileSet *token.FileSet, fullPackageNameToFind string) ([]*ast.File, error) {
-	packageFiles := []*ast.File{}
-	for _, file := range codeFiles {
-		packageName, err := GetFullPackageName(file, fileSet)
-		if err != nil {
-			return packageFiles, err
-		}
-		if packageName == fullPackageNameToFind {
-			packageFiles = append(packageFiles, file)
-		}
-	}
-	return packageFiles, nil
-}
-
-func GetFileByImportNode(codeFiles []*ast.File, fileSet *token.FileSet, importNode *ast.ImportSpec) (*ast.File, error) {
-	cleanedPackageName := strings.Trim(importNode.Path.Value, "\"")
-	for _, file := range codeFiles {
-		filePackageName, err := GetFullPackageName(file, fileSet)
-		if err != nil {
-			return nil, err
-		}
-		if filePackageName == cleanedPackageName {
-			return file, nil
-		}
-	}
-	return nil, nil
-}
-
-func GetPackageAndDependencies(
-	codeFiles []*ast.File,
-	fileSet *token.FileSet,
-	fullPackageNameToFind string,
-	relevantFilesOutput *MapSet.Set[*ast.File],
-) error {
-	files, err := GetAllPackageFiles(codeFiles, fileSet, fullPackageNameToFind)
-	if err != nil {
-		return err
-	}
-
-	for _, file := range files {
-		(*relevantFilesOutput).Add(file)
-		for _, importNode := range file.Imports {
-			relevantFile, err := GetFileByImportNode(codeFiles, fileSet, importNode)
-			if relevantFile == nil || err != nil {
-				return err
-			}
-
-			packageName, err := GetFullPackageName(relevantFile, fileSet)
-			if err != nil {
-				return err
-			}
-
-			err = GetPackageAndDependencies(codeFiles, fileSet, packageName, relevantFilesOutput)
-			if err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
-func GetPackagesFromExpressions(packageExpressions []string) ([]*packages.Package, error) {
-	cfg := &packages.Config{Mode: packages.LoadAllSyntax}
-	return packages.Load(cfg, packageExpressions...)
-}
-
 func IsIdentInPackage(pkg *packages.Package, ident *ast.Ident) bool {
 	return pkg.Types.Scope().Lookup(ident.Name) != nil
-}
-
-func ExtractAliasType(pkg *packages.Package, typeName *types.TypeName, ident *ast.Ident) (*definitions.AliasMetadata, error) {
-	basic, isBasicType := typeName.Type().Underlying().(*types.Basic)
-
-	if !isBasicType {
-		return nil, fmt.Errorf("type %s is not a basic type", typeName.Name())
-	}
-
-	aliasMetadata := definitions.AliasMetadata{
-		Name:      typeName.Name(),
-		AliasType: basic.String(),
-		Values:    []string{},
-	}
-
-	// Iterate through all objects in package scope
-	scope := pkg.Types.Scope()
-	for _, name := range scope.Names() {
-		obj := scope.Lookup(name)
-		if obj == nil {
-			continue
-		}
-
-		// Check if it's a constant
-		constVal, isConst := obj.(*types.Const)
-		if !isConst {
-			continue
-		}
-
-		// Check if this constant has the enum type we're looking for
-		if !types.Identical(constVal.Type(), typeName.Type()) {
-			continue
-		}
-
-		// Extract the value based on the basic kind
-		val := ""
-		switch basic.Kind() {
-		case types.String:
-			val = constant.StringVal(constVal.Val())
-		case types.Int, types.Int8, types.Int16, types.Int32, types.Int64,
-			types.Uint, types.Uint8, types.Uint16, types.Uint32, types.Uint64:
-			if intVal, ok := constant.Int64Val(constVal.Val()); ok {
-				val = strconv.FormatInt(intVal, 10)
-			}
-		case types.Float32, types.Float64:
-			if floatVal, ok := constant.Float64Val(constVal.Val()); ok {
-				val = strconv.FormatFloat(floatVal, 'f', -1, 64)
-			}
-		case types.Bool:
-			boolVal := constant.BoolVal(constVal.Val())
-			val = strconv.FormatBool(boolVal)
-		default:
-			return nil, fmt.Errorf("unsupported alias to basic type %s", basic.String())
-		}
-
-		aliasMetadata.Values = append(aliasMetadata.Values, val)
-	}
-
-	return &aliasMetadata, nil
-}
-
-func DoesTypeOrInterfaceExistInPackage(
-	typeName *types.TypeName,
-	ident *ast.Ident,
-) (bool, definitions.AstNodeKind, error) {
-	if _, isStruct := typeName.Type().Underlying().(*types.Struct); isStruct {
-		return true, definitions.AstNodeKindStruct, nil
-	}
-
-	// Get the underlying type and check if it's an interface.
-	if _, isInterface := typeName.Type().Underlying().(*types.Interface); isInterface {
-		return true, definitions.AstNodeKindInterface, nil
-	}
-
-	// Check if that is an alias of a basic type (string, int, bool, etc.)
-	if _, isBasicType := typeName.Type().Underlying().(*types.Basic); isBasicType {
-		return true, definitions.AstNodeKindAlias, nil
-	}
-
-	return true, definitions.AstNodeKindUnknown, nil
 }
 
 func IsUniverseType(typeName string) bool {
@@ -704,7 +311,7 @@ func LookupTypeName(pkg *packages.Package, name string) (*types.TypeName, error)
 	return typeName, nil
 }
 
-func TryGetStructOrInterfaceKind(pkg *packages.Package, name string) (definitions.AstNodeKind, error) {
+func GetEntityKind(pkg *packages.Package, name string) (definitions.AstNodeKind, error) {
 	typeName, err := LookupTypeName(pkg, name)
 	if err != nil {
 		return definitions.AstNodeKindNone, err

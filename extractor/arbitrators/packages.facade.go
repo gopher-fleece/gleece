@@ -46,6 +46,7 @@ func (facade *PackagesFacade) LoadPackages(packageExpressions []string) error {
 	for idx, expr := range packageExpressions {
 		_, exists := facade.packagesCache[expr]
 		if exists {
+			// Already cached, drop the expression (i.e., don't look for it)
 			expressionsToLookup = append(expressionsToLookup[:idx], expressionsToLookup[idx+1:]...)
 		}
 	}
@@ -58,8 +59,9 @@ func (facade *PackagesFacade) LoadPackages(packageExpressions []string) error {
 		return err
 	}
 
-	for idx, pkg := range matchingPackages {
-		facade.packagesCache[packageExpressions[idx]] = pkg
+	// Note that packages.Load does *not* guarantee order
+	for _, pkg := range matchingPackages {
+		facade.packagesCache[pkg.PkgPath] = pkg
 	}
 
 	return err

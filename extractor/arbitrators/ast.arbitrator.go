@@ -107,7 +107,7 @@ func (arb *AstArbitrator) GetTypeMetaByIdent(file *ast.File, ident *ast.Ident) (
 		meta.Import = definitions.ImportTypeDot
 		meta.FullyQualifiedPackage = relevantPkg.PkgPath
 		meta.DefaultPackageAlias = relevantPkg.Name
-		kind, err := extractor.TryGetStructOrInterfaceKind(relevantPkg, ident.Name)
+		kind, err := extractor.GetEntityKind(relevantPkg, ident.Name)
 		if err != nil {
 			return meta, err
 		}
@@ -167,11 +167,11 @@ func (arb *AstArbitrator) GetTypeMetaByIdent(file *ast.File, ident *ast.Ident) (
 func (arb *AstArbitrator) GetTypeMetaBySelectorExpr(file *ast.File, selector *ast.SelectorExpr) (definitions.TypeMetadata, error) {
 	aliasedImports := extractor.GetImportAliases(file)
 
-	typeOrInterfaceName := selector.Sel.Name
+	entityName := selector.Sel.Name
 
 	comments := extractor.GetCommentsFromIdent(arb.fileSet, file, selector.Sel)
 	meta := definitions.TypeMetadata{
-		Name:        typeOrInterfaceName,
+		Name:        entityName,
 		Description: extractor.FindAndExtract(comments, "@Description"),
 		Import:      definitions.ImportTypeAlias,
 	}
@@ -179,7 +179,7 @@ func (arb *AstArbitrator) GetTypeMetaBySelectorExpr(file *ast.File, selector *as
 	// Resolve the importAlias part to a full package
 	importAlias, ok := selector.X.(*ast.Ident)
 	if !ok {
-		return meta, fmt.Errorf("could not convert a selector expression's 'X' to an identifier. Sel name: %s", typeOrInterfaceName)
+		return meta, fmt.Errorf("could not convert a selector expression's 'X' to an identifier. Sel name: %s", entityName)
 	}
 
 	var realFullPackageName string
@@ -207,28 +207,28 @@ func (arb *AstArbitrator) GetTypeMetaBySelectorExpr(file *ast.File, selector *as
 
 	pkg, err := arb.pkgFacade.GetPackage(realFullPackageName)
 	if err != nil {
-		return meta, fmt.Errorf("failed to retrieve package '%s' whilst processing '%s'", realFullPackageName, typeOrInterfaceName)
+		return meta, fmt.Errorf("failed to retrieve package '%s' whilst processing '%s'", realFullPackageName, entityName)
 	}
 
 	if pkg == nil {
-		return meta, fmt.Errorf("could not find package '%s' whilst processing '%s'", realFullPackageName, typeOrInterfaceName)
+		return meta, fmt.Errorf("could not find package '%s' whilst processing '%s'", realFullPackageName, entityName)
 	}
 
-	kind, err := extractor.TryGetStructOrInterfaceKind(pkg, typeOrInterfaceName)
+	kind, err := extractor.GetEntityKind(pkg, entityName)
 	if err != nil {
-		return meta, fmt.Errorf("could not determine entity type whilst processing '%s'", typeOrInterfaceName)
+		return meta, err
 	}
 
 	meta.EntityKind = kind
 
 	if kind == definitions.AstNodeKindAlias {
-		typeName, err := extractor.LookupTypeName(pkg, typeOrInterfaceName)
+		typeName, err := extractor.LookupTypeName(pkg, entityName)
 		if err != nil {
 			return meta, err
 		}
 
 		if typeName == nil {
-			return meta, fmt.Errorf("type '%s' was not found in package %s", typeOrInterfaceName, pkg.Name)
+			return meta, fmt.Errorf("type '%s' was not found in package %s", entityName, pkg.Name)
 		}
 		aliasMetadata, err := arb.ExtractAliasType(pkg, typeName)
 		if err != nil {
