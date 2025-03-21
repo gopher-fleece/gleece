@@ -14,6 +14,7 @@ import (
 )
 
 var EchoRouter *echo.Echo
+var EchoExExtraRouter *echo.Echo
 
 func EchoRouterTest(routerTest common.RouterTest) common.RouterTestResult {
 	// Create a response recorder
@@ -60,7 +61,14 @@ func EchoRouterTest(routerTest common.RouterTest) common.RouterTestResult {
 		}
 	}
 
-	EchoRouter.ServeHTTP(w, req)
+	switch *routerTest.RunningMode {
+	case common.RunOnVanillaRoutes:
+		EchoExExtraRouter.ServeHTTP(w, req)
+	case common.RunOnFullyFeaturedRoutes:
+		EchoRouter.ServeHTTP(w, req)
+	default:
+		return common.RouterTestResult{}
+	}
 
 	// Convert response headers to map[string]string
 	headers := make(map[string]string)

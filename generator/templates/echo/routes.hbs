@@ -37,6 +37,13 @@ func RegisterCustomValidator(validateTagName string, validateFunc runtime.Valida
 func RegisterRoutes(engine *echo.Echo) {
 	urlParamRegex = regexp.MustCompile(`\{([\w\d-_]+)\}`)
 
+    {{!-- An experimental feature to auto generate enums validators --}}
+	{{#if ExperimentalConfig.GenerateEnumValidator}}
+	{{#each Models.Enums}}
+		registerEnumValidation(validatorInstance, "{{ToSnakeCase Name}}_enum", []string{ {{#each Values}}"{{{this}}}"{{#unless @last}},{{/unless}}{{/each}} })
+	{{/each}}
+	{{/if}}
+	
 	{{> RegisterRoutesExtension }}
 
 {{#each Controllers}}

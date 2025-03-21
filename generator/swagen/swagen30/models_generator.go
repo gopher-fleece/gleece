@@ -9,7 +9,7 @@ import (
 var objectType = &openapi3.Types{"object"}
 var arrayType = &openapi3.Types{"array"}
 
-func generateModelSpec(openapi *openapi3.T, model definitions.ModelMetadata) {
+func generateStructSpec(openapi *openapi3.T, model definitions.StructMetadata) {
 	schema := &openapi3.Schema{
 		Title:       model.Name,
 		Description: model.Description,
@@ -57,6 +57,31 @@ func generateModelSpec(openapi *openapi3.T, model definitions.ModelMetadata) {
 	}
 }
 
+func generateEnumSpec(openapi *openapi3.T, model definitions.EnumMetadata) {
+	enumType := &openapi3.Types{swagtool.ToOpenApiType(model.Type)}
+
+	// Create the enum schema
+	schema := &openapi3.Schema{
+		Title:       model.Name,
+		Description: model.Description,
+		Type:        enumType,
+		Deprecated:  swagtool.IsDeprecated(&model.Deprecation),
+	}
+
+	// Add the possible enum values
+	enumValues := []any{}
+	for _, value := range model.Values {
+		enumValues = append(enumValues, value)
+	}
+
+	schema.Enum = enumValues
+
+	// Add schema to components
+	openapi.Components.Schemas[model.Name] = &openapi3.SchemaRef{
+		Value: schema,
+	}
+}
+
 // Fill the schema references in the components
 func fillSchemaRef(openapi *openapi3.T) {
 	// Iterate over all EmptyRefSchemas
@@ -71,10 +96,15 @@ func fillSchemaRef(openapi *openapi3.T) {
 	}
 }
 
-func GenerateModelsSpec(openapi *openapi3.T, models []definitions.ModelMetadata) error {
-	for _, model := range models {
-		generateModelSpec(openapi, model)
+func GenerateModelsSpec(openapi *openapi3.T, models *definitions.Models) error {
+	for _, enum := range models.Enums {
+		generateEnumSpec(openapi, enum)
 	}
+
+	for _, model := range models.Structs {
+		generateStructSpec(openapi, model)
+	}
+
 	fillSchemaRef(openapi)
 	return nil
 }

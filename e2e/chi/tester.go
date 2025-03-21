@@ -15,6 +15,7 @@ import (
 )
 
 var ChiRouter *chi.Mux
+var ChiExExtraRouter *chi.Mux
 
 func ChiRouterTest(routerTest common.RouterTest) common.RouterTestResult {
 	// Create a response recorder
@@ -62,7 +63,14 @@ func ChiRouterTest(routerTest common.RouterTest) common.RouterTestResult {
 	}
 
 	// Use Chi router to serve the request
-	ChiRouter.ServeHTTP(w, req)
+	switch *routerTest.RunningMode {
+	case common.RunOnVanillaRoutes:
+		ChiExExtraRouter.ServeHTTP(w, req)
+	case common.RunOnFullyFeaturedRoutes:
+		ChiRouter.ServeHTTP(w, req)
+	default:
+		return common.RouterTestResult{}
+	}
 
 	// Convert response headers to map[string]string
 	headers := make(map[string]string)

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/generator/swagen/swagtool"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
@@ -110,7 +111,8 @@ func generateOperationSecurity(operation *openapi3.Operation, config *definition
 
 func setNewRouteOperation(openapi *openapi3.T, def definitions.ControllerMetadata, route definitions.RouteMetadata, operation *openapi3.Operation) {
 	// Set the operation in the path item
-	routePath := def.RestMetadata.Path + route.RestMetadata.Path
+	routePath := common.RemoveDuplicateSlash(def.RestMetadata.Path + route.RestMetadata.Path)
+
 	// Set the path item in the openapi
 	pathItem := openapi.Paths.Find(routePath)
 	// If path item is nil, create a new path item

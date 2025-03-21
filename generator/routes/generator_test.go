@@ -15,7 +15,8 @@ var _ = Describe("Engine Registration", func() {
 
 	BeforeEach(func() {
 		// Reset the global state before each test
-		lastEngine = nil
+		helpersRegistered = false
+		partialsRegistered = false
 		raymond.RemoveAllPartials()
 
 		config = &definitions.GleeceConfig{
@@ -33,8 +34,7 @@ var _ = Describe("Engine Registration", func() {
 				config.RoutesConfig.Engine = engineType
 				err := registerPartials(config)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(lastEngine).NotTo(BeNil())
-				Expect(*lastEngine).To(Equal(engineType))
+				Expect(partialsRegistered).To(BeTrue())
 			},
 			Entry("Gin engine", definitions.RoutingEngineGin),
 			Entry("Echo engine", definitions.RoutingEngineEcho),

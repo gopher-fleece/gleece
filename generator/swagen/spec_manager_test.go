@@ -19,7 +19,7 @@ var _ = Describe("Spec Preparing", func() {
 		// Create an example controller and add it to the definitions
 		defs = append(defs, definitions.ControllerMetadata{})
 
-		models := []definitions.ModelMetadata{}
+		models := []definitions.StructMetadata{}
 
 		outputPath := "./dist/test-spec-pre-out.json"
 		if swagtool.FileExists(outputPath) {
@@ -36,7 +36,9 @@ var _ = Describe("Spec Preparing", func() {
 			SpecGeneratorConfig: definitions.SpecGeneratorConfig{
 				OutputPath: outputPath,
 			},
-		}, defs, models, false)
+		}, defs, &definitions.Models{
+			Structs: models,
+		}, false)
 
 		Expect(swagtool.FileExists(outputPath)).To(BeTrue())
 	})
@@ -48,7 +50,7 @@ var _ = Describe("Spec Preparing", func() {
 		// Create an example controller and add it to the definitions
 		defs = append(defs, definitions.ControllerMetadata{})
 
-		models := []definitions.ModelMetadata{}
+		models := []definitions.StructMetadata{}
 
 		outputPath := "./dist/test-spec-pre-v31-out.json"
 		if swagtool.FileExists(outputPath) {
@@ -65,7 +67,9 @@ var _ = Describe("Spec Preparing", func() {
 			SpecGeneratorConfig: definitions.SpecGeneratorConfig{
 				OutputPath: outputPath,
 			},
-		}, defs, models, false)
+		}, defs, &definitions.Models{
+			Structs: models,
+		}, false)
 
 		Expect(swagtool.FileExists(outputPath)).To(BeTrue())
 	})
@@ -116,7 +120,7 @@ var _ = Describe("Spec Preparing", func() {
 			},
 		})
 
-		models := []definitions.ModelMetadata{}
+		models := []definitions.StructMetadata{}
 
 		swagtool.AppendErrorSchema(&models, true)
 
@@ -127,7 +131,9 @@ var _ = Describe("Spec Preparing", func() {
 				Version: "1.0.0",
 			},
 			BaseURL: "http://localhost:8080",
-		}, defs, models, true)
+		}, defs, &definitions.Models{
+			Structs: models,
+		}, true)
 
 		// Expect error not to be nil
 		Expect(err).NotTo(BeNil())

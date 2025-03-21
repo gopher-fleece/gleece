@@ -12,7 +12,7 @@ import (
 )
 
 var metadata []definitions.ControllerMetadata
-var models []definitions.ModelMetadata
+var models []definitions.StructMetadata
 var schemaShouldHaveStdErrorSanity bool
 
 var _ = BeforeSuite(func() {

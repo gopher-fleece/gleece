@@ -1,9 +1,11 @@
 package e2e
 
 import (
+	"fmt"
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-chi/chi/v5"
@@ -13,12 +15,22 @@ import (
 
 	"github.com/gopher-fleece/gleece/cmd"
 	"github.com/gopher-fleece/gleece/cmd/arguments"
+	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/e2e/common"
 
+	gleeceChiRoutesExExtra "github.com/gopher-fleece/gleece/e2e/chi/ex_extra_routes"
 	gleeceChiRoutes "github.com/gopher-fleece/gleece/e2e/chi/routes"
+
+	gleeceEchoRoutesExExtra "github.com/gopher-fleece/gleece/e2e/echo/ex_extra_routes"
 	gleeceEchoRoutes "github.com/gopher-fleece/gleece/e2e/echo/routes"
+
+	gleeceFiberRoutesExExtra "github.com/gopher-fleece/gleece/e2e/fiber/ex_extra_routes"
 	gleeceFiberRoutes "github.com/gopher-fleece/gleece/e2e/fiber/routes"
+
+	gleeceGinRoutesExExtra "github.com/gopher-fleece/gleece/e2e/gin/ex_extra_routes"
 	gleeceGinRoutes "github.com/gopher-fleece/gleece/e2e/gin/routes"
+
+	gleeceMuxRoutesExExtra "github.com/gopher-fleece/gleece/e2e/mux/ex_extra_routes"
 	gleeceMuxRoutes "github.com/gopher-fleece/gleece/e2e/mux/routes"
 
 	chiTester "github.com/gopher-fleece/gleece/e2e/chi"
@@ -40,19 +52,92 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+
+	"github.com/gopher-fleece/gleece/generator/routes"
+	"github.com/gopher-fleece/gleece/generator/swagen"
 )
 
+var exExtraRouting = common.RunOnVanillaRoutes
+var fullyFeaturedRouting = common.RunOnFullyFeaturedRoutes
+var allRouting = common.RunOnAllRoutes
+
+func init() {
+	// Force-set the test timeout via environment variable
+	// This affects the Go test runtime directly
+	os.Setenv("GO_TEST_TIMEOUT", "5m")
+
+	// Set up a failsafe timer that will force-exit if tests take too long
+	go func() {
+		time.Sleep(5 * time.Minute)
+		fmt.Println("⚠️ Test exceeded 5-minute timeout - force terminating")
+		os.Exit(1)
+	}()
+}
+
 func TestGleeceE2E(t *testing.T) {
-	// Disable logging to reduce clutter.
 	logger.SetLogLevel(logger.LogLevelNone)
+
+	// Configure Ginkgo with a longer default timeout
+	suiteConfig, reporterConfig := GinkgoConfiguration()
+	suiteConfig.Timeout = 5 * time.Minute
+
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Gleece E2E Suite")
+	RunSpecs(t, "Gleece E2E Suite", suiteConfig, reporterConfig)
+}
+
+func GenerateE2ERoutes(args arguments.CliArguments, engineName string) error {
+	logger.Info("Generating spec and routes")
+	config, meta, models, hasAnyErrorTypes, err := cmd.GetConfigAndMetadata(args)
+	if err != nil {
+		return err
+	}
+
+	// // Generate the routes first
+	if err := routes.GenerateRoutes(config, meta, models); err != nil {
+		logger.Fatal("Failed to generate routes - %v", err)
+		return err
+	}
+
+	// Off experimental feature
+	config.ExperimentalConfig = definitions.ExperimentalConfig{}
+
+	config.RoutesConfig.TemplateOverrides = nil
+	config.RoutesConfig.TemplateExtensions = nil
+	config.RoutesConfig.AuthorizationConfig.EnforceSecurityOnAllRoutes = false
+	config.RoutesConfig.ValidateResponsePayload = false
+
+	config.RoutesConfig.OutputPath = fmt.Sprintf("./%s/ex_extra_routes/%s.e2e.ex_extra.gleece.go", engineName, engineName)
+	config.RoutesConfig.PackageName = "ex_extra_routes"
+
+	// Generate the routes for ex_extra - a vanilla version of the routes without any customizations amd as default as possible
+	if err := routes.GenerateRoutes(config, meta, models); err != nil {
+		logger.Fatal("Failed to generate ex_extra_routes - %v", err)
+		return err
+	}
+
+	// Generate the OpenAPI 3.0.0 spec
+	config.OpenAPIGeneratorConfig.SpecGeneratorConfig.OutputPath = fmt.Sprintf("./%s/openapi/openapi3.0.0.json", engineName)
+	if err := swagen.GenerateAndOutputSpec(&config.OpenAPIGeneratorConfig, meta, models, hasAnyErrorTypes); err != nil {
+		logger.Fatal("Failed to generate OpenAPI spec - %v", err)
+		return err
+	}
+
+	// Generate the OpenAPI 3.1.0 spec
+	config.OpenAPIGeneratorConfig.Info.Version = "3.1.0"
+	config.OpenAPIGeneratorConfig.SpecGeneratorConfig.OutputPath = fmt.Sprintf("./%s/openapi/openapi3.1.0.json", engineName)
+	if err := swagen.GenerateAndOutputSpec(&config.OpenAPIGeneratorConfig, meta, models, hasAnyErrorTypes); err != nil {
+		logger.Fatal("Failed to generate OpenAPI spec - %v", err)
+		return err
+	}
+
+	logger.Info("Spec and routes successfully generated")
+	return nil
 }
 
 func RegenerateRoutes() {
 
 	// Always build routes for gin  ...
-	err := cmd.GenerateSpecAndRoutes(arguments.CliArguments{ConfigPath: "./e2e.gin.gleece.config.json"})
+	err := GenerateE2ERoutes(arguments.CliArguments{ConfigPath: "./e2e.gin.gleece.config.json"}, "gin")
 	if err != nil {
 		Fail("Failed to generate gin routes " + err.Error())
 	}
@@ -65,33 +150,35 @@ func RegenerateRoutes() {
 	}
 
 	// Build routes for echo ...
-	err = cmd.GenerateSpecAndRoutes(arguments.CliArguments{ConfigPath: "./e2e.echo.gleece.config.json"})
+	err = GenerateE2ERoutes(arguments.CliArguments{ConfigPath: "./e2e.echo.gleece.config.json"}, "echo")
 	if err != nil {
 		Fail("Failed to generate echo routes " + err.Error())
 	}
 
 	// Build routes for Gorilla mux ...
-	err = cmd.GenerateSpecAndRoutes(arguments.CliArguments{ConfigPath: "./e2e.mux.gleece.config.json"})
+	err = GenerateE2ERoutes(arguments.CliArguments{ConfigPath: "./e2e.mux.gleece.config.json"}, "mux")
 	if err != nil {
 		Fail("Failed to generate echo routes " + err.Error())
 	}
 
 	// Build routes for chi ...
-	err = cmd.GenerateSpecAndRoutes(arguments.CliArguments{ConfigPath: "./e2e.chi.gleece.config.json"})
+	err = GenerateE2ERoutes(arguments.CliArguments{ConfigPath: "./e2e.chi.gleece.config.json"}, "chi")
 	if err != nil {
 		Fail("Failed to generate echo routes " + err.Error())
 	}
 
 	// Build routes for Fiber ...
-	err = cmd.GenerateSpecAndRoutes(arguments.CliArguments{ConfigPath: "./e2e.fiber.gleece.config.json"})
+	err = GenerateE2ERoutes(arguments.CliArguments{ConfigPath: "./e2e.fiber.gleece.config.json"}, "fiber")
 	if err != nil {
 		Fail("Failed to generate echo routes " + err.Error())
 	}
 }
 
 var _ = BeforeSuite(func() {
+	// Generate routes
 	RegenerateRoutes()
-	// Init routes
+
+	// Init routers
 
 	// Set Gin
 	gin.SetMode(gin.TestMode)
@@ -105,6 +192,9 @@ var _ = BeforeSuite(func() {
 	gleeceGinRoutes.RegisterErrorMiddleware(runtime.OnOutputValidationError, ginMiddlewares.MiddlewareOnOutputValidationError)
 	gleeceGinRoutes.RegisterCustomValidator("validate_starts_with_letter", e2eAssets.ValidateStartsWithLetter)
 
+	ginTester.GinExExtraRouter = gin.Default()
+	gleeceGinRoutesExExtra.RegisterRoutes(ginTester.GinExExtraRouter)
+
 	// Set Echo
 	echoTester.EchoRouter = echo.New()
 	echoTester.EchoRouter.Use(middleware.Recover())
@@ -117,6 +207,9 @@ var _ = BeforeSuite(func() {
 	gleeceEchoRoutes.RegisterCustomValidator("validate_starts_with_letter", e2eAssets.ValidateStartsWithLetter)
 	gleeceEchoRoutes.RegisterRoutes(echoTester.EchoRouter)
 
+	echoTester.EchoExExtraRouter = echo.New()
+	gleeceEchoRoutesExExtra.RegisterRoutes(echoTester.EchoExExtraRouter)
+
 	// Set Gorilla mux
 	muxTester.MuxRouter = mux.NewRouter()
 	gleeceMuxRoutes.RegisterMiddleware(runtime.BeforeOperation, muxMiddlewares.MiddlewareBeforeOperation)
@@ -127,6 +220,9 @@ var _ = BeforeSuite(func() {
 	gleeceMuxRoutes.RegisterErrorMiddleware(runtime.OnOutputValidationError, muxMiddlewares.MiddlewareOnOutputValidationError)
 	gleeceMuxRoutes.RegisterCustomValidator("validate_starts_with_letter", e2eAssets.ValidateStartsWithLetter)
 	gleeceMuxRoutes.RegisterRoutes(muxTester.MuxRouter)
+
+	muxTester.MuxExExtraRouter = mux.NewRouter()
+	gleeceMuxRoutesExExtra.RegisterRoutes(muxTester.MuxExExtraRouter)
 
 	// Set Chi
 	chiTester.ChiRouter = chi.NewRouter()
@@ -139,6 +235,9 @@ var _ = BeforeSuite(func() {
 	gleeceChiRoutes.RegisterCustomValidator("validate_starts_with_letter", e2eAssets.ValidateStartsWithLetter)
 	gleeceChiRoutes.RegisterRoutes(chiTester.ChiRouter)
 
+	chiTester.ChiExExtraRouter = chi.NewRouter()
+	gleeceChiRoutesExExtra.RegisterRoutes(chiTester.ChiExExtraRouter)
+
 	// Set Fiber
 	fiberTester.FiberRouter = fiber.New()
 	gleeceFiberRoutes.RegisterMiddleware(runtime.BeforeOperation, fiberMiddlewares.MiddlewareBeforeOperation)
@@ -149,10 +248,13 @@ var _ = BeforeSuite(func() {
 	gleeceFiberRoutes.RegisterErrorMiddleware(runtime.OnOutputValidationError, fiberMiddlewares.MiddlewareOnOutputValidationError)
 	gleeceFiberRoutes.RegisterCustomValidator("validate_starts_with_letter", e2eAssets.ValidateStartsWithLetter)
 	gleeceFiberRoutes.RegisterRoutes(fiberTester.FiberRouter)
+
+	fiberTester.FiberExExtraRouter = fiber.New()
+	gleeceFiberRoutesExExtra.RegisterRoutes(fiberTester.FiberExExtraRouter)
 })
 
 func VerifyResult(result common.RouterTestResult, routerTest common.RouterTest) {
-	Expect(result.Code).To(Equal(routerTest.ExpectedStatus))
+	Expect(routerTest.ExpectedStatus).To(Equal(result.Code))
 	if routerTest.ExpectedBodyContain != "" {
 		Expect(result.Body).To(ContainSubstring(routerTest.ExpectedBodyContain))
 	} else if routerTest.ExpectedBody != "" {
@@ -168,7 +270,7 @@ func VerifyResult(result common.RouterTestResult, routerTest common.RouterTest) 
 	}
 }
 
-func RunRouterTest(routerTest common.RouterTest) {
+func runTest(routerTest common.RouterTest) {
 	ginResponse := ginTester.GinRouterTest(routerTest)
 	VerifyResult(ginResponse, routerTest)
 
@@ -183,4 +285,26 @@ func RunRouterTest(routerTest common.RouterTest) {
 
 	fiberResponse := fiberTester.FiberRouterTest(routerTest)
 	VerifyResult(fiberResponse, routerTest)
+}
+
+func RunRouterTest(routerTest common.RouterTest) {
+	routesFlavors := []common.RunningMode{}
+
+	if routerTest.RunningMode == nil {
+		routesFlavors = []common.RunningMode{common.RunOnVanillaRoutes, common.RunOnFullyFeaturedRoutes}
+	} else {
+		switch *routerTest.RunningMode {
+		case common.RunOnFullyFeaturedRoutes:
+			routesFlavors = []common.RunningMode{common.RunOnFullyFeaturedRoutes}
+		case common.RunOnVanillaRoutes:
+			routesFlavors = []common.RunningMode{common.RunOnVanillaRoutes}
+		case common.RunOnAllRoutes:
+			routesFlavors = []common.RunningMode{common.RunOnFullyFeaturedRoutes, common.RunOnVanillaRoutes}
+		}
+	}
+
+	for _, flavor := range routesFlavors {
+		routerTest.RunningMode = &flavor
+		runTest(routerTest)
+	}
 }

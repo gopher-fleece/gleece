@@ -14,6 +14,7 @@ import (
 )
 
 var MuxRouter *mux.Router
+var MuxExExtraRouter *mux.Router
 
 func MuxRouterTest(routerTest common.RouterTest) common.RouterTestResult {
 	// Create a response recorder
@@ -61,7 +62,14 @@ func MuxRouterTest(routerTest common.RouterTest) common.RouterTestResult {
 	}
 
 	// Use Mux router to serve the request
-	MuxRouter.ServeHTTP(w, req)
+	switch *routerTest.RunningMode {
+	case common.RunOnVanillaRoutes:
+		MuxExExtraRouter.ServeHTTP(w, req)
+	case common.RunOnFullyFeaturedRoutes:
+		MuxRouter.ServeHTTP(w, req)
+	default:
+		return common.RouterTestResult{}
+	}
 
 	// Convert response headers to map[string]string
 	headers := make(map[string]string)

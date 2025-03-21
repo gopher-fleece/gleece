@@ -1,14 +1,14 @@
 
 {{#equal PassedIn "Path"}}
 	{{ToLowerCamel Name}}vars := mux.Vars(ctx)
-	var {{ToLowerCamel Name}}RawPtr *{{{TypeMeta.Name}}} = nil
+	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
 	{{ToLowerCamel Name}}Raw, is{{Name}}Exists := {{ToLowerCamel Name}}vars["{{{NameInSchema}}}"]
 	{{> RequestSwitchParamType}}
 	{{> RunValidator}}
 {{/equal}}
 
 {{#equal PassedIn "Query"}}
-	var {{ToLowerCamel Name}}RawPtr *{{{TypeMeta.Name}}} = nil
+	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
 
 	{{ToLowerCamel Name}}Raw := ctx.URL.Query().Get("{{{NameInSchema}}}")
 	is{{Name}}Exists := ctx.URL.Query().Has("{{{NameInSchema}}}")
@@ -17,7 +17,7 @@
 {{/equal}}
 
 {{#equal PassedIn "Header"}}
-	var {{ToLowerCamel Name}}RawPtr *{{{TypeMeta.Name}}} = nil
+	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
 	{{ToLowerCamel Name}}Raw := ctx.Header.Get("{{{NameInSchema}}}")
 	_, is{{Name}}Exists := ctx.Header["{{{NameInSchema}}}"]
 	if !is{{Name}}Exists {
@@ -31,7 +31,7 @@
 
 {{#equal PassedIn "Form"}}
 	ctx.ParseForm()
-	var {{ToLowerCamel Name}}RawPtr *{{{TypeMeta.Name}}} = nil
+	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
 	{{ToLowerCamel Name}}RawArr, is{{Name}}Exists := ctx.PostForm["{{{NameInSchema}}}"]
 	{{ToLowerCamel Name}}Raw := ""
 	if is{{Name}}Exists {
@@ -43,7 +43,7 @@
 {{/equal}}
 
 {{#equal PassedIn "Body"}}
-	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
+	var {{ToLowerCamel Name}}RawPtr *{{SlicePrefix TypeMeta.Name}}{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{SliceSlice TypeMeta.Name}} = nil
 	conversionErr = bindAndValidateBody(ctx, "{{{ResponseContentType}}}", "{{Validator}}",&{{ToLowerCamel Name}}RawPtr)
 	if conversionErr != nil {
 		{{> JsonBodyValidationErrorResponse }}

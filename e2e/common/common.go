@@ -1,5 +1,16 @@
 package common
 
+type RunningMode string
+
+const (
+	// Run test on fully featured routes only (where all features are activated. g.e. middleware, templates execution & override, etc)
+	RunOnFullyFeaturedRoutes RunningMode = "RunOnFullyFeaturedRoutes"
+	// Run test on vanilla routes only same as default but without any extra features
+	RunOnVanillaRoutes RunningMode = "RunOnVanillaRoutes"
+	// Run test on all routes (fully featured and vanilla)
+	RunOnAllRoutes RunningMode = "RunOnAllRoutes"
+)
+
 type RouterTest struct {
 	Name                string
 	Path                string
@@ -12,6 +23,7 @@ type RouterTest struct {
 	ExpectedBody        string
 	ExpectedBodyContain string
 	ExpendedHeaders     map[string]string
+	RunningMode         *RunningMode
 }
 
 type RouterTestResult struct {

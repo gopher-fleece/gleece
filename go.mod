@@ -13,6 +13,7 @@ require (
 	github.com/gofiber/fiber/v2 v2.52.6
 	github.com/gopher-fleece/runtime v1.2.0
 	github.com/gorilla/mux v1.8.0
+	github.com/haimkastner/unitsnet-go v1.0.33
 	github.com/iancoleman/strcase v0.3.0
 	github.com/labstack/echo/v4 v4.13.3
 	github.com/onsi/ginkgo/v2 v2.22.2

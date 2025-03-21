@@ -2,10 +2,12 @@ package controller
 
 import (
 	"encoding/json"
+	"fmt"
 	"go/ast"
 	"slices"
 	"strings"
 
+	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/extractor"
 	"github.com/gopher-fleece/gleece/extractor/visitors"
@@ -65,9 +67,12 @@ func (v *ControllerVisitor) Visit(node ast.Node) ast.Visitor {
 	return v
 }
 
-func (v *ControllerVisitor) GetModelsFlat() ([]definitions.ModelMetadata, bool, error) {
+func (v *ControllerVisitor) GetModelsFlat() (*definitions.Models, bool, error) {
+	v.enter(fmt.Sprintf("%d controllers", len(v.controllers)))
+	defer v.exit()
+
 	if len(v.controllers) <= 0 {
-		return []definitions.ModelMetadata{}, false, nil
+		return nil, false, nil
 	}
 
 	existingTypesMap := make(map[string]string)
@@ -78,7 +83,7 @@ func (v *ControllerVisitor) GetModelsFlat() ([]definitions.ModelMetadata, bool, 
 		for _, route := range controller.Routes {
 			encounteredErrorType, err := v.insertRouteTypeList(&existingTypesMap, &models, &route)
 			if err != nil {
-				return []definitions.ModelMetadata{}, false, v.frozenError(err)
+				return nil, false, v.frozenError(err)
 			}
 			if encounteredErrorType {
 				hasAnyErrorTypes = true
@@ -86,9 +91,9 @@ func (v *ControllerVisitor) GetModelsFlat() ([]definitions.ModelMetadata, bool, 
 		}
 	}
 
-	typeVisitor := visitors.NewTypeVisitor(v.packages)
+	typeVisitor := visitors.NewTypeVisitor(v.packagesFacade.GetAllPackages())
 	for _, model := range models {
-		pkg := extractor.FilterPackageByFullName(v.packages, model.FullyQualifiedPackage)
+		pkg := extractor.FilterPackageByFullName(v.packagesFacade.GetAllPackages(), model.FullyQualifiedPackage)
 		if pkg == nil {
 			return nil, hasAnyErrorTypes, v.getFrozenError(
 				"could locate packages.Package '%s' whilst looking for type '%s'.\n"+
@@ -98,20 +103,44 @@ func (v *ControllerVisitor) GetModelsFlat() ([]definitions.ModelMetadata, bool, 
 			)
 		}
 
-		structNode, err := extractor.FindTypesStructInPackage(pkg, model.Name)
+		// Currently, Name includes a "[]" prefix if the type is an array.
+		// Need to remove it so lookup can actually succeed.
+		// Might move to an "IsArray" field in the near future.
+		cleanedName := common.UnwrapArrayTypeString(model.Name)
+
+		// Enums are handled separately
+		if model.EntityKind == definitions.AstNodeKindAlias {
+			err := typeVisitor.VisitEnum(cleanedName, model)
+			if err != nil {
+				return nil, hasAnyErrorTypes, v.frozenError(err)
+			}
+			continue
+		}
+
+		structNode, err := extractor.FindTypesStructInPackage(pkg, cleanedName)
 		if err != nil {
 			return nil, hasAnyErrorTypes, v.frozenError(err)
 		}
 
 		if structNode == nil {
-			return nil, hasAnyErrorTypes, v.getFrozenError("could not find struct '%s' in package '%s'", model.Name, model.FullyQualifiedPackage)
+			return nil,
+				hasAnyErrorTypes,
+				v.getFrozenError(
+					"could not find struct '%s' in package '%s'",
+					cleanedName,
+					model.FullyQualifiedPackage,
+				)
 		}
 
-		err = typeVisitor.VisitStruct(model.FullyQualifiedPackage, model.Name, structNode)
+		err = typeVisitor.VisitStruct(model.FullyQualifiedPackage, cleanedName, structNode)
 		if err != nil {
 			return nil, hasAnyErrorTypes, v.frozenError(err)
 		}
 	}
 
-	return typeVisitor.GetStructs(), hasAnyErrorTypes, nil
+	flatModels := &definitions.Models{
+		Structs: typeVisitor.GetStructs(),
+		Enums:   typeVisitor.GetEnums(),
+	}
+	return flatModels, hasAnyErrorTypes, nil
 }

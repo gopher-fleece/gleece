@@ -1,14 +1,38 @@
 package assets
 
 import (
+	"encoding/json"
 	"fmt"
+	"math"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gopher-fleece/runtime"
+	"github.com/haimkastner/unitsnet-go/units"
 	"github.com/labstack/echo/v4"
 )
+
+type StatusEnumeration string
+
+const (
+	StatusEnumerationActive   StatusEnumeration = "active"
+	StatusEnumerationInactive StatusEnumeration = "inactive"
+)
+
+type NumberEnumeration int
+
+const (
+	NumberEnumerationOne NumberEnumeration = 1
+	NumberEnumerationTwo NumberEnumeration = 2
+)
+
+type ObjectWithEnum struct {
+	Value    string              `json:"value"`
+	Values   []string            `json:"values"`
+	Status   StatusEnumeration   `json:"status" validate:"required,status_enumeration_enum"`
+	Statuses []StatusEnumeration `json:"statuses"`
+}
 
 // @Route(/e2e)
 type E2EController struct {
@@ -61,6 +85,38 @@ func (ec *E2EController) SimpleGetObjectPtr() (*BodyResponse, error) {
 // @Route(/simple-get-object-null)
 func (ec *E2EController) SimpleGetObjectNull() (*BodyResponse, error) {
 	return nil, nil
+}
+
+// @Method(GET)
+// @Route(/primitive-return-type)
+// @Response(200)
+// @ErrorResponse(500)
+func (ec *E2EController) PrimitiveReturnType() (int, error) {
+	return 20, nil
+}
+
+// @Method(GET)
+// @Route(/primitive-array-return-type)
+// @Response(200)
+// @ErrorResponse(500)
+func (ec *E2EController) PrimitiveArrayReturnType() ([]int, error) {
+	return []int{20}, nil
+}
+
+// @Method(GET)
+// @Route(/primitive-alias-return-type)
+// @Response(200)
+// @ErrorResponse(500)
+func (ec *E2EController) PrimitiveAliasReturnType() (NumberEnumeration, error) {
+	return NumberEnumerationOne, nil
+}
+
+// @Method(GET)
+// @Route(/primitive-alias-array-return-type)
+// @Response(200)
+// @ErrorResponse(500)
+func (ec *E2EController) PrimitiveAliasArrayReturnType() ([]NumberEnumeration, error) {
+	return []NumberEnumeration{NumberEnumerationOne}, nil
 }
 
 // @Method(GET)
@@ -422,4 +478,126 @@ func (ec *E2EController) TestResponseValidationNull() (*ResponseTest, error) {
 // @ErrorResponse(500) The error when process failed
 func (ec *E2EController) TestPrimitiveConversions(value1 int64, value2 bool, value3 int, value4 float64) (string, error) {
 	return fmt.Sprintf("%d %t %d %f", value1, value2, value3, value4), nil
+}
+
+// @Method(POST)
+// @Route(/test-enums)
+// @Query(value1)
+// @Query(value2)
+// @Body(value3)
+// @Response(200) The ID of the newly created user
+// @ErrorResponse(500) The error when process failed
+func (ec *E2EController) TestEnums(value1 StatusEnumeration, value2 NumberEnumeration, value3 ObjectWithEnum) (ObjectWithEnum, error) {
+	return ObjectWithEnum{
+		Value: string(fmt.Sprintf("%s %d", value1, value2)),
+		Values: []string{
+			string(value1),
+			string(fmt.Sprintf("%d", value2)),
+		},
+		Status:   value3.Status,
+		Statuses: value3.Statuses,
+	}, nil
+}
+
+// @Method(POST)
+// @Route(/test-enums-in-all/{value1})
+// @Path(value1)
+// @Header(value2)
+// @FormField(value3)
+// @Response(200) The ID of the newly created user
+// @ErrorResponse(500) The error when process failed
+func (ec *E2EController) TestEnumsInAll(value1 StatusEnumeration, value2 NumberEnumeration, value3 StatusEnumeration) (string, error) {
+	return fmt.Sprintf("%s %d %s", value1, value2, value3), nil
+}
+
+// @Method(POST)
+// @Route(/test-enums-optional)
+// @Header(value1)
+// @Response(200) The ID of the newly created user
+// @ErrorResponse(500) The error when process failed
+func (ec *E2EController) TestEnumsOptional(value1 *StatusEnumeration) (string, error) {
+	if value1 == nil {
+		return "nil", nil
+	}
+	return string(*value1), nil
+}
+
+// @Method(POST)
+// @Route(/external-packages)
+// @Query(unit)
+// @Body(data)
+// @Response(200)
+// @ErrorResponse(500)
+func (ec *E2EController) ExternalPackages(unit *units.LengthUnits, data units.LengthDto) (units.LengthDto, error) {
+	lf := units.LengthFactory{}
+	unitData, _ := lf.FromDto(data)
+
+	// Broken unit body
+	if math.IsNaN(unitData.BaseValue()) {
+		unitData, _ = lf.FromMeters(9992)
+	}
+
+	returnDto := unitData.ToDto(unit)
+
+	// Broken unit param
+	if math.IsNaN(returnDto.Value) {
+		returnDto.Value = 9991
+	}
+
+	return returnDto, nil
+}
+
+type LengthDtoWithValidation struct {
+	// units.LengthDto
+	Value float64           `json:"value"`
+	Unit  units.LengthUnits `json:"unit" validate:"required,length_units_enum"` // Extend it, to add the validation for the enum
+}
+
+// @Method(POST)
+// @Route(/external-packages-validation)
+// @Query(unit)
+// @Body(data)
+// @Response(200)
+// @ErrorResponse(500)
+func (ec *E2EController) ExternalPackagesValidation(unit *units.LengthUnits, data LengthDtoWithValidation) (units.LengthDto, error) {
+	lf := units.LengthFactory{}
+	// Dump to json
+	dataJson, _ := json.Marshal(data)
+	unitData, _ := lf.FromDtoJSON(dataJson)
+	return unitData.ToDto(unit), nil
+}
+
+type BlaBla struct {
+	ListOfLength []units.LengthDto `json:"listOfLength"`
+}
+
+// @Method(POST)
+// @Route(/arrays-in-body-and-res)
+// @Body(data)
+// @Response(200)
+// @ErrorResponse(500)
+func (ec *E2EController) ArraysInBodyAndRes(data []units.LengthDto) ([]units.LengthDto, error) {
+	return data, nil
+}
+
+// @Method(POST)
+// @Route(/arrays-inside-body-and-res)
+// @Body(data)
+// @Response(200)
+// @ErrorResponse(500)
+func (ec *E2EController) ArraysInsideBodyAndRes(data *[]BlaBla) (*[]BlaBla, error) {
+	return data, nil
+}
+
+type BlaBla2 struct {
+	Value int `json:"value" validate:"required,gte=0"`
+}
+
+// @Method(POST)
+// @Route(/deep-arrays-with-validation)
+// @Body(data)
+// @Response(200)
+// @ErrorResponse(500)
+func (ec *E2EController) DeepArraysWithValidation(data [][]BlaBla2) ([][][]BlaBla2, error) {
+	return [][][]BlaBla2{data}, nil
 }

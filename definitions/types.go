@@ -101,6 +101,12 @@ type FuncReturnValue struct {
 	UniqueImportSerial uint64
 }
 
+type AliasMetadata struct {
+	Name      string   // e.g. LengthUnits
+	AliasType string   // e.g. string, int, etc.
+	Values    []string // e.g. ["Meter", "Kilometer"]
+}
+
 type TypeMetadata struct {
 	Name                  string
 	FullyQualifiedPackage string
@@ -110,6 +116,7 @@ type TypeMetadata struct {
 	IsUniverseType        bool
 	IsByAddress           bool
 	EntityKind            AstNodeKind
+	AliasMetadata         *AliasMetadata
 }
 
 type ErrorResponse struct {
@@ -225,12 +232,26 @@ type ControllerMetadata struct {
 	Security []RouteSecurity
 }
 
-type ModelMetadata struct {
+type StructMetadata struct {
 	Name                  string
 	FullyQualifiedPackage string
 	Description           string
 	Fields                []FieldMetadata
 	Deprecation           DeprecationOptions
+}
+
+type EnumMetadata struct {
+	Name                  string
+	FullyQualifiedPackage string
+	Description           string
+	Values                []string
+	Type                  string
+	Deprecation           DeprecationOptions
+}
+
+type Models struct {
+	Structs []StructMetadata
+	Enums   []EnumMetadata
 }
 
 type FieldMetadata struct {
@@ -329,10 +350,16 @@ type CommonConfig struct {
 	ControllerGlobs []string `json:"controllerGlobs" validate:"omitempty,min=1"`
 }
 
+type ExperimentalConfig struct {
+	ValidateTopLevelOnlyEnum bool `json:"validateTopLevelOnlyEnum"`
+	GenerateEnumValidator    bool `json:"generateEnumValidator"`
+}
+
 type GleeceConfig struct {
 	CommonConfig           CommonConfig           `json:"commonConfig" validate:"required"`
 	RoutesConfig           RoutesConfig           `json:"routesConfig" validate:"required"`
 	OpenAPIGeneratorConfig OpenAPIGeneratorConfig `json:"openapiGeneratorConfig" validate:"required"`
+	ExperimentalConfig     ExperimentalConfig     `json:"experimentalConfig"` // TODO add docs
 }
 
 type AstNodeKind string
@@ -351,4 +378,5 @@ const (
 	AstNodeKindFunction    AstNodeKind = "Function"
 	AstNodeKindVariadic    AstNodeKind = "Variadic"
 	AstNodeKindParenthesis AstNodeKind = "Parenthesis"
+	AstNodeKindAlias       AstNodeKind = "Alias"
 )

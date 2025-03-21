@@ -12,6 +12,7 @@ import (
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
 )
 
+// visitMethod Visits a controller route given as a FuncDecl and returns its metadata and whether it is an API endpoint
 func (v *ControllerVisitor) visitMethod(funcDecl *ast.FuncDecl) (definitions.RouteMetadata, bool, error) {
 	v.enter(fmt.Sprintf("Method '%s'", funcDecl.Name.Name))
 	defer v.exit()
@@ -25,6 +26,7 @@ func (v *ControllerVisitor) visitMethod(funcDecl *ast.FuncDecl) (definitions.Rou
 	comments := extractor.MapDocListToStrings(funcDecl.Doc.List)
 	attributes, err := annotations.NewAnnotationHolder(comments, annotations.CommentSourceRoute)
 	if err != nil {
+		// Couldn't read comments. Fail.
 		return definitions.RouteMetadata{}, false, v.frozenError(err)
 	}
 
@@ -50,6 +52,9 @@ func (v *ControllerVisitor) visitMethod(funcDecl *ast.FuncDecl) (definitions.Rou
 		return definitions.RouteMetadata{}, true, v.frozenError(err)
 	}
 
+	// If the route does not have any security whatsoever and the `EnforceSecurityOnAllRoutes` setting is true, we must fail here.
+	//
+	// This is to prevent cases where a developer forgets to declare security for a controller/route.
 	if v.config.RoutesConfig.AuthorizationConfig.EnforceSecurityOnAllRoutes && len(security) <= 0 {
 		return definitions.RouteMetadata{}, true, v.getFrozenError(
 			"'enforceSecurityOnAllRoutes' setting is 'true'' but method '%s' on controller '%s'"+
@@ -59,6 +64,8 @@ func (v *ControllerVisitor) visitMethod(funcDecl *ast.FuncDecl) (definitions.Rou
 		)
 	}
 
+	// Template context is optional, additional information that can be accessed at the template level.
+	// This allows users to perform deep customizations on a per-route basis.
 	templateContext, err := v.getTemplateContextMetadata(&attributes)
 	if err != nil {
 		return definitions.RouteMetadata{}, true, err
@@ -72,8 +79,8 @@ func (v *ControllerVisitor) visitMethod(funcDecl *ast.FuncDecl) (definitions.Rou
 		Deprecation:         v.getDeprecationOpts(&attributes),
 		RestMetadata:        definitions.RestMetadata{Path: routePath},
 		ErrorResponses:      errorResponses,
-		RequestContentType:  definitions.ContentTypeJSON, // Hardcoded for now, should be supported via comments later
-		ResponseContentType: definitions.ContentTypeJSON, // Hardcoded for now, should be supported via comments later
+		RequestContentType:  definitions.ContentTypeJSON, // Hardcoded for now, should be supported via annotations later on
+		ResponseContentType: definitions.ContentTypeJSON, // Hardcoded for now, should be supported via annotations later on
 		Security:            security,
 		TemplateContext:     templateContext,
 	}
@@ -155,7 +162,8 @@ func (v *ControllerVisitor) validatePrimitiveParam(param definitions.FuncParam) 
 	// need to fully integrate the EntityKind field..
 	isErrType := param.TypeMeta.FullyQualifiedPackage == "" && param.TypeMeta.Name == "error"
 	isMapType := param.TypeMeta.FullyQualifiedPackage == "" && strings.HasPrefix(param.TypeMeta.Name, "map[")
-	if !param.TypeMeta.IsUniverseType || isErrType || isMapType {
+	isAliasType := param.TypeMeta.EntityKind == definitions.AstNodeKindAlias
+	if (!param.TypeMeta.IsUniverseType && !isAliasType) || isErrType || isMapType {
 		return v.getFrozenError(
 			"header, path and query parameters are currently limited to primitives only but "+
 				"%s parameter '%s' (schema name '%s', type '%s') is of kind '%s'",
@@ -204,7 +212,7 @@ func (v *ControllerVisitor) getFuncParams(funcDecl *ast.FuncDecl, comments []str
 
 	funcParams := []definitions.FuncParam{}
 
-	paramTypes, err := extractor.GetFuncParameterTypeList(v.currentSourceFile, v.fileSet, v.packages, funcDecl)
+	paramTypes, err := v.astArbitrator.GetFuncParameterTypeList(v.currentSourceFile, funcDecl)
 	if err != nil {
 		return funcParams, err
 	}
@@ -285,7 +293,7 @@ func (v *ControllerVisitor) getFuncReturnValue(funcDecl *ast.FuncDecl) ([]defini
 	values := []definitions.FuncReturnValue{}
 	var errorRetTypeIndex int
 
-	returnTypes, err := extractor.GetFuncReturnTypeList(v.currentSourceFile, v.fileSet, v.packages, funcDecl)
+	returnTypes, err := v.astArbitrator.GetFuncReturnTypeList(v.currentSourceFile, funcDecl)
 	if err != nil {
 		return values, err
 	}

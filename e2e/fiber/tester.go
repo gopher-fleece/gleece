@@ -15,6 +15,7 @@ import (
 )
 
 var FiberRouter *fiber.App
+var FiberExExtraRouter *fiber.App
 
 func FiberRouterTest(routerTest common.RouterTest) common.RouterTestResult {
 	// Build the query parameters
@@ -62,7 +63,18 @@ func FiberRouterTest(routerTest common.RouterTest) common.RouterTestResult {
 
 	// Execute the request on the Fiber app
 	// The second parameter is the timeout in milliseconds
-	resp, err := FiberRouter.Test(req, -1)
+	var resp *http.Response
+	var err error
+
+	switch *routerTest.RunningMode {
+	case common.RunOnVanillaRoutes:
+		resp, err = FiberExExtraRouter.Test(req, -1)
+	case common.RunOnFullyFeaturedRoutes:
+		resp, err = FiberRouter.Test(req, -1)
+	default:
+		return common.RouterTestResult{}
+	}
+
 	if err != nil {
 		// Handle error as needed (e.g. panic or return a default result)
 		panic(err)

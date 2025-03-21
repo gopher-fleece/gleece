@@ -40,10 +40,10 @@ func getConfig(configPath string) (*definitions.GleeceConfig, error) {
 	return &config, nil
 }
 
-func getMetadata(config *definitions.GleeceConfig) ([]definitions.ControllerMetadata, []definitions.ModelMetadata, bool, error) {
+func getMetadata(config *definitions.GleeceConfig) ([]definitions.ControllerMetadata, *definitions.Models, bool, error) {
 	visitor, err := controller.NewControllerVisitor(config)
 	if err != nil {
-		return []definitions.ControllerMetadata{}, []definitions.ModelMetadata{}, false, err
+		return []definitions.ControllerMetadata{}, nil, false, err
 	}
 
 	for _, file := range visitor.GetFiles() {
@@ -66,13 +66,14 @@ func getMetadata(config *definitions.GleeceConfig) ([]definitions.ControllerMeta
 	logger.Debug("Flat models list:\n%s", string(data))
 
 	controllers := visitor.GetControllers()
+
 	return controllers, flatModels, hasAnyErrorTypes, nil
 }
 
 func GetConfigAndMetadata(args arguments.CliArguments) (
 	*definitions.GleeceConfig,
 	[]definitions.ControllerMetadata,
-	[]definitions.ModelMetadata,
+	*definitions.Models,
 	bool,
 	error,
 ) {
@@ -111,12 +112,12 @@ func GenerateSpec(args arguments.CliArguments) error {
 
 func GenerateRoutes(args arguments.CliArguments) error {
 	logger.Info("Generating routes")
-	config, meta, _, _, err := GetConfigAndMetadata(args)
+	config, meta, models, _, err := GetConfigAndMetadata(args)
 	if err != nil {
 		return err
 	}
 
-	if err := routes.GenerateRoutes(config, meta); err != nil {
+	if err := routes.GenerateRoutes(config, meta, models); err != nil {
 		logger.Fatal("Failed to generate routing file - %v", err)
 		return err
 	}
@@ -133,7 +134,7 @@ func GenerateSpecAndRoutes(args arguments.CliArguments) error {
 	}
 
 	// Generate the routes first
-	if err := routes.GenerateRoutes(config, meta); err != nil {
+	if err := routes.GenerateRoutes(config, meta, models); err != nil {
 		logger.Fatal("Failed to generate routes - %v", err)
 		return err
 	}

@@ -13,6 +13,7 @@ import (
 )
 
 var GinRouter *gin.Engine
+var GinExExtraRouter *gin.Engine
 
 func GinRouterTest(routerTest common.RouterTest) common.RouterTestResult {
 	w := httptest.NewRecorder()
@@ -58,7 +59,14 @@ func GinRouterTest(routerTest common.RouterTest) common.RouterTestResult {
 		}
 	}
 
-	GinRouter.ServeHTTP(w, req)
+	switch *routerTest.RunningMode {
+	case common.RunOnVanillaRoutes:
+		GinExExtraRouter.ServeHTTP(w, req)
+	case common.RunOnFullyFeaturedRoutes:
+		GinRouter.ServeHTTP(w, req)
+	default:
+		return common.RouterTestResult{}
+	}
 
 	// Convert response headers to map[string]string
 	headers := make(map[string]string)

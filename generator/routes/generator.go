@@ -3,12 +3,12 @@ package routes
 import (
 	"encoding/json"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/aymerick/raymond"
-	"github.com/iancoleman/strcase"
 
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/generator/compilation"
@@ -23,77 +23,13 @@ import (
 var RoutesTemplateName = "Routes"
 
 var helpersRegistered bool
-var lastEngine *definitions.RoutingEngineType
+var partialsRegistered bool
 
 // dumpContext Dumps the routes context to the log for debugging purposes
 func dumpContext(ctx any) {
 	// It's basically impossible to break the marshaller without some pretty crazy, and very intentional hacks
 	contextJson, _ := json.MarshalIndent(ctx, "\t", "\t")
 	logger.Debug("Routes Context:\n%s", contextJson)
-}
-
-func registerHelpers() {
-	raymond.RegisterHelper("ToLowerCamel", func(arg string) string {
-		return strcase.ToLowerCamel(arg)
-	})
-
-	raymond.RegisterHelper("ToUpperCamel", func(arg string) string {
-		return strcase.ToCamel(arg)
-	})
-
-	raymond.RegisterHelper("LastTypeNameEquals", func(types []definitions.FuncReturnValue, value string, options *raymond.Options) string {
-		if len(types) <= 0 {
-			panic("LastTypeNameEquals received a 0-length array")
-		}
-
-		if types[len(types)-1].Name == value {
-			return options.Fn()
-		}
-
-		return options.Inverse()
-	})
-
-	raymond.RegisterHelper("ifEqual", func(a interface{}, b interface{}, options *raymond.Options) string {
-		if raymond.Str(a) == raymond.Str(b) {
-			return options.Fn()
-		}
-
-		return options.Inverse()
-	})
-
-	raymond.RegisterHelper("ifAnyParamRequiresConversion", func(params []definitions.FuncParam, options *raymond.Options) string {
-		for _, param := range params {
-			if param.TypeMeta.Name != "string" && param.TypeMeta.FullyQualifiedPackage != "" {
-				// Currently, only 'string' parameters don't undergo any validation
-				return options.Fn()
-			}
-		}
-
-		return options.Inverse()
-	})
-
-	raymond.RegisterHelper("LastTypeIsByAddress", func(types []definitions.FuncReturnValue, options *raymond.Options) string {
-		if len(types) <= 0 {
-			panic("LastTypeIsByAddress received a 0-length array")
-		}
-
-		if types[len(types)-1].IsByAddress {
-			return options.Fn()
-		}
-
-		return options.Inverse()
-	})
-
-	raymond.RegisterHelper("GetLastTyeFullyQualified", func(types []definitions.FuncReturnValue) string {
-		if len(types) <= 0 {
-			panic("GetLastTyeFullyQualified received a 0-length array")
-		}
-
-		last := types[len(types)-1]
-		return fmt.Sprintf("Response%d%s.%s", last.UniqueImportSerial, last.Name, last.Name)
-	})
-
-	helpersRegistered = true
 }
 
 func getDefaultTemplate(engine definitions.RoutingEngineType) string {
@@ -210,6 +146,10 @@ func registerPartials(config *definitions.GleeceConfig) error {
 		panic(fmt.Sprintf("Unknown routing engine type '%v'", engine))
 	}
 
+	// Make sure to work on a clone, to not apply changes on the code's map
+	extensions = maps.Clone(extensions)
+	partials = maps.Clone(partials)
+
 	if err := overrideTemplates(config, partials); err != nil {
 		return err
 	}
@@ -222,13 +162,8 @@ func registerPartials(config *definitions.GleeceConfig) error {
 	// Will likely need to find a way to register on the template level.
 	//
 	// Note that registering the same partials twice causes a panic.
-	if lastEngine != nil {
-		if *lastEngine == config.RoutesConfig.Engine {
-			logger.Debug("Last engine is %v, partials are already registered", *lastEngine)
-			return nil
-		}
-
-		logger.Debug("Last used engine was %v, removing all partials before re-registration'", *lastEngine)
+	if partialsRegistered {
+		logger.Debug("Removing all partials before re-registering")
 		raymond.RemoveAllPartials()
 	}
 
@@ -237,7 +172,7 @@ func registerPartials(config *definitions.GleeceConfig) error {
 	logger.Debug("Registering extensions for '%v'", config.RoutesConfig.Engine)
 	raymond.RegisterPartials(extensions)
 
-	lastEngine = &engine
+	partialsRegistered = true
 	return nil
 }
 
@@ -255,7 +190,8 @@ func getOutputFileMod(requestedPermissions string) os.FileMode {
 
 }
 
-func GenerateRoutes(config *definitions.GleeceConfig, controllerMeta []definitions.ControllerMetadata) error {
+func GenerateRoutes(config *definitions.GleeceConfig, controllerMeta []definitions.ControllerMetadata, models *definitions.Models) error {
+
 	args := (*config).RoutesConfig
 
 	if err := registerPartials(config); err != nil {
@@ -263,10 +199,11 @@ func GenerateRoutes(config *definitions.GleeceConfig, controllerMeta []definitio
 	}
 
 	if !helpersRegistered {
-		registerHelpers()
+		registerHandlebarsHelpers()
+		helpersRegistered = true
 	}
 
-	ctx, err := GetTemplateContext(args, controllerMeta)
+	ctx, err := GetTemplateContext(models, config, controllerMeta)
 
 	if err != nil {
 		logger.Fatal("Could not create a context for the template rendering process")

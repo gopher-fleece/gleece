@@ -26,7 +26,8 @@ type StructInfo struct {
 
 type TypeVisitor struct {
 	packages    []*packages.Package
-	typesByName map[string]*definitions.ModelMetadata
+	typesByName map[string]*definitions.StructMetadata
+	enumByName  map[string]*definitions.EnumMetadata
 }
 
 type StructAttributeHolders struct {
@@ -37,14 +38,15 @@ type StructAttributeHolders struct {
 func NewTypeVisitor(packages []*packages.Package) *TypeVisitor {
 	return &TypeVisitor{
 		packages:    packages,
-		typesByName: make(map[string]*definitions.ModelMetadata),
+		typesByName: make(map[string]*definitions.StructMetadata),
+		enumByName:  make(map[string]*definitions.EnumMetadata),
 	}
 }
 
 func (v *TypeVisitor) VisitStruct(fullPackageName string, structName string, structType *types.Struct) error {
 	fullName := fmt.Sprintf("%s.%s", fullPackageName, structName)
 	if v.typesByName[fullName] != nil {
-		return fmt.Errorf("struct %q has already been processed", fullName)
+		return nil // Already processed, ignore
 	}
 
 	attributeHolders, err := v.getAttributeHolders(fullPackageName, structName)
@@ -52,7 +54,7 @@ func (v *TypeVisitor) VisitStruct(fullPackageName string, structName string, str
 		return err
 	}
 
-	structInfo := definitions.ModelMetadata{
+	structInfo := definitions.StructMetadata{
 		Name:                  structName,
 		FullyQualifiedPackage: fullPackageName,
 		Description:           attributeHolders.StructHolder.GetDescription(),
@@ -75,13 +77,26 @@ func (v *TypeVisitor) VisitStruct(fullPackageName string, structName string, str
 		case *types.Pointer:
 			// Raise error for pointer fields.
 			return fmt.Errorf("field %q in struct %q is a pointer, which is not allowed", field.Name(), structName)
+		case *types.Array, *types.Slice:
+			fieldTypeString = extractor.GetIterableElementType(t)
 		case *types.Named:
-			// Check if the named type is a struct.
-			if underlying, ok := t.Underlying().(*types.Struct); ok {
-				// Recursively process the nested struct.
-				err := v.VisitStruct(fullPackageName, t.Obj().Name(), underlying)
-				if err != nil {
-					return err
+			if extractor.IsAliasType(t) {
+				aliasModel := createAliasModel(t, tag)
+				structInfo.Fields = append(structInfo.Fields, aliasModel)
+				continue // A bit ugly. Need to clean this up...
+			} else {
+				// Check if the named type is a struct.
+				if underlying, ok := t.Underlying().(*types.Struct); ok {
+					// Recursively process the nested struct.
+					err := v.VisitStruct(fullPackageName, t.Obj().Name(), underlying)
+					if err != nil {
+						return err
+					}
+				} else {
+					return fmt.Errorf(
+						"node '%s' is of kind 'Named' but is neither an alias-like nor struct and cannot be used",
+						t.Obj().Name(),
+					)
 				}
 			}
 
@@ -109,6 +124,24 @@ func (v *TypeVisitor) VisitStruct(fullPackageName string, structName string, str
 	}
 
 	v.typesByName[fullName] = &structInfo
+	return nil
+}
+
+func (v *TypeVisitor) VisitEnum(enumName string, model definitions.TypeMetadata) error {
+	if v.enumByName[enumName] != nil {
+		return nil // Already processed, ignore
+	}
+
+	enumModel := &definitions.EnumMetadata{
+		Name:                  model.Name,
+		FullyQualifiedPackage: model.FullyQualifiedPackage,
+		Description:           model.Description,
+		Values:                model.AliasMetadata.Values,
+		Type:                  model.AliasMetadata.AliasType,
+		// Deprecation         ?
+	}
+
+	v.enumByName[enumName] = enumModel
 	return nil
 }
 
@@ -177,9 +210,17 @@ func (v *TypeVisitor) getAttributeHolders(fullPackageName string, structName str
 }
 
 // GetStructs returns the list of processed structs.
-func (v *TypeVisitor) GetStructs() []definitions.ModelMetadata {
-	models := []definitions.ModelMetadata{}
+func (v *TypeVisitor) GetStructs() []definitions.StructMetadata {
+	models := []definitions.StructMetadata{}
 	for _, value := range v.typesByName {
+		models = append(models, *value)
+	}
+	return models
+}
+
+func (v *TypeVisitor) GetEnums() []definitions.EnumMetadata {
+	models := []definitions.EnumMetadata{}
+	for _, value := range v.enumByName {
 		models = append(models, *value)
 	}
 	return models
@@ -194,5 +235,25 @@ func getDeprecationOpts(attributes annotations.AnnotationHolder) definitions.Dep
 	return definitions.DeprecationOptions{
 		Deprecated:  true,
 		Description: deprecationAttr.Description,
+	}
+}
+
+func createAliasModel(node *types.Named, tag string) definitions.FieldMetadata {
+	name := node.Obj().Name()
+
+	underlying := node.Underlying()
+
+	typeName := extractor.GetUnderlyingTypeName(underlying)
+
+	// In case of an alias to a primitive type, we need to use the alias name.
+	_, isBasic := underlying.(*types.Basic)
+	if isBasic && name != typeName {
+		typeName = name
+	}
+
+	return definitions.FieldMetadata{
+		Name: name,
+		Type: typeName,
+		Tag:  tag,
 	}
 }

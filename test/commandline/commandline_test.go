@@ -83,21 +83,6 @@ var _ = Describe("Commandline", func() {
 		Expect(result.Logs).To(ContainSubstring("OpenAPI specification written to"))
 		Expect(result.Logs).To(ContainSubstring("[INFO]   Spec and routes successfully generated"))
 	})
-
-	It("Correctly detects and handles engine change during multiple invocations", func() {
-		configPath := utils.GetAbsPathByRelative("gleece.test.config.gin.json")
-		cmd.ExecuteWithArgs([]string{"generate", "routes", "--no-banner", "-v=5", "-c", configPath}, true)
-
-		configPath = utils.GetAbsPathByRelative("gleece.test.config.echo.json")
-		result := cmd.ExecuteWithArgs([]string{"generate", "routes", "--no-banner", "-v=0", "-c", configPath}, true)
-
-		Expect(result.Error).To(BeNil())
-		Expect(result.StdErr).To(BeEmpty())
-
-		Expect(result.Logs).To(ContainSubstring("[INFO]   Generating routes"))
-		Expect(result.Logs).To(ContainSubstring("Last used engine was gin, removing all partials before re-registration"))
-		Expect(result.Logs).To(ContainSubstring("[INFO]   Routes successfully generated"))
-	})
 })
 
 func TestCommandline(t *testing.T) {
