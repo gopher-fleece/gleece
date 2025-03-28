@@ -239,6 +239,30 @@ func FindGenDeclByName(pkg *packages.Package, typeSpecName string) *ast.GenDecl 
 	return nil // Struct not found
 }
 
+func FindTypeSpecByName(pkg *packages.Package, typeName string) *ast.TypeSpec {
+	for _, file := range pkg.Syntax { // Iterate over all files in the package
+		for _, decl := range file.Decls { // Iterate over top-level declarations
+			genDecl, ok := decl.(*ast.GenDecl)
+			if !ok {
+				continue // Skip non-general declarations (like functions)
+			}
+
+			// Iterate over TypeSpec declarations (type Foo struct {...})
+			for _, spec := range genDecl.Specs {
+				typeSpec, ok := spec.(*ast.TypeSpec)
+				if !ok {
+					continue
+				}
+
+				if typeSpec.Name.Name == typeName {
+					return typeSpec
+				}
+			}
+		}
+	}
+	return nil // TypeSpec not found
+}
+
 func FindGenDeclByIdent(fileSet *token.FileSet, file *ast.File, ident *ast.Ident) *ast.GenDecl {
 	var decl *ast.GenDecl
 
@@ -310,17 +334,33 @@ func LookupTypeName(pkg *packages.Package, name string) (*types.TypeName, error)
 
 	return typeName, nil
 }
+func GetTypeNameOrError(pkg *packages.Package, name string) (*types.TypeName, error) {
+	typeName, err := LookupTypeName(pkg, name)
+	if err != nil {
+		return nil, err
+	}
+
+	if typeName == nil {
+		return nil, fmt.Errorf("type '%s' was not found in package '%s'", name, pkg.Name)
+	}
+
+	if typeName.Type() == nil {
+		return nil, fmt.Errorf("type '%s.%s' does not have Type() information", pkg.Name, name)
+	}
+
+	return typeName, nil
+}
 
 func GetEntityKind(pkg *packages.Package, name string) (definitions.AstNodeKind, error) {
-	typeName, err := LookupTypeName(pkg, name)
+	typeName, err := GetTypeNameOrError(pkg, name)
 	if err != nil {
 		return definitions.AstNodeKindNone, err
 	}
 
-	if typeName == nil {
-		return definitions.AstNodeKindUnknown, fmt.Errorf("type '%s' was not found in package %s", name, pkg.Name)
-	}
+	return GetEntityKindFromTypeName(typeName)
+}
 
+func GetEntityKindFromTypeName(typeName *types.TypeName) (definitions.AstNodeKind, error) {
 	if _, isStruct := typeName.Type().Underlying().(*types.Struct); isStruct {
 		return definitions.AstNodeKindStruct, nil
 	}

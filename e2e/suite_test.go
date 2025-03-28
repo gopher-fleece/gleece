@@ -139,7 +139,7 @@ func RegenerateRoutes() {
 	// Always build routes for gin  ...
 	err := GenerateE2ERoutes(arguments.CliArguments{ConfigPath: "./e2e.gin.gleece.config.json"}, "gin")
 	if err != nil {
-		Fail("Failed to generate gin routes " + err.Error())
+		Fail("Failed to generate gin routes - " + err.Error())
 	}
 
 	// Get from env var whenever to regenerate all routes again.
@@ -152,25 +152,25 @@ func RegenerateRoutes() {
 	// Build routes for echo ...
 	err = GenerateE2ERoutes(arguments.CliArguments{ConfigPath: "./e2e.echo.gleece.config.json"}, "echo")
 	if err != nil {
-		Fail("Failed to generate echo routes " + err.Error())
+		Fail("Failed to generate echo routes - " + err.Error())
 	}
 
 	// Build routes for Gorilla mux ...
 	err = GenerateE2ERoutes(arguments.CliArguments{ConfigPath: "./e2e.mux.gleece.config.json"}, "mux")
 	if err != nil {
-		Fail("Failed to generate echo routes " + err.Error())
+		Fail("Failed to generate echo routes - " + err.Error())
 	}
 
 	// Build routes for chi ...
 	err = GenerateE2ERoutes(arguments.CliArguments{ConfigPath: "./e2e.chi.gleece.config.json"}, "chi")
 	if err != nil {
-		Fail("Failed to generate echo routes " + err.Error())
+		Fail("Failed to generate echo routes - " + err.Error())
 	}
 
 	// Build routes for Fiber ...
 	err = GenerateE2ERoutes(arguments.CliArguments{ConfigPath: "./e2e.fiber.gleece.config.json"}, "fiber")
 	if err != nil {
-		Fail("Failed to generate echo routes " + err.Error())
+		Fail("Failed to generate echo routes - " + err.Error())
 	}
 }
 

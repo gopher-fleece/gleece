@@ -91,7 +91,7 @@ func (v *ControllerVisitor) GetModelsFlat() (*definitions.Models, bool, error) {
 		}
 	}
 
-	typeVisitor := visitors.NewTypeVisitor(v.packagesFacade.GetAllPackages())
+	typeVisitor := visitors.NewTypeVisitor(&v.packagesFacade, &v.astArbitrator)
 	for _, model := range models {
 		pkg := extractor.FilterPackageByFullName(v.packagesFacade.GetAllPackages(), model.FullyQualifiedPackage)
 		if pkg == nil {

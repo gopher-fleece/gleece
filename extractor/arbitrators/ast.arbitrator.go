@@ -122,29 +122,29 @@ func (arb *AstArbitrator) GetTypeMetaByIdent(file *ast.File, ident *ast.Ident) (
 			return meta, err
 		}
 
-		pkg := extractor.FilterPackageByFullName(arb.pkgFacade.GetAllPackages(), currentPackageName)
+		pkg, err := arb.pkgFacade.GetPackage(currentPackageName)
+		if err != nil {
+			return meta, err
+		}
+
 		if pkg == nil {
 			return meta, fmt.Errorf("could not find package '%s' in the given list of packages", currentPackageName)
 		}
 
-		typeName, err := extractor.LookupTypeName(pkg, ident.Name)
+		typeName, err := extractor.GetTypeNameOrError(pkg, ident.Name)
 		if err != nil {
 			return meta, err
-		}
-
-		if (typeName == nil) || (typeName.Type() == nil) {
-			return meta, fmt.Errorf("could not find type '%s' in package '%s', are you sure it's included in the 'commonConfig->controllerGlobs' search paths?", ident.Name, currentPackageName)
 		}
 
 		// Verify the identifier does in fact exist in the current package.
 		// Not strictly needed but helps with safety.
-		exists, entityKind, err := arb.TypeOrInterfaceExistsIn(typeName, ident)
+		entityKind, err := extractor.GetEntityKindFromTypeName(typeName)
 		if err != nil {
 			return meta, err
 		}
 
-		if !exists {
-			return meta, fmt.Errorf("identifier %s does not correlate to a type or interface in package %s", ident.Name, currentPackageName)
+		if entityKind == definitions.AstNodeKindNone || entityKind == definitions.AstNodeKindUnknown {
+			return meta, fmt.Errorf("could not determine entity kind for '%s.%s", currentPackageName, ident.Name)
 		}
 
 		meta.Import = definitions.ImportTypeNone
@@ -250,32 +250,6 @@ func (arb *AstArbitrator) IsIdentFromDotImportedPackage(file *ast.File, ident *a
 		}
 	}
 	return nil
-}
-
-func (arb *AstArbitrator) TypeOrInterfaceExistsIn(
-	typeName *types.TypeName,
-	ident *ast.Ident,
-) (bool, definitions.AstNodeKind, error) {
-
-	if _, isStruct := typeName.Type().Underlying().(*types.Struct); isStruct {
-		return true, definitions.AstNodeKindStruct, nil
-	}
-
-	// Get the underlying type and check if it's an interface.
-	if _, isInterface := typeName.Type().Underlying().(*types.Interface); isInterface {
-		return true, definitions.AstNodeKindInterface, nil
-	}
-
-	// Check if that is an alias of a basic type (string, int, bool, etc.)
-	if typeName.IsAlias() {
-		return true, definitions.AstNodeKindAlias, nil
-	}
-
-	if _, isBasicType := typeName.Type().Underlying().(*types.Basic); isBasicType {
-		return true, definitions.AstNodeKindAlias, nil
-	}
-
-	return true, definitions.AstNodeKindUnknown, nil
 }
 
 func (arb *AstArbitrator) ExtractAliasType(pkg *packages.Package, typeName *types.TypeName) (*definitions.AliasMetadata, error) {

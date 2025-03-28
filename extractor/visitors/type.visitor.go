@@ -8,8 +8,8 @@ import (
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/extractor"
 	"github.com/gopher-fleece/gleece/extractor/annotations"
+	"github.com/gopher-fleece/gleece/extractor/arbitrators"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
-	"golang.org/x/tools/go/packages"
 )
 
 // Field represents a field in a struct
@@ -25,7 +25,11 @@ type StructInfo struct {
 }
 
 type TypeVisitor struct {
-	packages    []*packages.Package
+	// A facade for managing packages.Package
+	packagesFacade *arbitrators.PackagesFacade
+
+	astArbitrator *arbitrators.AstArbitrator
+
 	typesByName map[string]*definitions.StructMetadata
 	enumByName  map[string]*definitions.EnumMetadata
 }
@@ -35,11 +39,12 @@ type StructAttributeHolders struct {
 	FieldHolders map[string]*annotations.AnnotationHolder
 }
 
-func NewTypeVisitor(packages []*packages.Package) *TypeVisitor {
+func NewTypeVisitor(packagesFacade *arbitrators.PackagesFacade, astArbitrator *arbitrators.AstArbitrator) *TypeVisitor {
 	return &TypeVisitor{
-		packages:    packages,
-		typesByName: make(map[string]*definitions.StructMetadata),
-		enumByName:  make(map[string]*definitions.EnumMetadata),
+		packagesFacade: packagesFacade,
+		astArbitrator:  astArbitrator,
+		typesByName:    make(map[string]*definitions.StructMetadata),
+		enumByName:     make(map[string]*definitions.EnumMetadata),
 	}
 }
 
@@ -81,6 +86,17 @@ func (v *TypeVisitor) VisitStruct(fullPackageName string, structName string, str
 			fieldTypeString = extractor.GetIterableElementType(t)
 		case *types.Named:
 			if extractor.IsAliasType(t) {
+				pkg, err := v.packagesFacade.GetPackageByTypeName(t.Obj())
+				if err != nil {
+					return err
+				}
+
+				if pkg == nil {
+					return fmt.Errorf("could not obtain package for entity '%v'", t)
+				}
+
+				model, _ := v.astArbitrator.ExtractAliasType(pkg, t.Obj())
+				print(model)
 				aliasModel := createAliasModel(t, tag)
 				structInfo.Fields = append(structInfo.Fields, aliasModel)
 				continue // A bit ugly. Need to clean this up...
@@ -88,7 +104,16 @@ func (v *TypeVisitor) VisitStruct(fullPackageName string, structName string, str
 				// Check if the named type is a struct.
 				if underlying, ok := t.Underlying().(*types.Struct); ok {
 					// Recursively process the nested struct.
-					err := v.VisitStruct(fullPackageName, t.Obj().Name(), underlying)
+					nestedPackageName, err := v.packagesFacade.GetPackageNameByNamedEntity(t)
+					if err != nil {
+						return err
+					}
+
+					if len(nestedPackageName) == 0 {
+						return fmt.Errorf("could not determine package for named entity '%s'", t.Obj().Name())
+					}
+
+					err = v.VisitStruct(nestedPackageName, t.Obj().Name(), underlying)
 					if err != nil {
 						return err
 					}
@@ -148,7 +173,11 @@ func (v *TypeVisitor) VisitEnum(enumName string, model definitions.TypeMetadata)
 func (v *TypeVisitor) getAttributeHolders(fullPackageName string, structName string) (StructAttributeHolders, error) {
 	holders := StructAttributeHolders{FieldHolders: make(map[string]*annotations.AnnotationHolder)}
 
-	relevantPackage := extractor.FilterPackageByFullName(v.packages, fullPackageName)
+	relevantPackage, err := v.packagesFacade.GetPackage(fullPackageName)
+	if err != nil {
+		return holders, err
+	}
+
 	if relevantPackage == nil {
 		return holders, fmt.Errorf(
 			"could not find package object for '%s' whilst looking for struct '%s'",
