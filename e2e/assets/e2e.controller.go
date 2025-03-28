@@ -20,7 +20,8 @@ const (
 	StatusEnumerationInactive StatusEnumeration = "inactive"
 )
 
-type NumberEnumeration int
+// Test enum with = flavor too
+type NumberEnumeration = int
 
 const (
 	NumberEnumerationOne NumberEnumeration = 1
@@ -545,6 +546,23 @@ func (ec *E2EController) ExternalPackages(unit *units.LengthUnits, data units.Le
 	}
 
 	return returnDto, nil
+}
+
+// Test the recursive import process on first-and-ever-used type in struct only
+type UniqueExternalUsage struct {
+	// This enum is used ONLY here across all APIs
+	Enum units.SpeedUnits `json:"unit"`
+	// This struct is used ONLY here across all APIs
+	Struct units.SpeedDto `json:"data"`
+}
+
+// @Method(POST)
+// @Route(/external-packages-unique-in-struct)
+// @Body(data)
+// @Response(200)
+// @ErrorResponse(500)
+func (ec *E2EController) ExternalPackagesUniqueInStruct(data UniqueExternalUsage) (string, error) {
+	return "ok", nil
 }
 
 type LengthDtoWithValidation struct {
