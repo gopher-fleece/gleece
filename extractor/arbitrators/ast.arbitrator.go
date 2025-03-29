@@ -311,3 +311,45 @@ func (arb *AstArbitrator) ExtractAliasType(pkg *packages.Package, typeName *type
 
 	return &aliasMetadata, nil
 }
+
+func (arb *AstArbitrator) GetAstFileForNamed(named *types.Named) (*ast.File, error) {
+	pkg := named.Obj().Pkg()
+	if pkg == nil {
+		return nil, nil // Built-in types, unnamed types, etc.
+	}
+
+	// Find the package where the struct is defined
+	pkgPath := pkg.Path()
+	targetPkg, err := arb.pkgFacade.GetPackage(pkgPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if targetPkg == nil {
+		return nil, nil
+	}
+
+	// Iterate over all AST files to find the struct declaration
+	for _, file := range targetPkg.Syntax {
+		for _, decl := range file.Decls {
+			genDecl, ok := decl.(*ast.GenDecl)
+			if !ok {
+				continue
+			}
+
+			for _, spec := range genDecl.Specs {
+				typeSpec, ok := spec.(*ast.TypeSpec)
+				if !ok {
+					continue
+				}
+
+				// If this is the struct we're looking for, return the file
+				if typeSpec.Name.Name == named.Obj().Name() {
+					return file, nil
+				}
+			}
+		}
+	}
+
+	return nil, nil // Not found
+}

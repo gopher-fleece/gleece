@@ -334,6 +334,7 @@ func LookupTypeName(pkg *packages.Package, name string) (*types.TypeName, error)
 
 	return typeName, nil
 }
+
 func GetTypeNameOrError(pkg *packages.Package, name string) (*types.TypeName, error) {
 	typeName, err := LookupTypeName(pkg, name)
 	if err != nil {

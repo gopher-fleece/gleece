@@ -5,11 +5,13 @@ import (
 	"go/types"
 	"strings"
 
+	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/extractor"
 	"github.com/gopher-fleece/gleece/extractor/annotations"
 	"github.com/gopher-fleece/gleece/extractor/arbitrators"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
+	"golang.org/x/tools/go/packages"
 )
 
 // Field represents a field in a struct
@@ -86,18 +88,13 @@ func (v *TypeVisitor) VisitStruct(fullPackageName string, structName string, str
 			fieldTypeString = extractor.GetIterableElementType(t)
 		case *types.Named:
 			if extractor.IsAliasType(t) {
-				pkg, err := v.packagesFacade.GetPackageByTypeName(t.Obj())
+
+				aliasModel := createAliasModel(t, tag)
+				err := v.visitNestedEnum(t, aliasModel)
 				if err != nil {
 					return err
 				}
 
-				if pkg == nil {
-					return fmt.Errorf("could not obtain package for entity '%v'", t)
-				}
-
-				model, _ := v.astArbitrator.ExtractAliasType(pkg, t.Obj())
-				print(model)
-				aliasModel := createAliasModel(t, tag)
 				structInfo.Fields = append(structInfo.Fields, aliasModel)
 				continue // A bit ugly. Need to clean this up...
 			} else {
@@ -168,6 +165,30 @@ func (v *TypeVisitor) VisitEnum(enumName string, model definitions.TypeMetadata)
 
 	v.enumByName[enumName] = enumModel
 	return nil
+}
+
+func (v *TypeVisitor) getAttributeHolderFromEntityGenDecl(pkg *packages.Package, name string) (annotations.AnnotationHolder, error) {
+	genDecl := extractor.FindGenDeclByName(pkg, name)
+	if genDecl == nil {
+		return annotations.AnnotationHolder{},
+			fmt.Errorf("could not find GenDecl node for struct '%s.%s'", pkg.PkgPath, name)
+	}
+
+	if genDecl.Doc == nil || genDecl.Doc.List == nil || len(genDecl.Doc.List) <= 0 {
+		return annotations.AnnotationHolder{}, nil
+	}
+
+	holder, err := annotations.NewAnnotationHolder(
+		extractor.MapDocListToStrings(genDecl.Doc.List),
+		annotations.CommentSourceSchema,
+	)
+
+	if err != nil {
+		logger.Error("Could not create an attribute holder for struct '%s.%s' - %v", pkg.PkgPath, name, err)
+		return annotations.AnnotationHolder{}, err
+	}
+
+	return holder, nil
 }
 
 func (v *TypeVisitor) getAttributeHolders(fullPackageName string, structName string) (StructAttributeHolders, error) {
@@ -285,4 +306,47 @@ func createAliasModel(node *types.Named, tag string) definitions.FieldMetadata {
 		Type: typeName,
 		Tag:  tag,
 	}
+}
+
+func (v *TypeVisitor) visitNestedEnum(t *types.Named, aliasModel definitions.FieldMetadata) error {
+	pkg, err := v.packagesFacade.GetPackageByTypeName(t.Obj())
+	if err != nil {
+		return err
+	}
+
+	if pkg == nil {
+		return fmt.Errorf("could not obtain package for entity '%v'", t)
+	}
+
+	cleanedModelName := common.UnwrapArrayTypeString(aliasModel.Name)
+	if v.enumByName[cleanedModelName] != nil {
+		return nil // Already processed, ignore
+	}
+
+	typeName, err := extractor.GetTypeNameOrError(pkg, aliasModel.Name)
+	if err != nil {
+		return err
+	}
+
+	aliasMetadata, err := v.astArbitrator.ExtractAliasType(pkg, typeName)
+	if err != nil {
+		return err
+	}
+
+	holder, err := v.getAttributeHolderFromEntityGenDecl(pkg, cleanedModelName)
+	if err != nil {
+		return err
+	}
+
+	enumModel := &definitions.EnumMetadata{
+		Name:                  cleanedModelName,
+		FullyQualifiedPackage: pkg.PkgPath,
+		Description:           holder.GetDescription(),
+		Values:                aliasMetadata.Values,
+		Type:                  aliasMetadata.AliasType,
+		// Deprecation         ?
+	}
+
+	v.enumByName[cleanedModelName] = enumModel
+	return nil
 }
