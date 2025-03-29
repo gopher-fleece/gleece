@@ -478,7 +478,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 		RunRouterTest(common.RouterTest{
 			Name:           "Should pass thro validation error middleware for string param - enum conversion",
 			ExpectedStatus: 422,
-			ExpectedBody:   "{\"type\":\"Unprocessable Entity\",\"title\":\"\",\"detail\":\"A request was made to operation 'TestEnums' but parameter 'value1' was not properly sent - Expected StatusEnumeration but got string\",\"status\":422,\"instance\":\"/gleece/validation/error/TestEnums\",\"extensions\":{\"error\":\"value1 must be one of \\\"active, inactive\\\" options only but got activerrrr\"}}",
+			ExpectedBody:   "{\"type\":\"Unprocessable Entity\",\"title\":\"\",\"detail\":\"A request was made to operation 'TestEnums' but parameter 'value1' was not properly sent - Expected StatusEnumeration but got string\",\"status\":422,\"instance\":\"/gleece/validation/error/TestEnums\",\"extensions\":{\"error\":\"value1 must be one of \\\"active, inactive\\\" options only but got \\\"activerrrr\\\"\"}}",
 			ExpendedHeaders: map[string]string{
 				"X-pass-error-validation":        "true",
 				"X-pass-after-succeed-operation": "",

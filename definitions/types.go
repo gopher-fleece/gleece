@@ -259,6 +259,7 @@ type FieldMetadata struct {
 	Type        string
 	Description string
 	Tag         string
+	IsEmbedded  bool
 	Deprecation *DeprecationOptions
 }
 

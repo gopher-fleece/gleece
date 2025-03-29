@@ -108,9 +108,10 @@ func (v *TypeVisitor) VisitStruct(fullPackageName string, structName string, str
 		}
 
 		fieldMeta := definitions.FieldMetadata{
-			Name: field.Name(),
-			Type: fieldTypeString,
-			Tag:  tag,
+			Name:       field.Name(),
+			Type:       fieldTypeString,
+			Tag:        tag,
+			IsEmbedded: field.Anonymous(),
 		}
 
 		fieldAttr := attributeHolders.FieldHolders[field.Name()]
@@ -195,6 +196,10 @@ func (v *TypeVisitor) getAttributeHolders(fullPackageName string, structName str
 				)
 			}
 
+			if len(field.Names) == 0 {
+				// Embedded/Anonymous field, skip
+				continue
+			}
 			fieldName := field.Names[0].Name
 			fieldHolder, err := annotations.NewAnnotationHolder(extractor.MapDocListToStrings(field.Doc.List), annotations.CommentSourceProperty)
 			if err != nil {

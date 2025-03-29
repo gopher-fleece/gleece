@@ -235,4 +235,65 @@ var _ = Describe("Spec Helpers", func() {
 			Expect(value).To(Equal("user_name-123"))
 		})
 	})
+
+	Describe("HasEmbeddedField", func() {
+		It("should return false for empty fields", func() {
+			fields := []definitions.FieldMetadata{}
+			Expect(HasEmbeddedField(fields)).To(BeFalse())
+		})
+
+		It("should return false when no fields are embedded", func() {
+			fields := []definitions.FieldMetadata{
+				{Name: "Field1", IsEmbedded: false},
+				{Name: "Field2", IsEmbedded: false},
+				{Name: "Field3", IsEmbedded: false},
+			}
+			Expect(HasEmbeddedField(fields)).To(BeFalse())
+		})
+
+		It("should return true when a single field is embedded", func() {
+			fields := []definitions.FieldMetadata{
+				{Name: "Field1", IsEmbedded: false},
+				{Name: "Field2", IsEmbedded: true},
+				{Name: "Field3", IsEmbedded: false},
+			}
+			Expect(HasEmbeddedField(fields)).To(BeTrue())
+		})
+
+		It("should return true when all fields are embedded", func() {
+			fields := []definitions.FieldMetadata{
+				{Name: "Field1", IsEmbedded: true},
+				{Name: "Field2", IsEmbedded: true},
+				{Name: "Field3", IsEmbedded: true},
+			}
+			Expect(HasEmbeddedField(fields)).To(BeTrue())
+		})
+
+		It("should return true when multiple fields are embedded", func() {
+			fields := []definitions.FieldMetadata{
+				{Name: "Field1", IsEmbedded: true},
+				{Name: "Field2", IsEmbedded: false},
+				{Name: "Field3", IsEmbedded: true},
+			}
+			Expect(HasEmbeddedField(fields)).To(BeTrue())
+		})
+
+		It("should return true when the first field is embedded", func() {
+			fields := []definitions.FieldMetadata{
+				{Name: "Field1", IsEmbedded: true},
+				{Name: "Field2", IsEmbedded: false},
+				{Name: "Field3", IsEmbedded: false},
+			}
+			Expect(HasEmbeddedField(fields)).To(BeTrue())
+		})
+
+		It("should return true when the last field is embedded", func() {
+			fields := []definitions.FieldMetadata{
+				{Name: "Field1", IsEmbedded: false},
+				{Name: "Field2", IsEmbedded: false},
+				{Name: "Field3", IsEmbedded: true},
+			}
+			Expect(HasEmbeddedField(fields)).To(BeTrue())
+		})
+	})
 })
