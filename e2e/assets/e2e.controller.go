@@ -619,3 +619,31 @@ type BlaBla2 struct {
 func (ec *E2EController) DeepArraysWithValidation(data [][]BlaBla2) ([][][]BlaBla2, error) {
 	return [][][]BlaBla2{data}, nil
 }
+
+type FirstLevelModel struct {
+	SecondLevelModel
+	FirstLevelModelField string `json:"firstLevelModelField" validate:"required"`
+}
+
+type SecondLevelModel struct {
+	SecondLevelModelField string `json:"secondLevelModelField" validate:"required"`
+}
+
+type OtherModel struct {
+	OtherModelField string `json:"otherModelField" validate:"required"`
+}
+
+type TheModel struct {
+	FirstLevelModel
+	OtherModel
+	ModelField string `json:"modelField" validate:"required"`
+}
+
+// @Method(POST)
+// @Route(/embedded-structs)
+// @Body(data)
+// @Response(200)
+// @ErrorResponse(500)
+func (ec *E2EController) EmbeddedStructs(data TheModel) (TheModel, error) {
+	return data, nil
+}

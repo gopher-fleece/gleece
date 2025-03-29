@@ -324,4 +324,267 @@ var _ = Describe("Swagen", func() {
 			Expect(statusSchema.Value.Enum).To(ContainElements("ACTIVE", "INACTIVE", "SUSPENDED"))
 		})
 	})
+
+	Describe("GenerateSchemaSpec with embedded fields", func() {
+		It("should generate a model with embedded fields using allOf", func() {
+			// First define a base model
+			baseModel := definitions.StructMetadata{
+				Name:        "BaseModel",
+				Description: "A base model",
+				Fields: []definitions.FieldMetadata{
+					{
+						Name:        "ID",
+						Type:        "string",
+						Description: "Base ID field",
+						Tag:         `json:"id" validate:"required"`,
+					},
+					{
+						Name:        "CreatedAt",
+						Type:        "time.Time",
+						Description: "Creation timestamp",
+						Tag:         `json:"created_at"`,
+					},
+				},
+			}
+
+			// Generate the base model schema
+			generateStructSpec(openapi, baseModel)
+
+			// Now create a model with an embedded field
+			modelWithEmbedded := definitions.StructMetadata{
+				Name:        "ExtendedModel",
+				Description: "A model with embedded field",
+				Fields: []definitions.FieldMetadata{
+					{
+						Name:        "BaseModel",
+						Type:        "BaseModel",
+						Description: "",
+						IsEmbedded:  true,
+						Tag:         ``,
+					},
+					{
+						Name:        "ExtraField",
+						Type:        "string",
+						Description: "An extra field",
+						Tag:         `json:"extra_field" validate:"required"`,
+					},
+				},
+			}
+
+			// Generate the model with embedded field
+			generateStructSpec(openapi, modelWithEmbedded)
+
+			// Verify the schema structure
+			schemaRef := openapi.Components.Schemas["ExtendedModel"]
+			Expect(schemaRef).NotTo(BeNil())
+
+			// Check that it has an allOf structure
+			Expect(schemaRef.Value.AllOf).NotTo(BeNil())
+			Expect(schemaRef.Value.AllOf).To(HaveLen(2))
+
+			// First element in allOf should be the model's own properties schema
+			ownPropsSchema := schemaRef.Value.AllOf[0].Value
+			Expect(ownPropsSchema.Title).To(Equal("ExtendedModel"))
+			Expect(ownPropsSchema.Properties).To(HaveKey("extra_field"))
+			Expect(ownPropsSchema.Required).To(ContainElement("extra_field"))
+
+			// Second element should be a reference to the embedded BaseModel
+			embeddedRef := schemaRef.Value.AllOf[1]
+			Expect(embeddedRef.Ref).To(Equal("#/components/schemas/BaseModel"))
+		})
+
+		It("should generate a model with multiple embedded fields", func() {
+			// Define first embedded model
+			firstEmbedded := definitions.StructMetadata{
+				Name:        "Timestamps",
+				Description: "Timestamp fields",
+				Fields: []definitions.FieldMetadata{
+					{
+						Name:        "CreatedAt",
+						Type:        "time.Time",
+						Description: "Creation timestamp",
+						Tag:         `json:"created_at"`,
+					},
+					{
+						Name:        "UpdatedAt",
+						Type:        "time.Time",
+						Description: "Update timestamp",
+						Tag:         `json:"updated_at"`,
+					},
+				},
+			}
+
+			// Define second embedded model
+			secondEmbedded := definitions.StructMetadata{
+				Name:        "Identifiable",
+				Description: "Identity fields",
+				Fields: []definitions.FieldMetadata{
+					{
+						Name:        "ID",
+						Type:        "string",
+						Description: "Unique identifier",
+						Tag:         `json:"id" validate:"required"`,
+					},
+				},
+			}
+
+			// Generate schemas for embedded models
+			generateStructSpec(openapi, firstEmbedded)
+			generateStructSpec(openapi, secondEmbedded)
+
+			// Define a model with multiple embedded fields
+			modelWithMultipleEmbedded := definitions.StructMetadata{
+				Name:        "ComplexModel",
+				Description: "Model with multiple embedded types",
+				Fields: []definitions.FieldMetadata{
+					{
+						Name:       "Timestamps",
+						Type:       "Timestamps",
+						IsEmbedded: true,
+						Tag:        ``,
+					},
+					{
+						Name:       "Identifiable",
+						Type:       "Identifiable",
+						IsEmbedded: true,
+						Tag:        ``,
+					},
+					{
+						Name:        "Name",
+						Type:        "string",
+						Description: "Model name",
+						Tag:         `json:"name"`,
+					},
+				},
+			}
+
+			// Generate schema with multiple embedded fields
+			generateStructSpec(openapi, modelWithMultipleEmbedded)
+
+			// Verify the schema
+			schemaRef := openapi.Components.Schemas["ComplexModel"]
+			Expect(schemaRef).NotTo(BeNil())
+
+			// Check allOf structure has own properties and two embedded types
+			Expect(schemaRef.Value.AllOf).To(HaveLen(3))
+
+			// First element should be own properties
+			ownPropsSchema := schemaRef.Value.AllOf[0].Value
+			Expect(ownPropsSchema.Properties).To(HaveKey("name"))
+
+			// Other elements should be refs to embedded types
+			embedRefs := []string{
+				schemaRef.Value.AllOf[1].Ref,
+				schemaRef.Value.AllOf[2].Ref,
+			}
+			Expect(embedRefs).To(ContainElement("#/components/schemas/Timestamps"))
+			Expect(embedRefs).To(ContainElement("#/components/schemas/Identifiable"))
+		})
+
+		It("should generate a model with only embedded fields and no own properties", func() {
+			// Define an embedded model
+			embeddedModel := definitions.StructMetadata{
+				Name:        "BasicFields",
+				Description: "Basic fields model",
+				Fields: []definitions.FieldMetadata{
+					{
+						Name:        "Field1",
+						Type:        "string",
+						Description: "Basic field 1",
+						Tag:         `json:"field1"`,
+					},
+				},
+			}
+
+			generateStructSpec(openapi, embeddedModel)
+
+			// Create a model with only embedded fields
+			onlyEmbeddedModel := definitions.StructMetadata{
+				Name:        "EmbeddedOnly",
+				Description: "Model with only embedded fields",
+				Fields: []definitions.FieldMetadata{
+					{
+						Name:       "BasicFields",
+						Type:       "BasicFields",
+						IsEmbedded: true,
+						Tag:        ``,
+					},
+				},
+			}
+
+			generateStructSpec(openapi, onlyEmbeddedModel)
+
+			// Verify schema structure
+			schemaRef := openapi.Components.Schemas["EmbeddedOnly"]
+			Expect(schemaRef).NotTo(BeNil())
+
+			// Should have allOf with two elements: own schema (empty props) and embedded ref
+			Expect(schemaRef.Value.AllOf).To(HaveLen(2))
+
+			// First schema is the model's own schema (should be empty)
+			ownSchema := schemaRef.Value.AllOf[0].Value
+			Expect(ownSchema.Properties).To(BeEmpty())
+
+			// Second should be ref to embedded model
+			Expect(schemaRef.Value.AllOf[1].Ref).To(Equal("#/components/schemas/BasicFields"))
+		})
+
+		It("should handle a model with embedded field containing deprecation", func() {
+			// Create deprecated embedded model
+			deprecatedModel := definitions.StructMetadata{
+				Name:        "DeprecatedBase",
+				Description: "A deprecated base model",
+				Fields: []definitions.FieldMetadata{
+					{
+						Name:        "OldField",
+						Type:        "string",
+						Description: "Old field",
+						Tag:         `json:"old_field"`,
+					},
+				},
+				Deprecation: definitions.DeprecationOptions{
+					Deprecated:  true,
+					Description: "Use NewBase instead",
+				},
+			}
+
+			generateStructSpec(openapi, deprecatedModel)
+
+			// Model embedding the deprecated model
+			compositeModel := definitions.StructMetadata{
+				Name:        "Composite",
+				Description: "Composite model",
+				Fields: []definitions.FieldMetadata{
+					{
+						Name:       "DeprecatedBase",
+						Type:       "DeprecatedBase",
+						IsEmbedded: true,
+						Tag:        ``,
+					},
+					{
+						Name:        "NewField",
+						Type:        "string",
+						Description: "New field",
+						Tag:         `json:"new_field"`,
+					},
+				},
+			}
+
+			generateStructSpec(openapi, compositeModel)
+
+			// Verify schema
+			schemaRef := openapi.Components.Schemas["Composite"]
+			Expect(schemaRef).NotTo(BeNil())
+
+			// Check allOf structure
+			Expect(schemaRef.Value.AllOf).To(HaveLen(2))
+
+			// Second element should reference the deprecated model
+			Expect(schemaRef.Value.AllOf[1].Ref).To(Equal("#/components/schemas/DeprecatedBase"))
+
+			// Verify the deprecated model is actually marked as deprecated
+			deprecatedRef := openapi.Components.Schemas["DeprecatedBase"]
+			Expect(deprecatedRef.Value.Deprecated).To(BeTrue())
+		})
+	})
 })

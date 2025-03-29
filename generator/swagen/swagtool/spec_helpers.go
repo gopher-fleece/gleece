@@ -111,6 +111,15 @@ func IsDeprecated(deprecationOptions *definitions.DeprecationOptions) bool {
 	return deprecationOptions != nil && deprecationOptions.Deprecated
 }
 
+func HasEmbeddedField(fields []definitions.FieldMetadata) bool {
+	for _, field := range fields {
+		if field.IsEmbedded {
+			return true
+		}
+	}
+	return false
+}
+
 // GetTagValue extracts the value for a specific tag name from a struct tag string
 // If the tag or value is not found, returns the default value
 // Example usage:

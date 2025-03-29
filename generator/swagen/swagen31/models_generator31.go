@@ -11,7 +11,9 @@ import (
 
 func generateStructsSpec(doc *v3.Document, model definitions.StructMetadata) {
 	isDeprecated := swagtool.IsDeprecated(&model.Deprecation)
-	highbaseSchema := &highbase.Schema{
+
+	// The schema that will hold all regular fields
+	regularFieldsSchema := &highbase.Schema{
 		Title:       model.Name,
 		Description: model.Description,
 		Type:        []string{"object"},
@@ -19,9 +21,37 @@ func generateStructsSpec(doc *v3.Document, model definitions.StructMetadata) {
 		Deprecated:  &isDeprecated,
 	}
 
+	// Determine if we have any embedded fields
+	hasEmbeddedField := swagtool.HasEmbeddedField(model.Fields)
+
+	// The final schema to be added to components
+	var finalSchema *highbase.Schema
+
+	if !hasEmbeddedField {
+		// If no embedded fields, use the regular schema directly
+		finalSchema = regularFieldsSchema
+	} else {
+		// If there are embedded fields, create a schema with allOf
+		finalSchema = &highbase.Schema{
+			// Don't set Type for allOf schemas
+			AllOf: []*highbase.SchemaProxy{},
+		}
+
+		// Add the regular fields schema to allOf
+		finalSchema.AllOf = append(finalSchema.AllOf, highbase.CreateSchemaProxy(regularFieldsSchema))
+	}
+
 	requiredFields := []string{}
 
 	for _, field := range model.Fields {
+		if field.IsEmbedded {
+			// If the field is embedded, add it to the allOf array
+			fieldSchemaRef := InterfaceToSchemaV3(doc, field.Type)
+			finalSchema.AllOf = append(finalSchema.AllOf, fieldSchemaRef)
+			continue
+		}
+
+		// Process regular fields as before
 		fName := swagtool.GetJsonNameFromTag(field.Tag, field.Name)
 		validationTag := swagtool.GetTagValue(field.Tag, "validate", "")
 
@@ -39,11 +69,15 @@ func generateStructsSpec(doc *v3.Document, model definitions.StructMetadata) {
 			isFieldDeprecated := swagtool.IsDeprecated(field.Deprecation)
 			innerSchema.Deprecated = &isFieldDeprecated
 		}
-		highbaseSchema.Properties.Set(fName, fieldSchemaRef)
+
+		regularFieldsSchema.Properties.Set(fName, fieldSchemaRef)
 	}
 
-	highbaseSchema.Required = requiredFields
-	doc.Components.Schemas.Set(model.Name, highbase.CreateSchemaProxy(highbaseSchema))
+	// Required fields are part of the regular schema
+	regularFieldsSchema.Required = requiredFields
+
+	// Add the final schema to components
+	doc.Components.Schemas.Set(model.Name, highbase.CreateSchemaProxy(finalSchema))
 }
 
 func generateEnumsSpec(doc *v3.Document, model definitions.EnumMetadata) {
