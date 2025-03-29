@@ -56,6 +56,25 @@
         "title": "CustomError",
         "type": "object"
       },
+      "FirstLevelModel": {
+        "allOf": [
+          {
+            "properties": {
+              "firstLevelModelField": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "firstLevelModelField"
+            ],
+            "title": "FirstLevelModel",
+            "type": "object"
+          },
+          {
+            "$ref": "#/components/schemas/SecondLevelModel"
+          }
+        ]
+      },
       "LengthDto": {
         "description": "LengthDto represents a Length measurement with a numerical value and its corresponding unit.",
         "properties": {
@@ -169,6 +188,18 @@
         "title": "ObjectWithEnum",
         "type": "object"
       },
+      "OtherModel": {
+        "properties": {
+          "otherModelField": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "otherModelField"
+        ],
+        "title": "OtherModel",
+        "type": "object"
+      },
       "ResponseTest": {
         "properties": {
           "index": {
@@ -225,6 +256,18 @@
         "title": "Rfc7807Error",
         "type": "object"
       },
+      "SecondLevelModel": {
+        "properties": {
+          "secondLevelModelField": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "secondLevelModelField"
+        ],
+        "title": "SecondLevelModel",
+        "type": "object"
+      },
       "StatusEnumeration": {
         "enum": [
           "active",
@@ -232,6 +275,28 @@
         ],
         "title": "StatusEnumeration",
         "type": "string"
+      },
+      "TheModel": {
+        "allOf": [
+          {
+            "properties": {
+              "modelField": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "modelField"
+            ],
+            "title": "TheModel",
+            "type": "object"
+          },
+          {
+            "$ref": "#/components/schemas/FirstLevelModel"
+          },
+          {
+            "$ref": "#/components/schemas/OtherModel"
+          }
+        ]
       }
     },
     "securitySchemes": {
@@ -589,6 +654,56 @@
               "application/json": {
                 "schema": {
                   "type": "string"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          ""
+        ]
+      }
+    },
+    "/e2e/embedded-structs": {
+      "post": {
+        "operationId": "EmbeddedStructs",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TheModel"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TheModel"
+                }
+              }
+            },
+            "description": ""
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rfc7807Error"
                 }
               }
             },

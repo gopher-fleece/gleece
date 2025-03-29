@@ -10,6 +10,10 @@ var objectType = &openapi3.Types{"object"}
 var arrayType = &openapi3.Types{"array"}
 
 func generateStructSpec(openapi *openapi3.T, model definitions.StructMetadata) {
+	// The final schema that will be added to the components
+	var modelSchema *openapi3.Schema
+
+	// The schema that will be added to all fields (in case of embedded fields it will be part of the allOf array)
 	schema := &openapi3.Schema{
 		Title:       model.Name,
 		Description: model.Description,
@@ -18,11 +22,31 @@ func generateStructSpec(openapi *openapi3.T, model definitions.StructMetadata) {
 		Deprecated:  swagtool.IsDeprecated(&model.Deprecation),
 	}
 
+	hasEmbeddedField := swagtool.HasEmbeddedField(model.Fields)
+
+	if !hasEmbeddedField {
+		// If the model has no embedded fields, the schema can be used directly
+		modelSchema = schema
+	} else {
+		// If the model has embedded fields, the schema should be part of the allOf array
+		modelSchema = &openapi3.Schema{}
+		modelSchema.AllOf = make([]*openapi3.SchemaRef, 0)
+		// Add the schema to the allOf array
+		modelSchema.AllOf = append(modelSchema.AllOf, &openapi3.SchemaRef{
+			Value: schema,
+		})
+	}
+
 	requiredFields := []string{}
 
 	for _, field := range model.Fields {
 		fieldSchemaRef := InterfaceToSchemaRef(openapi, field.Type)
 
+		if field.IsEmbedded {
+			// If the field is embedded, add the embedded schema to the allOf array
+			modelSchema.AllOf = append(modelSchema.AllOf, fieldSchemaRef)
+			continue
+		}
 		validationTag := swagtool.GetTagValue(field.Tag, "validate", "")
 		BuildSchemaValidation(fieldSchemaRef, validationTag, field.Type)
 
@@ -53,7 +77,7 @@ func generateStructSpec(openapi *openapi3.T, model definitions.StructMetadata) {
 
 	// Add schema to components
 	openapi.Components.Schemas[model.Name] = &openapi3.SchemaRef{
-		Value: schema,
+		Value: modelSchema,
 	}
 }
 
