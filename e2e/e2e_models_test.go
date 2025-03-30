@@ -48,6 +48,27 @@ var _ = Describe("E2E Models Spec", func() {
 		})
 	})
 
+	It("Should return status code 200 for external packages referenced in local struct", func() {
+		RunRouterTest(common.RouterTest{
+			Name:                "Should return status code 200 for external packages referenced in local struct",
+			ExpectedStatus:      200,
+			ExpectedBodyContain: "FootPerHour:KilometerPerHour",
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/external-packages-unique-in-struct",
+			Method:              "POST",
+			Body: assets.UniqueExternalUsage{
+				Enum: units.SpeedFootPerHour,
+				Struct: units.SpeedDto{
+					Value: 1000,
+					Unit:  units.SpeedKilometerPerHour,
+				},
+			},
+			Query:       map[string]string{},
+			Headers:     map[string]string{},
+			RunningMode: &allRouting,
+		})
+	})
+
 	It("Should return status code 200 for arrays inside body and response", func() {
 		RunRouterTest(common.RouterTest{
 			Name:            "Should return status code 200 for arrays in body and response - in body",

@@ -562,7 +562,7 @@ type UniqueExternalUsage struct {
 // @Response(200)
 // @ErrorResponse(500)
 func (ec *E2EController) ExternalPackagesUniqueInStruct(data UniqueExternalUsage) (string, error) {
-	return "ok", nil
+	return string(data.Enum) + ":" + string(data.Struct.Unit), nil
 }
 
 type LengthDtoWithValidation struct {
