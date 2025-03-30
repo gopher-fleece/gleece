@@ -50,7 +50,8 @@ func generateStructSpec(openapi *openapi3.T, model definitions.StructMetadata) {
 		validationTag := swagtool.GetTagValue(field.Tag, "validate", "")
 		BuildSchemaValidation(fieldSchemaRef, validationTag, field.Type)
 
-		if fieldSchemaRef.Value != nil {
+		// OpenAPI 3.0 does not support the any extra field in the SchemaRef beside just ref, and we don't want to override the model properties themselves
+		if fieldSchemaRef.Value != nil && fieldSchemaRef.Ref == "" {
 			fieldSchemaRef.Value.Description = field.Description
 
 			// If the schema marked as deprecated, the field / property should be marked as deprecated as well

@@ -91,9 +91,13 @@ func (v *ControllerVisitor) GetModelsFlat() (*definitions.Models, bool, error) {
 		}
 	}
 
-	typeVisitor := visitors.NewTypeVisitor(v.packagesFacade.GetAllPackages())
+	typeVisitor := visitors.NewTypeVisitor(&v.packagesFacade, &v.astArbitrator)
 	for _, model := range models {
-		pkg := extractor.FilterPackageByFullName(v.packagesFacade.GetAllPackages(), model.FullyQualifiedPackage)
+		pkg, err := v.packagesFacade.GetPackage(model.FullyQualifiedPackage)
+		if err != nil {
+			return nil, hasAnyErrorTypes, v.frozenError(err)
+		}
+
 		if pkg == nil {
 			return nil, hasAnyErrorTypes, v.getFrozenError(
 				"could locate packages.Package '%s' whilst looking for type '%s'.\n"+

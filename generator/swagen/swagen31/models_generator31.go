@@ -63,7 +63,9 @@ func generateStructsSpec(doc *v3.Document, model definitions.StructMetadata) {
 
 		innerSchema := fieldSchemaRef.Schema()
 
-		if innerSchema != nil {
+		// OpenAPI 3.0 does not support the any extra field in the SchemaRef beside just ref, and we don't want to override the model properties themselves
+		// Hence, we here used 3.1, so it is possible, and it's in the TODO list to be implemented
+		if innerSchema != nil && !fieldSchemaRef.IsReference() {
 			BuildSchemaValidationV31(innerSchema, validationTag, field.Type)
 			innerSchema.Description = field.Description
 			isFieldDeprecated := swagtool.IsDeprecated(field.Deprecation)

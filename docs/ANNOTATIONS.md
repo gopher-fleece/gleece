@@ -1,1 +1,1 @@
-The content moved to https://docs.gleece.dev/docs/extras/ANNOTATIONS
+The content moved to https://docs.gleece.dev/docs/extras/annotations

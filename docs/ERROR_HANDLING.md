@@ -1,1 +1,1 @@
-The content moved to https://docs.gleece.dev/docs/basics/ERROR_HANDLING
+The content moved to https://docs.gleece.dev/docs/basics/errors
