@@ -39,11 +39,11 @@ jobs:
           ginkgo ./...
 
       - name: 5️⃣ Send coverage 📊
-        if: github.ref == 'refs/heads/main'
+        if: github.ref != 'refs/heads/main'
         env:
           COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdir dist
           go test -covermode atomic -coverpkg=$(go list ./... | grep -vE "/test/|/e2e/" | tr '\n' ',') -coverprofile=dist/covprofile ./...
-          goveralls -coverprofile=dist/covprofile -service=github
+          # goveralls -coverprofile=dist/covprofile -service=github
 
