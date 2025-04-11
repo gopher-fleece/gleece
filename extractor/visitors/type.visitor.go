@@ -26,33 +26,42 @@ type StructInfo struct {
 	Fields []Field
 }
 
+// TypeVisitor handles recursive 'visitation' of types (structs, enums, aliases)
 type TypeVisitor struct {
 	// A facade for managing packages.Package
 	packagesFacade *arbitrators.PackagesFacade
 
+	// An arbitrator providing logic for working with Go's AST
 	astArbitrator *arbitrators.AstArbitrator
 
-	typesByName map[string]*definitions.StructMetadata
-	enumByName  map[string]*definitions.EnumMetadata
+	// A map of struct names to metadata
+	structsByName map[string]*definitions.StructMetadata
+
+	// A map of 'enum' names to metadata
+	enumsByName map[string]*definitions.EnumMetadata
 }
 
+// StructAttributeHolders serves as a container for tracking AnnotationHolders for a struct and its fields
 type StructAttributeHolders struct {
 	StructHolder annotations.AnnotationHolder
 	FieldHolders map[string]*annotations.AnnotationHolder
 }
 
+// NewTypeVisitor Initializes a new visitor
 func NewTypeVisitor(packagesFacade *arbitrators.PackagesFacade, astArbitrator *arbitrators.AstArbitrator) *TypeVisitor {
 	return &TypeVisitor{
 		packagesFacade: packagesFacade,
 		astArbitrator:  astArbitrator,
-		typesByName:    make(map[string]*definitions.StructMetadata),
-		enumByName:     make(map[string]*definitions.EnumMetadata),
+		structsByName:  make(map[string]*definitions.StructMetadata),
+		enumsByName:    make(map[string]*definitions.EnumMetadata),
 	}
 }
 
+// VisitStruct dives into the given struct in the given package and recursively parses it to obtain metadata,
+// storing the results in the visitor's internal fields.
 func (v *TypeVisitor) VisitStruct(fullPackageName string, structName string, structType *types.Struct) error {
-	fullName := fmt.Sprintf("%s.%s", fullPackageName, structName)
-	if v.typesByName[fullName] != nil {
+	fullStructName := fmt.Sprintf("%s.%s", fullPackageName, structName)
+	if v.structsByName[fullStructName] != nil {
 		return nil // Already processed, ignore
 	}
 
@@ -68,12 +77,13 @@ func (v *TypeVisitor) VisitStruct(fullPackageName string, structName string, str
 		Deprecation:           getDeprecationOpts(attributeHolders.StructHolder),
 	}
 
-	for i := 0; i < structType.NumFields(); i++ {
+	// Iterate the struct's fields
+	for i := range structType.NumFields() {
 		field := structType.Field(i)
 		fieldType := field.Type()
 		tag := structType.Tag(i)
 
-		// Skip embedded error fields.
+		// Skip embedded 'error' fields.
 		if field.Name() == "error" && field.Type().String() == "error" {
 			continue
 		}
@@ -85,43 +95,19 @@ func (v *TypeVisitor) VisitStruct(fullPackageName string, structName string, str
 			// Raise error for pointer fields.
 			return fmt.Errorf("field %q in struct %q is a pointer, which is not allowed", field.Name(), structName)
 		case *types.Array, *types.Slice:
+			// For iterables, get the underlying field type.
+			//
+			// NOTE: Need to verify this works for complex array types
 			fieldTypeString = extractor.GetIterableElementType(t)
 		case *types.Named:
-			if extractor.IsAliasType(t) {
-
-				aliasModel := createAliasModel(t, tag)
-				err := v.visitNestedEnum(t, aliasModel)
-				if err != nil {
-					return err
-				}
-
-				structInfo.Fields = append(structInfo.Fields, aliasModel)
-				continue // A bit ugly. Need to clean this up...
-			} else {
-				// Check if the named type is a struct.
-				if underlying, ok := t.Underlying().(*types.Struct); ok {
-					// Recursively process the nested struct.
-					nestedPackageName, err := v.packagesFacade.GetPackageNameByNamedEntity(t)
-					if err != nil {
-						return err
-					}
-
-					if len(nestedPackageName) == 0 {
-						return fmt.Errorf("could not determine package for named entity '%s'", t.Obj().Name())
-					}
-
-					err = v.VisitStruct(nestedPackageName, t.Obj().Name(), underlying)
-					if err != nil {
-						return err
-					}
-				} else {
-					return fmt.Errorf(
-						"node '%s' is of kind 'Named' but is neither an alias-like nor struct and cannot be used",
-						t.Obj().Name(),
-					)
-				}
+			isEnumOrAlias, err := v.processNamedEntity(t, &structInfo, tag)
+			if err != nil {
+				return err
 			}
-
+			if isEnumOrAlias {
+				// Enums and aliases have already been processed at this point - continue to the next field.
+				continue
+			}
 			// Add the field as a reference to another struct.
 			fieldTypeString = t.Obj().Name()
 		default:
@@ -146,12 +132,57 @@ func (v *TypeVisitor) VisitStruct(fullPackageName string, structName string, str
 		structInfo.Fields = append(structInfo.Fields, fieldMeta)
 	}
 
-	v.typesByName[fullName] = &structInfo
+	v.structsByName[fullStructName] = &structInfo
 	return nil
 }
 
+// processNamedEntity receives a Named node and translates it into an enum/alias model.
+// Returns a boolean indicating whether the node is considered an enum/alias which indicates
+// whether it should be appended to the visitor's struct list or not.
+//
+// To clarify, an enum/alias is NOT appended to the struct list.
+func (v *TypeVisitor) processNamedEntity(
+	node *types.Named,
+	structInfo *definitions.StructMetadata,
+	fieldTag string,
+) (bool, error) {
+	// If the type's an enum.
+	// This is pretty nasty - there needs to be a stricter separation between simple aliases and actual enums.
+	if extractor.IsAliasType(node) {
+		aliasModel := createAliasModel(node, fieldTag)
+		err := v.visitNestedEnum(node, aliasModel)
+		if err != nil {
+			return true, err
+		}
+
+		structInfo.Fields = append(structInfo.Fields, aliasModel)
+		return true, nil
+	}
+
+	// Check if the named type is a struct.
+	if underlying, ok := node.Underlying().(*types.Struct); ok {
+		// Recursively process the nested struct.
+		nestedPackageName, err := v.packagesFacade.GetPackageNameByNamedEntity(node)
+		if err != nil {
+			return false, err
+		}
+
+		if len(nestedPackageName) == 0 {
+			return false, fmt.Errorf("could not determine package for named entity '%s'", node.Obj().Name())
+		}
+
+		err = v.VisitStruct(nestedPackageName, node.Obj().Name(), underlying)
+		return false, err
+	}
+
+	return false, fmt.Errorf(
+		"node '%s' is of kind 'Named' but is neither an alias-like nor struct and cannot be used",
+		node.Obj().Name(),
+	)
+}
+
 func (v *TypeVisitor) VisitEnum(enumName string, model definitions.TypeMetadata) error {
-	if v.enumByName[enumName] != nil {
+	if v.enumsByName[enumName] != nil {
 		return nil // Already processed, ignore
 	}
 
@@ -164,7 +195,7 @@ func (v *TypeVisitor) VisitEnum(enumName string, model definitions.TypeMetadata)
 		// Deprecation         ?
 	}
 
-	v.enumByName[enumName] = enumModel
+	v.enumsByName[enumName] = enumModel
 	return nil
 }
 
@@ -267,7 +298,7 @@ func (v *TypeVisitor) getAttributeHolders(fullPackageName string, structName str
 // GetStructs returns the list of processed structs.
 func (v *TypeVisitor) GetStructs() []definitions.StructMetadata {
 	models := []definitions.StructMetadata{}
-	for _, value := range v.typesByName {
+	for _, value := range v.structsByName {
 		models = append(models, *value)
 	}
 	return models
@@ -275,7 +306,7 @@ func (v *TypeVisitor) GetStructs() []definitions.StructMetadata {
 
 func (v *TypeVisitor) GetEnums() []definitions.EnumMetadata {
 	models := []definitions.EnumMetadata{}
-	for _, value := range v.enumByName {
+	for _, value := range v.enumsByName {
 		models = append(models, *value)
 	}
 	return models
@@ -324,7 +355,7 @@ func (v *TypeVisitor) visitNestedEnum(t *types.Named, aliasModel definitions.Fie
 	}
 
 	cleanedModelName := common.UnwrapArrayTypeString(aliasModel.Name)
-	if v.enumByName[cleanedModelName] != nil {
+	if v.enumsByName[cleanedModelName] != nil {
 		return nil // Already processed, ignore
 	}
 
@@ -352,6 +383,6 @@ func (v *TypeVisitor) visitNestedEnum(t *types.Named, aliasModel definitions.Fie
 		// Deprecation         ?
 	}
 
-	v.enumByName[cleanedModelName] = enumModel
+	v.enumsByName[cleanedModelName] = enumModel
 	return nil
 }
