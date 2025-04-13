@@ -239,30 +239,6 @@ func FindGenDeclByName(pkg *packages.Package, typeSpecName string) *ast.GenDecl 
 	return nil // Struct not found
 }
 
-func FindTypeSpecByName(pkg *packages.Package, typeName string) *ast.TypeSpec {
-	for _, file := range pkg.Syntax { // Iterate over all files in the package
-		for _, decl := range file.Decls { // Iterate over top-level declarations
-			genDecl, ok := decl.(*ast.GenDecl)
-			if !ok {
-				continue // Skip non-general declarations (like functions)
-			}
-
-			// Iterate over TypeSpec declarations (type Foo struct {...})
-			for _, spec := range genDecl.Specs {
-				typeSpec, ok := spec.(*ast.TypeSpec)
-				if !ok {
-					continue
-				}
-
-				if typeSpec.Name.Name == typeName {
-					return typeSpec
-				}
-			}
-		}
-	}
-	return nil // TypeSpec not found
-}
-
 func FindGenDeclByIdent(fileSet *token.FileSet, file *ast.File, ident *ast.Ident) *ast.GenDecl {
 	var decl *ast.GenDecl
 
@@ -346,6 +322,8 @@ func GetTypeNameOrError(pkg *packages.Package, name string) (*types.TypeName, er
 	}
 
 	if typeName.Type() == nil {
+		// This failure is pretty much impossible to trigger without some black magic.
+		// Even NeedTypes populates the type information and, if something was missing, it would've been caught by LookupTypeName
 		return nil, fmt.Errorf("type '%s.%s' does not have Type() information", pkg.Name, name)
 	}
 
