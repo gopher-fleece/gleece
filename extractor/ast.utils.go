@@ -12,6 +12,7 @@ import (
 	"golang.org/x/tools/go/packages"
 )
 
+// IsFuncDeclReceiverForStruct determines if the given FuncDecl is a receiver for a struct with the given name
 func IsFuncDeclReceiverForStruct(structName string, funcDecl *ast.FuncDecl) bool {
 	if funcDecl.Recv == nil || len(funcDecl.Recv.List) <= 0 {
 		return false
@@ -27,22 +28,29 @@ func IsFuncDeclReceiverForStruct(structName string, funcDecl *ast.FuncDecl) bool
 	}
 }
 
+// DoesStructEmbedStruct tests the given structToCheck in the *ast.File `sourceFile`
+// to determine whether it embeds struct `embeddedStructName` from package `embeddedStructFullPackageName`
 func DoesStructEmbedStruct(
 	sourceFile *ast.File,
-	structFullPackageName string,
-	structNode *ast.StructType,
+	structToCheck *ast.StructType,
+	embeddedStructFullPackageName string,
 	embeddedStructName string,
 ) bool {
 	aliasedImports := GetImportAliases(sourceFile)
 
 	// Iterate over the struct fields to check for embeds
-	for _, field := range structNode.Fields.List {
+	for _, field := range structToCheck.Fields.List {
 		switch fieldType := field.Type.(type) {
 		case *ast.Ident:
-			// If the type is just an Ident (simple struct type), check the name
+			// If the type is just an Ident (simple struct type), check the name.
 			if fieldType.Name == embeddedStructName {
+				// IMPORTANT NOTE:
+				// Believe there's an edge case here where detection may fail if both structs in from the same package.
+				// This is not relevant to the standard use-case but we'll need to verify
+				//
+				//
 				// If it's an Ident, check if it's a dot import or a direct match
-				if isDotImported, _ := IsPackageDotImported(sourceFile, structFullPackageName); isDotImported {
+				if isDotImported, _ := IsPackageDotImported(sourceFile, embeddedStructFullPackageName); isDotImported {
 					return true
 				}
 			}
@@ -51,7 +59,7 @@ func DoesStructEmbedStruct(
 			if ident, ok := fieldType.X.(*ast.Ident); ok {
 				// Compare the package name and struct name
 				sourcePackage := aliasedImports[ident.Name]
-				isCorrectPackage := sourcePackage == structFullPackageName || IsAliasDefault(structFullPackageName, ident.Name)
+				isCorrectPackage := sourcePackage == embeddedStructFullPackageName || IsAliasDefault(embeddedStructFullPackageName, ident.Name)
 				if isCorrectPackage && fieldType.Sel.Name == embeddedStructName {
 					return true
 				}
@@ -61,6 +69,7 @@ func DoesStructEmbedStruct(
 	return false
 }
 
+// GetDefaultPackageAlias returns the default import alias for the given file
 func GetDefaultPackageAlias(file *ast.File) (string, error) {
 	if file.Name != nil {
 		return GetDefaultAlias(file.Name.Name), nil
