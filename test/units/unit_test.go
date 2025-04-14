@@ -110,6 +110,26 @@ var _ = Describe("Unit Tests", func() {
 				Expect(typeName).To(BeNil())
 			})
 		})
+
+		Context("FindTypesStructInPackage", func() {
+			It("Returns correct error when package does not have type information", func() {
+				typeName, err := extractor.FindTypesStructInPackage(typesPkgLoadOnly, "StructA")
+				Expect(err).To(MatchError(ContainSubstring("does not have types or types scope")))
+				Expect(typeName).To(BeNil())
+			})
+
+			It("Returns no value and no error when given name does not exist in given package", func() {
+				typeName, err := extractor.FindTypesStructInPackage(typesPkgFullSyntax, "ThisNameDoesNotExistInThisPackage")
+				Expect(err).To(BeNil())
+				Expect(typeName).To(BeNil())
+			})
+
+			It("Returns correct error when given name exist in given package but is not a struct", func() {
+				typeName, err := extractor.FindTypesStructInPackage(typesPkgFullSyntax, "InterfaceA")
+				Expect(err).To(MatchError(ContainSubstring("is not a struct type")))
+				Expect(typeName).To(BeNil())
+			})
+		})
 	})
 })
 

@@ -441,35 +441,6 @@ func GetFieldTypeString(fieldType ast.Expr) string {
 	}
 }
 
-func GetNodeKind(fieldType ast.Expr) definitions.AstNodeKind {
-	switch fieldType.(type) {
-	case *ast.Ident:
-		return definitions.AstNodeKindIdent
-	case *ast.SelectorExpr:
-		return definitions.AstNodeKindSelector
-	case *ast.StarExpr:
-		return definitions.AstNodeKindPointer
-	case *ast.ArrayType:
-		return definitions.AstNodeKindArray
-	case *ast.MapType:
-		return definitions.AstNodeKindMap
-	case *ast.ChanType:
-		return definitions.AstNodeKindChannel
-	case *ast.FuncType:
-		return definitions.AstNodeKindFunction
-	case *ast.InterfaceType:
-		return definitions.AstNodeKindInterface
-	case *ast.StructType:
-		return definitions.AstNodeKindStruct
-	case *ast.Ellipsis:
-		return definitions.AstNodeKindVariadic
-	case *ast.ParenExpr:
-		return definitions.AstNodeKindParenthesis
-	default:
-		return definitions.AstNodeKindUnknown
-	}
-}
-
 func IsAliasType(named *types.Named) bool {
 	// First, check if it was declared using the alias syntax.
 	if named.Obj().IsAlias() {
