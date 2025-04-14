@@ -1,6 +1,9 @@
-package units_test
+package ast_test
 
 import (
+	"fmt"
+	"go/ast"
+	"go/token"
 	"testing"
 
 	"github.com/gopher-fleece/gleece/extractor"
@@ -36,8 +39,8 @@ var typesPkgLoadOnly *packages.Package
 var typesPkgFullSyntax *packages.Package
 
 var _ = BeforeSuite(func() {
-	typesPkgLoadOnly = utils.LoadPackage(auxTypesPackageName, packages.LoadFiles)
-	typesPkgFullSyntax = utils.LoadPackage(auxTypesPackageName, packages.LoadAllSyntax)
+	typesPkgLoadOnly = utils.LoadPackageOrFail(auxTypesPackageName, packages.LoadFiles)
+	typesPkgFullSyntax = utils.LoadPackageOrFail(auxTypesPackageName, packages.LoadAllSyntax)
 })
 
 var _ = Describe("Unit Tests", func() {
@@ -128,6 +131,104 @@ var _ = Describe("Unit Tests", func() {
 				typeName, err := extractor.FindTypesStructInPackage(typesPkgFullSyntax, "InterfaceA")
 				Expect(err).To(MatchError(ContainSubstring("is not a struct type")))
 				Expect(typeName).To(BeNil())
+			})
+		})
+
+		Context("GetUnderlyingTypeName", func() {
+			It("correctly resolves basic and named types", func() {
+				testStruct, err := extractor.FindTypesStructInPackage(typesPkgFullSyntax, "StructForGetUnderlyingTypeName")
+				Expect(err).To(BeNil())
+				Expect(testStruct).ToNot(BeNil())
+
+				tests := map[string]string{
+					"FieldIntAlias":     "IntAlias",       // named type
+					"FieldStringPtr":    "*string",        // pointer
+					"FieldIntSlice":     "[]int",          // slice
+					"FieldStringIntMap": "map[string]int", // map
+					"FieldChannelInt":   "chan int",       // channel
+					"FieldFunc":         "func(...)",      // function signature
+					"FieldIntArray":     "[3]int",         // array
+					"FieldInterface":    "any",            // fallback
+					"FieldStruct":       "struct{}",
+					"FieldInt":          "int",
+					"FieldComment":      "Comment",
+				}
+
+				for i := range testStruct.NumFields() {
+					field := testStruct.Field(i)
+					name := field.Name()
+					typ := field.Type()
+
+					expected := tests[name]
+					actual := extractor.GetUnderlyingTypeName(typ)
+					Expect(actual).To(Equal(expected), fmt.Sprintf("field %s", name))
+				}
+			})
+		})
+
+		Context("GetFieldTypeString", func() {
+			It("Correctly parses field AST expressions into string descriptions", func() {
+				typeStruct, err := extractor.FindTypesStructInPackage(typesPkgFullSyntax, "StructForGetUnderlyingTypeName")
+				Expect(err).To(BeNil())
+				Expect(typeStruct).ToNot(BeNil())
+
+				expected := map[string]string{
+					"FieldIntAlias":     "IntAlias",
+					"FieldStringPtr":    "*string",
+					"FieldIntSlice":     "[]int",
+					"FieldIntArray":     "[3]int",
+					"FieldStringIntMap": "map[string]int",
+					"FieldChannelInt":   "Channel (bidirectional, type: int)",
+					"FieldFunc":         "Function",
+					"FieldInterface":    "any",
+					"FieldStruct":       "Struct",
+					"FieldInt":          "Parenthesized (int)",
+					"FieldComment":      "ast.Comment",
+				}
+
+				for i := range typeStruct.NumFields() {
+					field := typeStruct.Field(i)
+					fieldName := field.Name()
+
+					expectedStr, ok := expected[fieldName]
+					if !ok {
+						continue // skip fields we're not explicitly testing
+					}
+
+					astField := utils.GetAstFieldByNameOrFail(typesPkgFullSyntax, "StructForGetUnderlyingTypeName", fieldName)
+					actualStr := extractor.GetFieldTypeString(astField.Type)
+
+					Expect(actualStr).To(Equal(expectedStr), fmt.Sprintf("Mismatch on field %q", fieldName))
+				}
+			})
+
+			It("Correctly parses variadic function parameters", func() {
+				funcDecl := utils.GetFunctionFromPackageOrFail(typesPkgFullSyntax, "SimpleVariadicFunc")
+				params := funcDecl.Type.Params.List
+				if params == nil || len(params) != 1 {
+					utils.FailWithTestCodeError("Expected test variadic function 'SimpleVariadicFunc' to have exactly one argument")
+				}
+
+				ellipsisExpr := params[0].Type
+				if ellipsisExpr == nil {
+					utils.FailWithTestCodeError("Function argument's type is not an ellipsis expression")
+				}
+
+				Expect(extractor.GetFieldTypeString(ellipsisExpr)).To(Equal("Variadic (...int)"))
+			})
+
+			It("Correctly falls back for unsupported array length expressions", func() {
+				arrayExpr := &ast.ArrayType{
+					Len: &ast.BinaryExpr{
+						X:  &ast.BasicLit{Kind: token.INT, Value: "1"},
+						Op: token.ADD,
+						Y:  &ast.BasicLit{Kind: token.INT, Value: "2"},
+					},
+					Elt: &ast.Ident{Name: "int"},
+				}
+
+				result := extractor.GetFieldTypeString(arrayExpr)
+				Expect(result).To(Equal("[?]int"))
 			})
 		})
 	})

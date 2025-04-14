@@ -13,7 +13,7 @@ import (
 )
 
 var _ = AfterEach(func() {
-	distPath := utils.GetAbsPathByRelative("dist")
+	distPath := utils.GetAbsPathByRelativeOrFail("dist")
 	os.RemoveAll(distPath)
 })
 
@@ -26,7 +26,7 @@ var _ = Describe("Commandline", func() {
 			}
 		}()
 
-		absPath := utils.GetAbsPathByRelative("./gleece.test.config.json")
+		absPath := utils.GetAbsPathByRelativeOrFail("./gleece.test.config.json")
 
 		result := cmd.ExecuteWithArgs([]string{"generate", "spec", "--no-banner", "-c", absPath}, true)
 		Expect(result.Error).To(BeNil())
@@ -50,7 +50,7 @@ var _ = Describe("Commandline", func() {
 			}
 		}()
 
-		absPath := utils.GetAbsPathByRelative("./gleece.test.config.json")
+		absPath := utils.GetAbsPathByRelativeOrFail("./gleece.test.config.json")
 
 		result := cmd.ExecuteWithArgs([]string{"generate", "routes", "--no-banner", "-c", absPath}, true)
 		Expect(result.Error).To(BeNil())
@@ -68,7 +68,7 @@ var _ = Describe("Commandline", func() {
 			}
 		}()
 
-		absPath := utils.GetAbsPathByRelative("./gleece.test.config.json")
+		absPath := utils.GetAbsPathByRelativeOrFail("./gleece.test.config.json")
 
 		result := cmd.ExecuteWithArgs([]string{"generate", "spec-and-routes", "--no-banner", "-c", absPath}, true)
 		Expect(result.Error).To(BeNil())

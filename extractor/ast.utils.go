@@ -405,7 +405,18 @@ func GetFieldTypeString(fieldType ast.Expr) string {
 		return fmt.Sprintf("*%s", GetFieldTypeString(t.X))
 
 	case *ast.ArrayType:
-		return fmt.Sprintf("[]%s", GetFieldTypeString(t.Elt))
+		// This takes care of *slices* like '[]int'
+		if t.Len == nil {
+			return fmt.Sprintf("[]%s", GetFieldTypeString(t.Elt))
+		}
+
+		// This handles fixed-size arrays like '[3]int'
+		if lit, ok := t.Len.(*ast.BasicLit); ok {
+			return fmt.Sprintf("[%s]%s", lit.Value, GetFieldTypeString(t.Elt))
+		}
+
+		// And a fallback for weird edge cases
+		return fmt.Sprintf("[?]%s", GetFieldTypeString(t.Elt))
 
 	case *ast.MapType:
 		return fmt.Sprintf("map[%s]%s", GetFieldTypeString(t.Key), GetFieldTypeString(t.Value))

@@ -1,5 +1,7 @@
 package units
 
+import "go/ast"
+
 type StructA struct {
 }
 
@@ -17,3 +19,21 @@ const (
 type AliasTypeA = string
 
 const ConstA = 1
+
+type IntAlias int
+
+type StructForGetUnderlyingTypeName struct {
+	FieldIntAlias     IntAlias
+	FieldStringPtr    *string
+	FieldIntSlice     []int
+	FieldIntArray     [3]int
+	FieldStringIntMap map[string]int
+	FieldChannelInt   chan int
+	FieldFunc         func()
+	FieldInterface    any
+	FieldStruct       struct{}
+	FieldInt          (int)
+	FieldComment      ast.Comment
+}
+
+func SimpleVariadicFunc(...int) {}
