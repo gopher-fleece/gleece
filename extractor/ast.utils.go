@@ -84,6 +84,7 @@ func GetFullPackageName(file *ast.File, fileSet *token.FileSet) (string, error) 
 
 	absFilePath, err := filepath.Abs(relativePath)
 	if err != nil {
+		// This is nearly impossible to break - filepath.Abs is extremely lenient.
 		return "", err
 	}
 

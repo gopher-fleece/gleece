@@ -37,3 +37,10 @@ type StructForGetUnderlyingTypeName struct {
 }
 
 func SimpleVariadicFunc(...int) {}
+
+func NotAReceiver() {}
+
+type StructWithReceivers struct{}
+
+func (s StructWithReceivers) ValueReceiverForStructWithReceivers()    {}
+func (s *StructWithReceivers) PointerReceiverForStructWithReceivers() {}
