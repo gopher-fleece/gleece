@@ -14,7 +14,7 @@ var metadata []definitions.ControllerMetadata
 var models []definitions.StructMetadata
 
 var _ = BeforeSuite(func() {
-	controllers, flatModels, _ := utils.GetControllersAndModels()
+	controllers, flatModels, _ := utils.GetControllersAndModelsOrFail()
 	metadata = controllers
 	models = flatModels
 })

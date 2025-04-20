@@ -85,6 +85,22 @@ var validHttpStatusCode = map[uint]struct{}{
 	uint(runtime.StatusNetworkAuthenticationRequired): {},
 }
 
+func GetValidHttpVerbs() []string {
+	verbs := make([]string, 0, len(validHttpVerbs))
+	for verb := range validHttpVerbs {
+		verbs = append(verbs, verb)
+	}
+	return verbs
+}
+
+func GetValidHttpStatusCodes() []uint {
+	codes := make([]uint, 0, len(validHttpStatusCode))
+	for code := range validHttpStatusCode {
+		codes = append(codes, code)
+	}
+	return codes
+}
+
 func IsValidHttpVerb(verb string) bool {
 	_, exists := validHttpVerbs[verb]
 	return exists
@@ -102,13 +118,6 @@ func IsValidHttpStatusCode(code uint) bool {
 	return exists
 }
 
-func EnsureHttpStatusCode(code uint) runtime.HttpStatusCode {
-	if IsValidHttpStatusCode(code) {
-		return runtime.HttpStatusCode(code)
-	}
-	panic(fmt.Sprintf("'%d' is not a valid HTTP status code", code))
-}
-
 func ConvertToHttpStatus(code string) (runtime.HttpStatusCode, error) {
 	parsed, err := strconv.ParseUint(code, 10, 32)
 	if err != nil {
@@ -124,7 +133,8 @@ func ConvertToHttpStatus(code string) (runtime.HttpStatusCode, error) {
 
 func PermissionStringToFileMod(permissionString string) (os.FileMode, error) {
 	permission, err := strconv.ParseUint(permissionString, 8, 32)
-	if err != nil || permission&^uint64(os.ModePerm) != 0 {
+	// A proper mask needs to account for sticky/setuid/setgid bitflags
+	if err != nil || permission&^uint64(0o7777) != 0 {
 		return 0, fmt.Errorf("must be a valid UNIX FileMode value")
 	}
 	return os.FileMode(permission), err

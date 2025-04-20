@@ -95,6 +95,7 @@ func (v *ControllerVisitor) init(sourceFileGlobs []string) error {
 
 	packages := MapSet.NewSet[string]()
 
+	// For each glob expression (provided via gleece.config), parse all matching files
 	for _, globExpr := range sourceFileGlobs {
 		sourceFiles, err := doublestar.FilepathGlob(globExpr)
 		if err != nil {
@@ -120,6 +121,8 @@ func (v *ControllerVisitor) init(sourceFileGlobs []string) error {
 	}
 
 	v.packagesFacade = arbitrators.NewPackagesFacade()
+
+	// Eagerly load all packages picked up by the globs
 	err := v.packagesFacade.LoadPackages(packages.ToSlice())
 	if err != nil {
 		return err

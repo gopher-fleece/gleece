@@ -13,7 +13,7 @@ import (
 var metadata []definitions.ControllerMetadata
 
 var _ = BeforeSuite(func() {
-	controllers, _, _ := utils.GetControllersAndModels()
+	controllers, _, _ := utils.GetControllersAndModelsOrFail()
 	metadata = controllers
 })
 
