@@ -35,6 +35,11 @@ func (v ControllerVisitor) isAnErrorEmbeddingType(meta definitions.TypeMetadata)
 		return true, nil
 	}
 
+	// Universe types are leaf nodes and can never embed anything- no reason to check them
+	if meta.IsUniverseType {
+		return false, nil
+	}
+
 	pkg := extractor.FilterPackageByFullName(v.packagesFacade.GetAllPackages(), meta.FullyQualifiedPackage)
 	embeds, err := extractor.DoesStructEmbedType(pkg, meta.Name, "", "error")
 	if err != nil {

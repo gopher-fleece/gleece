@@ -14,18 +14,54 @@ import (
 	"golang.org/x/tools/go/packages"
 )
 
+func GetMetadataByRelativeConfig(relativeConfigPath string) ([]definitions.ControllerMetadata, []definitions.StructMetadata, bool, error) {
+	_, controllers, flatModels, hasStdError, err := cmd.GetConfigAndMetadata(
+		arguments.CliArguments{
+			ConfigPath: constructFullPathOrFail(relativeConfigPath),
+		},
+	)
+
+	modelsList := []definitions.StructMetadata{}
+	if flatModels != nil && len(flatModels.Structs) > 0 {
+		modelsList = flatModels.Structs
+	}
+
+	return controllers, modelsList, hasStdError, err
+}
+
+func GetMetadataByRelativeConfigOrFail(relativeConfigPath string) ([]definitions.ControllerMetadata, []definitions.StructMetadata, bool) {
+
+	controllers, modelsList, hasStdError, generationErr := GetMetadataByRelativeConfig(relativeConfigPath)
+
+	if generationErr != nil {
+		Fail(fmt.Sprintf("Could not generate routes - %v", generationErr))
+	}
+	return controllers, modelsList, hasStdError
+}
+
 func GetControllersAndModelsOrFail() ([]definitions.ControllerMetadata, []definitions.StructMetadata, bool) {
+	return GetMetadataByRelativeConfigOrFail("gleece.test.config.json")
+}
+
+func constructFullPathOrFail(relativePath string) string {
 	cwd, err := os.Getwd()
 	if err != nil {
 		Fail(fmt.Sprintf("Could not determine process working directory - %v", err))
 	}
 
-	configPath := filepath.Join(cwd, "gleece.test.config.json")
-	_, controllers, flatModels, hasStdError, err := cmd.GetConfigAndMetadata(arguments.CliArguments{ConfigPath: configPath})
-	if err != nil {
-		Fail(fmt.Sprintf("Could not generate routes - %v", err))
+	fullPath := filepath.Join(cwd, relativePath)
+	if !FileOrFolderExists(fullPath) {
+		Fail(fmt.Sprintf("Path %s does not exist", fullPath))
 	}
-	return controllers, flatModels.Structs, hasStdError
+
+	return fullPath
+}
+
+func FileOrFolderExists(fullPath string) bool {
+	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
+		return false
+	}
+	return true
 }
 
 func GetAbsPathByRelativeOrFail(relativePath string) string {
