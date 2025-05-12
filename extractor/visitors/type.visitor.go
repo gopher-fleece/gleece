@@ -94,26 +94,23 @@ func (v *TypeVisitor) VisitStruct(fullPackageName string, structName string, str
 		case *types.Pointer:
 			// Raise error for pointer fields.
 			return fmt.Errorf("field %q in struct %q is a pointer, which is not allowed", field.Name(), structName)
-		case *types.Slice:
+
+		case *types.Slice, *types.Array:
 			// Go's rigid typing makes reuse pretty difficult...
+			iterable, ok := t.(definitions.Iterable)
+			if !ok {
+				return fmt.Errorf("expected slice or array to implement Iterable, got %T", t)
+			}
 
 			// Field type string is for the parent model's metadata
 			fieldTypeString = extractor.GetIterableElementType(t)
 
 			// Dive into the slice and recurse into nested structs, if required
-			err := v.processIterableField(field, t, fieldTypeString, &structInfo, tag)
+			err := v.processIterableField(field, iterable, fieldTypeString, &structInfo, tag)
 			if err != nil {
 				return err
 			}
-		case *types.Array:
-			// Field type string is for the parent model's metadata
-			fieldTypeString = extractor.GetIterableElementType(t)
 
-			// Dive into the slice and recurse into nested structs, if required
-			err := v.processIterableField(field, t, fieldTypeString, &structInfo, tag)
-			if err != nil {
-				return err
-			}
 		case *types.Named:
 			isEnumOrAlias, err := v.processNamedEntity(t, &structInfo, tag)
 			if err != nil {
@@ -125,6 +122,7 @@ func (v *TypeVisitor) VisitStruct(fullPackageName string, structName string, str
 			}
 			// Add the field as a reference to another struct.
 			fieldTypeString = t.Obj().Name()
+
 		default:
 			// Primitive field
 			fieldTypeString = fieldType.String()
