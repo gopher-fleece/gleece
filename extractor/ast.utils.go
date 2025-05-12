@@ -371,6 +371,11 @@ func GetEntityKindFromTypeName(typeName *types.TypeName) (definitions.AstNodeKin
 	return definitions.AstNodeKindUnknown, nil
 }
 
+func IsBasic(t types.Type) bool {
+	_, ok := t.(*types.Basic)
+	return ok
+}
+
 func GetUnderlyingTypeName(t types.Type) string {
 	switch underlying := t.(type) {
 	case *types.Basic:
@@ -486,4 +491,28 @@ func GetIterableElementType(iterable types.Type) string {
 	// For arrays of primitive types
 	return iterable.String() // <<< CHECK THIS WORKS!
 
+}
+
+// FindNamedTypePackage returns the *types.Package where the first underlying *types.Named is defined.
+// Returns nil if no such package is found (e.g. built-in types, unnamed structs, etc).
+func GetPackageOwnerOfType(t types.Type) *types.Package {
+	for {
+		switch underlyingType := t.(type) {
+		case *types.Slice:
+			t = underlyingType.Elem()
+		case *types.Array:
+			t = underlyingType.Elem()
+		case *types.Pointer:
+			t = underlyingType.Elem()
+		case *types.Named:
+			obj := underlyingType.Obj()
+			if obj != nil {
+				return obj.Pkg()
+			}
+			return nil
+		default:
+			// No deeper types to drill into; give up
+			return nil
+		}
+	}
 }

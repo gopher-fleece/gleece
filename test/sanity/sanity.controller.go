@@ -1,6 +1,7 @@
 package sanity_test
 
 import (
+	"github.com/gopher-fleece/gleece/test/units"
 	"github.com/gopher-fleece/runtime"
 )
 
@@ -33,4 +34,11 @@ func (ec *SanityController) ValidMethodWithSimpleRouteQueryAndHeaderParameters(
 	headerParam float32,
 ) (SimpleResponseModel, error) {
 	return SimpleResponseModel{}, nil
+}
+
+// @Method(POST)
+// @Route(/imports-from-other-package)
+// @Body(body)
+func (ec *SanityController) ImportsTypeFromOtherPackage(body []units.StructWithStructSlice) error {
+	return nil
 }
