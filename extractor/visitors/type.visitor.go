@@ -95,6 +95,16 @@ func (v *TypeVisitor) VisitStruct(fullPackageName string, structName string, str
 			// Raise error for pointer fields.
 			return fmt.Errorf("field %q in struct %q is a pointer, which is not allowed", field.Name(), structName)
 		case *types.Slice:
+			// Go's rigid typing makes reuse pretty difficult...
+
+			// Field type string is for the parent model's metadata
+			fieldTypeString = extractor.GetIterableElementType(t)
+
+			// Dive into the slice and recurse into nested structs, if required
+			err := v.processIterableField(field, t, fieldTypeString, &structInfo, tag)
+			if err != nil {
+				return err
+			}
 		case *types.Array:
 			// Field type string is for the parent model's metadata
 			fieldTypeString = extractor.GetIterableElementType(t)
