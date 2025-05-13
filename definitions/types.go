@@ -265,6 +265,33 @@ type FieldMetadata struct {
 	Deprecation *DeprecationOptions
 }
 
+// HttpAuthScheme defines valid authentication schemes for HTTP type security in OpenAPI 3.0.
+// These values must be registered in the IANA Authentication Scheme registry.
+type HttpAuthScheme string
+
+const (
+	// HttpAuthSchemeBasic Basic authentication
+	HttpAuthSchemeBasic HttpAuthScheme = "basic"
+	// HttpAuthSchemeBearer Bearer token authentication (commonly used with JWT)
+	HttpAuthSchemeBearer HttpAuthScheme = "bearer"
+	// HttpAuthSchemeDigest Digest authentication
+	HttpAuthSchemeDigest HttpAuthScheme = "digest"
+	// HttpAuthSchemeHoba HTTP Origin-Bound Authentication
+	HttpAuthSchemeHoba HttpAuthScheme = "hoba"
+	// HttpAuthSchemeMutual Mutual TLS authentication
+	HttpAuthSchemeMutual HttpAuthScheme = "mutual"
+	// HttpAuthSchemeNegotiate SPNEGO/Negotiate authentication
+	HttpAuthSchemeNegotiate HttpAuthScheme = "negotiate"
+	// HttpAuthSchemeOauth OAuth authentication
+	HttpAuthSchemeOauth HttpAuthScheme = "oauth"
+	// HttpAuthSchemeScramSha1 SCRAM-SHA-1 authentication
+	HttpAuthSchemeScramSha1 HttpAuthScheme = "scram-sha-1"
+	// HttpAuthSchemeScramSha256 SCRAM-SHA-256 authentication
+	HttpAuthSchemeScramSha256 HttpAuthScheme = "scram-sha-256"
+	// HttpAuthSchemeVapid Voluntary Application Server Identification
+	HttpAuthSchemeVapid HttpAuthScheme = "vapid"
+)
+
 type SecuritySchemeType string
 
 const (
@@ -286,12 +313,32 @@ type SpecGeneratorConfig struct {
 	OutputPath string `json:"outputPath" validate:"required"`
 }
 
+type OAuthFlow struct {
+	Extensions       map[string]any    `json:"-" yaml:"-"`
+	AuthorizationURL string            `json:"authorizationUrl,omitempty" yaml:"authorizationUrl,omitempty"`
+	TokenURL         string            `json:"tokenUrl,omitempty" yaml:"tokenUrl,omitempty"`
+	RefreshURL       string            `json:"refreshUrl,omitempty" yaml:"refreshUrl,omitempty"`
+	Scopes           map[string]string `json:"scopes" yaml:"scopes"` // required
+}
+
+type OAuthFlows struct {
+	Extensions map[string]any `json:"-" yaml:"-"`
+
+	Implicit          *OAuthFlow `json:"implicit,omitempty" yaml:"implicit,omitempty"`
+	Password          *OAuthFlow `json:"password,omitempty" yaml:"password,omitempty"`
+	ClientCredentials *OAuthFlow `json:"clientCredentials,omitempty" yaml:"clientCredentials,omitempty"`
+	AuthorizationCode *OAuthFlow `json:"authorizationCode,omitempty" yaml:"authorizationCode,omitempty"`
+}
+
 type SecuritySchemeConfig struct {
-	Description  string             `json:"description" validate:"required"`
-	SecurityName string             `json:"name" validate:"required,starts_with_letter"`
-	FieldName    string             `json:"fieldName" validate:"required,starts_with_letter"`
-	Type         SecuritySchemeType `json:"type" validate:"required,security_schema_type"` // see SecuritySchemeType
-	In           SecuritySchemeIn   `json:"in" validate:"required,security_schema_in"`     // see SecuritySchemeIn
+	Description      string             `json:"description" validate:"required"`
+	SecurityName     string             `json:"name" validate:"required,starts_with_letter"`
+	Scheme           HttpAuthScheme     `json:"scheme" validate:"omitempty,oneof=basic bearer digest hoba mutual negotiate oauth scram-sha-1 scram-sha-256 vapid"`
+	Flows            *OAuthFlows        `json:"flows"`
+	FieldName        string             `json:"fieldName" validate:"required,starts_with_letter"`
+	Type             SecuritySchemeType `json:"type" validate:"required,security_schema_type"` // see SecuritySchemeType
+	In               SecuritySchemeIn   `json:"in" validate:"required,security_schema_in"`     // see SecuritySchemeIn
+	OpenIdConnectUrl string             `json:"openIdConnectUrl" validate:"omitempty,url"`
 }
 
 type OpenAPIContact struct {
