@@ -487,6 +487,10 @@ var _ = Describe("Annotation Validator", func() {
 		It("Should reject duplicate values between Path and Query annotations", func() {
 			attrs := []annotations.Attribute{
 				{
+					Name:  "Route",
+					Value: "/users/{userId}",
+				},
+				{
 					Name:  "Path",
 					Value: "userId",
 				},
@@ -555,6 +559,10 @@ var _ = Describe("Annotation Validator", func() {
 		It("Should reject duplicate values across multiple annotation types", func() {
 			attrs := []annotations.Attribute{
 				{
+					Name:  "Route",
+					Value: "/api/v1/users/{id}",
+				},
+				{
 					Name:  "Method",
 					Value: "POST",
 				},
@@ -580,6 +588,10 @@ var _ = Describe("Annotation Validator", func() {
 		It("Should allow duplicate values for annotations that don't require uniqueness", func() {
 			attrs := []annotations.Attribute{
 				{
+					Name:  "Route",
+					Value: "/api/v1/users/{userId}",
+				},
+				{
 					Name:  "Method",
 					Value: "GET",
 				},
@@ -603,6 +615,10 @@ var _ = Describe("Annotation Validator", func() {
 
 		It("Should allow unique values for all annotations requiring uniqueness", func() {
 			attrs := []annotations.Attribute{
+				{
+					Name:  "Route",
+					Value: "/api/v1/users/{userId}",
+				},
 				{
 					Name:  "Path",
 					Value: "userId",
@@ -643,6 +659,141 @@ var _ = Describe("Annotation Validator", func() {
 			Expect(err).To(HaveOccurred())
 			// But not due to duplicates
 			Expect(err.Error()).NotTo(ContainSubstring("duplicate value"))
+		})
+	})
+
+	Context("When validating Path annotations with Route URLs", func() {
+		It("Should validate Path annotation that exists in Route URL", func() {
+			attrs := []annotations.Attribute{
+				{
+					Name:  "Route",
+					Value: "/users/{userId}",
+				},
+				{
+					Name:  "Path",
+					Value: "userId",
+				},
+			}
+
+			err := annotations.IsValidAnnotationCollection(attrs, "route")
+			Expect(err).To(BeNil())
+		})
+
+		It("Should reject Path annotation not found in Route URL", func() {
+			attrs := []annotations.Attribute{
+				{
+					Name:  "Route",
+					Value: "/users/list",
+				},
+				{
+					Name:  "Path",
+					Value: "userId",
+				},
+			}
+
+			err := annotations.IsValidAnnotationCollection(attrs, "route")
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("annotation @Path with name 'userId' is not found in the route URL"))
+		})
+
+		It("Should validate Path annotation using name property instead of value", func() {
+			attrs := []annotations.Attribute{
+				{
+					Name:  "Route",
+					Value: "/users/{id}",
+				},
+				{
+					Name:  "Path",
+					Value: "userId",
+					Properties: map[string]any{
+						"name": "id",
+					},
+				},
+			}
+
+			err := annotations.IsValidAnnotationCollection(attrs, "route")
+			Expect(err).To(BeNil())
+		})
+
+		It("Should reject Path annotation with name property not found in Route URL", func() {
+			attrs := []annotations.Attribute{
+				{
+					Name:  "Route",
+					Value: "/users/{userId}",
+				},
+				{
+					Name:  "Path",
+					Value: "userId",
+					Properties: map[string]any{
+						"name": "id",
+					},
+				},
+			}
+
+			err := annotations.IsValidAnnotationCollection(attrs, "route")
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("annotation @Path with name 'id' is not found in the route URL"))
+		})
+
+		It("Should validate Path annotation with complex Route URL", func() {
+			attrs := []annotations.Attribute{
+				{
+					Name:  "Route",
+					Value: "/users/{userId}/posts/{postId}",
+				},
+				{
+					Name:  "Path",
+					Value: "userId",
+				},
+				{
+					Name:  "Path",
+					Value: "postId",
+				},
+			}
+
+			err := annotations.IsValidAnnotationCollection(attrs, "route")
+			Expect(err).To(BeNil())
+		})
+
+		It("Should validate Path annotation in a collection with multiple annotations", func() {
+			attrs := []annotations.Attribute{
+				{
+					Name:  "Method",
+					Value: "GET",
+				},
+				{
+					Name:  "Route",
+					Value: "/api/v1/users/{userId}",
+				},
+				{
+					Name:  "Path",
+					Value: "userId",
+				},
+				{
+					Name:  "Response",
+					Value: "200",
+				},
+			}
+
+			err := annotations.IsValidAnnotationCollection(attrs, "route")
+			Expect(err).To(BeNil())
+		})
+
+		It("Should reject when no Route annotation is provided with Path annotation", func() {
+			attrs := []annotations.Attribute{
+				{
+					Name:  "Method",
+					Value: "GET",
+				},
+				{
+					Name:  "Path",
+					Value: "userId",
+				},
+			}
+
+			err := annotations.IsValidAnnotationCollection(attrs, "route")
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("annotation @Path with name 'userId' is not found in the route URL"))
 		})
 	})
 })
