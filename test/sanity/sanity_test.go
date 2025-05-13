@@ -27,7 +27,7 @@ var _ = Describe("Sanity Controller", func() {
 		Expect(metadata).ToNot(BeNil())
 		Expect(metadata).To(HaveLen(1))
 		Expect(models).ToNot(BeNil())
-		Expect(models).To(HaveLen(1))
+		Expect(models).To(HaveLen(3))
 		Expect(schemaShouldHaveStdErrorSanity).To(BeTrue())
 	})
 
@@ -39,7 +39,7 @@ var _ = Describe("Sanity Controller", func() {
 		Expect(controllerMeta.Tag).To(Equal("Sanity Controller Tag"))
 		Expect(controllerMeta.RestMetadata.Path).To(Equal("/test/sanity"))
 		Expect(controllerMeta.Description).To(Equal("Sanity Controller"))
-		Expect(controllerMeta.Routes).To(HaveLen(1))
+		Expect(controllerMeta.Routes).To(HaveLen(2))
 		Expect(controllerMeta.Security).To(HaveLen(1))
 		Expect(controllerMeta.Security[0].SecurityAnnotation).To(HaveLen(1))
 		Expect(controllerMeta.Security[0].SecurityAnnotation[0].SchemaName).To(Equal("sanitySchema"))
@@ -154,18 +154,61 @@ var _ = Describe("Sanity Controller", func() {
 	})
 
 	It("Produces correct models list", func() {
-		Expect(models[0].Name).To(Equal("SimpleResponseModel"))
-		Expect(models[0].FullyQualifiedPackage).To(Equal("github.com/gopher-fleece/gleece/test/sanity"))
-		Expect(models[0].Description).To(Equal("This should be the actual description"))
-		Expect(models[0].Fields).To(HaveLen(1))
-		Expect(models[0].Fields[0].Name).To(Equal("SomeValue"))
-		Expect(models[0].Fields[0].Type).To(Equal("int"))
-		Expect(models[0].Fields[0].Description).To(Equal("A description for the value"))
-		Expect(models[0].Fields[0].Tag).To(Equal("validate:\"required,min=0,max=10\""))
-		Expect(models[0].Fields[0].Deprecation.Deprecated).To(BeFalse())
-		Expect(models[0].Fields[0].Deprecation.Description).To(Equal(""))
-		Expect(models[0].Deprecation.Deprecated).To(BeFalse())
-		Expect(models[0].Deprecation.Description).To(Equal(""))
+		// Model 1
+		model1 := models[0]
+		Expect(model1.Name).To(Equal("SimpleResponseModel"))
+		Expect(model1.FullyQualifiedPackage).To(Equal("github.com/gopher-fleece/gleece/test/sanity"))
+		Expect(model1.Description).To(Equal("This should be the actual description"))
+		Expect(model1.Fields).To(HaveLen(1))
+		Expect(model1.Fields[0].Name).To(Equal("SomeValue"))
+		Expect(model1.Fields[0].Type).To(Equal("int"))
+		Expect(model1.Fields[0].Description).To(Equal("A description for the value"))
+		Expect(model1.Fields[0].Tag).To(Equal("validate:\"required,min=0,max=10\""))
+		Expect(model1.Fields[0].Deprecation.Deprecated).To(BeFalse())
+		Expect(model1.Fields[0].Deprecation.Description).To(Equal(""))
+		Expect(model1.Deprecation.Deprecated).To(BeFalse())
+		Expect(model1.Deprecation.Description).To(Equal(""))
+
+		// Model 2
+		model2 := models[1]
+		Expect(model2.Name).To(Equal("SimpleStruct"))
+		Expect(model2.FullyQualifiedPackage).To(Equal("github.com/gopher-fleece/gleece/test/units"))
+		Expect(model2.Description).To(BeEmpty())
+
+		Expect(model2.Fields).To(HaveLen(2))
+		Expect(model2.Fields[0].Name).To(Equal("FieldA"))
+		Expect(model2.Fields[0].Type).To(Equal("string"))
+		Expect(model2.Fields[0].Description).To(BeEmpty())
+		Expect(model2.Fields[0].Tag).To(BeEmpty())
+		Expect(model2.Fields[0].Deprecation.Deprecated).To(BeFalse())
+		Expect(model2.Fields[0].Deprecation.Description).To(Equal(""))
+
+		Expect(model2.Fields[1].Name).To(Equal("FieldB"))
+		Expect(model2.Fields[1].Type).To(Equal("int"))
+		Expect(model2.Fields[1].Description).To(BeEmpty())
+		Expect(model2.Fields[1].Tag).To(BeEmpty())
+		Expect(model2.Fields[1].Deprecation.Deprecated).To(BeFalse())
+		Expect(model2.Fields[1].Deprecation.Description).To(Equal(""))
+
+		Expect(model2.Deprecation.Deprecated).To(BeFalse())
+		Expect(model2.Deprecation.Description).To(Equal(""))
+
+		// Model 3
+		model3 := models[2]
+		Expect(model3.Name).To(Equal("StructWithStructSlice"))
+		Expect(model3.FullyQualifiedPackage).To(Equal("github.com/gopher-fleece/gleece/test/units"))
+		Expect(model3.Description).To(BeEmpty())
+
+		Expect(model3.Fields).To(HaveLen(1))
+		Expect(model3.Fields[0].Name).To(Equal("SimpleStructSlice"))
+		Expect(model3.Fields[0].Type).To(Equal("[]SimpleStruct"))
+		Expect(model3.Fields[0].Description).To(BeEmpty())
+		Expect(model3.Fields[0].Tag).To(BeEmpty())
+		Expect(model3.Fields[0].Deprecation.Deprecated).To(BeFalse())
+		Expect(model3.Fields[0].Deprecation.Description).To(Equal(""))
+
+		Expect(model3.Deprecation.Deprecated).To(BeFalse())
+		Expect(model3.Deprecation.Description).To(Equal(""))
 	})
 })
 

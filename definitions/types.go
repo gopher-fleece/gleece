@@ -1,6 +1,8 @@
 package definitions
 
 import (
+	"go/types"
+
 	"github.com/gopher-fleece/runtime"
 )
 
@@ -381,3 +383,9 @@ const (
 	AstNodeKindParenthesis AstNodeKind = "Parenthesis"
 	AstNodeKindAlias       AstNodeKind = "Alias"
 )
+
+type Iterable interface {
+	Elem() types.Type
+	Underlying() types.Type
+	String() string
+}

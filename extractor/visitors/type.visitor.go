@@ -94,11 +94,23 @@ func (v *TypeVisitor) VisitStruct(fullPackageName string, structName string, str
 		case *types.Pointer:
 			// Raise error for pointer fields.
 			return fmt.Errorf("field %q in struct %q is a pointer, which is not allowed", field.Name(), structName)
-		case *types.Array, *types.Slice:
-			// For iterables, get the underlying field type.
-			//
-			// NOTE: Need to verify this works for complex array types
+
+		case *types.Slice, *types.Array:
+			// Go's rigid typing makes reuse pretty difficult...
+			iterable, ok := t.(definitions.Iterable)
+			if !ok {
+				return fmt.Errorf("expected slice or array to implement Iterable, got %T", t)
+			}
+
+			// Field type string is for the parent model's metadata
 			fieldTypeString = extractor.GetIterableElementType(t)
+
+			// Dive into the slice and recurse into nested structs, if required
+			err := v.processIterableField(field, iterable, fieldTypeString, &structInfo, tag)
+			if err != nil {
+				return err
+			}
+
 		case *types.Named:
 			isEnumOrAlias, err := v.processNamedEntity(t, &structInfo, tag)
 			if err != nil {
@@ -110,6 +122,7 @@ func (v *TypeVisitor) VisitStruct(fullPackageName string, structName string, str
 			}
 			// Add the field as a reference to another struct.
 			fieldTypeString = t.Obj().Name()
+
 		default:
 			// Primitive field
 			fieldTypeString = fieldType.String()
@@ -127,12 +140,56 @@ func (v *TypeVisitor) VisitStruct(fullPackageName string, structName string, str
 			fieldMeta.Description = fieldAttr.GetDescription()
 			deprecationOpts := getDeprecationOpts(*fieldAttr)
 			fieldMeta.Deprecation = &deprecationOpts
+		} else {
+			fieldMeta.Deprecation = &definitions.DeprecationOptions{}
 		}
 
 		structInfo.Fields = append(structInfo.Fields, fieldMeta)
 	}
 
 	v.structsByName[fullStructName] = &structInfo
+	return nil
+}
+
+func (v *TypeVisitor) processIterableField(
+	field *types.Var,
+	fieldType definitions.Iterable,
+	sliceElementTypeNameString string,
+	structInfo *definitions.StructMetadata,
+	fieldTag string,
+) error {
+	if extractor.IsBasic(fieldType) {
+		return nil
+	}
+
+	pkg := extractor.GetPackageOwnerOfType(fieldType)
+	if pkg == nil {
+		baseTypeName := sliceElementTypeNameString
+		if strings.HasPrefix(sliceElementTypeNameString, "[]") {
+			baseTypeName = sliceElementTypeNameString[2:]
+		}
+
+		if extractor.IsUniverseType(baseTypeName) {
+			// If there's no owner package, this might be a universe type. If so, just ignore it
+			return nil
+		}
+
+		// Otherwise, we've a problem.
+		return fmt.Errorf(
+			"could not deduce package for the type of field %s of type %s on struct %s",
+			field.Name(),
+			sliceElementTypeNameString,
+			structInfo.Name,
+		)
+	}
+
+	if named, ok := fieldType.Elem().(*types.Named); ok {
+		_, err := v.processNamedEntity(named, structInfo, fieldTag)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

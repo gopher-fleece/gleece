@@ -142,9 +142,21 @@ func (v *ControllerVisitor) GetModelsFlat() (*definitions.Models, bool, error) {
 		}
 	}
 
+	structs := typeVisitor.GetStructs()
+	enums := typeVisitor.GetEnums()
+
+	slices.SortFunc(structs, func(a, b definitions.StructMetadata) int {
+		return strings.Compare(a.Name, b.Name)
+	})
+
+	slices.SortFunc(enums, func(a, b definitions.EnumMetadata) int {
+		return strings.Compare(a.Name, b.Name)
+	})
+
 	flatModels := &definitions.Models{
-		Structs: typeVisitor.GetStructs(),
-		Enums:   typeVisitor.GetEnums(),
+		Structs: structs,
+		Enums:   enums,
 	}
+
 	return flatModels, hasAnyErrorTypes, nil
 }

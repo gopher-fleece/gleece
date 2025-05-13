@@ -44,3 +44,12 @@ type StructWithReceivers struct{}
 
 func (s StructWithReceivers) ValueReceiverForStructWithReceivers()    {}
 func (s *StructWithReceivers) PointerReceiverForStructWithReceivers() {}
+
+type SimpleStruct struct {
+	FieldA string
+	FieldB int
+}
+
+type StructWithStructSlice struct {
+	SimpleStructSlice []SimpleStruct
+}
