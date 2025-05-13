@@ -243,6 +243,30 @@ func (v *Validator) ValidateAnnotationCollection(attrs []Attribute, commentSourc
 			// Mark this value as used by this annotation type
 			uniqueValues[attr.Value] = attr.Name
 		}
+
+		// Make sure Path annotations are used with Route URL
+		if attr.Name == AttributePath {
+			matchingURLPath := false
+			pathName := attr.Value
+			nameProp := attr.GetProperty(PropertyName)
+			if nameProp != nil {
+				if nameStr, ok := (*nameProp).(string); ok {
+					pathName = nameStr
+				}
+			}
+			expectedContains := fmt.Sprintf("{%s}", pathName)
+			for _, otherAttr := range attrs {
+				if otherAttr.Name == AttributeRoute && strings.Contains(otherAttr.Value, expectedContains) {
+					matchingURLPath = true
+					break
+				}
+			}
+
+			if !matchingURLPath {
+				return fmt.Errorf("annotation @%s with name '%s' is not found in the route URL", attr.Name, pathName)
+			}
+		}
+
 	}
 
 	return nil
