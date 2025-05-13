@@ -12,6 +12,7 @@ import (
 	"golang.org/x/tools/go/packages"
 )
 
+// IsFuncDeclReceiverForStruct determines if the given FuncDecl is a receiver for a struct with the given name
 func IsFuncDeclReceiverForStruct(structName string, funcDecl *ast.FuncDecl) bool {
 	if funcDecl.Recv == nil || len(funcDecl.Recv.List) <= 0 {
 		return false
@@ -27,22 +28,29 @@ func IsFuncDeclReceiverForStruct(structName string, funcDecl *ast.FuncDecl) bool
 	}
 }
 
+// DoesStructEmbedStruct tests the given structToCheck in the *ast.File `sourceFile`
+// to determine whether it embeds struct `embeddedStructName` from package `embeddedStructFullPackageName`
 func DoesStructEmbedStruct(
 	sourceFile *ast.File,
-	structFullPackageName string,
-	structNode *ast.StructType,
+	structToCheck *ast.StructType,
+	embeddedStructFullPackageName string,
 	embeddedStructName string,
 ) bool {
 	aliasedImports := GetImportAliases(sourceFile)
 
 	// Iterate over the struct fields to check for embeds
-	for _, field := range structNode.Fields.List {
+	for _, field := range structToCheck.Fields.List {
 		switch fieldType := field.Type.(type) {
 		case *ast.Ident:
-			// If the type is just an Ident (simple struct type), check the name
+			// If the type is just an Ident (simple struct type), check the name.
 			if fieldType.Name == embeddedStructName {
+				// IMPORTANT NOTE:
+				// Believe there's an edge case here where detection may fail if both structs in from the same package.
+				// This is not relevant to the standard use-case but we'll need to verify
+				//
+				//
 				// If it's an Ident, check if it's a dot import or a direct match
-				if isDotImported, _ := IsPackageDotImported(sourceFile, structFullPackageName); isDotImported {
+				if isDotImported, _ := IsPackageDotImported(sourceFile, embeddedStructFullPackageName); isDotImported {
 					return true
 				}
 			}
@@ -51,7 +59,7 @@ func DoesStructEmbedStruct(
 			if ident, ok := fieldType.X.(*ast.Ident); ok {
 				// Compare the package name and struct name
 				sourcePackage := aliasedImports[ident.Name]
-				isCorrectPackage := sourcePackage == structFullPackageName || IsAliasDefault(structFullPackageName, ident.Name)
+				isCorrectPackage := sourcePackage == embeddedStructFullPackageName || IsAliasDefault(embeddedStructFullPackageName, ident.Name)
 				if isCorrectPackage && fieldType.Sel.Name == embeddedStructName {
 					return true
 				}
@@ -61,6 +69,7 @@ func DoesStructEmbedStruct(
 	return false
 }
 
+// GetDefaultPackageAlias returns the default import alias for the given file
 func GetDefaultPackageAlias(file *ast.File) (string, error) {
 	if file.Name != nil {
 		return GetDefaultAlias(file.Name.Name), nil
@@ -75,6 +84,7 @@ func GetFullPackageName(file *ast.File, fileSet *token.FileSet) (string, error) 
 
 	absFilePath, err := filepath.Abs(relativePath)
 	if err != nil {
+		// This is nearly impossible to break - filepath.Abs is extremely lenient.
 		return "", err
 	}
 
@@ -311,16 +321,35 @@ func LookupTypeName(pkg *packages.Package, name string) (*types.TypeName, error)
 	return typeName, nil
 }
 
-func GetEntityKind(pkg *packages.Package, name string) (definitions.AstNodeKind, error) {
+func GetTypeNameOrError(pkg *packages.Package, name string) (*types.TypeName, error) {
 	typeName, err := LookupTypeName(pkg, name)
+	if err != nil {
+		return nil, err
+	}
+
+	if typeName == nil {
+		return nil, fmt.Errorf("type '%s' was not found in package '%s'", name, pkg.Name)
+	}
+
+	if typeName.Type() == nil {
+		// This failure is pretty much impossible to trigger without some black magic.
+		// Even NeedTypes populates the type information and, if something was missing, it would've been caught by LookupTypeName
+		return nil, fmt.Errorf("type '%s.%s' does not have Type() information", pkg.Name, name)
+	}
+
+	return typeName, nil
+}
+
+func GetEntityKind(pkg *packages.Package, name string) (definitions.AstNodeKind, error) {
+	typeName, err := GetTypeNameOrError(pkg, name)
 	if err != nil {
 		return definitions.AstNodeKindNone, err
 	}
 
-	if typeName == nil {
-		return definitions.AstNodeKindUnknown, fmt.Errorf("type '%s' was not found in package %s", name, pkg.Name)
-	}
+	return GetEntityKindFromTypeName(typeName)
+}
 
+func GetEntityKindFromTypeName(typeName *types.TypeName) (definitions.AstNodeKind, error) {
 	if _, isStruct := typeName.Type().Underlying().(*types.Struct); isStruct {
 		return definitions.AstNodeKindStruct, nil
 	}
@@ -377,7 +406,18 @@ func GetFieldTypeString(fieldType ast.Expr) string {
 		return fmt.Sprintf("*%s", GetFieldTypeString(t.X))
 
 	case *ast.ArrayType:
-		return fmt.Sprintf("[]%s", GetFieldTypeString(t.Elt))
+		// This takes care of *slices* like '[]int'
+		if t.Len == nil {
+			return fmt.Sprintf("[]%s", GetFieldTypeString(t.Elt))
+		}
+
+		// This handles fixed-size arrays like '[3]int'
+		if lit, ok := t.Len.(*ast.BasicLit); ok {
+			return fmt.Sprintf("[%s]%s", lit.Value, GetFieldTypeString(t.Elt))
+		}
+
+		// And a fallback for weird edge cases
+		return fmt.Sprintf("[?]%s", GetFieldTypeString(t.Elt))
 
 	case *ast.MapType:
 		return fmt.Sprintf("map[%s]%s", GetFieldTypeString(t.Key), GetFieldTypeString(t.Value))
@@ -410,35 +450,6 @@ func GetFieldTypeString(fieldType ast.Expr) string {
 
 	default:
 		return fmt.Sprintf("Unknown type (%T)", fieldType)
-	}
-}
-
-func GetNodeKind(fieldType ast.Expr) definitions.AstNodeKind {
-	switch fieldType.(type) {
-	case *ast.Ident:
-		return definitions.AstNodeKindIdent
-	case *ast.SelectorExpr:
-		return definitions.AstNodeKindSelector
-	case *ast.StarExpr:
-		return definitions.AstNodeKindPointer
-	case *ast.ArrayType:
-		return definitions.AstNodeKindArray
-	case *ast.MapType:
-		return definitions.AstNodeKindMap
-	case *ast.ChanType:
-		return definitions.AstNodeKindChannel
-	case *ast.FuncType:
-		return definitions.AstNodeKindFunction
-	case *ast.InterfaceType:
-		return definitions.AstNodeKindInterface
-	case *ast.StructType:
-		return definitions.AstNodeKindStruct
-	case *ast.Ellipsis:
-		return definitions.AstNodeKindVariadic
-	case *ast.ParenExpr:
-		return definitions.AstNodeKindParenthesis
-	default:
-		return definitions.AstNodeKindUnknown
 	}
 }
 

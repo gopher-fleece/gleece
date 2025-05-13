@@ -1,6 +1,8 @@
 package arbitrators
 
 import (
+	"go/types"
+
 	"golang.org/x/tools/go/packages"
 )
 
@@ -103,4 +105,29 @@ func (facade *PackagesFacade) EvictCache() {
 	for k := range facade.packagesCache {
 		delete(facade.packagesCache, k)
 	}
+}
+
+func (facade *PackagesFacade) GetPackageNameByNamedEntity(namedEntity *types.Named) (string, error) {
+	pkg := namedEntity.Obj().Pkg()
+	if pkg == nil {
+		return "", nil // Built-in types, unnamed types, etc.
+	}
+
+	// Find the package where the struct is defined
+	pkgPath := pkg.Path()
+	targetPkg, err := facade.GetPackage(pkgPath)
+	if err != nil {
+		return "", err // Package not found in loaded AST
+	}
+
+	return targetPkg.PkgPath, nil
+}
+
+func (facade *PackagesFacade) GetPackageByTypeName(typeName *types.TypeName) (*packages.Package, error) {
+	pkg := typeName.Pkg()
+	if pkg == nil {
+		return nil, nil // Built-in types, unnamed types, etc.
+	}
+
+	return facade.GetPackage(pkg.Path())
 }

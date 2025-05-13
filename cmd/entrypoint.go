@@ -16,6 +16,7 @@ import (
 	"github.com/titanous/json5"
 )
 
+// getConfig gets the currently relevant Gleece Config file
 func getConfig(configPath string) (*definitions.GleeceConfig, error) {
 
 	// Read the JSON file

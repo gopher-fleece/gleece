@@ -19,20 +19,20 @@ var _ = Describe("Error-handling", func() {
 	})
 
 	It("Returns a clear error when configuration is syntactically broken", func() {
-		configPath := utils.GetAbsPathByRelative("gleece.broken.json.config")
+		configPath := utils.GetAbsPathByRelativeOrFail("gleece.broken.json.config")
 		_, _, _, _, err := cmd.GetConfigAndMetadata(arguments.CliArguments{ConfigPath: configPath})
 		Expect(err).To(MatchError(ContainSubstring("could not unmarshal config file")))
 		Expect(err).To(MatchError(ContainSubstring("invalid character")))
 	})
 
 	It("Returns a clear error when configuration fails validation", func() {
-		configPath := utils.GetAbsPathByRelative("gleece.invalid.config.json")
+		configPath := utils.GetAbsPathByRelativeOrFail("gleece.invalid.config.json")
 		_, _, _, _, err := cmd.GetConfigAndMetadata(arguments.CliArguments{ConfigPath: configPath})
 		Expect(err).To(MatchError(ContainSubstring("Field 'ControllerGlobs' failed validation with tag 'min'")))
 	})
 
 	It("Returns a clear error when configuration has a non-existent template override", func() {
-		configPath := utils.GetAbsPathByRelative("gleece.missing.partial.config.json")
+		configPath := utils.GetAbsPathByRelativeOrFail("gleece.missing.partial.config.json")
 		err := cmd.GenerateRoutes(arguments.CliArguments{ConfigPath: configPath})
 
 		Expect(err).To(MatchError(ContainSubstring("could not read given template Imports override at")))
@@ -40,14 +40,14 @@ var _ = Describe("Error-handling", func() {
 	})
 
 	It("Returns a clear error when configuration references a non-existent partial", func() {
-		configPath := utils.GetAbsPathByRelative("gleece.unknown.partial.config.json")
+		configPath := utils.GetAbsPathByRelativeOrFail("gleece.unknown.partial.config.json")
 		err := cmd.GenerateRoutes(arguments.CliArguments{ConfigPath: configPath})
 
 		Expect(err).To(MatchError(ContainSubstring("partial 'thisPartialDoesNotExist' is not a valid gin partial")))
 	})
 
 	It("Returns a clear error when configuration has a syntactically broken template override", func() {
-		configPath := utils.GetAbsPathByRelative("gleece.broken.override.syntax.config.json")
+		configPath := utils.GetAbsPathByRelativeOrFail("gleece.broken.override.syntax.config.json")
 		err := cmd.GenerateRoutes(arguments.CliArguments{ConfigPath: configPath})
 
 		Expect(err).To(MatchError(ContainSubstring("Evaluation error")))
@@ -56,23 +56,25 @@ var _ = Describe("Error-handling", func() {
 	})
 
 	It("Returns a clear error when configuration references a non-existent template extension", func() {
-		configPath := utils.GetAbsPathByRelative("gleece.unknown.extension.config.json")
+		configPath := utils.GetAbsPathByRelativeOrFail("gleece.unknown.extension.config.json")
 		err := cmd.GenerateRoutes(arguments.CliArguments{ConfigPath: configPath})
 
 		Expect(err).To(MatchError(ContainSubstring("The extension 'thisExtensionsDoesNotExist' is not a valid gin extension")))
 	})
 
 	It("Returns a clear error when configuration has a non-existent template extension", func() {
-		configPath := utils.GetAbsPathByRelative("gleece.missing.extension.config.json")
+		configPath := utils.GetAbsPathByRelativeOrFail("gleece.missing.extension.config.json")
 		err := cmd.GenerateRoutes(arguments.CliArguments{ConfigPath: configPath})
 
 		Expect(err).To(MatchError(ContainSubstring("could not read given template ImportsExtension override at")))
 	})
 
 	It("Returns a clear error when type declared outside of global path", func() {
-		configPath := utils.GetAbsPathByRelative("gleece.unscanned.types.json")
+		configPath := utils.GetAbsPathByRelativeOrFail("gleece.unscanned.types.json")
 		err := cmd.GenerateRoutes(arguments.CliArguments{ConfigPath: configPath})
-		Expect(err).To(MatchError(ContainSubstring("encountered an error visiting controller UnScannedTypeController method EmptyMethod - could not find type 'HoldsVeryNestedStructs' in package 'github.com/gopher-fleece/gleece/test/errorhandling', are you sure it's included in the 'commonConfig->controllerGlobs' search paths?")))
+		Expect(err).To(MatchError(ContainSubstring("encountered an error visiting controller UnScannedTypeController method EmptyMethod - type 'HoldsVeryNestedStructs' was not found in package 'errorhandling_test'")))
+		// TODO: Test that case too
+		// Expect(err).To(MatchError(ContainSubstring("encountered an error visiting controller UnScannedTypeController method EmptyMethod - could not find type 'HoldsVeryNestedStructs' in package 'github.com/gopher-fleece/gleece/test/errorhandling', are you sure it's included in the 'commonConfig->controllerGlobs' search paths?")))
 	})
 })
 

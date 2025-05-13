@@ -16,7 +16,7 @@ var models []definitions.StructMetadata
 var schemaShouldHaveStdErrorSanity bool
 
 var _ = BeforeSuite(func() {
-	controllers, flatModels, hasStdError := utils.GetControllersAndModels()
+	controllers, flatModels, hasStdError := utils.GetControllersAndModelsOrFail()
 	metadata = controllers
 	models = flatModels
 	schemaShouldHaveStdErrorSanity = hasStdError

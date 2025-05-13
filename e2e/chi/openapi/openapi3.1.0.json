@@ -268,6 +268,60 @@
         "title": "SecondLevelModel",
         "type": "object"
       },
+      "SpeedDto": {
+        "description": "SpeedDto represents a Speed measurement with a numerical value and its corresponding unit.",
+        "properties": {
+          "unit": {
+            "$ref": "#/components/schemas/SpeedUnits"
+          },
+          "value": {
+            "description": "Value is the numerical representation of the Speed.",
+            "type": "number"
+          }
+        },
+        "title": "SpeedDto",
+        "type": "object"
+      },
+      "SpeedUnits": {
+        "description": "SpeedUnits defines various units of Speed.",
+        "enum": [
+          "CentimeterPerHour",
+          "CentimeterPerMinute",
+          "CentimeterPerSecond",
+          "DecimeterPerMinute",
+          "DecimeterPerSecond",
+          "FootPerHour",
+          "FootPerMinute",
+          "FootPerSecond",
+          "InchPerHour",
+          "InchPerMinute",
+          "InchPerSecond",
+          "KilometerPerHour",
+          "KilometerPerMinute",
+          "KilometerPerSecond",
+          "Knot",
+          "Mach",
+          "MeterPerHour",
+          "MeterPerMinute",
+          "MeterPerSecond",
+          "MicrometerPerMinute",
+          "MicrometerPerSecond",
+          "MilePerHour",
+          "MillimeterPerHour",
+          "MillimeterPerMinute",
+          "MillimeterPerSecond",
+          "NanometerPerMinute",
+          "NanometerPerSecond",
+          "UsSurveyFootPerHour",
+          "UsSurveyFootPerMinute",
+          "UsSurveyFootPerSecond",
+          "YardPerHour",
+          "YardPerMinute",
+          "YardPerSecond"
+        ],
+        "title": "SpeedUnits",
+        "type": "string"
+      },
       "StatusEnumeration": {
         "enum": [
           "active",
@@ -297,6 +351,19 @@
             "$ref": "#/components/schemas/OtherModel"
           }
         ]
+      },
+      "UniqueExternalUsage": {
+        "description": "Test the recursive import process on first-and-ever-used type in struct only",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/SpeedDto"
+          },
+          "unit": {
+            "$ref": "#/components/schemas/SpeedUnits"
+          }
+        },
+        "title": "UniqueExternalUsage",
+        "type": "object"
       }
     },
     "securitySchemes": {
@@ -753,6 +820,56 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/LengthDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rfc7807Error"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          ""
+        ]
+      }
+    },
+    "/e2e/external-packages-unique-in-struct": {
+      "post": {
+        "operationId": "ExternalPackagesUniqueInStruct",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UniqueExternalUsage"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
                 }
               }
             },

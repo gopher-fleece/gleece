@@ -26,3 +26,6 @@ go.work.sum
 
 dist/
 temp/
+
+e2e/__debug*
+e2e/assets/__debug*

@@ -5,9 +5,11 @@ import (
 	"go/types"
 	"strings"
 
+	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/extractor"
 	"github.com/gopher-fleece/gleece/extractor/annotations"
+	"github.com/gopher-fleece/gleece/extractor/arbitrators"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
 	"golang.org/x/tools/go/packages"
 )
@@ -24,28 +26,42 @@ type StructInfo struct {
 	Fields []Field
 }
 
+// TypeVisitor handles recursive 'visitation' of types (structs, enums, aliases)
 type TypeVisitor struct {
-	packages    []*packages.Package
-	typesByName map[string]*definitions.StructMetadata
-	enumByName  map[string]*definitions.EnumMetadata
+	// A facade for managing packages.Package
+	packagesFacade *arbitrators.PackagesFacade
+
+	// An arbitrator providing logic for working with Go's AST
+	astArbitrator *arbitrators.AstArbitrator
+
+	// A map of struct names to metadata
+	structsByName map[string]*definitions.StructMetadata
+
+	// A map of 'enum' names to metadata
+	enumsByName map[string]*definitions.EnumMetadata
 }
 
+// StructAttributeHolders serves as a container for tracking AnnotationHolders for a struct and its fields
 type StructAttributeHolders struct {
 	StructHolder annotations.AnnotationHolder
 	FieldHolders map[string]*annotations.AnnotationHolder
 }
 
-func NewTypeVisitor(packages []*packages.Package) *TypeVisitor {
+// NewTypeVisitor Initializes a new visitor
+func NewTypeVisitor(packagesFacade *arbitrators.PackagesFacade, astArbitrator *arbitrators.AstArbitrator) *TypeVisitor {
 	return &TypeVisitor{
-		packages:    packages,
-		typesByName: make(map[string]*definitions.StructMetadata),
-		enumByName:  make(map[string]*definitions.EnumMetadata),
+		packagesFacade: packagesFacade,
+		astArbitrator:  astArbitrator,
+		structsByName:  make(map[string]*definitions.StructMetadata),
+		enumsByName:    make(map[string]*definitions.EnumMetadata),
 	}
 }
 
+// VisitStruct dives into the given struct in the given package and recursively parses it to obtain metadata,
+// storing the results in the visitor's internal fields.
 func (v *TypeVisitor) VisitStruct(fullPackageName string, structName string, structType *types.Struct) error {
-	fullName := fmt.Sprintf("%s.%s", fullPackageName, structName)
-	if v.typesByName[fullName] != nil {
+	fullStructName := fmt.Sprintf("%s.%s", fullPackageName, structName)
+	if v.structsByName[fullStructName] != nil {
 		return nil // Already processed, ignore
 	}
 
@@ -61,12 +77,13 @@ func (v *TypeVisitor) VisitStruct(fullPackageName string, structName string, str
 		Deprecation:           getDeprecationOpts(attributeHolders.StructHolder),
 	}
 
-	for i := 0; i < structType.NumFields(); i++ {
+	// Iterate the struct's fields
+	for i := range structType.NumFields() {
 		field := structType.Field(i)
 		fieldType := field.Type()
 		tag := structType.Tag(i)
 
-		// Skip embedded error fields.
+		// Skip embedded 'error' fields.
 		if field.Name() == "error" && field.Type().String() == "error" {
 			continue
 		}
@@ -78,28 +95,19 @@ func (v *TypeVisitor) VisitStruct(fullPackageName string, structName string, str
 			// Raise error for pointer fields.
 			return fmt.Errorf("field %q in struct %q is a pointer, which is not allowed", field.Name(), structName)
 		case *types.Array, *types.Slice:
+			// For iterables, get the underlying field type.
+			//
+			// NOTE: Need to verify this works for complex array types
 			fieldTypeString = extractor.GetIterableElementType(t)
 		case *types.Named:
-			if extractor.IsAliasType(t) {
-				aliasModel := createAliasModel(t, tag)
-				structInfo.Fields = append(structInfo.Fields, aliasModel)
-				continue // A bit ugly. Need to clean this up...
-			} else {
-				// Check if the named type is a struct.
-				if underlying, ok := t.Underlying().(*types.Struct); ok {
-					// Recursively process the nested struct.
-					err := v.VisitStruct(fullPackageName, t.Obj().Name(), underlying)
-					if err != nil {
-						return err
-					}
-				} else {
-					return fmt.Errorf(
-						"node '%s' is of kind 'Named' but is neither an alias-like nor struct and cannot be used",
-						t.Obj().Name(),
-					)
-				}
+			isEnumOrAlias, err := v.processNamedEntity(t, &structInfo, tag)
+			if err != nil {
+				return err
 			}
-
+			if isEnumOrAlias {
+				// Enums and aliases have already been processed at this point - continue to the next field.
+				continue
+			}
 			// Add the field as a reference to another struct.
 			fieldTypeString = t.Obj().Name()
 		default:
@@ -124,12 +132,57 @@ func (v *TypeVisitor) VisitStruct(fullPackageName string, structName string, str
 		structInfo.Fields = append(structInfo.Fields, fieldMeta)
 	}
 
-	v.typesByName[fullName] = &structInfo
+	v.structsByName[fullStructName] = &structInfo
 	return nil
 }
 
+// processNamedEntity receives a Named node and translates it into an enum/alias model.
+// Returns a boolean indicating whether the node is considered an enum/alias which indicates
+// whether it should be appended to the visitor's struct list or not.
+//
+// To clarify, an enum/alias is NOT appended to the struct list.
+func (v *TypeVisitor) processNamedEntity(
+	node *types.Named,
+	structInfo *definitions.StructMetadata,
+	fieldTag string,
+) (bool, error) {
+	// If the type's an enum.
+	// This is pretty nasty - there needs to be a stricter separation between simple aliases and actual enums.
+	if extractor.IsAliasType(node) {
+		aliasModel := createAliasModel(node, fieldTag)
+		err := v.visitNestedEnum(node, aliasModel)
+		if err != nil {
+			return true, err
+		}
+
+		structInfo.Fields = append(structInfo.Fields, aliasModel)
+		return true, nil
+	}
+
+	// Check if the named type is a struct.
+	if underlying, ok := node.Underlying().(*types.Struct); ok {
+		// Recursively process the nested struct.
+		nestedPackageName, err := v.packagesFacade.GetPackageNameByNamedEntity(node)
+		if err != nil {
+			return false, err
+		}
+
+		if len(nestedPackageName) == 0 {
+			return false, fmt.Errorf("could not determine package for named entity '%s'", node.Obj().Name())
+		}
+
+		err = v.VisitStruct(nestedPackageName, node.Obj().Name(), underlying)
+		return false, err
+	}
+
+	return false, fmt.Errorf(
+		"node '%s' is of kind 'Named' but is neither an alias-like nor struct and cannot be used",
+		node.Obj().Name(),
+	)
+}
+
 func (v *TypeVisitor) VisitEnum(enumName string, model definitions.TypeMetadata) error {
-	if v.enumByName[enumName] != nil {
+	if v.enumsByName[enumName] != nil {
 		return nil // Already processed, ignore
 	}
 
@@ -142,14 +195,42 @@ func (v *TypeVisitor) VisitEnum(enumName string, model definitions.TypeMetadata)
 		// Deprecation         ?
 	}
 
-	v.enumByName[enumName] = enumModel
+	v.enumsByName[enumName] = enumModel
 	return nil
+}
+
+func (v *TypeVisitor) getAttributeHolderFromEntityGenDecl(pkg *packages.Package, name string) (annotations.AnnotationHolder, error) {
+	genDecl := extractor.FindGenDeclByName(pkg, name)
+	if genDecl == nil {
+		return annotations.AnnotationHolder{},
+			fmt.Errorf("could not find GenDecl node for struct '%s.%s'", pkg.PkgPath, name)
+	}
+
+	if genDecl.Doc == nil || genDecl.Doc.List == nil || len(genDecl.Doc.List) <= 0 {
+		return annotations.AnnotationHolder{}, nil
+	}
+
+	holder, err := annotations.NewAnnotationHolder(
+		extractor.MapDocListToStrings(genDecl.Doc.List),
+		annotations.CommentSourceSchema,
+	)
+
+	if err != nil {
+		logger.Error("Could not create an attribute holder for struct '%s.%s' - %v", pkg.PkgPath, name, err)
+		return annotations.AnnotationHolder{}, err
+	}
+
+	return holder, nil
 }
 
 func (v *TypeVisitor) getAttributeHolders(fullPackageName string, structName string) (StructAttributeHolders, error) {
 	holders := StructAttributeHolders{FieldHolders: make(map[string]*annotations.AnnotationHolder)}
 
-	relevantPackage := extractor.FilterPackageByFullName(v.packages, fullPackageName)
+	relevantPackage, err := v.packagesFacade.GetPackage(fullPackageName)
+	if err != nil {
+		return holders, err
+	}
+
 	if relevantPackage == nil {
 		return holders, fmt.Errorf(
 			"could not find package object for '%s' whilst looking for struct '%s'",
@@ -217,7 +298,7 @@ func (v *TypeVisitor) getAttributeHolders(fullPackageName string, structName str
 // GetStructs returns the list of processed structs.
 func (v *TypeVisitor) GetStructs() []definitions.StructMetadata {
 	models := []definitions.StructMetadata{}
-	for _, value := range v.typesByName {
+	for _, value := range v.structsByName {
 		models = append(models, *value)
 	}
 	return models
@@ -225,7 +306,7 @@ func (v *TypeVisitor) GetStructs() []definitions.StructMetadata {
 
 func (v *TypeVisitor) GetEnums() []definitions.EnumMetadata {
 	models := []definitions.EnumMetadata{}
-	for _, value := range v.enumByName {
+	for _, value := range v.enumsByName {
 		models = append(models, *value)
 	}
 	return models
@@ -261,4 +342,47 @@ func createAliasModel(node *types.Named, tag string) definitions.FieldMetadata {
 		Type: typeName,
 		Tag:  tag,
 	}
+}
+
+func (v *TypeVisitor) visitNestedEnum(t *types.Named, aliasModel definitions.FieldMetadata) error {
+	pkg, err := v.packagesFacade.GetPackageByTypeName(t.Obj())
+	if err != nil {
+		return err
+	}
+
+	if pkg == nil {
+		return fmt.Errorf("could not obtain package for entity '%v'", t)
+	}
+
+	cleanedModelName := common.UnwrapArrayTypeString(aliasModel.Name)
+	if v.enumsByName[cleanedModelName] != nil {
+		return nil // Already processed, ignore
+	}
+
+	typeName, err := extractor.GetTypeNameOrError(pkg, aliasModel.Name)
+	if err != nil {
+		return err
+	}
+
+	aliasMetadata, err := v.astArbitrator.ExtractAliasType(pkg, typeName)
+	if err != nil {
+		return err
+	}
+
+	holder, err := v.getAttributeHolderFromEntityGenDecl(pkg, cleanedModelName)
+	if err != nil {
+		return err
+	}
+
+	enumModel := &definitions.EnumMetadata{
+		Name:                  cleanedModelName,
+		FullyQualifiedPackage: pkg.PkgPath,
+		Description:           holder.GetDescription(),
+		Values:                aliasMetadata.Values,
+		Type:                  aliasMetadata.AliasType,
+		// Deprecation         ?
+	}
+
+	v.enumsByName[cleanedModelName] = enumModel
+	return nil
 }
