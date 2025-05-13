@@ -58,7 +58,7 @@ var _ = Describe("Sanity Controller", func() {
 		Expect(route.Deprecation.Deprecated).To(BeFalse())
 		Expect(route.Deprecation.Description).To(BeEmpty())
 		Expect(route.Description).To(Equal("A sanity test controller method"))
-		Expect(route.RestMetadata.Path).To(Equal("/{routeParam}"))
+		Expect(route.RestMetadata.Path).To(Equal("/{routeParamAlias}"))
 		Expect(route.FuncParams).To(HaveLen(3))
 		Expect(route.Responses).To(HaveLen(2))
 		Expect(route.HasReturnValue).To(BeTrue())
