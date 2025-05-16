@@ -154,6 +154,7 @@
         "type": "string"
       },
       "NumberEnumeration": {
+        "description": "Test enum with = flavor too",
         "enum": [
           "1",
           "2"

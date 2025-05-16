@@ -36,7 +36,10 @@ var _ = Describe("E2E Specification", func() {
 		for _, engine := range engines {
 			spec := GetEngineSpecification(engine, "openapi/openapi3.0.0.json")
 			areEqual, _ := swagtool.AreJSONsIdentical([]byte(spec), []byte(expectedOpenapi300))
-			Expect(areEqual).To(BeTrue())
+			Expect(areEqual).To(BeTrueBecause(
+				"Test for engine '%s' in version 3.0.0 yielded a difference between expected and generated spec",
+				engine,
+			))
 		}
 	})
 
@@ -44,7 +47,10 @@ var _ = Describe("E2E Specification", func() {
 		for _, engine := range engines {
 			spec := GetEngineSpecification(engine, "openapi/openapi3.1.0.json")
 			areEqual, _ := swagtool.AreJSONsIdentical([]byte(spec), []byte(expectedOpenapi310))
-			Expect(areEqual).To(BeTrue())
+			Expect(areEqual).To(BeTrueBecause(
+				"Test for engine '%s' in version 3.1.0 yielded a difference between expected and generated spec",
+				engine,
+			))
 		}
 	})
 })

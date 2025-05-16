@@ -72,10 +72,10 @@ const (
 	CommentSourceProperty   CommentSource = "property"
 )
 
-func NewAnnotationHolder(comments []string, commentSource CommentSource) (AnnotationHolder, error) {
-	// Captures: 1. TEXT (after @), 2. TEXT (inside parentheses), 3. JSON5 Object, 4. Remaining TEXT
-	parsingRegex := regexp.MustCompile(`^// @(\w+)(?:(?:\(([\w-_/\\{} ]+))(?:\s*,\s*(\{.*\}))?\))?(?:\s+(.+))?$`)
+// Captures: 1. TEXT (after @), 2. TEXT (inside parentheses), 3. JSON5 Object, 4. Remaining TEXT
+var parsingRegex *regexp.Regexp = regexp.MustCompile(`^// @(\w+)(?:(?:\(([\w-_/\\{} ]+))(?:\s*,\s*(\{.*\}))?\))?(?:\s+(.+))?$`)
 
+func NewAnnotationHolder(comments []string, commentSource CommentSource) (AnnotationHolder, error) {
 	holder := AnnotationHolder{
 		nonAttributeComments: make([]NonAttributeComment, 0),
 	}
