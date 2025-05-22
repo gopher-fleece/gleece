@@ -10,14 +10,18 @@ import (
 
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/extractor"
+	"github.com/gopher-fleece/gleece/extractor/annotations"
 	"golang.org/x/tools/go/packages"
 )
 
+// AstArbitrator serves as an abstraction and interconnect for Go's AST and packages components.
+// The arbitrator is used to obtain high level metadata for given AST structures like FuncDecls
 type AstArbitrator struct {
 	pkgFacade *PackagesFacade
 	fileSet   *token.FileSet
 }
 
+// Creates a new AST Arbitrator
 func NewAstArbitrator(pkgFacade *PackagesFacade, fileSet *token.FileSet) AstArbitrator {
 	return AstArbitrator{
 		pkgFacade: pkgFacade,
@@ -25,6 +29,7 @@ func NewAstArbitrator(pkgFacade *PackagesFacade, fileSet *token.FileSet) AstArbi
 	}
 }
 
+// GetFuncParameterTypeList gets metadata for all parameters of the given function in the given AST file
 func (arb *AstArbitrator) GetFuncParameterTypeList(file *ast.File, funcDecl *ast.FuncDecl) ([]definitions.ParamMeta, error) {
 	paramTypes := []definitions.ParamMeta{}
 
@@ -43,6 +48,7 @@ func (arb *AstArbitrator) GetFuncParameterTypeList(file *ast.File, funcDecl *ast
 	return paramTypes, nil
 }
 
+// GetFuncReturnTypesMetadata gets type metadata for all return values of the given function in the given AST file
 func (arb *AstArbitrator) GetFuncReturnTypeList(file *ast.File, funcDecl *ast.FuncDecl) ([]definitions.TypeMetadata, error) {
 	returnTypes := []definitions.TypeMetadata{}
 
@@ -60,10 +66,13 @@ func (arb *AstArbitrator) GetFuncReturnTypeList(file *ast.File, funcDecl *ast.Fu
 	return returnTypes, nil
 }
 
+// GetFieldMetadata gets metadata for the given field in the given AST file
 func (arb *AstArbitrator) GetFieldMetadata(file *ast.File, value *ast.Field) (definitions.TypeMetadata, error) {
 	return arb.GetTypeMetaForExpr(file, value.Type)
 }
 
+// GetTypeMetaForExpr gets type metadata for the given expression in the given AST file
+// Note that if the type of expression is not currently supported, an error will be returned.
 func (arb *AstArbitrator) GetTypeMetaForExpr(file *ast.File, expr ast.Expr) (definitions.TypeMetadata, error) {
 	switch fieldType := expr.(type) {
 	case *ast.Ident:
@@ -84,13 +93,18 @@ func (arb *AstArbitrator) GetTypeMetaForExpr(file *ast.File, expr ast.Expr) (def
 	}
 }
 
+// GetTypeMetaByIdent gets type metadata for the given Ident in the given AST file
 func (arb *AstArbitrator) GetTypeMetaByIdent(file *ast.File, ident *ast.Ident) (definitions.TypeMetadata, error) {
 	comments := extractor.GetCommentsFromIdent(arb.fileSet, file, ident)
+	holder, err := annotations.NewAnnotationHolder(comments, annotations.CommentSourceProperty)
 
-	meta := definitions.TypeMetadata{
-		Name:        ident.Name,
-		Description: extractor.FindAndExtract(comments, "@Description"),
+	meta := definitions.TypeMetadata{Name: ident.Name}
+
+	if err != nil {
+		return meta, err
 	}
+
+	meta.Description = holder.GetDescription()
 
 	if extractor.IsUniverseType(ident.Name) {
 		// The identifier is a member of the universe, e.g. 'error'.
@@ -101,7 +115,7 @@ func (arb *AstArbitrator) GetTypeMetaByIdent(file *ast.File, ident *ast.Ident) (
 		return meta, nil
 	}
 
-	relevantPkg := arb.IsIdentFromDotImportedPackage(file, ident)
+	relevantPkg := arb.GetPackageFromDotImportedIdent(file, ident)
 	if relevantPkg != nil {
 		// The identifier is a type from a dot imported package
 		meta.Import = definitions.ImportTypeDot
@@ -153,7 +167,7 @@ func (arb *AstArbitrator) GetTypeMetaByIdent(file *ast.File, ident *ast.Ident) (
 		meta.EntityKind = entityKind
 
 		if entityKind == definitions.AstNodeKindAlias {
-			aliasMetadata, err := arb.ExtractAliasType(pkg, typeName)
+			aliasMetadata, err := arb.ExtractEnumAliasType(pkg, typeName)
 			if err != nil {
 				return meta, err
 			}
@@ -164,17 +178,24 @@ func (arb *AstArbitrator) GetTypeMetaByIdent(file *ast.File, ident *ast.Ident) (
 	return meta, nil
 }
 
+// GetTypeMetaBySelectorExpr gets type metadata for the given Selector Expression in the given AST file
 func (arb *AstArbitrator) GetTypeMetaBySelectorExpr(file *ast.File, selector *ast.SelectorExpr) (definitions.TypeMetadata, error) {
 	aliasedImports := extractor.GetImportAliases(file)
 
 	entityName := selector.Sel.Name
 
-	comments := extractor.GetCommentsFromIdent(arb.fileSet, file, selector.Sel)
 	meta := definitions.TypeMetadata{
-		Name:        entityName,
-		Description: extractor.FindAndExtract(comments, "@Description"),
-		Import:      definitions.ImportTypeAlias,
+		Name:   entityName,
+		Import: definitions.ImportTypeAlias,
 	}
+
+	comments := extractor.GetCommentsFromIdent(arb.fileSet, file, selector.Sel)
+	holder, err := annotations.NewAnnotationHolder(comments, annotations.CommentSourceProperty)
+	if err != nil {
+		return meta, err
+	}
+
+	meta.Description = holder.GetDescription()
 
 	// Resolve the importAlias part to a full package
 	importAlias, ok := selector.X.(*ast.Ident)
@@ -230,7 +251,7 @@ func (arb *AstArbitrator) GetTypeMetaBySelectorExpr(file *ast.File, selector *as
 		if typeName == nil {
 			return meta, fmt.Errorf("type '%s' was not found in package %s", entityName, pkg.Name)
 		}
-		aliasMetadata, err := arb.ExtractAliasType(pkg, typeName)
+		aliasMetadata, err := arb.ExtractEnumAliasType(pkg, typeName)
 		if err != nil {
 			return meta, err
 		}
@@ -239,7 +260,11 @@ func (arb *AstArbitrator) GetTypeMetaBySelectorExpr(file *ast.File, selector *as
 	return meta, nil
 }
 
-func (arb *AstArbitrator) IsIdentFromDotImportedPackage(file *ast.File, ident *ast.Ident) *packages.Package {
+// GetPackageFromDotImportedIdent returns the package from which a dot-imported ident was imported or nil
+// the ident is not a dot-imported one.
+//
+// This method can be used as a "Is this Ident from a dot-import?"
+func (arb *AstArbitrator) GetPackageFromDotImportedIdent(file *ast.File, ident *ast.Ident) *packages.Package {
 	dotImports := extractor.GetDotImportedPackageNames(file)
 	for _, dotImport := range dotImports {
 		pkg := extractor.FilterPackageByFullName(arb.pkgFacade.GetAllPackages(), dotImport)
@@ -252,7 +277,9 @@ func (arb *AstArbitrator) IsIdentFromDotImportedPackage(file *ast.File, ident *a
 	return nil
 }
 
-func (arb *AstArbitrator) ExtractAliasType(pkg *packages.Package, typeName *types.TypeName) (*definitions.AliasMetadata, error) {
+// ExtractEnumAliasType attempts to determine the underlying type and possible value for the given TypeName,
+// assuming it is an enumeration.
+func (arb *AstArbitrator) ExtractEnumAliasType(pkg *packages.Package, typeName *types.TypeName) (*definitions.AliasMetadata, error) {
 
 	basic, isBasicType := typeName.Type().Underlying().(*types.Basic)
 
@@ -310,46 +337,4 @@ func (arb *AstArbitrator) ExtractAliasType(pkg *packages.Package, typeName *type
 	}
 
 	return &aliasMetadata, nil
-}
-
-func (arb *AstArbitrator) GetAstFileForNamed(named *types.Named) (*ast.File, error) {
-	pkg := named.Obj().Pkg()
-	if pkg == nil {
-		return nil, nil // Built-in types, unnamed types, etc.
-	}
-
-	// Find the package where the struct is defined
-	pkgPath := pkg.Path()
-	targetPkg, err := arb.pkgFacade.GetPackage(pkgPath)
-	if err != nil {
-		return nil, err
-	}
-
-	if targetPkg == nil {
-		return nil, nil
-	}
-
-	// Iterate over all AST files to find the struct declaration
-	for _, file := range targetPkg.Syntax {
-		for _, decl := range file.Decls {
-			genDecl, ok := decl.(*ast.GenDecl)
-			if !ok {
-				continue
-			}
-
-			for _, spec := range genDecl.Specs {
-				typeSpec, ok := spec.(*ast.TypeSpec)
-				if !ok {
-					continue
-				}
-
-				// If this is the struct we're looking for, return the file
-				if typeSpec.Name.Name == named.Obj().Name() {
-					return file, nil
-				}
-			}
-		}
-	}
-
-	return nil, nil // Not found
 }

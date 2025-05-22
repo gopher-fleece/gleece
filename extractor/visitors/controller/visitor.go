@@ -73,7 +73,7 @@ type ControllerVisitor struct {
 	controllers []definitions.ControllerMetadata
 }
 
-// NewControllerVisitor Instantiates a new Gleece Controller visitor
+// NewControllerVisitor Instantiates a new Gleece Controller visitor.
 func NewControllerVisitor(config *definitions.GleeceConfig) (*ControllerVisitor, error) {
 	visitor := ControllerVisitor{}
 	visitor.config = config

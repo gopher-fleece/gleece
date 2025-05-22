@@ -421,7 +421,7 @@ func (v *TypeVisitor) visitNestedEnum(t *types.Named, aliasModel definitions.Fie
 		return err
 	}
 
-	aliasMetadata, err := v.astArbitrator.ExtractAliasType(pkg, typeName)
+	aliasMetadata, err := v.astArbitrator.ExtractEnumAliasType(pkg, typeName)
 	if err != nil {
 		return err
 	}
