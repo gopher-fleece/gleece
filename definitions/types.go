@@ -84,8 +84,9 @@ type RestMetadata struct {
 }
 
 type ParamMeta struct {
-	Name     string
-	TypeMeta TypeMetadata
+	Name      string
+	IsContext bool
+	TypeMeta  TypeMetadata
 }
 
 type FuncParam struct {
@@ -379,6 +380,14 @@ const (
 	RoutingEngineFiber RoutingEngineType = "fiber"
 	RoutingEngineChi   RoutingEngineType = "chi"
 )
+
+var SupportedRoutingEngineStrings = []string{
+	string(RoutingEngineGin),
+	string(RoutingEngineEcho),
+	string(RoutingEngineMux),
+	string(RoutingEngineFiber),
+	string(RoutingEngineChi),
+}
 
 type RoutesConfig struct {
 	Engine                  RoutingEngineType   `json:"engine" validate:"required,oneof=gin echo mux fiber chi"`

@@ -2,12 +2,15 @@ package routes
 
 import (
 	"fmt"
+	"regexp"
 
 	"github.com/aymerick/raymond"
 	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/iancoleman/strcase"
 )
+
+var collapsibleSpaceRegex = regexp.MustCompile("[\t\r\n]")
 
 // SplitBracketName splits a string into brackets part and name part
 // Example: "[][][]Name" -> "[][][]", "Name"
@@ -65,7 +68,7 @@ func registerHandlebarsHelpers() {
 		return options.Inverse()
 	})
 
-	raymond.RegisterHelper("ifEqual", func(a interface{}, b interface{}, options *raymond.Options) string {
+	raymond.RegisterHelper("ifEqual", func(a any, b any, options *raymond.Options) string {
 		if raymond.Str(a) == raymond.Str(b) {
 			return options.Fn()
 		}
@@ -105,9 +108,14 @@ func registerHandlebarsHelpers() {
 		return fmt.Sprintf("Response%d%s.%s", last.UniqueImportSerial, last.Name, last.Name)
 	})
 
-	raymond.RegisterHelper("OrEqual", func(val1, comp1, val2, comp2 interface{}) bool {
+	raymond.RegisterHelper("OrEqual", func(val1, comp1, val2, comp2 any) bool {
 		isEqual1 := (val1 == comp1)
 		isEqual2 := (val2 == comp2)
 		return isEqual1 || isEqual2
+	})
+
+	raymond.RegisterHelper("CollapseMultiline", func(options *raymond.Options) string {
+		content := options.Fn()
+		return string(collapsibleSpaceRegex.ReplaceAllString(content, ""))
 	})
 }

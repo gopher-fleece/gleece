@@ -15,7 +15,18 @@ import (
 )
 
 func GetMetadataByRelativeConfig(relativeConfigPath string) ([]definitions.ControllerMetadata, []definitions.StructMetadata, bool, error) {
-	_, controllers, flatModels, hasStdError, err := cmd.GetConfigAndMetadata(
+	_, controllers, modelsList, hasStdError, err := GetConfigAndMetadataOrFail(relativeConfigPath)
+	return controllers, modelsList, hasStdError, err
+}
+
+func GetConfigAndMetadataOrFail(relativeConfigPath string) (
+	*definitions.GleeceConfig,
+	[]definitions.ControllerMetadata,
+	[]definitions.StructMetadata,
+	bool,
+	error,
+) {
+	config, controllers, flatModels, hasStdError, err := cmd.GetConfigAndMetadata(
 		arguments.CliArguments{
 			ConfigPath: constructFullPathOrFail(relativeConfigPath),
 		},
@@ -26,7 +37,17 @@ func GetMetadataByRelativeConfig(relativeConfigPath string) ([]definitions.Contr
 		modelsList = flatModels.Structs
 	}
 
-	return controllers, modelsList, hasStdError, err
+	return config, controllers, modelsList, hasStdError, err
+}
+
+func GetDefaultConfigAndMetadataOrFail() (
+	*definitions.GleeceConfig,
+	[]definitions.ControllerMetadata,
+	[]definitions.StructMetadata,
+	bool,
+	error,
+) {
+	return GetConfigAndMetadataOrFail("gleece.test.config.json")
 }
 
 func GetMetadataByRelativeConfigOrFail(relativeConfigPath string) ([]definitions.ControllerMetadata, []definitions.StructMetadata, bool) {
@@ -64,6 +85,16 @@ func FileOrFolderExists(fullPath string) bool {
 	return true
 }
 
+func ReadFileByRelativePathOrFail(relativePath string) string {
+	filePath := constructFullPathOrFail(relativePath)
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		Fail(fmt.Sprintf("Could not read file from '%s' - %v", filePath, err))
+	}
+
+	return string(data)
+}
+
 func GetAbsPathByRelativeOrFail(relativePath string) string {
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -71,6 +102,14 @@ func GetAbsPathByRelativeOrFail(relativePath string) string {
 	}
 
 	return filepath.Join(cwd, relativePath)
+}
+
+func DeleteDistInCurrentFolderOrFail() {
+	distPath := GetAbsPathByRelativeOrFail("dist")
+	err := os.RemoveAll(distPath)
+	if err != nil {
+		Fail(fmt.Sprintf("Could not delete dist folder at '%s' - %v", distPath, err))
+	}
 }
 
 func LoadPackageOrFail(fullName string, loadMode packages.LoadMode) *packages.Package {

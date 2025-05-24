@@ -58,6 +58,9 @@ var Middleware string
 //go:embed partials/register.middleware.hbs
 var RegisterMiddleware string
 
+//go:embed partials/method.parameter.list.hbs
+var MethodParameterList string
+
 // Those are the extension that made to allow *extend* Gleece's routes logic. as default they are all empty.
 var TemplateExtensions = map[string]string{
 	// On routes.hbs
@@ -95,4 +98,5 @@ var Partials = map[string]string{
 	"RunValidator":                    RunValidator,
 	"Middleware":                      Middleware,
 	"RegisterMiddleware":              RegisterMiddleware,
+	"MethodParameterList":             MethodParameterList,
 }

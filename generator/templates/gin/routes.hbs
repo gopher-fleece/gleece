@@ -69,7 +69,7 @@ func RegisterRoutes(engine *gin.Engine) {
 
 		{{> Middleware isErrorMiddleware=false middlewares="beforeOperationMiddlewares" }} 
 		{{> BeforeOperationRoutesExtension }}
-		{{#equal HasReturnValue true}}value, {{/equal}}opError := controller.{{{OperationId}}}({{#each FuncParams}}{{#if TypeMeta.IsByAddress}}{{else}}*{{/if}}{{ToLowerCamel Name}}RawPtr{{#unless @last}}, {{/unless}}{{/each}})
+		{{#equal HasReturnValue true}}value, {{/equal}}opError := controller.{{{OperationId}}}({{#CollapseMultiline}}{{> MethodParameterList}}{{/CollapseMultiline}})
 		
 		{{> ResponseHeaders }}
 

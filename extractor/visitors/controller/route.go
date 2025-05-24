@@ -124,6 +124,11 @@ func (v *ControllerVisitor) getValidatedFuncParams(funcDecl *ast.FuncDecl, comme
 	}
 
 	for _, param := range funcParams {
+		if param.IsContext {
+			// Context parameters do not require any validation
+			continue
+		}
+
 		var validationErr error
 
 		switch param.PassedIn {
@@ -217,73 +222,91 @@ func (v *ControllerVisitor) getFuncParams(funcDecl *ast.FuncDecl, comments []str
 		return funcParams, err
 	}
 
+	holder, err := annotations.NewAnnotationHolder(comments, annotations.CommentSourceRoute)
+	if err != nil {
+		return funcParams, err
+	}
+
 	for _, param := range paramTypes {
 		// Record state for diagnostics
 		v.enter(fmt.Sprintf("Param %s", param.Name))
 		defer v.exit()
 
-		holder, err := annotations.NewAnnotationHolder(comments, annotations.CommentSourceRoute)
-		if err != nil {
-			return funcParams, err
-		}
-		paramAttrib := holder.FindFirstByValue(param.Name)
-		if paramAttrib == nil {
-			return funcParams, v.getFrozenError("parameter '%s' does not have a matching documentation attribute", param.Name)
-		}
+		var finalParamMeta definitions.FuncParam
 
-		castValidator, err := annotations.GetCastProperty[string](paramAttrib, annotations.PropertyValidatorString)
-		if err != nil {
-			return funcParams, v.frozenError(err)
-		}
+		if param.IsContext {
+			// Special handling for contexts - a context parameter doesn't have nor need much of the metadata or validations
+			finalParamMeta = definitions.FuncParam{ParamMeta: param}
+		} else {
+			// Normal params do require further processing (comments, validator strings) and validations
+			if finalParamMeta, err = v.processFuncParameter(holder, param); err != nil {
+				return funcParams, v.frozenError(err)
+			}
 
-		validatorString := ""
-		if castValidator != nil && len(*castValidator) > 0 {
-			validatorString = *castValidator
-		}
-
-		castName, err := annotations.GetCastProperty[string](paramAttrib, annotations.PropertyName)
-		if err != nil {
-			return funcParams, v.frozenError(err)
-		}
-
-		nameString := param.Name
-		if castName != nil && len(*castName) > 0 {
-			nameString = *castName
-		}
-
-		var paramPassedIn definitions.ParamPassedIn
-
-		// Currently, only body param can be an object type
-		switch strings.ToLower(paramAttrib.Name) {
-		case "query":
-			paramPassedIn = definitions.PassedInQuery
-		case "header":
-			paramPassedIn = definitions.PassedInHeader
-		case "path":
-			paramPassedIn = definitions.PassedInPath
-		case "body":
-			paramPassedIn = definitions.PassedInBody
-		case "formfield": // Currently, form fields are the only supported form of form parameters, in the future, a full form object may be supported too
-			paramPassedIn = definitions.PassedInForm
-		}
-
-		if err := v.validateParamsCombinations(funcParams, paramPassedIn); err != nil {
-			return funcParams, err
-		}
-
-		finalParamMeta := definitions.FuncParam{
-			NameInSchema:       nameString,
-			ParamMeta:          param,
-			PassedIn:           paramPassedIn,
-			Description:        paramAttrib.Description,
-			Validator:          appendParamRequiredValidation(&validatorString, param.TypeMeta.IsByAddress, paramPassedIn),
-			UniqueImportSerial: v.getNextImportId(),
+			if err := v.validateParamsCombinations(funcParams, finalParamMeta.PassedIn); err != nil {
+				return funcParams, v.frozenError(err)
+			}
 		}
 
 		funcParams = append(funcParams, finalParamMeta)
 	}
 
 	return funcParams, nil
+}
+
+func (v *ControllerVisitor) processFuncParameter(
+	annotationHolder annotations.AnnotationHolder,
+	param definitions.ParamMeta,
+) (definitions.FuncParam, error) {
+	paramAttrib := annotationHolder.FindFirstByValue(param.Name)
+	if paramAttrib == nil {
+		return definitions.FuncParam{}, v.getFrozenError("parameter '%s' does not have a matching documentation attribute", param.Name)
+	}
+
+	castValidator, err := annotations.GetCastProperty[string](paramAttrib, annotations.PropertyValidatorString)
+	if err != nil {
+		return definitions.FuncParam{}, v.frozenError(err)
+	}
+
+	validatorString := ""
+	if castValidator != nil && len(*castValidator) > 0 {
+		validatorString = *castValidator
+	}
+
+	castName, err := annotations.GetCastProperty[string](paramAttrib, annotations.PropertyName)
+	if err != nil {
+		return definitions.FuncParam{}, v.frozenError(err)
+	}
+
+	nameString := param.Name
+	if castName != nil && len(*castName) > 0 {
+		nameString = *castName
+	}
+
+	var paramPassedIn definitions.ParamPassedIn
+
+	// Currently, only body param can be an object type
+	switch strings.ToLower(paramAttrib.Name) {
+	case "query":
+		paramPassedIn = definitions.PassedInQuery
+	case "header":
+		paramPassedIn = definitions.PassedInHeader
+	case "path":
+		paramPassedIn = definitions.PassedInPath
+	case "body":
+		paramPassedIn = definitions.PassedInBody
+	case "formfield": // Currently, form fields are the only supported form of form parameters, in the future, a full form object may be supported too
+		paramPassedIn = definitions.PassedInForm
+	}
+
+	return definitions.FuncParam{
+		NameInSchema:       nameString,
+		ParamMeta:          param,
+		PassedIn:           paramPassedIn,
+		Description:        paramAttrib.Description,
+		Validator:          appendParamRequiredValidation(&validatorString, param.TypeMeta.IsByAddress, paramPassedIn),
+		UniqueImportSerial: v.getNextImportId(),
+	}, nil
 }
 
 func (v *ControllerVisitor) getFuncReturnValue(funcDecl *ast.FuncDecl) ([]definitions.FuncReturnValue, error) {
