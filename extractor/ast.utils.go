@@ -516,3 +516,12 @@ func GetPackageOwnerOfType(t types.Type) *types.Package {
 		}
 	}
 }
+
+// MapDocListToStrings converts a list of comment nodes (ast.Comment) to a string array
+func MapDocListToStrings(docList []*ast.Comment) []string {
+	var result []string
+	for _, comment := range docList {
+		result = append(result, comment.Text)
+	}
+	return result
+}
