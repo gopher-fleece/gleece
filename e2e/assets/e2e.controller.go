@@ -1,6 +1,7 @@
 package assets
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"math"
@@ -646,4 +647,27 @@ type TheModel struct {
 // @ErrorResponse(500)
 func (ec *E2EController) EmbeddedStructs(data TheModel) (TheModel, error) {
 	return data, nil
+}
+
+type ContextKeyType int
+
+const ContextName ContextKeyType = iota
+
+// @Method(POST)
+// @Route(/context-injection-empty)
+// @Response(200)
+// @ErrorResponse(500)
+func (ec *E2EController) ContextInjectionEmpty(ctx context.Context) error {
+	ec.SetHeader("x-context-name", ctx.Value(ContextName).(string))
+	return nil
+}
+
+// @Method(POST)
+// @Route(/context-injection)
+// @Body(data)
+// @Response(200)
+// @ErrorResponse(500)
+func (ec *E2EController) ContextInjection(ctx context.Context, data TheModel) error {
+	ec.SetHeader("x-context-name", ctx.Value(ContextName).(string))
+	return nil
 }
