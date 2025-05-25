@@ -109,9 +109,9 @@ func getStatusCode(controller runtime.Controller, hasReturnValue bool, err error
 	}
 	return http.StatusNoContent
 }
-func bindAndValidateBody[TOutput any](ctx *gin.Context, contentType string, validation string, output **TOutput) error {
+func bindAndValidateBody[TOutput any](ginCtx *gin.Context, contentType string, validation string, output **TOutput) error {
 	var err error
-	bodyBytes, err := io.ReadAll(ctx.Request.Body)
+	bodyBytes, err := io.ReadAll(ginCtx.Request.Body)
 	if err != nil || len(bodyBytes) == 0 {
 		if strings.Contains(validation, "required") {
 			return fmt.Errorf("body is required but was not provided")
@@ -209,7 +209,7 @@ func toGinUrl(url string) string {
 	}
 	return processedUrl
 }
-func authorize(ctx *gin.Context, checksLists []SecurityCheckList) *runtime.SecurityError {
+func authorize(ginCtx *gin.Context, checksLists []SecurityCheckList) *runtime.SecurityError {
 	var lastError *runtime.SecurityError
 	for _, list := range checksLists {
 		if list.Relation != SecurityListRelationAnd {
@@ -221,7 +221,10 @@ func authorize(ctx *gin.Context, checksLists []SecurityCheckList) *runtime.Secur
 		// Iterate over each security list
 		encounteredErrorInList := false
 		for _, check := range list.Checks {
-			secErr := RequestAuth.GleeceRequestAuthorization(ctx, check)
+			secCtx, secErr := RequestAuth.GleeceRequestAuthorization(ginCtx.Request.Context(), ginCtx, check)
+			if secCtx != nil {
+				ginCtx.Request = ginCtx.Request.WithContext(secCtx)
+			}
 			if secErr != nil {
 				lastError = secErr
 				encounteredErrorInList = true
@@ -237,11 +240,11 @@ func authorize(ctx *gin.Context, checksLists []SecurityCheckList) *runtime.Secur
 	// If we got here it means authentication has failed
 	return lastError
 }
-func handleAuthorizationError(ctx *gin.Context, authErr *runtime.SecurityError, operationId string) {
+func handleAuthorizationError(ginCtx *gin.Context, authErr *runtime.SecurityError, operationId string) {
 	statusCode := int(authErr.StatusCode)
 	if authErr.CustomError != nil {
 		// For now, we support JSON only
-		ctx.JSON(statusCode, authErr.CustomError.Payload)
+		ginCtx.JSON(statusCode, authErr.CustomError.Payload)
 		return
 	}
 	stdError := runtime.Rfc7807Error{
@@ -250,7 +253,7 @@ func handleAuthorizationError(ctx *gin.Context, authErr *runtime.SecurityError, 
 		Status:   statusCode,
 		Instance: "/gleece/authorization/error/" + operationId,
 	}
-	ctx.JSON(statusCode, stdError)
+	ginCtx.JSON(statusCode, stdError)
 }
 func wrapValidatorError(validatorErr error, operationId string, fieldName string) runtime.Rfc7807Error {
 	return runtime.Rfc7807Error{

@@ -78,10 +78,7 @@ func registerHandlebarsHelpers() {
 
 	raymond.RegisterHelper("ifAnyParamRequiresConversion", func(params []definitions.FuncParam, options *raymond.Options) string {
 		for _, param := range params {
-
-			if param.TypeMeta.Name == "Context" &&
-				param.TypeMeta.FullyQualifiedPackage == "context" &&
-				param.TypeMeta.EntityKind == definitions.AstNodeKindInterface {
+			if param.IsContext {
 				// The CTX param is not come from the http "input" and should not be converted from anything
 				continue
 			}
