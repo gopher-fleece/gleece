@@ -35,11 +35,11 @@ var _ = Describe("Context Controller", func() {
 
 		// Each engine has a different way of accessing the raw HTTP context
 		expectedSubstringPerEngine := map[string]string{
-			string(definitions.RoutingEngineGin):   "opError := controller.MethodWithContext(ctx.Request.Context(), *idRawPtr)",
-			string(definitions.RoutingEngineEcho):  "opError := controller.MethodWithContext(ctx.Request().Context(), *idRawPtr)",
-			string(definitions.RoutingEngineMux):   "opError := controller.MethodWithContext(ctx.Context(), *idRawPtr)",
-			string(definitions.RoutingEngineFiber): "opError := controller.MethodWithContext(ctx.UserContext(), *idRawPtr)",
-			string(definitions.RoutingEngineChi):   "opError := controller.MethodWithContext(ctx.Context(), *idRawPtr)",
+			string(definitions.RoutingEngineGin):   "opError := controller.MethodWithContext(getRequestContext(ginCtx), *idRawPtr)",
+			string(definitions.RoutingEngineEcho):  "opError := controller.MethodWithContext(getRequestContext(echoCtx), *idRawPtr)",
+			string(definitions.RoutingEngineMux):   "opError := controller.MethodWithContext(getRequestContext(req), *idRawPtr)",
+			string(definitions.RoutingEngineFiber): "opError := controller.MethodWithContext(getRequestContext(fiberCtx), *idRawPtr)",
+			string(definitions.RoutingEngineChi):   "opError := controller.MethodWithContext(getRequestContext(req), *idRawPtr)",
 		}
 
 		// For each engine, make sure the context is correctly injected
@@ -66,11 +66,11 @@ var _ = Describe("Context Controller", func() {
 
 		// Each engine has a different way of accessing the raw HTTP context
 		expectedSubstringPerEngine := map[string]string{
-			string(definitions.RoutingEngineGin):   "opError := controller.MethodWithLastParamContext(*idRawPtr, ctx.Request.Context())",
-			string(definitions.RoutingEngineEcho):  "opError := controller.MethodWithLastParamContext(*idRawPtr, ctx.Request().Context())",
-			string(definitions.RoutingEngineMux):   "opError := controller.MethodWithLastParamContext(*idRawPtr, ctx.Context())",
-			string(definitions.RoutingEngineFiber): "opError := controller.MethodWithLastParamContext(*idRawPtr, ctx.UserContext())",
-			string(definitions.RoutingEngineChi):   "opError := controller.MethodWithLastParamContext(*idRawPtr, ctx.Context())",
+			string(definitions.RoutingEngineGin):   "opError := controller.MethodWithLastParamContext(*idRawPtr, getRequestContext(ginCtx))",
+			string(definitions.RoutingEngineEcho):  "opError := controller.MethodWithLastParamContext(*idRawPtr, getRequestContext(echoCtx))",
+			string(definitions.RoutingEngineMux):   "opError := controller.MethodWithLastParamContext(*idRawPtr, getRequestContext(req))",
+			string(definitions.RoutingEngineFiber): "opError := controller.MethodWithLastParamContext(*idRawPtr, getRequestContext(fiberCtx))",
+			string(definitions.RoutingEngineChi):   "opError := controller.MethodWithLastParamContext(*idRawPtr, getRequestContext(req))",
 		}
 
 		// For each engine, make sure the context is correctly injected
