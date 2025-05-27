@@ -1,4 +1,4 @@
 for key, value := range controller.GetHeaders() {
-	ctx.Header(key, value)
+	ginCtx.Header(key, value)
 }
-ctx.Header("x-inject", "true")
+ginCtx.Header("x-inject", "true")

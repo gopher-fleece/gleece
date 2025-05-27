@@ -1,8 +1,8 @@
-ctx.Header("x-RouteEndRoutesExtension", "{{{ OperationId }}}")
+ginCtx.Header("x-RouteEndRoutesExtension", "{{{ OperationId }}}")
 
 {{#if TemplateContext.MODE }}
-        ctx.Header("x-mode", "{{{ TemplateContext.MODE.Options.mode }}}")
+        ginCtx.Header("x-mode", "{{{ TemplateContext.MODE.Options.mode }}}")
 {{/if }}
 {{#if TemplateContext.LEVEL }}
-        ctx.Header("x-level", "{{{ TemplateContext.LEVEL.Options.value }}}")
+        ginCtx.Header("x-level", "{{{ TemplateContext.LEVEL.Options.value }}}")
 {{/if }}

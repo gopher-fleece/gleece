@@ -1,11 +1,15 @@
 // Middlewares {{middlewares}} section
 for _, middleware := range {{middlewares}} {
 	{{#if isErrorMiddleware}}
-		if continueOperation := middleware(w, ctx, {{errorName}}); !continueOperation {
+		middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, {{errorName}})
+		setRequestContext(req, middlewareCtx)
+		if !continueOperation {
 			return
 		}
 	{{else}}
-		if continueOperation := middleware(w, ctx); !continueOperation {
+		middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+		setRequestContext(req, middlewareCtx)
+		if !continueOperation {
 			return
 		}
 	{{/if}}

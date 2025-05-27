@@ -93,6 +93,13 @@ func (v *ControllerVisitor) GetModelsFlat() (*definitions.Models, bool, error) {
 
 	typeVisitor := visitors.NewTypeVisitor(&v.packagesFacade, &v.astArbitrator)
 	for _, model := range models {
+
+		// Ignore Context parameters - they're injected at the template levels and
+		// do not reach the OpenAPI schema
+		if model.Name == "Context" && model.FullyQualifiedPackage == "context" {
+			continue
+		}
+
 		pkg, err := v.packagesFacade.GetPackage(model.FullyQualifiedPackage)
 		if err != nil {
 			return nil, hasAnyErrorTypes, v.frozenError(err)

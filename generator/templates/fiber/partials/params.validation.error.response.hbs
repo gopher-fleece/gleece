@@ -13,4 +13,4 @@ validationError := runtime.Rfc7807Error{
 	Extensions: map[string]string{"error": conversionErr.Error()},
 }
 {{> ParamsValidationErrorResponseExtension}}
-return ctx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)

@@ -6,6 +6,6 @@
 
         {{> RunValidatorExtension}}
 
-        return ctx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+        return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
     }
 {{/if}}

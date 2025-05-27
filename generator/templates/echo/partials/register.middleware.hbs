@@ -1,5 +1,5 @@
-type MiddlewareFunc func(ctx echo.Context) bool
-type ErrorMiddlewareFunc func(ctx echo.Context, err error) bool
+type MiddlewareFunc func(ctx context.Context, echoCtx echo.Context) (context.Context, bool)
+type ErrorMiddlewareFunc func(ctx context.Context, echoCtx echo.Context, err error) (context.Context, bool)
 
 var beforeOperationMiddlewares []MiddlewareFunc
 var afterOperationSuccessMiddlewares []MiddlewareFunc

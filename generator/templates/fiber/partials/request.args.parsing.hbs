@@ -1,7 +1,7 @@
 
 {{#equal PassedIn "Path"}}
 	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
-	{{ToLowerCamel Name}}Raw := ctx.Params("{{{NameInSchema}}}")
+	{{ToLowerCamel Name}}Raw := fiberCtx.Params("{{{NameInSchema}}}")
 	is{{Name}}Exists := true // if parameter is in route but not provided, it won't reach this handler
 	{{> RequestSwitchParamType}}
 	{{> RunValidator}}
@@ -9,31 +9,31 @@
 
 {{#equal PassedIn "Query"}}
 	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
-	{{ToLowerCamel Name}}Raw := ctx.Query("{{{NameInSchema}}}")
-	is{{Name}}Exists := ctx.Context().QueryArgs().Has("{{{NameInSchema}}}")
+	{{ToLowerCamel Name}}Raw := fiberCtx.Query("{{{NameInSchema}}}")
+	is{{Name}}Exists := fiberCtx.Context().QueryArgs().Has("{{{NameInSchema}}}")
 	{{> RequestSwitchParamType}}
 	{{> RunValidator}}
 {{/equal}}
 
 {{#equal PassedIn "Header"}}
 	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
-	{{ToLowerCamel Name}}Raw := ctx.Get("{{{NameInSchema}}}")
-	is{{Name}}Exists := len(ctx.Request().Header.Peek("{{{NameInSchema}}}")) > 0
+	{{ToLowerCamel Name}}Raw := fiberCtx.Get("{{{NameInSchema}}}")
+	is{{Name}}Exists := len(fiberCtx.Request().Header.Peek("{{{NameInSchema}}}")) > 0
 	{{> RequestSwitchParamType}}
 	{{> RunValidator}}
 {{/equal}}
 
 {{#equal PassedIn "Form"}}
 	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
-	{{ToLowerCamel Name}}Raw := ctx.FormValue("{{{NameInSchema}}}")
-	is{{Name}}Exists := ctx.Context().PostArgs().Has("{{{NameInSchema}}}")
+	{{ToLowerCamel Name}}Raw := fiberCtx.FormValue("{{{NameInSchema}}}")
+	is{{Name}}Exists := fiberCtx.Context().PostArgs().Has("{{{NameInSchema}}}")
 	{{> RequestSwitchParamType}}
 	{{> RunValidator}}
 {{/equal}}
 
 {{#equal PassedIn "Body"}}
 	var {{ToLowerCamel Name}}RawPtr *{{SlicePrefix TypeMeta.Name}}{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{SliceSlice TypeMeta.Name}} = nil
-	conversionErr = bindAndValidateBody(ctx, "{{{ResponseContentType}}}", "{{Validator}}",&{{ToLowerCamel Name}}RawPtr)
+	conversionErr = bindAndValidateBody(fiberCtx, "{{{ResponseContentType}}}", "{{Validator}}",&{{ToLowerCamel Name}}RawPtr)
 	if conversionErr != nil {
 		{{> JsonBodyValidationErrorResponse }}
 	}

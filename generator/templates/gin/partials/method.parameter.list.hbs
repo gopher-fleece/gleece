@@ -1,0 +1,13 @@
+{{#each FuncParams}}
+	{{#if IsContext}}
+		getRequestContext(ginCtx)
+	{{else}}
+		{{#if TypeMeta.IsByAddress}}
+
+		{{else}}
+			*
+		{{/if}}
+		{{ToLowerCamel Name}}RawPtr
+	{{/if}}
+	{{#unless @last}}, {{/unless}}
+{{/each}}

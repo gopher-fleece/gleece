@@ -49,15 +49,15 @@ func RegisterRoutes(engine *echo.Echo) {
 {{#each Controllers}}
 	// {{{Name}}}
 	{{#each Routes}}
-		engine.{{{HttpVerb}}}(toEchoUrl("{{{../RestMetadata.Path}}}{{{RestMetadata.Path}}}"), func(ctx echo.Context) error  {
+		engine.{{{HttpVerb}}}(toEchoUrl("{{{../RestMetadata.Path}}}{{{RestMetadata.Path}}}"), func(echoCtx echo.Context) error  {
 			{{> RouteStartRoutesExtension }}
 			
 			authErr := {{> AuthorizationCall}}
 			if authErr != nil {
-				return handleAuthorizationError(ctx, authErr, "{{{OperationId}}}")
+				return handleAuthorizationError(echoCtx, authErr, "{{{OperationId}}}")
 							}
 			controller := {{{Name}}}Import.{{../Name}}{}
-			controller.InitController(ctx)
+			controller.InitController(echoCtx)
 			{{#ifAnyParamRequiresConversion FuncParams}}
 			var conversionErr error
 			{{/ifAnyParamRequiresConversion}}
@@ -67,7 +67,7 @@ func RegisterRoutes(engine *echo.Echo) {
 
 		{{> Middleware isErrorMiddleware=false middlewares="beforeOperationMiddlewares" }} 
 		{{> BeforeOperationRoutesExtension }}
-		{{#equal HasReturnValue true}}value, {{/equal}}opError := controller.{{{OperationId}}}({{#each FuncParams}}{{#if TypeMeta.IsByAddress}}{{else}}*{{/if}}{{ToLowerCamel Name}}RawPtr{{#unless @last}}, {{/unless}}{{/each}})
+		{{#equal HasReturnValue true}}value, {{/equal}}opError := controller.{{{OperationId}}}({{#CollapseMultiline}}{{> MethodParameterList}}{{/CollapseMultiline}})
 
 		{{> ResponseHeaders }}
 		

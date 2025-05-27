@@ -8,7 +8,7 @@ stdError := runtime.Rfc7807Error{
 	Extensions: map[string]string{"error": opError.Error()},
 }
 {{> JsonErrorResponseExtension}}
-ctx.JSON(statusCode, stdError)
+ginCtx.JSON(statusCode, stdError)
 {{else}}
-ctx.JSON(statusCode, opError)
+ginCtx.JSON(statusCode, opError)
 {{/LastTypeNameEquals}}

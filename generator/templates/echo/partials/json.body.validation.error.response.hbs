@@ -14,4 +14,4 @@ validationError := runtime.Rfc7807Error{
 
 {{> JsonBodyValidationErrorResponseExtension}}
 
-return ctx.JSON(http.StatusUnprocessableEntity, validationError)
+return echoCtx.JSON(http.StatusUnprocessableEntity, validationError)

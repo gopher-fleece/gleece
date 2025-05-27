@@ -1,8 +1,8 @@
-ctx.Set("x-RouteEndRoutesExtension", "{{{ OperationId }}}")
+fiberCtx.Set("x-RouteEndRoutesExtension", "{{{ OperationId }}}")
 
 {{#if TemplateContext.MODE }}
-        ctx.Set("x-mode", "{{{ TemplateContext.MODE.Options.mode }}}")
+        fiberCtx.Set("x-mode", "{{{ TemplateContext.MODE.Options.mode }}}")
 {{/if }}
 {{#if TemplateContext.LEVEL }}
-        ctx.Set("x-level", "{{{ TemplateContext.LEVEL.Options.value }}}")
+        fiberCtx.Set("x-level", "{{{ TemplateContext.LEVEL.Options.value }}}")
 {{/if }}

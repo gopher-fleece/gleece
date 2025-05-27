@@ -2,7 +2,6 @@ package imports_test
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/gopher-fleece/gleece/cmd"
@@ -13,8 +12,7 @@ import (
 )
 
 var _ = AfterEach(func() {
-	distPath := utils.GetAbsPathByRelativeOrFail("dist")
-	os.RemoveAll(distPath)
+	utils.DeleteDistInCurrentFolderOrFail()
 })
 
 var _ = Describe("Commandline", func() {

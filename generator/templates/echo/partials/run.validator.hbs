@@ -6,6 +6,6 @@
 
         {{> RunValidatorExtension}}
 
-        return ctx.JSON(http.StatusUnprocessableEntity, validationError)
+        return echoCtx.JSON(http.StatusUnprocessableEntity, validationError)
     }
 {{/if}}

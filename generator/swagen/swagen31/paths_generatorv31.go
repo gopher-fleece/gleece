@@ -230,6 +230,9 @@ func createRequestFormParam(doc *v3.Document, param definitions.FuncParam, opera
 func generateParams(doc *v3.Document, route definitions.RouteMetadata, operation *v3.Operation) {
 	// Iterate over FuncParams and create parameters
 	for _, param := range route.FuncParams {
+		if param.IsContext {
+			continue // The context is for the generated code only, and should not affect the specification
+		}
 
 		switch param.PassedIn {
 		case definitions.PassedInBody:

@@ -6,7 +6,7 @@
 
         {{> RunValidatorExtension}}
         
-        ctx.JSON(http.StatusUnprocessableEntity, validationError)
+        ginCtx.JSON(http.StatusUnprocessableEntity, validationError)
         return
     }
 {{/if}}

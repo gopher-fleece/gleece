@@ -26,19 +26,19 @@
 				Instance:   "/gleece/controller/error/{{{OperationId}}}",
 				Extensions: map[string]string{},
 			}
-			ctx.JSON(outputValidationStatusCode, outputValidationRfc7807Error)
+			ginCtx.JSON(outputValidationStatusCode, outputValidationRfc7807Error)
 			return
 		}
 	{{/equal}}
 	{{/if}}
 	{{> Middleware isErrorMiddleware=false middlewares="afterOperationSuccessMiddlewares" }} 
 	{{> AfterOperationRoutesExtension }}
-	ctx.JSON(statusCode, value)
+	ginCtx.JSON(statusCode, value)
 	{{> RouteEndRoutesExtension }}
 {{/equal}}
 {{#equal HasReturnValue false}}
 	{{> Middleware isErrorMiddleware=false middlewares="afterOperationSuccessMiddlewares" }} 
 	{{> AfterOperationRoutesExtension }}
-	ctx.Status(statusCode)
+	ginCtx.Status(statusCode)
 	{{> RouteEndRoutesExtension }}
 {{/equal}}

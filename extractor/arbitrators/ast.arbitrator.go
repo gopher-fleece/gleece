@@ -42,7 +42,15 @@ func (arb *AstArbitrator) GetFuncParameterTypeList(file *ast.File, funcDecl *ast
 		if err != nil {
 			return paramTypes, err
 		}
-		paramTypes = append(paramTypes, definitions.ParamMeta{Name: field.Names[0].Name, TypeMeta: meta})
+
+		paramTypes = append(
+			paramTypes,
+			definitions.ParamMeta{
+				Name: field.Names[0].Name, TypeMeta: meta,
+				// A special case- Go Contexts should be explicitly marked so they can be injected via the template
+				IsContext: meta.Name == "Context" && meta.FullyQualifiedPackage == "context",
+			},
+		)
 	}
 
 	return paramTypes, nil

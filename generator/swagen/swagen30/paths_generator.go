@@ -191,6 +191,10 @@ func generateParams(openapi *openapi3.T, route definitions.RouteMetadata, operat
 	// Iterate over FuncParams and create parameters
 	for _, param := range route.FuncParams {
 
+		if param.IsContext {
+			continue // The context is for the generated code only, and should not affect the specification
+		}
+
 		switch param.PassedIn {
 		case definitions.PassedInBody:
 			operation.RequestBody = createRequestBodyParam(openapi, param)

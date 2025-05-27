@@ -1,3 +1,14 @@
+func getRequestContext(echoCtx echo.Context) context.Context {
+	return echoCtx.Request().Context()
+}
+
+func setRequestContext(echoCtx echo.Context, ctx context.Context) {
+	if ctx != nil {
+		newCtx := echoCtx.Request().WithContext(ctx)
+		echoCtx.SetRequest(newCtx)
+	}
+}
+
 func registerEnumValidation(validate *validator.Validate, validationName string, allowedValues []string) {
 	// Convert the array to a map for O(1) lookup
 	lookup := make(map[string]struct{})
@@ -51,9 +62,9 @@ func getStatusCode(controller runtime.Controller, hasReturnValue bool, err error
 	return http.StatusNoContent
 }
 
-func bindAndValidateBody[TOutput any](ctx echo.Context, contentType string, validation string, output **TOutput) error {
+func bindAndValidateBody[TOutput any](echoCtx echo.Context, contentType string, validation string, output **TOutput) error {
 	var err error
-	bodyBytes, err := io.ReadAll(ctx.Request().Body)
+	bodyBytes, err := io.ReadAll(echoCtx.Request().Body)
 
 	if err != nil || len(bodyBytes) == 0 {
 		if strings.Contains(validation, "required") {
@@ -169,7 +180,7 @@ func toEchoUrl(url string) string {
 	return processedUrl
 }
 
-func authorize(ctx echo.Context, checksLists []SecurityCheckList) *runtime.SecurityError {
+func authorize(echoCtx echo.Context, checksLists []SecurityCheckList) *runtime.SecurityError {
 	var lastError *runtime.SecurityError
 
 	for _, list := range checksLists {
@@ -183,7 +194,8 @@ func authorize(ctx echo.Context, checksLists []SecurityCheckList) *runtime.Secur
 		// Iterate over each security list
 		encounteredErrorInList := false
 		for _, check := range list.Checks {
-			secErr := RequestAuth.GleeceRequestAuthorization(ctx, check)
+			secCtx, secErr := RequestAuth.GleeceRequestAuthorization(getRequestContext(echoCtx), echoCtx, check)
+			setRequestContext(echoCtx, secCtx)
 			if secErr != nil {
 				lastError = secErr
 				encounteredErrorInList = true
@@ -202,11 +214,11 @@ func authorize(ctx echo.Context, checksLists []SecurityCheckList) *runtime.Secur
 	return lastError
 }
 
-func handleAuthorizationError(ctx echo.Context, authErr *runtime.SecurityError, operationId string) error {
+func handleAuthorizationError(echoCtx echo.Context, authErr *runtime.SecurityError, operationId string) error {
 	statusCode := int(authErr.StatusCode)
 	if authErr.CustomError != nil {
 		// For now, we support JSON only
-		return ctx.JSON(statusCode, authErr.CustomError.Payload)
+		return echoCtx.JSON(statusCode, authErr.CustomError.Payload)
 		
 	} 
 	stdError := runtime.Rfc7807Error{
@@ -215,7 +227,7 @@ func handleAuthorizationError(ctx echo.Context, authErr *runtime.SecurityError, 
 		Status:   statusCode,
 		Instance: "/gleece/authorization/error/" + operationId,
 	}
-	return ctx.JSON(statusCode, stdError)
+	return echoCtx.JSON(statusCode, stdError)
 }
 
 func wrapValidatorError(validatorErr error, operationId string, fieldName string) runtime.Rfc7807Error {

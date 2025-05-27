@@ -1,7 +1,7 @@
 
 {{#equal PassedIn "Path"}}
 	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
-	{{ToLowerCamel Name}}Raw := ctx.Param("{{{NameInSchema}}}")
+	{{ToLowerCamel Name}}Raw := echoCtx.Param("{{{NameInSchema}}}")
 	is{{Name}}Exists := true // if parameter is in route but not provided, it won't reach this handler
 	{{> RequestSwitchParamType}}
 	{{> RunValidator}}
@@ -9,19 +9,19 @@
 
 {{#equal PassedIn "Query"}}
 	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
-	{{ToLowerCamel Name}}Raw := ctx.QueryParam("{{{NameInSchema}}}")
-	is{{Name}}Exists := ctx.Request().URL.Query().Has("{{{NameInSchema}}}")
+	{{ToLowerCamel Name}}Raw := echoCtx.QueryParam("{{{NameInSchema}}}")
+	is{{Name}}Exists := echoCtx.Request().URL.Query().Has("{{{NameInSchema}}}")
 	{{> RequestSwitchParamType}}
 	{{> RunValidator}}
 {{/equal}}
 
 {{#equal PassedIn "Header"}}
 	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
-	{{ToLowerCamel Name}}Raw := ctx.Request().Header.Get("{{{NameInSchema}}}")
-	_, is{{Name}}Exists := ctx.Request().Header["{{{NameInSchema}}}"]
+	{{ToLowerCamel Name}}Raw := echoCtx.Request().Header.Get("{{{NameInSchema}}}")
+	_, is{{Name}}Exists := echoCtx.Request().Header["{{{NameInSchema}}}"]
 	if !is{{Name}}Exists {
-		// In echo, the ctx.Request().Header["key"] is not 100% reliable, so we need other check, but only if is was not found in the first method
-		headerValues := ctx.Request().Header.Values("{{{NameInSchema}}}")
+		// In echo, the echoCtx.Request().Header["key"] is not 100% reliable, so we need other check, but only if is was not found in the first method
+		headerValues := echoCtx.Request().Header.Values("{{{NameInSchema}}}")
 		is{{Name}}Exists = len(headerValues) > 0
 	}
 	{{> RequestSwitchParamType}}
@@ -29,9 +29,9 @@
 {{/equal}}
 
 {{#equal PassedIn "Form"}}
-	ctx.Request().ParseForm()
+	echoCtx.Request().ParseForm()
 	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
-	{{ToLowerCamel Name}}RawArr, is{{Name}}Exists := ctx.Request().PostForm["{{{NameInSchema}}}"]
+	{{ToLowerCamel Name}}RawArr, is{{Name}}Exists := echoCtx.Request().PostForm["{{{NameInSchema}}}"]
 	{{ToLowerCamel Name}}Raw := ""
 	if is{{Name}}Exists {
 		{{ToLowerCamel Name}}Raw = {{ToLowerCamel Name}}RawArr[0] // Get first value since form values are slices
@@ -43,7 +43,7 @@
 
 {{#equal PassedIn "Body"}}
 	var {{ToLowerCamel Name}}RawPtr *{{SlicePrefix TypeMeta.Name}}{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{SliceSlice TypeMeta.Name}} = nil
-	conversionErr = bindAndValidateBody(ctx, "{{{ResponseContentType}}}", "{{Validator}}",&{{ToLowerCamel Name}}RawPtr)
+	conversionErr = bindAndValidateBody(echoCtx, "{{{ResponseContentType}}}", "{{Validator}}",&{{ToLowerCamel Name}}RawPtr)
 	if conversionErr != nil {
 		{{> JsonBodyValidationErrorResponse }}
 	}

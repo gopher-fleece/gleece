@@ -26,20 +26,20 @@
 				Instance:   "/gleece/controller/error/{{{OperationId}}}",
 				Extensions: map[string]string{},
 			}
-			return ctx.Status(outputValidationStatusCode).JSON(outputValidationRfc7807Error)
+			return fiberCtx.Status(outputValidationStatusCode).JSON(outputValidationRfc7807Error)
 		}
 	{{/equal}}
 	{{/if}}
 	{{> Middleware isErrorMiddleware=false middlewares="afterOperationSuccessMiddlewares" }} 
 	{{> AfterOperationRoutesExtension }}
-	ctx.Status(statusCode).JSON(value)
+	fiberCtx.Status(statusCode).JSON(value)
 	{{> RouteEndRoutesExtension }}
 	return nil
 {{/equal}}
 {{#equal HasReturnValue false}}
 	{{> Middleware isErrorMiddleware=false middlewares="afterOperationSuccessMiddlewares" }} 
 	{{> AfterOperationRoutesExtension }}
-	ctx.Status(statusCode)
+	fiberCtx.Status(statusCode)
 	{{> RouteEndRoutesExtension }}
 	return nil
 {{/equal}}

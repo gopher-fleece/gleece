@@ -1,6 +1,7 @@
 package e2e
 
 import (
+	"github.com/gopher-fleece/gleece/e2e/assets"
 	"github.com/gopher-fleece/gleece/e2e/common"
 	. "github.com/onsi/ginkgo/v2"
 )
@@ -262,6 +263,43 @@ var _ = Describe("E2E Controller Spec", func() {
 			Body:            nil,
 			Query:           nil,
 			Headers:         nil,
+		})
+	})
+
+	It("Should handle context from auth function", func() {
+		RunRouterTest(common.RouterTest{
+			Name:            "Should allow context with no other input",
+			ExpectedStatus:  204,
+			ExpectedBody:    "",
+			ExpendedHeaders: map[string]string{"x-context-auth": "123"},
+			Path:            "/e2e/context-injection-empty",
+			Method:          "POST",
+			Body:            nil,
+			Query:           nil,
+			Headers:         nil,
+		})
+
+		RunRouterTest(common.RouterTest{
+			Name:            "Should allow context with other input",
+			ExpectedStatus:  204,
+			ExpectedBody:    "",
+			ExpendedHeaders: map[string]string{"x-context-auth": "123"},
+			Path:            "/e2e/context-injection",
+			Method:          "POST",
+			Body: assets.TheModel{
+				ModelField: "model field",
+				FirstLevelModel: assets.FirstLevelModel{
+					FirstLevelModelField: "first level",
+					SecondLevelModel: assets.SecondLevelModel{
+						SecondLevelModelField: "second level",
+					},
+				},
+				OtherModel: assets.OtherModel{
+					OtherModelField: "other model",
+				},
+			},
+			Query:   map[string]string{},
+			Headers: map[string]string{},
 		})
 	})
 })

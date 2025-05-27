@@ -190,4 +190,18 @@ var _ = Describe("E2E Authorization Spec", func() {
 			},
 		})
 	})
+
+	It("Should inject context by auth function", func() {
+		RunRouterTest(common.RouterTest{
+			Name:            "Should allow context with no other input",
+			ExpectedStatus:  204,
+			ExpectedBody:    "",
+			ExpendedHeaders: map[string]string{"x-context-auth": "123"},
+			Path:            "/e2e/context-injection-empty",
+			Method:          "POST",
+			Body:            nil,
+			Query:           nil,
+			Headers:         nil,
+		})
+	})
 })
