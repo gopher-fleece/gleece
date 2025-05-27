@@ -1,6 +1,7 @@
 {{#each FuncParams}}
 	{{#if IsContext}}
-		ctx.UserContext()
+		getRequestContext(fiberCtx)
+		{{!-- ctx.UserContext() --}}
 	{{else}}
 		{{#if TypeMeta.IsByAddress}}
 

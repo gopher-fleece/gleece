@@ -1,39 +1,40 @@
 package middlewares
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/gopher-fleece/gleece/e2e/assets"
 	"github.com/labstack/echo/v4"
 )
 
-func MiddlewareBeforeOperation(c echo.Context) bool {
-	c.Response().Header().Set("X-pass-before-operation", "true")
+func MiddlewareBeforeOperation(ctx context.Context, echoCtx echo.Context) (context.Context, bool) {
+	echoCtx.Response().Header().Set("X-pass-before-operation", "true")
 
-	abortBeforeOperation := c.Request().Header.Get("abort-before-operation")
+	abortBeforeOperation := echoCtx.Request().Header.Get("abort-before-operation")
 	if abortBeforeOperation == "true" {
-		c.JSON(http.StatusBadRequest, map[string]string{"error": "abort-before-operation header is set to true"})
-		return false
+		echoCtx.JSON(http.StatusBadRequest, map[string]string{"error": "abort-before-operation header is set to true"})
+		return ctx, false
 	}
 
-	return true
+	return context.WithValue(ctx, assets.ContextMiddleware, "pass"), true
 }
 
-func MiddlewareAfterOperationSuccess(c echo.Context) bool {
-	c.Response().Header().Set("X-pass-after-succeed-operation", "true")
+func MiddlewareAfterOperationSuccess(ctx context.Context, echoCtx echo.Context) (context.Context, bool) {
+	echoCtx.Response().Header().Set("X-pass-after-succeed-operation", "true")
 
-	abortAfterOperationSuccess := c.Request().Header.Get("abort-after-operation")
+	abortAfterOperationSuccess := echoCtx.Request().Header.Get("abort-after-operation")
 	if abortAfterOperationSuccess == "true" {
-		c.JSON(http.StatusBadRequest, map[string]string{"error": "abort-after-operation header is set to true"})
-		return false
+		echoCtx.JSON(http.StatusBadRequest, map[string]string{"error": "abort-after-operation header is set to true"})
+		return ctx, false
 	}
-	return true
+	return ctx, true
 }
 
-func MiddlewareOnError(c echo.Context, err error) bool {
-	c.Response().Header().Set("X-pass-on-error", "true")
+func MiddlewareOnError(ctx context.Context, echoCtx echo.Context, err error) (context.Context, bool) {
+	echoCtx.Response().Header().Set("X-pass-on-error", "true")
 
-	abortOnError := c.Request().Header.Get("abort-on-error")
+	abortOnError := echoCtx.Request().Header.Get("abort-on-error")
 	if abortOnError == "true" {
 		operationErr := ""
 		switch e := err.(type) {
@@ -44,21 +45,21 @@ func MiddlewareOnError(c echo.Context, err error) bool {
 		default:
 			operationErr = err.Error()
 		}
-		c.JSON(http.StatusBadRequest, map[string]string{"error": "abort-on-error header is set to true " + operationErr})
-		return false
+		echoCtx.JSON(http.StatusBadRequest, map[string]string{"error": "abort-on-error header is set to true " + operationErr})
+		return ctx, false
 	}
-	return true
+	return ctx, true
 }
 
-func MiddlewareOnError2(c echo.Context, err error) bool {
-	c.Response().Header().Set("X-pass-on-error-2", "true")
-	return true
+func MiddlewareOnError2(ctx context.Context, echoCtx echo.Context, err error) (context.Context, bool) {
+	echoCtx.Response().Header().Set("X-pass-on-error-2", "true")
+	return ctx, true
 }
 
-func MiddlewareOnValidationError(c echo.Context, err error) bool {
-	c.Response().Header().Set("X-pass-error-validation", "true")
-	
-	abortOnError := c.Request().Header.Get("abort-on-error")
+func MiddlewareOnValidationError(ctx context.Context, echoCtx echo.Context, err error) (context.Context, bool) {
+	echoCtx.Response().Header().Set("X-pass-error-validation", "true")
+
+	abortOnError := echoCtx.Request().Header.Get("abort-on-error")
 	if abortOnError == "true" {
 		operationErr := ""
 		switch e := err.(type) {
@@ -67,21 +68,21 @@ func MiddlewareOnValidationError(c echo.Context, err error) bool {
 		case error:
 			operationErr = e.Error()
 		}
-		c.JSON(http.StatusBadRequest, map[string]string{"error": "abort-on-error header is set to true " + operationErr})
-		return false
+		echoCtx.JSON(http.StatusBadRequest, map[string]string{"error": "abort-on-error header is set to true " + operationErr})
+		return ctx, false
 	}
-	return true
+	return ctx, true
 }
 
-func MiddlewareOnOutputValidationError(c echo.Context, err error) bool {
-	c.Response().Header().Set("X-pass-output-validation", "true")
-	
-	returnNull := c.Request().Header.Get("x-return-null")
+func MiddlewareOnOutputValidationError(ctx context.Context, echoCtx echo.Context, err error) (context.Context, bool) {
+	echoCtx.Response().Header().Set("X-pass-output-validation", "true")
+
+	returnNull := echoCtx.Request().Header.Get("x-return-null")
 	if returnNull == "true" {
-		c.JSON(http.StatusOK, nil)
-		return false
+		echoCtx.JSON(http.StatusOK, nil)
+		return ctx, false
 	}
-	abortOnError := c.Request().Header.Get("abort-on-error")
+	abortOnError := echoCtx.Request().Header.Get("abort-on-error")
 	if abortOnError == "true" {
 		operationErr := ""
 		switch e := err.(type) {
@@ -90,8 +91,8 @@ func MiddlewareOnOutputValidationError(c echo.Context, err error) bool {
 		case error:
 			operationErr = e.Error()
 		}
-		c.JSON(http.StatusBadRequest, map[string]string{"error": "abort-on-error header is set to true " + operationErr})
-		return false
+		echoCtx.JSON(http.StatusBadRequest, map[string]string{"error": "abort-on-error header is set to true " + operationErr})
+		return ctx, false
 	}
-	return true
+	return ctx, true
 }

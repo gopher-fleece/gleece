@@ -1,8 +1,8 @@
-ctx.Response().Header().Set("x-RouteEndRoutesExtension", "{{{ OperationId }}}")
+echoCtx.Response().Header().Set("x-RouteEndRoutesExtension", "{{{ OperationId }}}")
 
 {{#if TemplateContext.MODE }}
-        ctx.Response().Header().Set("x-mode", "{{{ TemplateContext.MODE.Options.mode }}}")
+        echoCtx.Response().Header().Set("x-mode", "{{{ TemplateContext.MODE.Options.mode }}}")
 {{/if }}
 {{#if TemplateContext.LEVEL }}
-        ctx.Response().Header().Set("x-level", "{{{ TemplateContext.LEVEL.Options.value }}}")
+        echoCtx.Response().Header().Set("x-level", "{{{ TemplateContext.LEVEL.Options.value }}}")
 {{/if }}

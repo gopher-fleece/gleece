@@ -649,16 +649,23 @@ func (ec *E2EController) EmbeddedStructs(data TheModel) (TheModel, error) {
 	return data, nil
 }
 
-type ContextKeyType int
+type ContextAuthInjectType int
+type ContextMiddlewareInjectType int
 
-const ContextName ContextKeyType = iota
+const ContextAuth ContextAuthInjectType = iota
+const ContextMiddleware ContextMiddlewareInjectType = iota
 
 // @Method(POST)
 // @Route(/context-injection-empty)
 // @Response(200)
 // @ErrorResponse(500)
 func (ec *E2EController) ContextInjectionEmpty(ctx context.Context) error {
-	ec.SetHeader("x-context-name", ctx.Value(ContextName).(string))
+	ec.SetHeader("x-context-auth", ctx.Value(ContextAuth).(string))
+
+	value := ctx.Value(ContextMiddleware)
+	if value != nil {
+		ec.SetHeader("x-context-middleware", value.(string))
+	}
 	return nil
 }
 
@@ -668,6 +675,6 @@ func (ec *E2EController) ContextInjectionEmpty(ctx context.Context) error {
 // @Response(200)
 // @ErrorResponse(500)
 func (ec *E2EController) ContextInjection(ctx context.Context, data TheModel) error {
-	ec.SetHeader("x-context-name", ctx.Value(ContextName).(string))
+	ec.SetHeader("x-context-auth", ctx.Value(ContextAuth).(string))
 	return nil
 }

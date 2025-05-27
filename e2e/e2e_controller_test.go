@@ -266,12 +266,12 @@ var _ = Describe("E2E Controller Spec", func() {
 		})
 	})
 
-	It("Should inject context", func() {
+	It("Should handle context from auth function", func() {
 		RunRouterTest(common.RouterTest{
 			Name:            "Should allow context with no other input",
 			ExpectedStatus:  204,
 			ExpectedBody:    "",
-			ExpendedHeaders: map[string]string{"x-context-name": "123"},
+			ExpendedHeaders: map[string]string{"x-context-auth": "123"},
 			Path:            "/e2e/context-injection-empty",
 			Method:          "POST",
 			Body:            nil,
@@ -283,7 +283,7 @@ var _ = Describe("E2E Controller Spec", func() {
 			Name:            "Should allow context with other input",
 			ExpectedStatus:  204,
 			ExpectedBody:    "",
-			ExpendedHeaders: map[string]string{"x-context-name": "123"},
+			ExpendedHeaders: map[string]string{"x-context-auth": "123"},
 			Path:            "/e2e/context-injection",
 			Method:          "POST",
 			Body: assets.TheModel{

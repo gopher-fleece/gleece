@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
@@ -8,43 +9,43 @@ import (
 )
 
 // MiddlewareBeforeOperation sets a header and optionally aborts the operation based on a request header.
-func MiddlewareBeforeOperation(c *fiber.Ctx) bool {
+func MiddlewareBeforeOperation(ctx context.Context, fiberCtx *fiber.Ctx) (context.Context, bool) {
 	// Set the header for the test with the given LAST run scope.
-	c.Response().Header.Set("X-pass-before-operation", "true")
+	fiberCtx.Response().Header.Set("X-pass-before-operation", "true")
 
 	// Retrieve the "abort-before-operation" header value.
-	abortBeforeOperation := string(c.Request().Header.Peek("abort-before-operation"))
+	abortBeforeOperation := string(fiberCtx.Request().Header.Peek("abort-before-operation"))
 	if abortBeforeOperation == "true" {
 		// Send a JSON response with status 400.
-		c.Status(http.StatusBadRequest).JSON(map[string]string{
+		fiberCtx.Status(http.StatusBadRequest).JSON(map[string]string{
 			"error": "abort-before-operation header is set to true",
 		})
-		return false
+		return ctx, false
 	}
 
-	return true
+	return context.WithValue(ctx, assets.ContextMiddleware, "pass"), true
 }
 
 // MiddlewareAfterOperationSuccess sets a header and optionally aborts after a successful operation.
-func MiddlewareAfterOperationSuccess(c *fiber.Ctx) bool {
-	c.Response().Header.Set("X-pass-after-succeed-operation", "true")
+func MiddlewareAfterOperationSuccess(ctx context.Context, fiberCtx *fiber.Ctx) (context.Context, bool) {
+	fiberCtx.Response().Header.Set("X-pass-after-succeed-operation", "true")
 
 	// Retrieve the "abort-after-operation" header value.
-	abortAfterOperationSuccess := string(c.Request().Header.Peek("abort-after-operation"))
+	abortAfterOperationSuccess := string(fiberCtx.Request().Header.Peek("abort-after-operation"))
 	if abortAfterOperationSuccess == "true" {
-		c.Status(http.StatusBadRequest).JSON(map[string]string{
+		fiberCtx.Status(http.StatusBadRequest).JSON(map[string]string{
 			"error": "abort-after-operation header is set to true",
 		})
-		return false
+		return ctx, false
 	}
-	return true
+	return ctx, true
 }
 
 // MiddlewareOnError sets a header and optionally aborts on error.
-func MiddlewareOnError(c *fiber.Ctx, err error) bool {
-	c.Response().Header.Set("X-pass-on-error", "true")
+func MiddlewareOnError(ctx context.Context, fiberCtx *fiber.Ctx, err error) (context.Context, bool) {
+	fiberCtx.Response().Header.Set("X-pass-on-error", "true")
 
-	abortOnError := string(c.Request().Header.Peek("abort-on-error"))
+	abortOnError := string(fiberCtx.Request().Header.Peek("abort-on-error"))
 	if abortOnError == "true" {
 		operationErr := ""
 		// Handle different error types.
@@ -56,24 +57,24 @@ func MiddlewareOnError(c *fiber.Ctx, err error) bool {
 		default:
 			operationErr = err.Error()
 		}
-		c.Status(http.StatusBadRequest).JSON(map[string]string{
+		fiberCtx.Status(http.StatusBadRequest).JSON(map[string]string{
 			"error": "abort-on-error header is set to true " + operationErr,
 		})
-		return false
+		return ctx, false
 	}
-	return true
+	return ctx, true
 }
 
 // MiddlewareOnError2 sets a header for error handling without aborting.
-func MiddlewareOnError2(c *fiber.Ctx, err error) bool {
-	c.Response().Header.Set("X-pass-on-error-2", "true")
-	return true
+func MiddlewareOnError2(ctx context.Context, fiberCtx *fiber.Ctx, err error) (context.Context, bool) {
+	fiberCtx.Response().Header.Set("X-pass-on-error-2", "true")
+	return ctx, true
 }
 
-func MiddlewareOnValidationError(c *fiber.Ctx, err error) bool {
-	c.Response().Header.Set("X-pass-error-validation", "true")
+func MiddlewareOnValidationError(ctx context.Context, fiberCtx *fiber.Ctx, err error) (context.Context, bool) {
+	fiberCtx.Response().Header.Set("X-pass-error-validation", "true")
 
-	abortOnError := string(c.Request().Header.Peek("abort-on-error"))
+	abortOnError := string(fiberCtx.Request().Header.Peek("abort-on-error"))
 	if abortOnError == "true" {
 		operationErr := ""
 		// Handle different error types
@@ -83,24 +84,24 @@ func MiddlewareOnValidationError(c *fiber.Ctx, err error) bool {
 		case error:
 			operationErr = e.Error()
 		}
-		c.Status(http.StatusBadRequest).JSON(map[string]string{
+		fiberCtx.Status(http.StatusBadRequest).JSON(map[string]string{
 			"error": "abort-on-error header is set to true " + operationErr,
 		})
-		return false
+		return ctx, false
 	}
-	return true
+	return ctx, true
 }
 
-func MiddlewareOnOutputValidationError(c *fiber.Ctx, err error) bool {
-	c.Response().Header.Set("X-pass-output-validation", "true")
+func MiddlewareOnOutputValidationError(ctx context.Context, fiberCtx *fiber.Ctx, err error) (context.Context, bool) {
+	fiberCtx.Response().Header.Set("X-pass-output-validation", "true")
 
-	returnNull := string(c.Request().Header.Peek("x-return-null"))
+	returnNull := string(fiberCtx.Request().Header.Peek("x-return-null"))
 	if returnNull == "true" {
-		c.Status(http.StatusOK).JSON(nil)
-		return false
+		fiberCtx.Status(http.StatusOK).JSON(nil)
+		return ctx, false
 	}
 
-	abortOnError := string(c.Request().Header.Peek("abort-on-error"))
+	abortOnError := string(fiberCtx.Request().Header.Peek("abort-on-error"))
 	if abortOnError == "true" {
 		operationErr := ""
 		// Handle different error types
@@ -110,10 +111,10 @@ func MiddlewareOnOutputValidationError(c *fiber.Ctx, err error) bool {
 		case error:
 			operationErr = e.Error()
 		}
-		c.Status(http.StatusBadRequest).JSON(map[string]string{
+		fiberCtx.Status(http.StatusBadRequest).JSON(map[string]string{
 			"error": "abort-on-error header is set to true " + operationErr,
 		})
-		return false
+		return ctx, false
 	}
-	return true
+	return ctx, true
 }

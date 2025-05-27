@@ -49,15 +49,15 @@ func RegisterRoutes(engine *fiber.App) {
 {{#each Controllers}}
 	// {{{Name}}}
 	{{#each Routes}}
-		engine.{{{ToUpperCamel HttpVerb}}}(toFiberUrl("{{{../RestMetadata.Path}}}{{{RestMetadata.Path}}}"), func(ctx *fiber.Ctx) error  {
+		engine.{{{ToUpperCamel HttpVerb}}}(toFiberUrl("{{{../RestMetadata.Path}}}{{{RestMetadata.Path}}}"), func(fiberCtx *fiber.Ctx) error  {
 			{{> RouteStartRoutesExtension }}
 			
 			authErr := {{> AuthorizationCall}}
 			if authErr != nil {
-				return handleAuthorizationError(ctx, authErr, "{{{OperationId}}}")
+				return handleAuthorizationError(fiberCtx, authErr, "{{{OperationId}}}")
 							}
 			controller := {{{Name}}}Import.{{../Name}}{}
-			controller.InitController(ctx)
+			controller.InitController(fiberCtx)
 			{{#ifAnyParamRequiresConversion FuncParams}}
 			var conversionErr error
 			{{/ifAnyParamRequiresConversion}}

@@ -1,3 +1,13 @@
+func getRequestContext(ginCtx *gin.Context) context.Context {
+	return ginCtx.Request.Context()
+}
+
+func setRequestContext(ginCtx *gin.Context, ctx context.Context) {
+	if ctx != nil {
+		ginCtx.Request = ginCtx.Request.WithContext(ctx)
+	}
+}
+
 func registerEnumValidation(validate *validator.Validate, validationName string, allowedValues []string) {
 	// Convert the array to a map for O(1) lookup
 	lookup := make(map[string]struct{})
@@ -183,10 +193,8 @@ func authorize(ginCtx *gin.Context, checksLists []SecurityCheckList) *runtime.Se
 		// Iterate over each security list
 		encounteredErrorInList := false
 		for _, check := range list.Checks {
-			secCtx, secErr := RequestAuth.GleeceRequestAuthorization(ginCtx.Request.Context(), ginCtx, check)
-			if secCtx != nil {
-				ginCtx.Request = ginCtx.Request.WithContext(secCtx)
-			}
+			secCtx, secErr := RequestAuth.GleeceRequestAuthorization(getRequestContext(ginCtx), ginCtx, check)
+			setRequestContext(ginCtx, secCtx)
 			if secErr != nil {
 				lastError = secErr
 				encounteredErrorInList = true

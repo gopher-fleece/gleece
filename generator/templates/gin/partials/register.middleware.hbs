@@ -1,5 +1,5 @@
-type MiddlewareFunc func(ctx *gin.Context) bool
-type ErrorMiddlewareFunc func(ctx *gin.Context, err error) bool
+type MiddlewareFunc func(ctx context.Context, ginCtx *gin.Context) (context.Context, bool)
+type ErrorMiddlewareFunc func(ctx context.Context, ginCtx *gin.Context, err error) (context.Context, bool)
 
 var beforeOperationMiddlewares []MiddlewareFunc
 var afterOperationSuccessMiddlewares []MiddlewareFunc

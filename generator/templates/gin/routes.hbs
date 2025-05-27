@@ -50,16 +50,16 @@ func RegisterRoutes(engine *gin.Engine) {
 	// {{{Name}}}
 
 	{{#each Routes}}
-		engine.{{{HttpVerb}}}(toGinUrl("{{{../RestMetadata.Path}}}{{{RestMetadata.Path}}}"), func(ctx *gin.Context) {
+		engine.{{{HttpVerb}}}(toGinUrl("{{{../RestMetadata.Path}}}{{{RestMetadata.Path}}}"), func(ginCtx *gin.Context) {
 			{{> RouteStartRoutesExtension }}
 			
 			authErr := {{> AuthorizationCall}}
 			if authErr != nil {
-				handleAuthorizationError(ctx, authErr, "{{{OperationId}}}")
+				handleAuthorizationError(ginCtx, authErr, "{{{OperationId}}}")
 				return
 			}
 			controller := {{{Name}}}Import.{{../Name}}{}
-			controller.InitController(ctx)
+			controller.InitController(ginCtx)
 			{{#ifAnyParamRequiresConversion FuncParams}}
 			var conversionErr error
 			{{/ifAnyParamRequiresConversion}}

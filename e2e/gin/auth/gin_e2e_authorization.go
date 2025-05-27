@@ -11,7 +11,7 @@ import (
 
 func GleeceRequestAuthorization(ctx context.Context, ginCtx *gin.Context, check runtime.SecurityCheck) (context.Context, *runtime.SecurityError) {
 
-	finalCtx := context.WithValue(ctx, assets.ContextName, "123")
+	finalCtx := context.WithValue(ctx, assets.ContextAuth, "123")
 
 	// A WA to set the header for the test with the given LAST run scope
 	ginCtx.Request.Header.Set("x-test-scopes", check.SchemaName+check.Scopes[0])

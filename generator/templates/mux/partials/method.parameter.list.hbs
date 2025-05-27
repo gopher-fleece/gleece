@@ -1,6 +1,6 @@
 {{#each FuncParams}}
 	{{#if IsContext}}
-		ctx.Context()
+		getRequestContext(req)
 	{{else}}
 		{{#if TypeMeta.IsByAddress}}
 

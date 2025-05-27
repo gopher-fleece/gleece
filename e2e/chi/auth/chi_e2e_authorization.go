@@ -1,13 +1,16 @@
 package auth
 
 import (
+	"context"
 	"net/http"
 	"strconv"
 
+	"github.com/gopher-fleece/gleece/e2e/assets"
 	"github.com/gopher-fleece/runtime"
 )
 
-func GleeceRequestAuthorization(r *http.Request, check runtime.SecurityCheck) *runtime.SecurityError {
+func GleeceRequestAuthorization(ctx context.Context, r *http.Request, check runtime.SecurityCheck) (context.Context, *runtime.SecurityError) {
+	finalCtx := context.WithValue(ctx, assets.ContextAuth, "123")
 	// A WA to set the header for the test with the given LAST run scope
 	r.Header.Set("x-test-scopes", check.SchemaName+check.Scopes[0])
 	// Simulate auth failed
@@ -20,7 +23,7 @@ func GleeceRequestAuthorization(r *http.Request, check runtime.SecurityCheck) *r
 	}
 
 	if r.Header.Get("fail-auth") == check.SchemaName {
-		return &runtime.SecurityError{
+		return finalCtx, &runtime.SecurityError{
 			Message:    "Failed to authorize",
 			StatusCode: runtime.HttpStatusCode(authCode),
 		}
@@ -28,7 +31,7 @@ func GleeceRequestAuthorization(r *http.Request, check runtime.SecurityCheck) *r
 
 	// Simulate auth failed with custom error
 	if r.Header.Get("fail-auth-custom") == check.SchemaName {
-		return &runtime.SecurityError{
+		return finalCtx, &runtime.SecurityError{
 			Message:    "Failed to authorize",
 			StatusCode: runtime.HttpStatusCode(authCode),
 			CustomError: &runtime.CustomError{
@@ -42,5 +45,5 @@ func GleeceRequestAuthorization(r *http.Request, check runtime.SecurityCheck) *r
 			},
 		}
 	}
-	return nil
+	return finalCtx, nil
 }

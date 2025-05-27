@@ -50,7 +50,7 @@ func RegisterRoutes(engine *chi.Mux) {
 	// {{{Name}}}
 
 	{{#each Routes}}
-		engine.{{{ToUpperCamel HttpVerb}}}(toChiUrl("{{{../RestMetadata.Path}}}{{{RestMetadata.Path}}}"), func(w http.ResponseWriter, ctx *http.Request) {
+		engine.{{{ToUpperCamel HttpVerb}}}(toChiUrl("{{{../RestMetadata.Path}}}{{{RestMetadata.Path}}}"), func(w http.ResponseWriter, req *http.Request) {
 			{{> RouteStartRoutesExtension }}
 			
 			authErr := {{> AuthorizationCall}}
@@ -59,7 +59,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				return
 			}
 			controller := {{{Name}}}Import.{{../Name}}{}
-			controller.InitController(ctx)
+			controller.InitController(req)
 			{{#ifAnyParamRequiresConversion FuncParams}}
 			var conversionErr error
 			{{/ifAnyParamRequiresConversion}}

@@ -957,4 +957,20 @@ var _ = Describe("E2E Middlewares Spec", func() {
 			RunningMode: &exExtraRouting,
 		})
 	})
+
+	It("Should inject context by middleware function", func() {
+		RunRouterTest(common.RouterTest{
+			Name:            "Should allow context with no other input",
+			ExpectedStatus:  204,
+			ExpectedBody:    "",
+			ExpendedHeaders: map[string]string{"x-context-middleware": "pass"},
+			Path:            "/e2e/context-injection-empty",
+			Method:          "POST",
+			Body:            nil,
+			Query:           nil,
+			Headers:         nil,
+			RunningMode:     &fullyFeaturedRouting,
+		})
+	})
+
 })

@@ -231,7 +231,7 @@ func generateParams(doc *v3.Document, route definitions.RouteMetadata, operation
 	// Iterate over FuncParams and create parameters
 	for _, param := range route.FuncParams {
 		if param.IsContext {
-			continue // The context if for the generated code only, no affect it should apply on the specification
+			continue // The context is for the generated code only, and should not affect the specification
 		}
 
 		switch param.PassedIn {

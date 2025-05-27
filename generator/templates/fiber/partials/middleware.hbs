@@ -1,11 +1,15 @@
 // Middlewares {{middlewares}} section
 for _, middleware := range {{middlewares}} {
 	{{#if isErrorMiddleware}}
-		if continueOperation := middleware(ctx, {{errorName}}); !continueOperation {
+		middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, {{errorName}})
+		setRequestContext(fiberCtx, middlewareCtx)
+		if !continueOperation {
 			return nil
 		}
 	{{else}}
-		if continueOperation := middleware(ctx); !continueOperation {
+		middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+		setRequestContext(fiberCtx, middlewareCtx)
+		if !continueOperation {
 			return nil
 		}
 	{{/if}}

@@ -1,5 +1,5 @@
-type MiddlewareFunc func(ctx *fiber.Ctx) bool
-type ErrorMiddlewareFunc func(ctx *fiber.Ctx, err error) bool
+type MiddlewareFunc func(ctx context.Context, fiberCtx *fiber.Ctx) (context.Context, bool)
+type ErrorMiddlewareFunc func(ctx context.Context, fiberCtx *fiber.Ctx, err error) (context.Context, bool)
 
 var beforeOperationMiddlewares []MiddlewareFunc
 var afterOperationSuccessMiddlewares []MiddlewareFunc

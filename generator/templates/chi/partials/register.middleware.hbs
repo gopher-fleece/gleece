@@ -1,5 +1,5 @@
-type MiddlewareFunc func(w http.ResponseWriter, r *http.Request) bool
-type ErrorMiddlewareFunc func(w http.ResponseWriter, r *http.Request, err error) bool
+type MiddlewareFunc func(ctx context.Context, w http.ResponseWriter, r *http.Request) (context.Context, bool)
+type ErrorMiddlewareFunc func(ctx context.Context, w http.ResponseWriter, r *http.Request, err error) (context.Context, bool)
 
 var beforeOperationMiddlewares []MiddlewareFunc
 var afterOperationSuccessMiddlewares []MiddlewareFunc

@@ -1,13 +1,17 @@
 package auth
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gopher-fleece/gleece/e2e/assets"
 	"github.com/gopher-fleece/runtime"
 )
 
-func GleeceRequestAuthorization(c *fiber.Ctx, check runtime.SecurityCheck) *runtime.SecurityError {
+func GleeceRequestAuthorization(ctx context.Context, c *fiber.Ctx, check runtime.SecurityCheck) (context.Context, *runtime.SecurityError) {
+	finalCtx := context.WithValue(ctx, assets.ContextAuth, "123")
+
 	// Set the header for the test with the given LAST run scope.
 	// Fiber gives you access to the underlying fasthttp request.
 	c.Request().Header.Set("x-test-scopes", check.SchemaName+check.Scopes[0])
@@ -24,7 +28,7 @@ func GleeceRequestAuthorization(c *fiber.Ctx, check runtime.SecurityCheck) *runt
 
 	// Check if the "fail-auth" header equals the schema name in the check.
 	if string(c.Request().Header.Peek("fail-auth")) == check.SchemaName {
-		return &runtime.SecurityError{
+		return finalCtx, &runtime.SecurityError{
 			Message:    "Failed to authorize",
 			StatusCode: runtime.HttpStatusCode(authCode),
 		}
@@ -32,7 +36,7 @@ func GleeceRequestAuthorization(c *fiber.Ctx, check runtime.SecurityCheck) *runt
 
 	// Simulate auth failed with a custom error
 	if string(c.Request().Header.Peek("fail-auth-custom")) == check.SchemaName {
-		return &runtime.SecurityError{
+		return finalCtx, &runtime.SecurityError{
 			Message:    "Failed to authorize",
 			StatusCode: runtime.HttpStatusCode(authCode),
 			CustomError: &runtime.CustomError{
@@ -47,5 +51,5 @@ func GleeceRequestAuthorization(c *fiber.Ctx, check runtime.SecurityCheck) *runt
 		}
 	}
 
-	return nil
+	return finalCtx, nil
 }

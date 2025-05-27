@@ -1,6 +1,6 @@
 {{#each FuncParams}}
 	{{#if IsContext}}
-		ctx.Request().Context()
+		getRequestContext(echoCtx)
 	{{else}}
 		{{#if TypeMeta.IsByAddress}}
 
