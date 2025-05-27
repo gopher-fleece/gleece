@@ -97,7 +97,12 @@ var _ = Describe("Unit Tests - AST", func() {
 
 			// Now call your function
 			fullPkg, err := extractor.GetFullPackageName(astFile, fileSet)
-			Expect(err).To(MatchError(ContainSubstring("no such file or directory")))
+			Expect(err).To(
+				Or(
+					MatchError(ContainSubstring("no such file or directory")),
+					MatchError(ContainSubstring("cannot find the path")),
+				),
+			)
 			Expect(fullPkg).To(BeEmpty())
 		})
 
