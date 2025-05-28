@@ -9,7 +9,7 @@ validationError := runtime.Rfc7807Error{
 		extractValidationErrorMessage(conversionErr, nil),
 	),
 	Status:     http.StatusUnprocessableEntity,
-	Instance:   "/gleece/validation/error/{{{OperationId}}}",
+	Instance:   "/validation/error/{{{OperationId}}}",
 }
 
 {{> JsonBodyValidationErrorResponseExtension}}

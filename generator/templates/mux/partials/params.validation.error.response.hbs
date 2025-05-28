@@ -9,7 +9,7 @@ validationError := runtime.Rfc7807Error{
 		reflect.TypeOf({{ToLowerCamel Name}}{{#ifEqual PassedIn "Body"}}{{else}}Raw{{/ifEqual}}).String(),
 	),
 	Status:     http.StatusUnprocessableEntity,
-	Instance:   "/gleece/validation/error/{{{OperationId}}}",
+	Instance:   "/validation/error/{{{OperationId}}}",
 	Extensions: map[string]string{"error": conversionErr.Error()},
 }
 {{> ParamsValidationErrorResponseExtension}}

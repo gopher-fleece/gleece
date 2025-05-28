@@ -67,7 +67,7 @@ var _ = Describe("E2E Authorization Spec", func() {
 		RunRouterTest(common.RouterTest{
 			Name:            "Should fail one security check",
 			ExpectedStatus:  401,
-			ExpectedBody:    "{\"type\":\"Unauthorized\",\"title\":\"\",\"detail\":\"Failed to authorize\",\"status\":401,\"instance\":\"/gleece/authorization/error/WithOneSecurity\",\"extensions\":null}",
+			ExpectedBody:    "{\"type\":\"Unauthorized\",\"title\":\"\",\"detail\":\"Failed to authorize\",\"status\":401,\"instance\":\"/authorization/error/WithOneSecurity\",\"extensions\":null}",
 			ExpendedHeaders: nil,
 			Path:            "/e2e/with-one-security",
 			Method:          "GET",
@@ -131,7 +131,7 @@ var _ = Describe("E2E Authorization Spec", func() {
 		RunRouterTest(common.RouterTest{
 			Name:            "Should fail by both security check",
 			ExpectedStatus:  401,
-			ExpectedBody:    "{\"type\":\"Unauthorized\",\"title\":\"\",\"detail\":\"Failed to authorize\",\"status\":401,\"instance\":\"/gleece/authorization/error/WithTwoSecuritySameMethod\",\"extensions\":null}",
+			ExpectedBody:    "{\"type\":\"Unauthorized\",\"title\":\"\",\"detail\":\"Failed to authorize\",\"status\":401,\"instance\":\"/authorization/error/WithTwoSecuritySameMethod\",\"extensions\":null}",
 			ExpendedHeaders: nil,
 			Path:            "/e2e/with-two-security-same-method",
 			Method:          "GET",

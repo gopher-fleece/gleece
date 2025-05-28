@@ -478,7 +478,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 		RunRouterTest(common.RouterTest{
 			Name:           "Should pass thro validation error middleware for string param - enum conversion",
 			ExpectedStatus: 422,
-			ExpectedBody:   "{\"type\":\"Unprocessable Entity\",\"title\":\"\",\"detail\":\"A request was made to operation 'TestEnums' but parameter 'value1' was not properly sent - Expected StatusEnumeration but got string\",\"status\":422,\"instance\":\"/gleece/validation/error/TestEnums\",\"extensions\":{\"error\":\"value1 must be one of \\\"active, inactive\\\" options only but got \\\"activerrrr\\\"\"}}",
+			ExpectedBody:   "{\"type\":\"Unprocessable Entity\",\"title\":\"\",\"detail\":\"A request was made to operation 'TestEnums' but parameter 'value1' was not properly sent - Expected StatusEnumeration but got string\",\"status\":422,\"instance\":\"/validation/error/TestEnums\",\"extensions\":{\"error\":\"value1 must be one of \\\"active, inactive\\\" options only but got \\\"activerrrr\\\"\"}}",
 			ExpendedHeaders: map[string]string{
 				"X-pass-error-validation":        "true",
 				"X-pass-after-succeed-operation": "",
@@ -776,7 +776,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 		RunRouterTest(common.RouterTest{
 			Name:                "Should NOT pass thro validation error middleware for struct param - missing body",
 			ExpectedStatus:      422,
-			ExpectedBodyContain: "{\"type\":\"Unprocessable Entity\",\"title\":\"\",\"detail\":\"A request was made to operation 'PostWithAllParamsWithBody' but body parameter 'theBody' did not pass validation of 'BodyInfo' - body is required but was not provided\",\"status\":422,\"instance\":\"/gleece/validation/error/PostWithAllParamsWithBody\",\"extensions\":null}",
+			ExpectedBodyContain: "{\"type\":\"Unprocessable Entity\",\"title\":\"\",\"detail\":\"A request was made to operation 'PostWithAllParamsWithBody' but body parameter 'theBody' did not pass validation of 'BodyInfo' - body is required but was not provided\",\"status\":422,\"instance\":\"/validation/error/PostWithAllParamsWithBody\",\"extensions\":null}",
 			ExpendedHeaders: map[string]string{
 				"X-pass-error-validation":        "",
 				"X-pass-after-succeed-operation": "",
@@ -816,7 +816,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 		RunRouterTest(common.RouterTest{
 			Name:           "Should set validation error for invalid response payload - direct",
 			ExpectedStatus: 500,
-			ExpectedBody:   "{\"type\":\"Internal Server Error\",\"title\":\"\",\"detail\":\"Encountered an error during operation 'TestResponseValidation'\",\"status\":500,\"instance\":\"/gleece/controller/error/TestResponseValidation\",\"extensions\":{}}",
+			ExpectedBody:   "{\"type\":\"Internal Server Error\",\"title\":\"\",\"detail\":\"Encountered an error during operation 'TestResponseValidation'\",\"status\":500,\"instance\":\"/controller/error/TestResponseValidation\",\"extensions\":{}}",
 			ExpendedHeaders: map[string]string{
 				"X-pass-output-validation":       "true",
 				"X-pass-after-succeed-operation": "",
@@ -832,7 +832,7 @@ var _ = Describe("E2E Middlewares Spec", func() {
 		RunRouterTest(common.RouterTest{
 			Name:           "Should set validation error for invalid response payload -ptr",
 			ExpectedStatus: 500,
-			ExpectedBody:   "{\"type\":\"Internal Server Error\",\"title\":\"\",\"detail\":\"Encountered an error during operation 'TestResponseValidationPtr'\",\"status\":500,\"instance\":\"/gleece/controller/error/TestResponseValidationPtr\",\"extensions\":{}}",
+			ExpectedBody:   "{\"type\":\"Internal Server Error\",\"title\":\"\",\"detail\":\"Encountered an error during operation 'TestResponseValidationPtr'\",\"status\":500,\"instance\":\"/controller/error/TestResponseValidationPtr\",\"extensions\":{}}",
 			ExpendedHeaders: map[string]string{
 				"X-pass-output-validation":       "true",
 				"X-pass-after-succeed-operation": "",

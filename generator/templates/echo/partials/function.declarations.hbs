@@ -225,7 +225,7 @@ func handleAuthorizationError(echoCtx echo.Context, authErr *runtime.SecurityErr
 		Type:     http.StatusText(statusCode),
 		Detail:   authErr.Message,
 		Status:   statusCode,
-		Instance: "/gleece/authorization/error/" + operationId,
+		Instance: "/authorization/error/" + operationId,
 	}
 	return echoCtx.JSON(statusCode, stdError)
 }
@@ -240,7 +240,7 @@ func wrapValidatorError(validatorErr error, operationId string, fieldName string
 			extractValidationErrorMessage(validatorErr, &fieldName),
 		),
 		Status:     http.StatusUnprocessableEntity,
-		Instance:   fmt.Sprintf("/gleece/validation/error/%s", operationId),
+		Instance:   fmt.Sprintf("/validation/error/%s", operationId),
 	}
 }
 

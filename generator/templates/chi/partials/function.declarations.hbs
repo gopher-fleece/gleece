@@ -214,7 +214,7 @@ func handleAuthorizationError(w http.ResponseWriter, authErr *runtime.SecurityEr
 		Type:     http.StatusText(statusCode),
 		Detail:   authErr.Message,
 		Status:   statusCode,
-		Instance: "/gleece/authorization/error/" + operationId,
+		Instance: "/authorization/error/" + operationId,
 	}
 	w.WriteHeader(statusCode)
 	json.NewEncoder(w).Encode(stdError)
@@ -230,7 +230,7 @@ func wrapValidatorError(validatorErr error, operationId string, fieldName string
 			extractValidationErrorMessage(validatorErr, &fieldName),
 		),
 		Status:     http.StatusUnprocessableEntity,
-		Instance:   fmt.Sprintf("/gleece/validation/error/%s", operationId),
+		Instance:   fmt.Sprintf("/validation/error/%s", operationId),
 	}
 }
 
