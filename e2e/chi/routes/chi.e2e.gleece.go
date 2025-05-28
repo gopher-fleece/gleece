@@ -15,6 +15,7 @@ Repository: https://github.com/gopher-fleece/gleece
 --
 */
 package routes
+
 import (
 	"context"
 	"encoding/json"
@@ -25,16 +26,11 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
-	RequestAuth "github.com/gopher-fleece/gleece/e2e/chi/auth"
-	"github.com/gopher-fleece/runtime"
+	E2EClassSecControllerImport "github.com/gopher-fleece/gleece/e2e/assets"
 	E2EControllerImport "github.com/gopher-fleece/gleece/e2e/assets"
-	Param41theBody "github.com/gopher-fleece/gleece/e2e/assets"
-	Param46theBody "github.com/gopher-fleece/gleece/e2e/assets"
-	Param49theBody "github.com/gopher-fleece/gleece/e2e/assets"
-	Response70CustomError "github.com/gopher-fleece/gleece/e2e/assets"
-	Response73CustomError "github.com/gopher-fleece/gleece/e2e/assets"
 	Param100value1 "github.com/gopher-fleece/gleece/e2e/assets"
 	Param101value2 "github.com/gopher-fleece/gleece/e2e/assets"
 	Param102value3 "github.com/gopher-fleece/gleece/e2e/assets"
@@ -42,29 +38,40 @@ import (
 	Param106value2 "github.com/gopher-fleece/gleece/e2e/assets"
 	Param107value3 "github.com/gopher-fleece/gleece/e2e/assets"
 	Param110value1 "github.com/gopher-fleece/gleece/e2e/assets"
-	Param113unit "github.com/haimkastner/unitsnet-go/units"
-	Param114data "github.com/haimkastner/unitsnet-go/units"
 	Param117data "github.com/gopher-fleece/gleece/e2e/assets"
 	Param121data "github.com/gopher-fleece/gleece/e2e/assets"
-	Param120unit "github.com/haimkastner/unitsnet-go/units"
-	Param124data "github.com/haimkastner/unitsnet-go/units"
 	Param127data "github.com/gopher-fleece/gleece/e2e/assets"
 	Param130data "github.com/gopher-fleece/gleece/e2e/assets"
 	Param133data "github.com/gopher-fleece/gleece/e2e/assets"
 	Param137data "github.com/gopher-fleece/gleece/e2e/assets"
-	E2EClassSecControllerImport "github.com/gopher-fleece/gleece/e2e/assets"
+	Param41theBody "github.com/gopher-fleece/gleece/e2e/assets"
+	Param46theBody "github.com/gopher-fleece/gleece/e2e/assets"
+	Param49theBody "github.com/gopher-fleece/gleece/e2e/assets"
+	Response70CustomError "github.com/gopher-fleece/gleece/e2e/assets"
+	Response73CustomError "github.com/gopher-fleece/gleece/e2e/assets"
+	RequestAuth "github.com/gopher-fleece/gleece/e2e/chi/auth"
+	"github.com/gopher-fleece/runtime"
+	Param113unit "github.com/haimkastner/unitsnet-go/units"
+	Param114data "github.com/haimkastner/unitsnet-go/units"
+	Param120unit "github.com/haimkastner/unitsnet-go/units"
+	Param124data "github.com/haimkastner/unitsnet-go/units"
 	// ImportsExtension - test
 )
+
 var validatorInstance = validator.New()
 var urlParamRegex *regexp.Regexp
+
 type SecurityListRelation string
+
 const (
 	SecurityListRelationAnd SecurityListRelation = "AND"
 )
+
 type SecurityCheckList struct {
 	Checks   []runtime.SecurityCheck
 	Relation SecurityListRelation
 }
+
 // TypeDeclarationsExtension - test
 func getRequestContext(req *http.Request) context.Context {
 	return req.Context()
@@ -250,7 +257,7 @@ func handleAuthorizationError(w http.ResponseWriter, authErr *runtime.SecurityEr
 		Type:     http.StatusText(statusCode),
 		Detail:   authErr.Message,
 		Status:   statusCode,
-		Instance: "/gleece/authorization/error/" + operationId,
+		Instance: "/authorization/error/" + operationId,
 	}
 	w.WriteHeader(statusCode)
 	json.NewEncoder(w).Encode(stdError)
@@ -265,17 +272,20 @@ func wrapValidatorError(validatorErr error, operationId string, fieldName string
 			extractValidationErrorMessage(validatorErr, &fieldName),
 		),
 		Status:   http.StatusUnprocessableEntity,
-		Instance: fmt.Sprintf("/gleece/validation/error/%s", operationId),
+		Instance: fmt.Sprintf("/validation/error/%s", operationId),
 	}
 }
+
 // FunctionDeclarationsExtension - test
 type MiddlewareFunc func(ctx context.Context, w http.ResponseWriter, r *http.Request) (context.Context, bool)
 type ErrorMiddlewareFunc func(ctx context.Context, w http.ResponseWriter, r *http.Request, err error) (context.Context, bool)
+
 var beforeOperationMiddlewares []MiddlewareFunc
 var afterOperationSuccessMiddlewares []MiddlewareFunc
 var onErrorMiddlewares []ErrorMiddlewareFunc
 var onInputValidationMiddlewares []ErrorMiddlewareFunc
 var onOutputValidationMiddlewares []ErrorMiddlewareFunc
+
 func RegisterMiddleware(executionType runtime.MiddlewareExecutionType, middlewareFunc MiddlewareFunc) {
 	switch executionType {
 	case runtime.BeforeOperation:
@@ -362,7 +372,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'SimpleGet'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/SimpleGet",
+				Instance:   "/controller/error/SimpleGet",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "SimpleGet")
@@ -441,7 +451,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'SimpleGetEmptyString'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/SimpleGetEmptyString",
+				Instance:   "/controller/error/SimpleGetEmptyString",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "SimpleGetEmptyString")
@@ -520,7 +530,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'SimpleGetPtrString'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/SimpleGetPtrString",
+				Instance:   "/controller/error/SimpleGetPtrString",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "SimpleGetPtrString")
@@ -599,7 +609,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'SimpleGetNullString'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/SimpleGetNullString",
+				Instance:   "/controller/error/SimpleGetNullString",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "SimpleGetNullString")
@@ -678,7 +688,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'SimpleGetObject'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/SimpleGetObject",
+				Instance:   "/controller/error/SimpleGetObject",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "SimpleGetObject")
@@ -704,7 +714,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(outputValidationStatusCode),
 				Detail:     "Encountered an error during operation 'SimpleGetObject'",
 				Status:     outputValidationStatusCode,
-				Instance:   "/gleece/controller/error/SimpleGetObject",
+				Instance:   "/controller/error/SimpleGetObject",
 				Extensions: map[string]string{},
 			}
 			w.Header().Set("Content-Type", "application/json")
@@ -782,7 +792,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'SimpleGetObjectPtr'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/SimpleGetObjectPtr",
+				Instance:   "/controller/error/SimpleGetObjectPtr",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "SimpleGetObjectPtr")
@@ -812,7 +822,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(outputValidationStatusCode),
 				Detail:     "Encountered an error during operation 'SimpleGetObjectPtr'",
 				Status:     outputValidationStatusCode,
-				Instance:   "/gleece/controller/error/SimpleGetObjectPtr",
+				Instance:   "/controller/error/SimpleGetObjectPtr",
 				Extensions: map[string]string{},
 			}
 			w.Header().Set("Content-Type", "application/json")
@@ -890,7 +900,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'SimpleGetObjectNull'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/SimpleGetObjectNull",
+				Instance:   "/controller/error/SimpleGetObjectNull",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "SimpleGetObjectNull")
@@ -920,7 +930,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(outputValidationStatusCode),
 				Detail:     "Encountered an error during operation 'SimpleGetObjectNull'",
 				Status:     outputValidationStatusCode,
-				Instance:   "/gleece/controller/error/SimpleGetObjectNull",
+				Instance:   "/controller/error/SimpleGetObjectNull",
 				Extensions: map[string]string{},
 			}
 			w.Header().Set("Content-Type", "application/json")
@@ -998,7 +1008,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'PrimitiveReturnType'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/PrimitiveReturnType",
+				Instance:   "/controller/error/PrimitiveReturnType",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "PrimitiveReturnType")
@@ -1077,7 +1087,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'PrimitiveArrayReturnType'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/PrimitiveArrayReturnType",
+				Instance:   "/controller/error/PrimitiveArrayReturnType",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "PrimitiveArrayReturnType")
@@ -1156,7 +1166,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'PrimitiveAliasReturnType'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/PrimitiveAliasReturnType",
+				Instance:   "/controller/error/PrimitiveAliasReturnType",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "PrimitiveAliasReturnType")
@@ -1182,7 +1192,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(outputValidationStatusCode),
 				Detail:     "Encountered an error during operation 'PrimitiveAliasReturnType'",
 				Status:     outputValidationStatusCode,
-				Instance:   "/gleece/controller/error/PrimitiveAliasReturnType",
+				Instance:   "/controller/error/PrimitiveAliasReturnType",
 				Extensions: map[string]string{},
 			}
 			w.Header().Set("Content-Type", "application/json")
@@ -1260,7 +1270,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'PrimitiveAliasArrayReturnType'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/PrimitiveAliasArrayReturnType",
+				Instance:   "/controller/error/PrimitiveAliasArrayReturnType",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "PrimitiveAliasArrayReturnType")
@@ -1286,7 +1296,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(outputValidationStatusCode),
 				Detail:     "Encountered an error during operation 'PrimitiveAliasArrayReturnType'",
 				Status:     outputValidationStatusCode,
-				Instance:   "/gleece/controller/error/PrimitiveAliasArrayReturnType",
+				Instance:   "/controller/error/PrimitiveAliasArrayReturnType",
 				Extensions: map[string]string{},
 			}
 			w.Header().Set("Content-Type", "application/json")
@@ -1388,7 +1398,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'SimpleGetEmpty'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/SimpleGetEmpty",
+				Instance:   "/controller/error/SimpleGetEmpty",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "SimpleGetEmpty")
@@ -1542,7 +1552,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'GetWithAllParams'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/GetWithAllParams",
+				Instance:   "/controller/error/GetWithAllParams",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "GetWithAllParams")
@@ -1664,7 +1674,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'GetWithAllParamsPtr'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/GetWithAllParamsPtr",
+				Instance:   "/controller/error/GetWithAllParamsPtr",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "GetWithAllParamsPtr")
@@ -1820,7 +1830,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'GetWithAllParamsRequiredPtr'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/GetWithAllParamsRequiredPtr",
+				Instance:   "/controller/error/GetWithAllParamsRequiredPtr",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "GetWithAllParamsRequiredPtr")
@@ -1943,7 +1953,7 @@ func RegisterRoutes(engine *chi.Mux) {
 					extractValidationErrorMessage(conversionErr, nil),
 				),
 				Status:   http.StatusUnprocessableEntity,
-				Instance: "/gleece/validation/error/PostWithAllParamsWithBody",
+				Instance: "/validation/error/PostWithAllParamsWithBody",
 			}
 			w.Header().Set("x-JsonBodyValidationErrorResponseExtension", "PostWithAllParamsWithBody")
 			w.WriteHeader(http.StatusUnprocessableEntity)
@@ -1981,7 +1991,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'PostWithAllParamsWithBody'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/PostWithAllParamsWithBody",
+				Instance:   "/controller/error/PostWithAllParamsWithBody",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "PostWithAllParamsWithBody")
@@ -2007,7 +2017,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(outputValidationStatusCode),
 				Detail:     "Encountered an error during operation 'PostWithAllParamsWithBody'",
 				Status:     outputValidationStatusCode,
-				Instance:   "/gleece/controller/error/PostWithAllParamsWithBody",
+				Instance:   "/controller/error/PostWithAllParamsWithBody",
 				Extensions: map[string]string{},
 			}
 			w.Header().Set("Content-Type", "application/json")
@@ -2095,7 +2105,7 @@ func RegisterRoutes(engine *chi.Mux) {
 					extractValidationErrorMessage(conversionErr, nil),
 				),
 				Status:   http.StatusUnprocessableEntity,
-				Instance: "/gleece/validation/error/PostWithAllParamsWithBodyPtr",
+				Instance: "/validation/error/PostWithAllParamsWithBodyPtr",
 			}
 			w.Header().Set("x-JsonBodyValidationErrorResponseExtension", "PostWithAllParamsWithBodyPtr")
 			w.WriteHeader(http.StatusUnprocessableEntity)
@@ -2133,7 +2143,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'PostWithAllParamsWithBodyPtr'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/PostWithAllParamsWithBodyPtr",
+				Instance:   "/controller/error/PostWithAllParamsWithBodyPtr",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "PostWithAllParamsWithBodyPtr")
@@ -2163,7 +2173,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(outputValidationStatusCode),
 				Detail:     "Encountered an error during operation 'PostWithAllParamsWithBodyPtr'",
 				Status:     outputValidationStatusCode,
-				Instance:   "/gleece/controller/error/PostWithAllParamsWithBodyPtr",
+				Instance:   "/controller/error/PostWithAllParamsWithBodyPtr",
 				Extensions: map[string]string{},
 			}
 			w.Header().Set("Content-Type", "application/json")
@@ -2232,7 +2242,7 @@ func RegisterRoutes(engine *chi.Mux) {
 					extractValidationErrorMessage(conversionErr, nil),
 				),
 				Status:   http.StatusUnprocessableEntity,
-				Instance: "/gleece/validation/error/PostWithAllParamsWithBodyRequiredPtr",
+				Instance: "/validation/error/PostWithAllParamsWithBodyRequiredPtr",
 			}
 			w.Header().Set("x-JsonBodyValidationErrorResponseExtension", "PostWithAllParamsWithBodyRequiredPtr")
 			w.WriteHeader(http.StatusUnprocessableEntity)
@@ -2270,7 +2280,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'PostWithAllParamsWithBodyRequiredPtr'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/PostWithAllParamsWithBodyRequiredPtr",
+				Instance:   "/controller/error/PostWithAllParamsWithBodyRequiredPtr",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "PostWithAllParamsWithBodyRequiredPtr")
@@ -2300,7 +2310,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(outputValidationStatusCode),
 				Detail:     "Encountered an error during operation 'PostWithAllParamsWithBodyRequiredPtr'",
 				Status:     outputValidationStatusCode,
-				Instance:   "/gleece/controller/error/PostWithAllParamsWithBodyRequiredPtr",
+				Instance:   "/controller/error/PostWithAllParamsWithBodyRequiredPtr",
 				Extensions: map[string]string{},
 			}
 			w.Header().Set("Content-Type", "application/json")
@@ -2407,7 +2417,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'GetHeaderStartWithLetter'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/GetHeaderStartWithLetter",
+				Instance:   "/controller/error/GetHeaderStartWithLetter",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "GetHeaderStartWithLetter")
@@ -2515,7 +2525,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'WithDefaultConfigSecurity'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/WithDefaultConfigSecurity",
+				Instance:   "/controller/error/WithDefaultConfigSecurity",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "WithDefaultConfigSecurity")
@@ -2623,7 +2633,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'WithOneSecurity'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/WithOneSecurity",
+				Instance:   "/controller/error/WithOneSecurity",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "WithOneSecurity")
@@ -2743,7 +2753,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'WithTwoSecurity'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/WithTwoSecurity",
+				Instance:   "/controller/error/WithTwoSecurity",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "WithTwoSecurity")
@@ -2863,7 +2873,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'WithTwoSecuritySameMethod'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/WithTwoSecuritySameMethod",
+				Instance:   "/controller/error/WithTwoSecuritySameMethod",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "WithTwoSecuritySameMethod")
@@ -2942,7 +2952,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'DefaultError'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/DefaultError",
+				Instance:   "/controller/error/DefaultError",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "DefaultError")
@@ -3019,7 +3029,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'DefaultErrorWithPayload'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/DefaultErrorWithPayload",
+				Instance:   "/controller/error/DefaultErrorWithPayload",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "DefaultErrorWithPayload")
@@ -3237,7 +3247,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'Error503'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/Error503",
+				Instance:   "/controller/error/Error503",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "Error503")
@@ -3384,7 +3394,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'ContextAccess'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/ContextAccess",
+				Instance:   "/controller/error/ContextAccess",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "ContextAccess")
@@ -3461,7 +3471,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'Get'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/Get",
+				Instance:   "/controller/error/Get",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "Get")
@@ -3538,7 +3548,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'Post'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/Post",
+				Instance:   "/controller/error/Post",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "Post")
@@ -3615,7 +3625,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'Put'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/Put",
+				Instance:   "/controller/error/Put",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "Put")
@@ -3692,7 +3702,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'Delete'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/Delete",
+				Instance:   "/controller/error/Delete",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "Delete")
@@ -3769,7 +3779,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'Patch'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/Patch",
+				Instance:   "/controller/error/Patch",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "Patch")
@@ -3846,7 +3856,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'TemplateContext1'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/TemplateContext1",
+				Instance:   "/controller/error/TemplateContext1",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "TemplateContext1")
@@ -3926,7 +3936,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'TemplateContext2'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/TemplateContext2",
+				Instance:   "/controller/error/TemplateContext2",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "TemplateContext2")
@@ -4063,7 +4073,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'TestForm'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/TestForm",
+				Instance:   "/controller/error/TestForm",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "TestForm")
@@ -4142,7 +4152,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'TestResponseValidation'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/TestResponseValidation",
+				Instance:   "/controller/error/TestResponseValidation",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "TestResponseValidation")
@@ -4168,7 +4178,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(outputValidationStatusCode),
 				Detail:     "Encountered an error during operation 'TestResponseValidation'",
 				Status:     outputValidationStatusCode,
-				Instance:   "/gleece/controller/error/TestResponseValidation",
+				Instance:   "/controller/error/TestResponseValidation",
 				Extensions: map[string]string{},
 			}
 			w.Header().Set("Content-Type", "application/json")
@@ -4246,7 +4256,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'TestResponseValidationPtr'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/TestResponseValidationPtr",
+				Instance:   "/controller/error/TestResponseValidationPtr",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "TestResponseValidationPtr")
@@ -4276,7 +4286,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(outputValidationStatusCode),
 				Detail:     "Encountered an error during operation 'TestResponseValidationPtr'",
 				Status:     outputValidationStatusCode,
-				Instance:   "/gleece/controller/error/TestResponseValidationPtr",
+				Instance:   "/controller/error/TestResponseValidationPtr",
 				Extensions: map[string]string{},
 			}
 			w.Header().Set("Content-Type", "application/json")
@@ -4354,7 +4364,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'TestResponseValidationNull'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/TestResponseValidationNull",
+				Instance:   "/controller/error/TestResponseValidationNull",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "TestResponseValidationNull")
@@ -4384,7 +4394,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(outputValidationStatusCode),
 				Detail:     "Encountered an error during operation 'TestResponseValidationNull'",
 				Status:     outputValidationStatusCode,
-				Instance:   "/gleece/controller/error/TestResponseValidationNull",
+				Instance:   "/controller/error/TestResponseValidationNull",
 				Extensions: map[string]string{},
 			}
 			w.Header().Set("Content-Type", "application/json")
@@ -4455,7 +4465,7 @@ func RegisterRoutes(engine *chi.Mux) {
 						reflect.TypeOf(value1Raw).String(),
 					),
 					Status:     http.StatusUnprocessableEntity,
-					Instance:   "/gleece/validation/error/TestPrimitiveConversions",
+					Instance:   "/validation/error/TestPrimitiveConversions",
 					Extensions: map[string]string{"error": conversionErr.Error()},
 				}
 				w.Header().Set("x-ParamsValidationErrorResponseExtension", "TestPrimitiveConversions")
@@ -4507,7 +4517,7 @@ func RegisterRoutes(engine *chi.Mux) {
 						reflect.TypeOf(value2Raw).String(),
 					),
 					Status:     http.StatusUnprocessableEntity,
-					Instance:   "/gleece/validation/error/TestPrimitiveConversions",
+					Instance:   "/validation/error/TestPrimitiveConversions",
 					Extensions: map[string]string{"error": conversionErr.Error()},
 				}
 				w.Header().Set("x-ParamsValidationErrorResponseExtension", "TestPrimitiveConversions")
@@ -4558,7 +4568,7 @@ func RegisterRoutes(engine *chi.Mux) {
 						reflect.TypeOf(value3Raw).String(),
 					),
 					Status:     http.StatusUnprocessableEntity,
-					Instance:   "/gleece/validation/error/TestPrimitiveConversions",
+					Instance:   "/validation/error/TestPrimitiveConversions",
 					Extensions: map[string]string{"error": conversionErr.Error()},
 				}
 				w.Header().Set("x-ParamsValidationErrorResponseExtension", "TestPrimitiveConversions")
@@ -4610,7 +4620,7 @@ func RegisterRoutes(engine *chi.Mux) {
 						reflect.TypeOf(value4Raw).String(),
 					),
 					Status:     http.StatusUnprocessableEntity,
-					Instance:   "/gleece/validation/error/TestPrimitiveConversions",
+					Instance:   "/validation/error/TestPrimitiveConversions",
 					Extensions: map[string]string{"error": conversionErr.Error()},
 				}
 				w.Header().Set("x-ParamsValidationErrorResponseExtension", "TestPrimitiveConversions")
@@ -4668,7 +4678,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'TestPrimitiveConversions'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/TestPrimitiveConversions",
+				Instance:   "/controller/error/TestPrimitiveConversions",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "TestPrimitiveConversions")
@@ -4746,7 +4756,7 @@ func RegisterRoutes(engine *chi.Mux) {
 						reflect.TypeOf(value1Raw).String(),
 					),
 					Status:     http.StatusUnprocessableEntity,
-					Instance:   "/gleece/validation/error/TestEnums",
+					Instance:   "/validation/error/TestEnums",
 					Extensions: map[string]string{"error": conversionErr.Error()},
 				}
 				w.Header().Set("x-ParamsValidationErrorResponseExtension", "TestEnums")
@@ -4796,7 +4806,7 @@ func RegisterRoutes(engine *chi.Mux) {
 						reflect.TypeOf(value2Raw).String(),
 					),
 					Status:     http.StatusUnprocessableEntity,
-					Instance:   "/gleece/validation/error/TestEnums",
+					Instance:   "/validation/error/TestEnums",
 					Extensions: map[string]string{"error": conversionErr.Error()},
 				}
 				w.Header().Set("x-ParamsValidationErrorResponseExtension", "TestEnums")
@@ -4829,7 +4839,7 @@ func RegisterRoutes(engine *chi.Mux) {
 						reflect.TypeOf(value2Raw).String(),
 					),
 					Status:     http.StatusUnprocessableEntity,
-					Instance:   "/gleece/validation/error/TestEnums",
+					Instance:   "/validation/error/TestEnums",
 					Extensions: map[string]string{"error": conversionErr.Error()},
 				}
 				w.Header().Set("x-ParamsValidationErrorResponseExtension", "TestEnums")
@@ -4876,7 +4886,7 @@ func RegisterRoutes(engine *chi.Mux) {
 					extractValidationErrorMessage(conversionErr, nil),
 				),
 				Status:   http.StatusUnprocessableEntity,
-				Instance: "/gleece/validation/error/TestEnums",
+				Instance: "/validation/error/TestEnums",
 			}
 			w.Header().Set("x-JsonBodyValidationErrorResponseExtension", "TestEnums")
 			w.WriteHeader(http.StatusUnprocessableEntity)
@@ -4914,7 +4924,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'TestEnums'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/TestEnums",
+				Instance:   "/controller/error/TestEnums",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "TestEnums")
@@ -4940,7 +4950,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(outputValidationStatusCode),
 				Detail:     "Encountered an error during operation 'TestEnums'",
 				Status:     outputValidationStatusCode,
-				Instance:   "/gleece/controller/error/TestEnums",
+				Instance:   "/controller/error/TestEnums",
 				Extensions: map[string]string{},
 			}
 			w.Header().Set("Content-Type", "application/json")
@@ -5016,7 +5026,7 @@ func RegisterRoutes(engine *chi.Mux) {
 						reflect.TypeOf(value1Raw).String(),
 					),
 					Status:     http.StatusUnprocessableEntity,
-					Instance:   "/gleece/validation/error/TestEnumsInAll",
+					Instance:   "/validation/error/TestEnumsInAll",
 					Extensions: map[string]string{"error": conversionErr.Error()},
 				}
 				w.Header().Set("x-ParamsValidationErrorResponseExtension", "TestEnumsInAll")
@@ -5071,7 +5081,7 @@ func RegisterRoutes(engine *chi.Mux) {
 						reflect.TypeOf(value2Raw).String(),
 					),
 					Status:     http.StatusUnprocessableEntity,
-					Instance:   "/gleece/validation/error/TestEnumsInAll",
+					Instance:   "/validation/error/TestEnumsInAll",
 					Extensions: map[string]string{"error": conversionErr.Error()},
 				}
 				w.Header().Set("x-ParamsValidationErrorResponseExtension", "TestEnumsInAll")
@@ -5104,7 +5114,7 @@ func RegisterRoutes(engine *chi.Mux) {
 						reflect.TypeOf(value2Raw).String(),
 					),
 					Status:     http.StatusUnprocessableEntity,
-					Instance:   "/gleece/validation/error/TestEnumsInAll",
+					Instance:   "/validation/error/TestEnumsInAll",
 					Extensions: map[string]string{"error": conversionErr.Error()},
 				}
 				w.Header().Set("x-ParamsValidationErrorResponseExtension", "TestEnumsInAll")
@@ -5163,7 +5173,7 @@ func RegisterRoutes(engine *chi.Mux) {
 						reflect.TypeOf(value3Raw).String(),
 					),
 					Status:     http.StatusUnprocessableEntity,
-					Instance:   "/gleece/validation/error/TestEnumsInAll",
+					Instance:   "/validation/error/TestEnumsInAll",
 					Extensions: map[string]string{"error": conversionErr.Error()},
 				}
 				w.Header().Set("x-ParamsValidationErrorResponseExtension", "TestEnumsInAll")
@@ -5220,7 +5230,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'TestEnumsInAll'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/TestEnumsInAll",
+				Instance:   "/controller/error/TestEnumsInAll",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "TestEnumsInAll")
@@ -5302,7 +5312,7 @@ func RegisterRoutes(engine *chi.Mux) {
 						reflect.TypeOf(value1Raw).String(),
 					),
 					Status:     http.StatusUnprocessableEntity,
-					Instance:   "/gleece/validation/error/TestEnumsOptional",
+					Instance:   "/validation/error/TestEnumsOptional",
 					Extensions: map[string]string{"error": conversionErr.Error()},
 				}
 				w.Header().Set("x-ParamsValidationErrorResponseExtension", "TestEnumsOptional")
@@ -5342,7 +5352,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'TestEnumsOptional'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/TestEnumsOptional",
+				Instance:   "/controller/error/TestEnumsOptional",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "TestEnumsOptional")
@@ -5420,7 +5430,7 @@ func RegisterRoutes(engine *chi.Mux) {
 						reflect.TypeOf(unitRaw).String(),
 					),
 					Status:     http.StatusUnprocessableEntity,
-					Instance:   "/gleece/validation/error/ExternalPackages",
+					Instance:   "/validation/error/ExternalPackages",
 					Extensions: map[string]string{"error": conversionErr.Error()},
 				}
 				w.Header().Set("x-ParamsValidationErrorResponseExtension", "ExternalPackages")
@@ -5450,7 +5460,7 @@ func RegisterRoutes(engine *chi.Mux) {
 					extractValidationErrorMessage(conversionErr, nil),
 				),
 				Status:   http.StatusUnprocessableEntity,
-				Instance: "/gleece/validation/error/ExternalPackages",
+				Instance: "/validation/error/ExternalPackages",
 			}
 			w.Header().Set("x-JsonBodyValidationErrorResponseExtension", "ExternalPackages")
 			w.WriteHeader(http.StatusUnprocessableEntity)
@@ -5488,7 +5498,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'ExternalPackages'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/ExternalPackages",
+				Instance:   "/controller/error/ExternalPackages",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "ExternalPackages")
@@ -5514,7 +5524,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(outputValidationStatusCode),
 				Detail:     "Encountered an error during operation 'ExternalPackages'",
 				Status:     outputValidationStatusCode,
-				Instance:   "/gleece/controller/error/ExternalPackages",
+				Instance:   "/controller/error/ExternalPackages",
 				Extensions: map[string]string{},
 			}
 			w.Header().Set("Content-Type", "application/json")
@@ -5583,7 +5593,7 @@ func RegisterRoutes(engine *chi.Mux) {
 					extractValidationErrorMessage(conversionErr, nil),
 				),
 				Status:   http.StatusUnprocessableEntity,
-				Instance: "/gleece/validation/error/ExternalPackagesUniqueInStruct",
+				Instance: "/validation/error/ExternalPackagesUniqueInStruct",
 			}
 			w.Header().Set("x-JsonBodyValidationErrorResponseExtension", "ExternalPackagesUniqueInStruct")
 			w.WriteHeader(http.StatusUnprocessableEntity)
@@ -5621,7 +5631,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'ExternalPackagesUniqueInStruct'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/ExternalPackagesUniqueInStruct",
+				Instance:   "/controller/error/ExternalPackagesUniqueInStruct",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "ExternalPackagesUniqueInStruct")
@@ -5699,7 +5709,7 @@ func RegisterRoutes(engine *chi.Mux) {
 						reflect.TypeOf(unitRaw).String(),
 					),
 					Status:     http.StatusUnprocessableEntity,
-					Instance:   "/gleece/validation/error/ExternalPackagesValidation",
+					Instance:   "/validation/error/ExternalPackagesValidation",
 					Extensions: map[string]string{"error": conversionErr.Error()},
 				}
 				w.Header().Set("x-ParamsValidationErrorResponseExtension", "ExternalPackagesValidation")
@@ -5729,7 +5739,7 @@ func RegisterRoutes(engine *chi.Mux) {
 					extractValidationErrorMessage(conversionErr, nil),
 				),
 				Status:   http.StatusUnprocessableEntity,
-				Instance: "/gleece/validation/error/ExternalPackagesValidation",
+				Instance: "/validation/error/ExternalPackagesValidation",
 			}
 			w.Header().Set("x-JsonBodyValidationErrorResponseExtension", "ExternalPackagesValidation")
 			w.WriteHeader(http.StatusUnprocessableEntity)
@@ -5767,7 +5777,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'ExternalPackagesValidation'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/ExternalPackagesValidation",
+				Instance:   "/controller/error/ExternalPackagesValidation",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "ExternalPackagesValidation")
@@ -5793,7 +5803,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(outputValidationStatusCode),
 				Detail:     "Encountered an error during operation 'ExternalPackagesValidation'",
 				Status:     outputValidationStatusCode,
-				Instance:   "/gleece/controller/error/ExternalPackagesValidation",
+				Instance:   "/controller/error/ExternalPackagesValidation",
 				Extensions: map[string]string{},
 			}
 			w.Header().Set("Content-Type", "application/json")
@@ -5862,7 +5872,7 @@ func RegisterRoutes(engine *chi.Mux) {
 					extractValidationErrorMessage(conversionErr, nil),
 				),
 				Status:   http.StatusUnprocessableEntity,
-				Instance: "/gleece/validation/error/ArraysInBodyAndRes",
+				Instance: "/validation/error/ArraysInBodyAndRes",
 			}
 			w.Header().Set("x-JsonBodyValidationErrorResponseExtension", "ArraysInBodyAndRes")
 			w.WriteHeader(http.StatusUnprocessableEntity)
@@ -5900,7 +5910,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'ArraysInBodyAndRes'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/ArraysInBodyAndRes",
+				Instance:   "/controller/error/ArraysInBodyAndRes",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "ArraysInBodyAndRes")
@@ -5926,7 +5936,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(outputValidationStatusCode),
 				Detail:     "Encountered an error during operation 'ArraysInBodyAndRes'",
 				Status:     outputValidationStatusCode,
-				Instance:   "/gleece/controller/error/ArraysInBodyAndRes",
+				Instance:   "/controller/error/ArraysInBodyAndRes",
 				Extensions: map[string]string{},
 			}
 			w.Header().Set("Content-Type", "application/json")
@@ -5995,7 +6005,7 @@ func RegisterRoutes(engine *chi.Mux) {
 					extractValidationErrorMessage(conversionErr, nil),
 				),
 				Status:   http.StatusUnprocessableEntity,
-				Instance: "/gleece/validation/error/ArraysInsideBodyAndRes",
+				Instance: "/validation/error/ArraysInsideBodyAndRes",
 			}
 			w.Header().Set("x-JsonBodyValidationErrorResponseExtension", "ArraysInsideBodyAndRes")
 			w.WriteHeader(http.StatusUnprocessableEntity)
@@ -6033,7 +6043,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'ArraysInsideBodyAndRes'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/ArraysInsideBodyAndRes",
+				Instance:   "/controller/error/ArraysInsideBodyAndRes",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "ArraysInsideBodyAndRes")
@@ -6063,7 +6073,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(outputValidationStatusCode),
 				Detail:     "Encountered an error during operation 'ArraysInsideBodyAndRes'",
 				Status:     outputValidationStatusCode,
-				Instance:   "/gleece/controller/error/ArraysInsideBodyAndRes",
+				Instance:   "/controller/error/ArraysInsideBodyAndRes",
 				Extensions: map[string]string{},
 			}
 			w.Header().Set("Content-Type", "application/json")
@@ -6132,7 +6142,7 @@ func RegisterRoutes(engine *chi.Mux) {
 					extractValidationErrorMessage(conversionErr, nil),
 				),
 				Status:   http.StatusUnprocessableEntity,
-				Instance: "/gleece/validation/error/DeepArraysWithValidation",
+				Instance: "/validation/error/DeepArraysWithValidation",
 			}
 			w.Header().Set("x-JsonBodyValidationErrorResponseExtension", "DeepArraysWithValidation")
 			w.WriteHeader(http.StatusUnprocessableEntity)
@@ -6170,7 +6180,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'DeepArraysWithValidation'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/DeepArraysWithValidation",
+				Instance:   "/controller/error/DeepArraysWithValidation",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "DeepArraysWithValidation")
@@ -6196,7 +6206,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(outputValidationStatusCode),
 				Detail:     "Encountered an error during operation 'DeepArraysWithValidation'",
 				Status:     outputValidationStatusCode,
-				Instance:   "/gleece/controller/error/DeepArraysWithValidation",
+				Instance:   "/controller/error/DeepArraysWithValidation",
 				Extensions: map[string]string{},
 			}
 			w.Header().Set("Content-Type", "application/json")
@@ -6265,7 +6275,7 @@ func RegisterRoutes(engine *chi.Mux) {
 					extractValidationErrorMessage(conversionErr, nil),
 				),
 				Status:   http.StatusUnprocessableEntity,
-				Instance: "/gleece/validation/error/EmbeddedStructs",
+				Instance: "/validation/error/EmbeddedStructs",
 			}
 			w.Header().Set("x-JsonBodyValidationErrorResponseExtension", "EmbeddedStructs")
 			w.WriteHeader(http.StatusUnprocessableEntity)
@@ -6303,7 +6313,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'EmbeddedStructs'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/EmbeddedStructs",
+				Instance:   "/controller/error/EmbeddedStructs",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "EmbeddedStructs")
@@ -6329,7 +6339,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(outputValidationStatusCode),
 				Detail:     "Encountered an error during operation 'EmbeddedStructs'",
 				Status:     outputValidationStatusCode,
-				Instance:   "/gleece/controller/error/EmbeddedStructs",
+				Instance:   "/controller/error/EmbeddedStructs",
 				Extensions: map[string]string{},
 			}
 			w.Header().Set("Content-Type", "application/json")
@@ -6407,7 +6417,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'ContextInjectionEmpty'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/ContextInjectionEmpty",
+				Instance:   "/controller/error/ContextInjectionEmpty",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "ContextInjectionEmpty")
@@ -6475,7 +6485,7 @@ func RegisterRoutes(engine *chi.Mux) {
 					extractValidationErrorMessage(conversionErr, nil),
 				),
 				Status:   http.StatusUnprocessableEntity,
-				Instance: "/gleece/validation/error/ContextInjection",
+				Instance: "/validation/error/ContextInjection",
 			}
 			w.Header().Set("x-JsonBodyValidationErrorResponseExtension", "ContextInjection")
 			w.WriteHeader(http.StatusUnprocessableEntity)
@@ -6513,7 +6523,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'ContextInjection'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/ContextInjection",
+				Instance:   "/controller/error/ContextInjection",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "ContextInjection")
@@ -6620,7 +6630,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'WithDefaultClassSecurity'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/WithDefaultClassSecurity",
+				Instance:   "/controller/error/WithDefaultClassSecurity",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "WithDefaultClassSecurity")
@@ -6728,7 +6738,7 @@ func RegisterRoutes(engine *chi.Mux) {
 				Type:       http.StatusText(statusCode),
 				Detail:     "Encountered an error during operation 'WithOverrideClassSecurity'",
 				Status:     statusCode,
-				Instance:   "/gleece/controller/error/WithOverrideClassSecurity",
+				Instance:   "/controller/error/WithOverrideClassSecurity",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			w.Header().Set("x-JsonErrorResponseExtension", "WithOverrideClassSecurity")

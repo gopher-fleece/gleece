@@ -11,7 +11,7 @@ var _ = Describe("E2E Errors Spec", func() {
 		RunRouterTest(common.RouterTest{
 			Name:            "Should return default rfc7807 error",
 			ExpectedStatus:  500,
-			ExpectedBody:    "{\"type\":\"Internal Server Error\",\"title\":\"\",\"detail\":\"Encountered an error during operation 'DefaultError'\",\"status\":500,\"instance\":\"/gleece/controller/error/DefaultError\",\"extensions\":{\"error\":\"default error\"}}",
+			ExpectedBody:    "{\"type\":\"Internal Server Error\",\"title\":\"\",\"detail\":\"Encountered an error during operation 'DefaultError'\",\"status\":500,\"instance\":\"/controller/error/DefaultError\",\"extensions\":{\"error\":\"default error\"}}",
 			ExpendedHeaders: nil,
 			Path:            "/e2e/default-error",
 			Method:          "GET",
@@ -25,7 +25,7 @@ var _ = Describe("E2E Errors Spec", func() {
 		RunRouterTest(common.RouterTest{
 			Name:            "Should return default error rfc7807 with payload response",
 			ExpectedStatus:  500,
-			ExpectedBody:    "{\"type\":\"Internal Server Error\",\"title\":\"\",\"detail\":\"Encountered an error during operation 'DefaultErrorWithPayload'\",\"status\":500,\"instance\":\"/gleece/controller/error/DefaultErrorWithPayload\",\"extensions\":{\"error\":\"default error\"}}",
+			ExpectedBody:    "{\"type\":\"Internal Server Error\",\"title\":\"\",\"detail\":\"Encountered an error during operation 'DefaultErrorWithPayload'\",\"status\":500,\"instance\":\"/controller/error/DefaultErrorWithPayload\",\"extensions\":{\"error\":\"default error\"}}",
 			ExpendedHeaders: nil,
 			Path:            "/e2e/default-error-with-payload",
 			Method:          "GET",
@@ -53,7 +53,7 @@ var _ = Describe("E2E Errors Spec", func() {
 		RunRouterTest(common.RouterTest{
 			Name:            "Should set custom error code",
 			ExpectedStatus:  503,
-			ExpectedBody:    "{\"type\":\"Service Unavailable\",\"title\":\"\",\"detail\":\"Encountered an error during operation 'Error503'\",\"status\":503,\"instance\":\"/gleece/controller/error/Error503\",\"extensions\":{\"error\":\"default error\"}}",
+			ExpectedBody:    "{\"type\":\"Service Unavailable\",\"title\":\"\",\"detail\":\"Encountered an error during operation 'Error503'\",\"status\":503,\"instance\":\"/controller/error/Error503\",\"extensions\":{\"error\":\"default error\"}}",
 			ExpendedHeaders: nil,
 			Path:            "/e2e/503-error-code",
 			Method:          "GET",
@@ -81,7 +81,7 @@ var _ = Describe("E2E Errors Spec", func() {
 		RunRouterTest(common.RouterTest{
 			Name:            "Should set validation error for invalid response payload",
 			ExpectedStatus:  500,
-			ExpectedBody:    "{\"type\":\"Internal Server Error\",\"title\":\"\",\"detail\":\"Encountered an error during operation 'TestResponseValidation'\",\"status\":500,\"instance\":\"/gleece/controller/error/TestResponseValidation\",\"extensions\":{}}",
+			ExpectedBody:    "{\"type\":\"Internal Server Error\",\"title\":\"\",\"detail\":\"Encountered an error during operation 'TestResponseValidation'\",\"status\":500,\"instance\":\"/controller/error/TestResponseValidation\",\"extensions\":{}}",
 			ExpendedHeaders: nil,
 			Path:            "/e2e/test-response-validation",
 			Method:          "POST",
@@ -111,7 +111,7 @@ var _ = Describe("E2E Errors Spec", func() {
 		RunRouterTest(common.RouterTest{
 			Name:            "Should set validation error for invalid response payload pointer",
 			ExpectedStatus:  500,
-			ExpectedBody:    "{\"type\":\"Internal Server Error\",\"title\":\"\",\"detail\":\"Encountered an error during operation 'TestResponseValidationPtr'\",\"status\":500,\"instance\":\"/gleece/controller/error/TestResponseValidationPtr\",\"extensions\":{}}",
+			ExpectedBody:    "{\"type\":\"Internal Server Error\",\"title\":\"\",\"detail\":\"Encountered an error during operation 'TestResponseValidationPtr'\",\"status\":500,\"instance\":\"/controller/error/TestResponseValidationPtr\",\"extensions\":{}}",
 			ExpendedHeaders: nil,
 			Path:            "/e2e/test-response-validation-ptr",
 			Method:          "POST",
@@ -141,7 +141,7 @@ var _ = Describe("E2E Errors Spec", func() {
 		RunRouterTest(common.RouterTest{
 			Name:            "Should set validation error for empty response payload pointer",
 			ExpectedStatus:  500,
-			ExpectedBody:    "{\"type\":\"Internal Server Error\",\"title\":\"\",\"detail\":\"Encountered an error during operation 'TestResponseValidationNull'\",\"status\":500,\"instance\":\"/gleece/controller/error/TestResponseValidationNull\",\"extensions\":{}}",
+			ExpectedBody:    "{\"type\":\"Internal Server Error\",\"title\":\"\",\"detail\":\"Encountered an error during operation 'TestResponseValidationNull'\",\"status\":500,\"instance\":\"/controller/error/TestResponseValidationNull\",\"extensions\":{}}",
 			ExpendedHeaders: nil,
 			Path:            "/e2e/test-response-validation-null",
 			Method:          "POST",

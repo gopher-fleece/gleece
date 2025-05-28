@@ -3,6 +3,7 @@ package middlewares
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gopher-fleece/gleece/e2e/assets"
@@ -16,7 +17,7 @@ func MiddlewareBeforeOperation(ctx context.Context, ginCtx *gin.Context) (contex
 		ginCtx.JSON(400, gin.H{"error": "abort-before-operation header is set to true"})
 		return ctx, false
 	}
-
+	ctx = context.WithValue(ctx, "arrive-time", time.Now())
 	return context.WithValue(ctx, assets.ContextMiddleware, "pass"), true
 }
 

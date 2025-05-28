@@ -4,7 +4,7 @@ stdError := runtime.Rfc7807Error{
 	Type:       http.StatusText(statusCode),
 	Detail:     "Encountered an error during operation '{{{OperationId}}}'",
 	Status:     statusCode,
-	Instance:   "/gleece/controller/error/{{{OperationId}}}",
+	Instance:   "/controller/error/{{{OperationId}}}",
 	Extensions: map[string]string{"error": opError.Error()},
 }
 {{> JsonErrorResponseExtension}}

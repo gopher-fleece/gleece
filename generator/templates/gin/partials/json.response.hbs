@@ -23,7 +23,7 @@
 				Type:       http.StatusText(outputValidationStatusCode),
 				Detail:     "Encountered an error during operation '{{{OperationId}}}'",
 				Status:     outputValidationStatusCode,
-				Instance:   "/gleece/controller/error/{{{OperationId}}}",
+				Instance:   "/controller/error/{{{OperationId}}}",
 				Extensions: map[string]string{},
 			}
 			ginCtx.JSON(outputValidationStatusCode, outputValidationRfc7807Error)

@@ -316,7 +316,7 @@ var _ = Describe("E2E Models Spec", func() {
 		RunRouterTest(common.RouterTest{
 			Name:            "Should return status code 422 for enum prams and body - wrong direct string enum",
 			ExpectedStatus:  422,
-			ExpectedBody:    "{\"type\":\"Unprocessable Entity\",\"title\":\"\",\"detail\":\"A request was made to operation 'TestEnums' but parameter 'value1' was not properly sent - Expected StatusEnumeration but got string\",\"status\":422,\"instance\":\"/gleece/validation/error/TestEnums\",\"extensions\":{\"error\":\"value1 must be one of \\\"active, inactive\\\" options only but got \\\"blabla\\\"\"}}",
+			ExpectedBody:    "{\"type\":\"Unprocessable Entity\",\"title\":\"\",\"detail\":\"A request was made to operation 'TestEnums' but parameter 'value1' was not properly sent - Expected StatusEnumeration but got string\",\"status\":422,\"instance\":\"/validation/error/TestEnums\",\"extensions\":{\"error\":\"value1 must be one of \\\"active, inactive\\\" options only but got \\\"blabla\\\"\"}}",
 			ExpendedHeaders: nil,
 			Path:            "/e2e/test-enums",
 			Method:          "POST",
@@ -334,7 +334,7 @@ var _ = Describe("E2E Models Spec", func() {
 		RunRouterTest(common.RouterTest{
 			Name:            "Should return status code 422 for enum prams and body - wrong direct number enum",
 			ExpectedStatus:  422,
-			ExpectedBody:    "{\"type\":\"Unprocessable Entity\",\"title\":\"\",\"detail\":\"A request was made to operation 'TestEnums' but parameter 'value2' was not properly sent - Expected NumberEnumeration but got string\",\"status\":422,\"instance\":\"/gleece/validation/error/TestEnums\",\"extensions\":{\"error\":\"value2 must be one of \\\"1, 2\\\" options only but got \\\"4\\\"\"}}",
+			ExpectedBody:    "{\"type\":\"Unprocessable Entity\",\"title\":\"\",\"detail\":\"A request was made to operation 'TestEnums' but parameter 'value2' was not properly sent - Expected NumberEnumeration but got string\",\"status\":422,\"instance\":\"/validation/error/TestEnums\",\"extensions\":{\"error\":\"value2 must be one of \\\"1, 2\\\" options only but got \\\"4\\\"\"}}",
 			ExpendedHeaders: nil,
 			Path:            "/e2e/test-enums",
 			Method:          "POST",
@@ -352,7 +352,7 @@ var _ = Describe("E2E Models Spec", func() {
 		RunRouterTest(common.RouterTest{
 			Name:            "Should return status code 422 for enum prams and body - wrong in struct enum validated by generated validator",
 			ExpectedStatus:  422,
-			ExpectedBody:    "{\"type\":\"Unprocessable Entity\",\"title\":\"\",\"detail\":\"A request was made to operation 'TestEnums' but body parameter 'value3' did not pass validation of 'ObjectWithEnum' - Field 'Status' failed validation with tag 'status_enumeration_enum'. \",\"status\":422,\"instance\":\"/gleece/validation/error/TestEnums\",\"extensions\":null}",
+			ExpectedBody:    "{\"type\":\"Unprocessable Entity\",\"title\":\"\",\"detail\":\"A request was made to operation 'TestEnums' but body parameter 'value3' did not pass validation of 'ObjectWithEnum' - Field 'Status' failed validation with tag 'status_enumeration_enum'. \",\"status\":422,\"instance\":\"/validation/error/TestEnums\",\"extensions\":null}",
 			ExpendedHeaders: nil,
 			Path:            "/e2e/test-enums",
 			Method:          "POST",
@@ -370,7 +370,7 @@ var _ = Describe("E2E Models Spec", func() {
 		RunRouterTest(common.RouterTest{
 			Name:            "Should return status code 422 for enum prams and body - wrong enum in optional param",
 			ExpectedStatus:  422,
-			ExpectedBody:    "{\"type\":\"Unprocessable Entity\",\"title\":\"\",\"detail\":\"A request was made to operation 'TestEnumsOptional' but parameter 'value1' was not properly sent - Expected StatusEnumeration but got string\",\"status\":422,\"instance\":\"/gleece/validation/error/TestEnumsOptional\",\"extensions\":{\"error\":\"value1 must be one of \\\"active, inactive\\\" options only but got \\\"active222\\\"\"}}",
+			ExpectedBody:    "{\"type\":\"Unprocessable Entity\",\"title\":\"\",\"detail\":\"A request was made to operation 'TestEnumsOptional' but parameter 'value1' was not properly sent - Expected StatusEnumeration but got string\",\"status\":422,\"instance\":\"/validation/error/TestEnumsOptional\",\"extensions\":{\"error\":\"value1 must be one of \\\"active, inactive\\\" options only but got \\\"active222\\\"\"}}",
 			ExpendedHeaders: nil,
 			Path:            "/e2e/test-enums-optional",
 			Method:          "POST",
