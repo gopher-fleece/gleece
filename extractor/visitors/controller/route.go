@@ -148,13 +148,13 @@ func (v *ControllerVisitor) getValidatedFuncParams(funcDecl *ast.FuncDecl, comme
 
 func (v *ControllerVisitor) validateBodyParam(param definitions.FuncParam) error {
 	// Verify the body is a struct
-	if param.ParamMeta.TypeMeta.EntityKind != definitions.AstNodeKindStruct {
+	if param.ParamMeta.TypeMeta.SymbolKind != definitions.SymKindStruct {
 		return v.getFrozenError(
 			"body parameters must be structs but '%s' (schema name '%s', type '%s') is of kind '%s'",
 			param.Name,
 			param.NameInSchema,
 			param.TypeMeta.Name,
-			param.TypeMeta.EntityKind,
+			param.TypeMeta.SymbolKind,
 		)
 	}
 
@@ -164,10 +164,10 @@ func (v *ControllerVisitor) validateBodyParam(param definitions.FuncParam) error
 func (v *ControllerVisitor) validatePrimitiveParam(param definitions.FuncParam) error {
 	// Currently, we're limited to primitive header, path and query parameters.
 	// This is a simple and silly check for those.
-	// need to fully integrate the EntityKind field..
+	// need to fully integrate the SymbolKind field..
 	isErrType := param.TypeMeta.FullyQualifiedPackage == "" && param.TypeMeta.Name == "error"
 	isMapType := param.TypeMeta.FullyQualifiedPackage == "" && strings.HasPrefix(param.TypeMeta.Name, "map[")
-	isAliasType := param.TypeMeta.EntityKind == definitions.AstNodeKindAlias
+	isAliasType := param.TypeMeta.SymbolKind == definitions.SymKindAlias
 	if (!param.TypeMeta.IsUniverseType && !isAliasType) || isErrType || isMapType {
 		return v.getFrozenError(
 			"header, path and query parameters are currently limited to primitives only but "+
@@ -176,7 +176,7 @@ func (v *ControllerVisitor) validatePrimitiveParam(param definitions.FuncParam) 
 			param.Name,
 			param.NameInSchema,
 			param.TypeMeta.Name,
-			param.TypeMeta.EntityKind,
+			param.TypeMeta.SymbolKind,
 		)
 	}
 

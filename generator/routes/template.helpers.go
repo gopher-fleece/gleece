@@ -82,7 +82,7 @@ func registerHandlebarsHelpers() {
 				// The CTX param is not come from the http "input" and should not be converted from anything
 				continue
 			}
-			if param.TypeMeta.Name != "string" && param.TypeMeta.FullyQualifiedPackage != "" && param.TypeMeta.EntityKind != definitions.AstNodeKindAlias {
+			if param.TypeMeta.Name != "string" && param.TypeMeta.FullyQualifiedPackage != "" && param.TypeMeta.SymbolKind != definitions.SymKindAlias {
 				// Currently, only 'string' parameters don't undergo any validation
 				return options.Fn()
 			}

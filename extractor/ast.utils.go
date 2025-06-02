@@ -340,35 +340,13 @@ func GetTypeNameOrError(pkg *packages.Package, name string) (*types.TypeName, er
 	return typeName, nil
 }
 
-func GetEntityKind(pkg *packages.Package, name string) (definitions.AstNodeKind, error) {
+func GetSymbolKind(pkg *packages.Package, name string) (definitions.SymKind, error) {
 	typeName, err := GetTypeNameOrError(pkg, name)
 	if err != nil {
-		return definitions.AstNodeKindNone, err
+		return definitions.SymKindUnknown, err
 	}
 
-	return GetEntityKindFromTypeName(typeName)
-}
-
-func GetEntityKindFromTypeName(typeName *types.TypeName) (definitions.AstNodeKind, error) {
-	if _, isStruct := typeName.Type().Underlying().(*types.Struct); isStruct {
-		return definitions.AstNodeKindStruct, nil
-	}
-
-	// Get the underlying type and check if it's an interface.
-	if _, isInterface := typeName.Type().Underlying().(*types.Interface); isInterface {
-		return definitions.AstNodeKindInterface, nil
-	}
-
-	// Check if that is an alias of a basic type (string, int, bool, etc.)
-	if typeName.IsAlias() {
-		return definitions.AstNodeKindAlias, nil
-	}
-
-	if _, isBasicType := typeName.Type().Underlying().(*types.Basic); isBasicType {
-		return definitions.AstNodeKindAlias, nil
-	}
-
-	return definitions.AstNodeKindUnknown, nil
+	return GetSymbolKindFromObject(typeName), nil
 }
 
 func IsBasic(t types.Type) bool {
@@ -524,4 +502,64 @@ func MapDocListToStrings(docList []*ast.Comment) []string {
 		result = append(result, comment.Text)
 	}
 	return result
+}
+
+func GetSymbolKindFromObject(obj types.Object) definitions.SymKind {
+	switch o := obj.(type) {
+
+	case *types.PkgName:
+		return definitions.SymKindPackage
+
+	case *types.Const:
+		return definitions.SymKindConstant
+
+	case *types.Var:
+		if o.IsField() {
+			return definitions.SymKindField
+		}
+		// Parameters are Vars too, but we must distinguish
+		// Parameters live in function signatures, not top-level scope
+		if isParameter(o) {
+			return definitions.SymKindParameter
+		}
+		return definitions.SymKindVariable
+
+	case *types.Func:
+		if sig, ok := o.Type().(*types.Signature); ok && sig.Recv() != nil {
+			return definitions.SymKindMethod
+		}
+		return definitions.SymKindFunction
+
+	case *types.TypeName:
+		if o.IsAlias() {
+			return definitions.SymKindAlias
+		}
+		switch o.Type().Underlying().(type) {
+		case *types.Struct:
+			return definitions.SymKindStruct
+		case *types.Interface:
+			return definitions.SymKindInterface
+		default:
+			return definitions.SymKindAlias
+		}
+	}
+
+	return definitions.SymKindUnknown
+}
+
+func isParameter(v *types.Var) bool {
+	// Parameters do not have a parent scope associated with a file/package block
+	if v.Parent() != nil {
+		switch v.Parent().Parent() {
+		case nil:
+			// Probably not a parameter
+			return false
+		default:
+			// Heuristic: check if the parent is a function Signature
+			// Unfortunately, Go's type checker doesn't expose a perfect way to trace this
+			// So this may need to be called only in known contexts (like while walking a Signature)
+			return true
+		}
+	}
+	return false
 }

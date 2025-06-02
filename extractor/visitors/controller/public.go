@@ -120,7 +120,7 @@ func (v *ControllerVisitor) GetModelsFlat() (*definitions.Models, bool, error) {
 		cleanedName := common.UnwrapArrayTypeString(model.Name)
 
 		// Enums are handled separately
-		if model.EntityKind == definitions.AstNodeKindAlias {
+		if model.SymbolKind == definitions.SymKindAlias {
 			err := typeVisitor.VisitEnum(cleanedName, model)
 			if err != nil {
 				return nil, hasAnyErrorTypes, v.frozenError(err)

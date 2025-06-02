@@ -119,7 +119,7 @@ func (arb *AstArbitrator) GetTypeMetaByIdent(file *ast.File, ident *ast.Ident) (
 		// Nothing to do here. Leave the package empty so the downstream generator knows no import/alias is needed
 		meta.IsUniverseType = true
 		meta.Import = definitions.ImportTypeNone
-		meta.EntityKind = definitions.AstNodeKindUnknown
+		meta.SymbolKind = definitions.SymKindUnknown
 		return meta, nil
 	}
 
@@ -129,11 +129,11 @@ func (arb *AstArbitrator) GetTypeMetaByIdent(file *ast.File, ident *ast.Ident) (
 		meta.Import = definitions.ImportTypeDot
 		meta.FullyQualifiedPackage = relevantPkg.PkgPath
 		meta.DefaultPackageAlias = relevantPkg.Name
-		kind, err := extractor.GetEntityKind(relevantPkg, ident.Name)
+		kind, err := extractor.GetSymbolKind(relevantPkg, ident.Name)
 		if err != nil {
 			return meta, err
 		}
-		meta.EntityKind = kind
+		meta.SymbolKind = kind
 	} else {
 		// If we've gotten here, the ident is a locally defined entity;
 		//
@@ -160,21 +160,18 @@ func (arb *AstArbitrator) GetTypeMetaByIdent(file *ast.File, ident *ast.Ident) (
 
 		// Verify the identifier does in fact exist in the current package.
 		// Not strictly needed but helps with safety.
-		entityKind, err := extractor.GetEntityKindFromTypeName(typeName)
-		if err != nil {
-			return meta, err
-		}
+		symbolKind := extractor.GetSymbolKindFromObject(typeName)
 
-		if entityKind == definitions.AstNodeKindNone || entityKind == definitions.AstNodeKindUnknown {
+		if symbolKind == definitions.SymKindUnknown {
 			return meta, fmt.Errorf("could not determine entity kind for '%s.%s", currentPackageName, ident.Name)
 		}
 
 		meta.Import = definitions.ImportTypeNone
 		meta.FullyQualifiedPackage = currentPackageName
 		meta.DefaultPackageAlias = extractor.GetDefaultAlias(currentPackageName)
-		meta.EntityKind = entityKind
+		meta.SymbolKind = symbolKind
 
-		if entityKind == definitions.AstNodeKindAlias {
+		if symbolKind == definitions.SymKindAlias {
 			aliasMetadata, err := arb.ExtractEnumAliasType(pkg, typeName)
 			if err != nil {
 				return meta, err
@@ -243,14 +240,14 @@ func (arb *AstArbitrator) GetTypeMetaBySelectorExpr(file *ast.File, selector *as
 		return meta, fmt.Errorf("could not find package '%s' whilst processing '%s'", realFullPackageName, entityName)
 	}
 
-	kind, err := extractor.GetEntityKind(pkg, entityName)
+	kind, err := extractor.GetSymbolKind(pkg, entityName)
 	if err != nil {
 		return meta, err
 	}
 
-	meta.EntityKind = kind
+	meta.SymbolKind = kind
 
-	if kind == definitions.AstNodeKindAlias {
+	if kind == definitions.SymKindAlias {
 		typeName, err := extractor.LookupTypeName(pkg, entityName)
 		if err != nil {
 			return meta, err

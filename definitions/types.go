@@ -1,6 +1,7 @@
 package definitions
 
 import (
+	"go/token"
 	"go/types"
 
 	"github.com/gopher-fleece/runtime"
@@ -110,6 +111,26 @@ type AliasMetadata struct {
 	Values    []string // e.g. ["Meter", "Kilometer"]
 }
 
+type DeclInfo struct {
+	FVersion  *FileVersion
+	Pos       token.Pos // Start position in token.FileSet
+	ByteStart int       // Start offset (optional, useful for editors/tools)
+	ByteEnd   int       // End offset
+}
+
+type EnclosingSymbol struct {
+	Name    string // e.g. "User" or "MyStruct.MyMethod"
+	PkgPath string // e.g. "github.com/gopher-fleece/gleece/extractor
+	Kind    SymKind
+}
+
+type PackageInfo struct {
+	DefaultAlias string
+	Path         string // Canonical import path, e.g. "github.com/gopher-fleece/gleece/extractor
+	Import       ImportType
+	IsStd        bool
+}
+
 type TypeMetadata struct {
 	Name                  string
 	FullyQualifiedPackage string
@@ -118,7 +139,7 @@ type TypeMetadata struct {
 	Import                ImportType
 	IsUniverseType        bool
 	IsByAddress           bool
-	EntityKind            AstNodeKind
+	SymbolKind            SymKind
 	AliasMetadata         *AliasMetadata
 }
 
@@ -420,25 +441,6 @@ type GleeceConfig struct {
 	OpenAPIGeneratorConfig OpenAPIGeneratorConfig `json:"openapiGeneratorConfig" validate:"required"`
 	ExperimentalConfig     ExperimentalConfig     `json:"experimentalConfig"` // TODO add docs
 }
-
-type AstNodeKind string
-
-const (
-	AstNodeKindNone        AstNodeKind = "None"
-	AstNodeKindUnknown     AstNodeKind = "Unknown"
-	AstNodeKindInterface   AstNodeKind = "Interface"
-	AstNodeKindStruct      AstNodeKind = "Struct"
-	AstNodeKindIdent       AstNodeKind = "Identifier"
-	AstNodeKindSelector    AstNodeKind = "SelectorExpr"
-	AstNodeKindPointer     AstNodeKind = "Pointer"
-	AstNodeKindArray       AstNodeKind = "Array"
-	AstNodeKindMap         AstNodeKind = "Map"
-	AstNodeKindChannel     AstNodeKind = "Channel"
-	AstNodeKindFunction    AstNodeKind = "Function"
-	AstNodeKindVariadic    AstNodeKind = "Variadic"
-	AstNodeKindParenthesis AstNodeKind = "Parenthesis"
-	AstNodeKindAlias       AstNodeKind = "Alias"
-)
 
 type Iterable interface {
 	Elem() types.Type
