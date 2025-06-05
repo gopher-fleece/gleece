@@ -84,8 +84,8 @@ var _ = Describe("Spec Generator", func() {
 					Responses: []definitions.FuncReturnValue{
 						{
 							TypeMetadata: definitions.TypeMetadata{
-								Name:                  "[]ExampleSchema",
-								FullyQualifiedPackage: "example",
+								Name:    "[]ExampleSchema",
+								PkgPath: "example",
 							},
 						},
 						{
@@ -197,8 +197,8 @@ var _ = Describe("Spec Generator", func() {
 					Responses: []definitions.FuncReturnValue{
 						{
 							TypeMetadata: definitions.TypeMetadata{
-								Name:                  "int",
-								FullyQualifiedPackage: "example",
+								Name:    "int",
+								PkgPath: "example",
 							},
 						},
 						{
@@ -302,8 +302,8 @@ var _ = Describe("Spec Generator", func() {
 					Responses: []definitions.FuncReturnValue{
 						{
 							TypeMetadata: definitions.TypeMetadata{
-								Name:                  "[]ExampleSchemaWithEnum",
-								FullyQualifiedPackage: "example",
+								Name:    "[]ExampleSchemaWithEnum",
+								PkgPath: "example",
 							},
 						},
 						{
@@ -563,8 +563,8 @@ var _ = Describe("Spec Generator", func() {
 					Responses: []definitions.FuncReturnValue{
 						{
 							TypeMetadata: definitions.TypeMetadata{
-								Name:                  "[]string",
-								FullyQualifiedPackage: "example",
+								Name:    "[]string",
+								PkgPath: "example",
 							},
 						},
 						{

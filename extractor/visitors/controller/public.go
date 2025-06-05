@@ -96,11 +96,11 @@ func (v *ControllerVisitor) GetModelsFlat() (*definitions.Models, bool, error) {
 
 		// Ignore Context parameters - they're injected at the template levels and
 		// do not reach the OpenAPI schema
-		if model.Name == "Context" && model.FullyQualifiedPackage == "context" {
+		if model.Name == "Context" && model.PkgPath == "context" {
 			continue
 		}
 
-		pkg, err := v.packagesFacade.GetPackage(model.FullyQualifiedPackage)
+		pkg, err := v.packagesFacade.GetPackage(model.PkgPath)
 		if err != nil {
 			return nil, hasAnyErrorTypes, v.frozenError(err)
 		}
@@ -109,7 +109,7 @@ func (v *ControllerVisitor) GetModelsFlat() (*definitions.Models, bool, error) {
 			return nil, hasAnyErrorTypes, v.getFrozenError(
 				"could locate packages.Package '%s' whilst looking for type '%s'.\n"+
 					"Please note that Gleece currently cannot use any structs from externally imported packages",
-				model.FullyQualifiedPackage,
+				model.PkgPath,
 				model.Name,
 			)
 		}
@@ -139,11 +139,11 @@ func (v *ControllerVisitor) GetModelsFlat() (*definitions.Models, bool, error) {
 				v.getFrozenError(
 					"could not find struct '%s' in package '%s'",
 					cleanedName,
-					model.FullyQualifiedPackage,
+					model.PkgPath,
 				)
 		}
 
-		err = typeVisitor.VisitStruct(model.FullyQualifiedPackage, cleanedName, structNode)
+		err = typeVisitor.VisitStruct(model.PkgPath, cleanedName, structNode)
 		if err != nil {
 			return nil, hasAnyErrorTypes, v.frozenError(err)
 		}

@@ -1,6 +1,7 @@
 package definitions
 
 import (
+	"go/ast"
 	"go/token"
 	"go/types"
 
@@ -84,12 +85,20 @@ type RestMetadata struct {
 	Path string
 }
 
+type OrderedIdent struct {
+	Ident   *ast.Ident
+	Ordinal int
+}
+
+// This struct describes a function parameter's metadata without Gleece's additions
 type ParamMeta struct {
+	OrderedIdent
 	Name      string
 	IsContext bool
 	TypeMeta  TypeMetadata
 }
 
+// This struct describes a function parameter's metadata with Gleece's additions.
 type FuncParam struct {
 	ParamMeta
 	PassedIn           ParamPassedIn
@@ -101,6 +110,7 @@ type FuncParam struct {
 }
 
 type FuncReturnValue struct {
+	OrderedIdent
 	TypeMetadata
 	UniqueImportSerial uint64
 }
@@ -109,6 +119,27 @@ type AliasMetadata struct {
 	Name      string   // e.g. LengthUnits
 	AliasType string   // e.g. string, int, etc.
 	Values    []string // e.g. ["Meter", "Kilometer"]
+}
+
+func (a AliasMetadata) Equals(other AliasMetadata) bool {
+	if a.Name != other.Name {
+		return false
+	}
+
+	if a.AliasType != other.AliasType {
+		return false
+	}
+
+	if len(a.Values) != len(other.Values) {
+		return false
+	}
+
+	for i := range a.Values {
+		if a.Values[i] != other.Values[i] {
+			return false
+		}
+	}
+	return true
 }
 
 type DeclInfo struct {
@@ -132,15 +163,57 @@ type PackageInfo struct {
 }
 
 type TypeMetadata struct {
-	Name                  string
-	FullyQualifiedPackage string
-	DefaultPackageAlias   string
-	Description           string
-	Import                ImportType
-	IsUniverseType        bool
-	IsByAddress           bool
-	SymbolKind            SymKind
-	AliasMetadata         *AliasMetadata
+	Name                string
+	PkgPath             string
+	DefaultPackageAlias string
+	Description         string
+	Import              ImportType
+	IsUniverseType      bool
+	IsByAddress         bool
+	SymbolKind          SymKind
+	AliasMetadata       *AliasMetadata
+	FVersion            *FileVersion
+}
+
+func (t TypeMetadata) Equals(other TypeMetadata) bool {
+	if t.Name != other.Name {
+		return false
+	}
+	if t.PkgPath != other.PkgPath {
+		return false
+	}
+	if t.DefaultPackageAlias != other.DefaultPackageAlias {
+		return false
+	}
+	if t.Description != other.Description {
+		return false
+	}
+	if t.Import != other.Import {
+		return false
+	}
+	if t.IsUniverseType != other.IsUniverseType {
+		return false
+	}
+	if t.IsByAddress != other.IsByAddress {
+		return false
+	}
+	if t.SymbolKind != other.SymbolKind {
+		return false
+	}
+
+	if (t.AliasMetadata == nil) != (other.AliasMetadata == nil) {
+		return false
+	}
+
+	if t.AliasMetadata != nil && !t.AliasMetadata.Equals(*other.AliasMetadata) {
+		return false
+	}
+
+	if !t.FVersion.Equals(other.FVersion) {
+		return false
+	}
+
+	return true
 }
 
 type ErrorResponse struct {
@@ -242,35 +315,38 @@ type SecurityAnnotationComponent struct {
 	Scopes     []string `json:"scopes" validate:"not_nil_array"`
 }
 
+// ControllerMetadata holds metadata pertaining to a specific controller as a full entity, including its receivers (routes)
 type ControllerMetadata struct {
-	Name                  string
-	Package               string
-	FullyQualifiedPackage string
-	Tag                   string
-	Description           string
-	RestMetadata          RestMetadata
-	Routes                []RouteMetadata
+	Name         string
+	Package      string
+	PkgPath      string
+	Tag          string
+	Description  string
+	RestMetadata RestMetadata
+	Routes       []RouteMetadata
 
 	// The default security schema/s used for the controller's operations.
 	// May be overridden at the route level
 	Security []RouteSecurity
+
+	FVersion *FileVersion
 }
 
 type StructMetadata struct {
-	Name                  string
-	FullyQualifiedPackage string
-	Description           string
-	Fields                []FieldMetadata
-	Deprecation           DeprecationOptions
+	Name        string
+	PkgPath     string
+	Description string
+	Fields      []FieldMetadata
+	Deprecation DeprecationOptions
 }
 
 type EnumMetadata struct {
-	Name                  string
-	FullyQualifiedPackage string
-	Description           string
-	Values                []string
-	Type                  string
-	Deprecation           DeprecationOptions
+	Name        string
+	PkgPath     string
+	Description string
+	Values      []string
+	Type        string
+	Deprecation DeprecationOptions
 }
 
 type Models struct {

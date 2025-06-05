@@ -71,6 +71,8 @@ func (v *ControllerVisitor) visitMethod(funcDecl *ast.FuncDecl) (definitions.Rou
 		return definitions.RouteMetadata{}, true, err
 	}
 
+	fVer := definitions.FileVersion{}
+
 	meta := definitions.RouteMetadata{
 		OperationId:         funcDecl.Name.Name,
 		HttpVerb:            definitions.EnsureValidHttpVerb(methodAttr.Value),
@@ -165,8 +167,8 @@ func (v *ControllerVisitor) validatePrimitiveParam(param definitions.FuncParam) 
 	// Currently, we're limited to primitive header, path and query parameters.
 	// This is a simple and silly check for those.
 	// need to fully integrate the SymbolKind field..
-	isErrType := param.TypeMeta.FullyQualifiedPackage == "" && param.TypeMeta.Name == "error"
-	isMapType := param.TypeMeta.FullyQualifiedPackage == "" && strings.HasPrefix(param.TypeMeta.Name, "map[")
+	isErrType := param.TypeMeta.PkgPath == "" && param.TypeMeta.Name == "error"
+	isMapType := param.TypeMeta.PkgPath == "" && strings.HasPrefix(param.TypeMeta.Name, "map[")
 	isAliasType := param.TypeMeta.SymbolKind == definitions.SymKindAlias
 	if (!param.TypeMeta.IsUniverseType && !isAliasType) || isErrType || isMapType {
 		return v.getFrozenError(

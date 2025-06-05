@@ -24,7 +24,7 @@ var _ = Describe("Context Controller", func() {
 	It("Does not include Go Context parameters in the model list", func() {
 		_, modelsList, _ := utils.GetControllersAndModelsOrFail()
 		Expect(modelsList).ToNot(ContainElement(Satisfy(func(model definitions.StructMetadata) bool {
-			return model.Name == "Context" && model.FullyQualifiedPackage == "context"
+			return model.Name == "Context" && model.PkgPath == "context"
 		})))
 	})
 

@@ -56,3 +56,7 @@ func (v *FileVersion) HasChanged(selfUpdate bool) (bool, error) {
 
 	return hasChanged, nil
 }
+
+func (v FileVersion) Equals(other *FileVersion) bool {
+	return v.ModTime.Equal(other.ModTime) && v.Hash == other.Hash
+}

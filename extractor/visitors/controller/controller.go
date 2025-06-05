@@ -68,9 +68,9 @@ func (v *ControllerVisitor) createControllerMetadata(controllerNode *ast.TypeSpe
 
 	// Start off by filling the name and package
 	meta := definitions.ControllerMetadata{
-		Name:                  controllerNode.Name.Name,
-		FullyQualifiedPackage: fullPackageName,
-		Package:               packageAlias,
+		Name:    controllerNode.Name.Name,
+		PkgPath: fullPackageName,
+		Package: packageAlias,
 	}
 
 	// Comments are usually located on the nearest GenDecl but may also be inlined on the struct itself

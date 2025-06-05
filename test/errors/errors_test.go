@@ -25,7 +25,7 @@ var _ = Describe("Errors Controller", func() {
 
 		Expect(route.Responses).To(HaveLen(1))
 		Expect(route.Responses[0].TypeMetadata.Name).To(Equal("SimpleCustomError"))
-		Expect(route.Responses[0].TypeMetadata.FullyQualifiedPackage).To(Equal("github.com/gopher-fleece/gleece/test/errors"))
+		Expect(route.Responses[0].TypeMetadata.PkgPath).To(Equal("github.com/gopher-fleece/gleece/test/errors"))
 		Expect(route.Responses[0].TypeMetadata.DefaultPackageAlias).To(Equal("errors"))
 		Expect(route.Responses[0].TypeMetadata.Import).To(Equal(definitions.ImportTypeNone))
 		Expect(route.Responses[0].TypeMetadata.IsUniverseType).To(BeFalse())
@@ -38,7 +38,7 @@ var _ = Describe("Errors Controller", func() {
 
 		Expect(route.Responses).To(HaveLen(1))
 		Expect(route.Responses[0].TypeMetadata.Name).To(Equal("ComplexCustomError"))
-		Expect(route.Responses[0].TypeMetadata.FullyQualifiedPackage).To(Equal("github.com/gopher-fleece/gleece/test/errors"))
+		Expect(route.Responses[0].TypeMetadata.PkgPath).To(Equal("github.com/gopher-fleece/gleece/test/errors"))
 		Expect(route.Responses[0].TypeMetadata.DefaultPackageAlias).To(Equal("errors"))
 		Expect(route.Responses[0].TypeMetadata.Import).To(Equal(definitions.ImportTypeNone))
 		Expect(route.Responses[0].TypeMetadata.IsUniverseType).To(BeFalse())

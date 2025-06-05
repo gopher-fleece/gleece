@@ -48,7 +48,7 @@ func (arb *AstArbitrator) GetFuncParameterTypeList(file *ast.File, funcDecl *ast
 			definitions.ParamMeta{
 				Name: field.Names[0].Name, TypeMeta: meta,
 				// A special case- Go Contexts should be explicitly marked so they can be injected via the template
-				IsContext: meta.Name == "Context" && meta.FullyQualifiedPackage == "context",
+				IsContext: meta.Name == "Context" && meta.PkgPath == "context",
 			},
 		)
 	}
@@ -127,7 +127,7 @@ func (arb *AstArbitrator) GetTypeMetaByIdent(file *ast.File, ident *ast.Ident) (
 	if relevantPkg != nil {
 		// The identifier is a type from a dot imported package
 		meta.Import = definitions.ImportTypeDot
-		meta.FullyQualifiedPackage = relevantPkg.PkgPath
+		meta.PkgPath = relevantPkg.PkgPath
 		meta.DefaultPackageAlias = relevantPkg.Name
 		kind, err := extractor.GetSymbolKind(relevantPkg, ident.Name)
 		if err != nil {
@@ -167,7 +167,7 @@ func (arb *AstArbitrator) GetTypeMetaByIdent(file *ast.File, ident *ast.Ident) (
 		}
 
 		meta.Import = definitions.ImportTypeNone
-		meta.FullyQualifiedPackage = currentPackageName
+		meta.PkgPath = currentPackageName
 		meta.DefaultPackageAlias = extractor.GetDefaultAlias(currentPackageName)
 		meta.SymbolKind = symbolKind
 
@@ -228,7 +228,7 @@ func (arb *AstArbitrator) GetTypeMetaBySelectorExpr(file *ast.File, selector *as
 		realFullPackageName = aliasedFullName
 	}
 
-	meta.FullyQualifiedPackage = realFullPackageName
+	meta.PkgPath = realFullPackageName
 	meta.DefaultPackageAlias = extractor.GetDefaultAlias(realFullPackageName)
 
 	pkg, err := arb.pkgFacade.GetPackage(realFullPackageName)

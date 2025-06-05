@@ -35,7 +35,7 @@ var _ = Describe("Sanity Controller", func() {
 		controllerMeta := metadata[0]
 		Expect(controllerMeta.Name).To(Equal("SanityController"))
 		Expect(controllerMeta.Package).To(Equal("sanity_test"))
-		Expect(controllerMeta.FullyQualifiedPackage).To(Equal("github.com/gopher-fleece/gleece/test/sanity"))
+		Expect(controllerMeta.PkgPath).To(Equal("github.com/gopher-fleece/gleece/test/sanity"))
 		Expect(controllerMeta.Tag).To(Equal("Sanity Controller Tag"))
 		Expect(controllerMeta.RestMetadata.Path).To(Equal("/test/sanity"))
 		Expect(controllerMeta.Description).To(Equal("Sanity Controller"))
@@ -92,7 +92,7 @@ var _ = Describe("Sanity Controller", func() {
 		Expect(route.FuncParams[0].Deprecation).To(BeNil())
 		Expect(route.FuncParams[0].ParamMeta.Name).To(Equal("routeParam"))
 		Expect(route.FuncParams[0].ParamMeta.TypeMeta.Name).To(Equal("string"))
-		Expect(route.FuncParams[0].ParamMeta.TypeMeta.FullyQualifiedPackage).To(Equal(""))
+		Expect(route.FuncParams[0].ParamMeta.TypeMeta.PkgPath).To(Equal(""))
 		Expect(route.FuncParams[0].ParamMeta.TypeMeta.DefaultPackageAlias).To(Equal(""))
 		Expect(route.FuncParams[0].ParamMeta.TypeMeta.Description).To(Equal(""))
 		Expect(route.FuncParams[0].ParamMeta.TypeMeta.Import).To(Equal(definitions.ImportTypeNone))
@@ -108,7 +108,7 @@ var _ = Describe("Sanity Controller", func() {
 		Expect(route.FuncParams[1].Deprecation).To(BeNil())
 		Expect(route.FuncParams[1].ParamMeta.Name).To(Equal("queryParam"))
 		Expect(route.FuncParams[1].ParamMeta.TypeMeta.Name).To(Equal("int"))
-		Expect(route.FuncParams[1].ParamMeta.TypeMeta.FullyQualifiedPackage).To(Equal(""))
+		Expect(route.FuncParams[1].ParamMeta.TypeMeta.PkgPath).To(Equal(""))
 		Expect(route.FuncParams[1].ParamMeta.TypeMeta.DefaultPackageAlias).To(Equal(""))
 		Expect(route.FuncParams[1].ParamMeta.TypeMeta.Description).To(Equal(""))
 		Expect(route.FuncParams[1].ParamMeta.TypeMeta.Import).To(Equal(definitions.ImportTypeNone))
@@ -124,7 +124,7 @@ var _ = Describe("Sanity Controller", func() {
 		Expect(route.FuncParams[2].Deprecation).To(BeNil())
 		Expect(route.FuncParams[2].ParamMeta.Name).To(Equal("headerParam"))
 		Expect(route.FuncParams[2].ParamMeta.TypeMeta.Name).To(Equal("float32"))
-		Expect(route.FuncParams[2].ParamMeta.TypeMeta.FullyQualifiedPackage).To(Equal(""))
+		Expect(route.FuncParams[2].ParamMeta.TypeMeta.PkgPath).To(Equal(""))
 		Expect(route.FuncParams[2].ParamMeta.TypeMeta.DefaultPackageAlias).To(Equal(""))
 		Expect(route.FuncParams[2].ParamMeta.TypeMeta.Description).To(Equal(""))
 		Expect(route.FuncParams[2].ParamMeta.TypeMeta.Import).To(Equal(definitions.ImportTypeNone))
@@ -134,7 +134,7 @@ var _ = Describe("Sanity Controller", func() {
 
 		Expect(route.Responses[0].UniqueImportSerial).To(Equal(uint64(3)))
 		Expect(route.Responses[0].TypeMetadata.Name).To(Equal("SimpleResponseModel"))
-		Expect(route.Responses[0].TypeMetadata.FullyQualifiedPackage).To(Equal("github.com/gopher-fleece/gleece/test/sanity"))
+		Expect(route.Responses[0].TypeMetadata.PkgPath).To(Equal("github.com/gopher-fleece/gleece/test/sanity"))
 		Expect(route.Responses[0].TypeMetadata.DefaultPackageAlias).To(Equal("sanity"))
 		Expect(route.Responses[0].TypeMetadata.Description).To(Equal("This should be the actual description"))
 		Expect(route.Responses[0].TypeMetadata.Import).To(Equal(definitions.ImportTypeNone))
@@ -144,7 +144,7 @@ var _ = Describe("Sanity Controller", func() {
 
 		Expect(route.Responses[1].UniqueImportSerial).To(Equal(uint64(4)))
 		Expect(route.Responses[1].TypeMetadata.Name).To(Equal("error"))
-		Expect(route.Responses[1].TypeMetadata.FullyQualifiedPackage).To(Equal(""))
+		Expect(route.Responses[1].TypeMetadata.PkgPath).To(Equal(""))
 		Expect(route.Responses[1].TypeMetadata.DefaultPackageAlias).To(Equal(""))
 		Expect(route.Responses[1].TypeMetadata.Description).To(Equal(""))
 		Expect(route.Responses[1].TypeMetadata.Import).To(Equal(definitions.ImportTypeNone))
@@ -157,7 +157,7 @@ var _ = Describe("Sanity Controller", func() {
 		// Model 1
 		model1 := models[0]
 		Expect(model1.Name).To(Equal("SimpleResponseModel"))
-		Expect(model1.FullyQualifiedPackage).To(Equal("github.com/gopher-fleece/gleece/test/sanity"))
+		Expect(model1.PkgPath).To(Equal("github.com/gopher-fleece/gleece/test/sanity"))
 		Expect(model1.Description).To(Equal("This should be the actual description"))
 		Expect(model1.Fields).To(HaveLen(1))
 		Expect(model1.Fields[0].Name).To(Equal("SomeValue"))
@@ -172,7 +172,7 @@ var _ = Describe("Sanity Controller", func() {
 		// Model 2
 		model2 := models[1]
 		Expect(model2.Name).To(Equal("SimpleStruct"))
-		Expect(model2.FullyQualifiedPackage).To(Equal("github.com/gopher-fleece/gleece/test/units"))
+		Expect(model2.PkgPath).To(Equal("github.com/gopher-fleece/gleece/test/units"))
 		Expect(model2.Description).To(BeEmpty())
 
 		Expect(model2.Fields).To(HaveLen(2))
@@ -196,7 +196,7 @@ var _ = Describe("Sanity Controller", func() {
 		// Model 3
 		model3 := models[2]
 		Expect(model3.Name).To(Equal("StructWithStructSlice"))
-		Expect(model3.FullyQualifiedPackage).To(Equal("github.com/gopher-fleece/gleece/test/units"))
+		Expect(model3.PkgPath).To(Equal("github.com/gopher-fleece/gleece/test/units"))
 		Expect(model3.Description).To(BeEmpty())
 
 		Expect(model3.Fields).To(HaveLen(1))

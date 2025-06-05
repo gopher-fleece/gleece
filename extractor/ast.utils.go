@@ -134,8 +134,8 @@ func IsAliasDefault(fullPackageName string, alias string) bool {
 	return alias == packageName
 }
 
-func GetDefaultAlias(fullyQualifiedPackage string) string {
-	segments := strings.Split(fullyQualifiedPackage, "/")
+func GetDefaultAlias(PkgPath string) string {
+	segments := strings.Split(PkgPath, "/")
 	last := segments[len(segments)-1]
 
 	// Check if last segment is a version (v2, v3, etc.)

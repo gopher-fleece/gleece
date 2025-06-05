@@ -105,8 +105,8 @@ var _ = Describe("Spec Preparing", func() {
 					Responses: []definitions.FuncReturnValue{
 						{
 							TypeMetadata: definitions.TypeMetadata{
-								Name:                  "[]string",
-								FullyQualifiedPackage: "example",
+								Name:    "[]string",
+								PkgPath: "example",
 							},
 						},
 						{

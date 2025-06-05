@@ -71,10 +71,10 @@ func (v *TypeVisitor) VisitStruct(fullPackageName string, structName string, str
 	}
 
 	structInfo := definitions.StructMetadata{
-		Name:                  structName,
-		FullyQualifiedPackage: fullPackageName,
-		Description:           attributeHolders.StructHolder.GetDescription(),
-		Deprecation:           getDeprecationOpts(attributeHolders.StructHolder),
+		Name:        structName,
+		PkgPath:     fullPackageName,
+		Description: attributeHolders.StructHolder.GetDescription(),
+		Deprecation: getDeprecationOpts(attributeHolders.StructHolder),
 	}
 
 	// Iterate the struct's fields
@@ -244,11 +244,11 @@ func (v *TypeVisitor) VisitEnum(enumName string, model definitions.TypeMetadata)
 	}
 
 	enumModel := &definitions.EnumMetadata{
-		Name:                  model.Name,
-		FullyQualifiedPackage: model.FullyQualifiedPackage,
-		Description:           model.Description,
-		Values:                model.AliasMetadata.Values,
-		Type:                  model.AliasMetadata.AliasType,
+		Name:        model.Name,
+		PkgPath:     model.PkgPath,
+		Description: model.Description,
+		Values:      model.AliasMetadata.Values,
+		Type:        model.AliasMetadata.AliasType,
 		// Deprecation         ?
 	}
 
@@ -432,11 +432,11 @@ func (v *TypeVisitor) visitNestedEnum(t *types.Named, aliasModel definitions.Fie
 	}
 
 	enumModel := &definitions.EnumMetadata{
-		Name:                  cleanedModelName,
-		FullyQualifiedPackage: pkg.PkgPath,
-		Description:           holder.GetDescription(),
-		Values:                aliasMetadata.Values,
-		Type:                  aliasMetadata.AliasType,
+		Name:        cleanedModelName,
+		PkgPath:     pkg.PkgPath,
+		Description: holder.GetDescription(),
+		Values:      aliasMetadata.Values,
+		Type:        aliasMetadata.AliasType,
 		// Deprecation         ?
 	}
 

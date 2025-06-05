@@ -13,7 +13,7 @@ func (v *ControllerVisitor) addToTypeMap(
 
 	existsInPackage, exists := (*existingTypesMap)[typeMeta.Name]
 	if exists {
-		if existsInPackage == typeMeta.FullyQualifiedPackage {
+		if existsInPackage == typeMeta.PkgPath {
 			// Same type referenced from a separate location
 			return nil
 		}
@@ -21,12 +21,12 @@ func (v *ControllerVisitor) addToTypeMap(
 		return v.getFrozenError(
 			"type '%s' exists in more that one package (%s and %s). This is not currently supported",
 			typeMeta.Name,
-			typeMeta.FullyQualifiedPackage,
+			typeMeta.PkgPath,
 			existsInPackage,
 		)
 	}
 
-	(*existingTypesMap)[typeMeta.Name] = typeMeta.FullyQualifiedPackage
+	(*existingTypesMap)[typeMeta.Name] = typeMeta.PkgPath
 	(*existingModels) = append((*existingModels), typeMeta)
 	return nil
 }
@@ -39,7 +39,7 @@ func (v *ControllerVisitor) insertRouteTypeList(
 
 	plainErrorEncountered := false
 	for _, param := range route.FuncParams {
-		if param.TypeMeta.IsUniverseType && param.TypeMeta.Name == "error" && param.TypeMeta.FullyQualifiedPackage == "" {
+		if param.TypeMeta.IsUniverseType && param.TypeMeta.Name == "error" && param.TypeMeta.PkgPath == "" {
 			// Mark whether we've encountered any 'error' type
 			plainErrorEncountered = true
 		}
@@ -50,7 +50,7 @@ func (v *ControllerVisitor) insertRouteTypeList(
 	}
 
 	for _, param := range route.Responses {
-		if param.IsUniverseType && param.Name == "error" && param.FullyQualifiedPackage == "" {
+		if param.IsUniverseType && param.Name == "error" && param.PkgPath == "" {
 			// Mark whether we've encountered any 'error' type
 			plainErrorEncountered = true
 		}

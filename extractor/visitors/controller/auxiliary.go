@@ -28,7 +28,7 @@ func (v *ControllerVisitor) getAllSourceFiles() []*ast.File {
 }
 
 func (v ControllerVisitor) isAnErrorEmbeddingType(meta definitions.TypeMetadata) (bool, error) {
-	v.enter(fmt.Sprintf("Type %s (%s)", meta.Name, meta.FullyQualifiedPackage))
+	v.enter(fmt.Sprintf("Type %s (%s)", meta.Name, meta.PkgPath))
 	defer v.exit()
 
 	if meta.Name == "error" {
@@ -40,7 +40,7 @@ func (v ControllerVisitor) isAnErrorEmbeddingType(meta definitions.TypeMetadata)
 		return false, nil
 	}
 
-	pkg := extractor.FilterPackageByFullName(v.packagesFacade.GetAllPackages(), meta.FullyQualifiedPackage)
+	pkg := extractor.FilterPackageByFullName(v.packagesFacade.GetAllPackages(), meta.PkgPath)
 	embeds, err := extractor.DoesStructEmbedType(pkg, meta.Name, "", "error")
 	if err != nil {
 		return false, err
