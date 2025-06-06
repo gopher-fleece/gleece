@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/gopher-fleece/gleece/extractor"
+	"github.com/gopher-fleece/gleece/gast"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
 	"github.com/gopher-fleece/gleece/test/utils"
 	. "github.com/onsi/ginkgo/v2"
@@ -31,17 +31,17 @@ var _ = Describe("Unit Tests - AST", func() {
 	Context("IsFuncDeclReceiverForStruct", func() {
 		It("Returns false if the given FuncDecl is not a receiver", func() {
 			funcDecl := utils.GetFunctionFromPackageOrFail(typesPkgFullSyntax, "NotAReceiver")
-			Expect(extractor.IsFuncDeclReceiverForStruct("StructWithReceivers", funcDecl)).To(BeFalse())
+			Expect(gast.IsFuncDeclReceiverForStruct("StructWithReceivers", funcDecl)).To(BeFalse())
 		})
 
 		It("Returns true if the given FuncDecl is a value receiver", func() {
 			funcDecl := utils.GetFunctionFromPackageOrFail(typesPkgFullSyntax, "ValueReceiverForStructWithReceivers")
-			Expect(extractor.IsFuncDeclReceiverForStruct("StructWithReceivers", funcDecl)).To(BeTrue())
+			Expect(gast.IsFuncDeclReceiverForStruct("StructWithReceivers", funcDecl)).To(BeTrue())
 		})
 
 		It("Returns true if the given FuncDecl is a pointer receiver", func() {
 			funcDecl := utils.GetFunctionFromPackageOrFail(typesPkgFullSyntax, "PointerReceiverForStructWithReceivers")
-			Expect(extractor.IsFuncDeclReceiverForStruct("StructWithReceivers", funcDecl)).To(BeTrue())
+			Expect(gast.IsFuncDeclReceiverForStruct("StructWithReceivers", funcDecl)).To(BeTrue())
 		})
 
 		It("Returns false if the receiver type is not Ident or SelectorExpr", func() {
@@ -61,7 +61,7 @@ var _ = Describe("Unit Tests - AST", func() {
 				},
 			}
 
-			Expect(extractor.IsFuncDeclReceiverForStruct("StructWithReceivers", funcDecl)).To(BeFalse())
+			Expect(gast.IsFuncDeclReceiverForStruct("StructWithReceivers", funcDecl)).To(BeFalse())
 		})
 	})
 
@@ -70,7 +70,7 @@ var _ = Describe("Unit Tests - AST", func() {
 			file := &ast.File{
 				Name: nil,
 			}
-			alias, err := extractor.GetDefaultPackageAlias(file)
+			alias, err := gast.GetDefaultPackageAlias(file)
 			Expect(err).To(MatchError(ContainSubstring("source file does not have a name")))
 			Expect(alias).To(BeEmpty())
 		})
@@ -96,7 +96,7 @@ var _ = Describe("Unit Tests - AST", func() {
 			}
 
 			// Now call your function
-			fullPkg, err := extractor.GetFullPackageName(astFile, fileSet)
+			fullPkg, err := gast.GetFullPackageName(astFile, fileSet)
 			Expect(err).To(
 				Or(
 					MatchError(ContainSubstring("no such file or directory")),
@@ -126,7 +126,7 @@ var _ = Describe("Unit Tests - AST", func() {
 			f.SetLines([]int{0})
 			parsedFile.Package = f.Pos(0)
 
-			pkgName, err := extractor.GetFullPackageName(parsedFile, fileSet)
+			pkgName, err := gast.GetFullPackageName(parsedFile, fileSet)
 			Expect(err).To(BeNil())       // packages.Load succeeded
 			Expect(pkgName).To(BeEmpty()) // but file wasn't found in the loaded package
 		})
@@ -135,33 +135,33 @@ var _ = Describe("Unit Tests - AST", func() {
 
 	Context("LookupTypeName", func() {
 		It("Returns correct error when given package has no type information", func() {
-			typeName, err := extractor.LookupTypeName(typesPkgLoadOnly, "NA")
+			typeName, err := gast.LookupTypeName(typesPkgLoadOnly, "NA")
 			Expect(typeName).To(BeNil())
 			Expect(err).To(MatchError(ContainSubstring("does not have types or types scope")))
 		})
 
 		It("Returns no value and no error when given name does not exist in given package", func() {
-			typeName, err := extractor.LookupTypeName(typesPkgFullSyntax, "ThisNameDoesNotExistInThisPackage")
+			typeName, err := gast.LookupTypeName(typesPkgFullSyntax, "ThisNameDoesNotExistInThisPackage")
 			Expect(typeName).To(BeNil())
 			Expect(err).To(BeNil())
 		})
 
 		It("Returns no value and no error when given name exist in given package but is not a TypeName", func() {
-			typeName, err := extractor.LookupTypeName(typesPkgFullSyntax, "ConstA")
+			typeName, err := gast.LookupTypeName(typesPkgFullSyntax, "ConstA")
 			Expect(typeName).To(BeNil())
 			Expect(err).To(BeNil())
 		})
 
 		It("Returns correct value when given name exist in given package and is a TypeName", func() {
-			typeName, err := extractor.LookupTypeName(typesPkgFullSyntax, "StructA")
+			typeName, err := gast.LookupTypeName(typesPkgFullSyntax, "StructA")
 			Expect(err).To(BeNil())
 			Expect(typeName.Name()).ToNot(BeNil())
 
-			typeName, err = extractor.LookupTypeName(typesPkgFullSyntax, "InterfaceA")
+			typeName, err = gast.LookupTypeName(typesPkgFullSyntax, "InterfaceA")
 			Expect(err).To(BeNil())
 			Expect(typeName.Name()).ToNot(BeNil())
 
-			typeName, err = extractor.LookupTypeName(typesPkgFullSyntax, "EnumTypeA")
+			typeName, err = gast.LookupTypeName(typesPkgFullSyntax, "EnumTypeA")
 			Expect(err).To(BeNil())
 			Expect(typeName.Name()).ToNot(BeNil())
 		})
@@ -169,13 +169,13 @@ var _ = Describe("Unit Tests - AST", func() {
 
 	Context("GetTypeNameOrError", func() {
 		It("Returns correct error when package does not have type information", func() {
-			typeName, err := extractor.GetTypeNameOrError(typesPkgLoadOnly, "StructA")
+			typeName, err := gast.GetTypeNameOrError(typesPkgLoadOnly, "StructA")
 			Expect(err).To(MatchError(ContainSubstring("does not have types or types scope")))
 			Expect(typeName).To(BeNil())
 		})
 
 		It("Returns correct error given name does not exist in given package", func() {
-			typeName, err := extractor.GetTypeNameOrError(typesPkgFullSyntax, "ThisNameDoesNotExistInThisPackage")
+			typeName, err := gast.GetTypeNameOrError(typesPkgFullSyntax, "ThisNameDoesNotExistInThisPackage")
 			Expect(err).To(MatchError(ContainSubstring("was not found in package")))
 			Expect(typeName).To(BeNil())
 		})
@@ -183,19 +183,19 @@ var _ = Describe("Unit Tests - AST", func() {
 
 	Context("FindTypesStructInPackage", func() {
 		It("Returns correct error when package does not have type information", func() {
-			typeName, err := extractor.FindTypesStructInPackage(typesPkgLoadOnly, "StructA")
+			typeName, err := gast.FindTypesStructInPackage(typesPkgLoadOnly, "StructA")
 			Expect(err).To(MatchError(ContainSubstring("does not have types or types scope")))
 			Expect(typeName).To(BeNil())
 		})
 
 		It("Returns no value and no error when given name does not exist in given package", func() {
-			typeName, err := extractor.FindTypesStructInPackage(typesPkgFullSyntax, "ThisNameDoesNotExistInThisPackage")
+			typeName, err := gast.FindTypesStructInPackage(typesPkgFullSyntax, "ThisNameDoesNotExistInThisPackage")
 			Expect(err).To(BeNil())
 			Expect(typeName).To(BeNil())
 		})
 
 		It("Returns correct error when given name exist in given package but is not a struct", func() {
-			typeName, err := extractor.FindTypesStructInPackage(typesPkgFullSyntax, "InterfaceA")
+			typeName, err := gast.FindTypesStructInPackage(typesPkgFullSyntax, "InterfaceA")
 			Expect(err).To(MatchError(ContainSubstring("is not a struct type")))
 			Expect(typeName).To(BeNil())
 		})
@@ -203,7 +203,7 @@ var _ = Describe("Unit Tests - AST", func() {
 
 	Context("GetUnderlyingTypeName", func() {
 		It("correctly resolves basic and named types", func() {
-			testStruct, err := extractor.FindTypesStructInPackage(typesPkgFullSyntax, "StructForGetUnderlyingTypeName")
+			testStruct, err := gast.FindTypesStructInPackage(typesPkgFullSyntax, "StructForGetUnderlyingTypeName")
 			Expect(err).To(BeNil())
 			Expect(testStruct).ToNot(BeNil())
 
@@ -227,7 +227,7 @@ var _ = Describe("Unit Tests - AST", func() {
 				typ := field.Type()
 
 				expected := tests[name]
-				actual := extractor.GetUnderlyingTypeName(typ)
+				actual := gast.GetUnderlyingTypeName(typ)
 				Expect(actual).To(Equal(expected), fmt.Sprintf("field %s", name))
 			}
 		})
@@ -235,7 +235,7 @@ var _ = Describe("Unit Tests - AST", func() {
 
 	Context("GetFieldTypeString", func() {
 		It("Correctly parses field AST expressions into string descriptions", func() {
-			typeStruct, err := extractor.FindTypesStructInPackage(typesPkgFullSyntax, "StructForGetUnderlyingTypeName")
+			typeStruct, err := gast.FindTypesStructInPackage(typesPkgFullSyntax, "StructForGetUnderlyingTypeName")
 			Expect(err).To(BeNil())
 			Expect(typeStruct).ToNot(BeNil())
 
@@ -263,7 +263,7 @@ var _ = Describe("Unit Tests - AST", func() {
 				}
 
 				astField := utils.GetAstFieldByNameOrFail(typesPkgFullSyntax, "StructForGetUnderlyingTypeName", fieldName)
-				actualStr := extractor.GetFieldTypeString(astField.Type)
+				actualStr := gast.GetFieldTypeString(astField.Type)
 
 				Expect(actualStr).To(Equal(expectedStr), fmt.Sprintf("Mismatch on field %q", fieldName))
 			}
@@ -281,7 +281,7 @@ var _ = Describe("Unit Tests - AST", func() {
 				utils.FailWithTestCodeError("Function argument's type is not an ellipsis expression")
 			}
 
-			Expect(extractor.GetFieldTypeString(ellipsisExpr)).To(Equal("Variadic (...int)"))
+			Expect(gast.GetFieldTypeString(ellipsisExpr)).To(Equal("Variadic (...int)"))
 		})
 
 		It("Correctly falls back for unsupported array length expressions", func() {
@@ -294,7 +294,7 @@ var _ = Describe("Unit Tests - AST", func() {
 				Elt: &ast.Ident{Name: "int"},
 			}
 
-			result := extractor.GetFieldTypeString(arrayExpr)
+			result := gast.GetFieldTypeString(arrayExpr)
 			Expect(result).To(Equal("[?]int"))
 		})
 	})

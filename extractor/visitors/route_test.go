@@ -1,4 +1,4 @@
-package controller
+package visitors
 
 import (
 	"github.com/gopher-fleece/gleece/definitions"
@@ -7,10 +7,10 @@ import (
 )
 
 var _ = Describe("Route Tests", func() {
-	var visitor ControllerVisitor
+	var routeVisitor RouteVisitor
 
 	BeforeEach(func() {
-		visitor = ControllerVisitor{}
+		routeVisitor = RouteVisitor{}
 	})
 
 	Context("when validating parameter combinations", func() {
@@ -19,7 +19,7 @@ var _ = Describe("Route Tests", func() {
 			params := []definitions.FuncParam{}
 
 			// Act
-			err := visitor.validateParamsCombinations(params, definitions.PassedInBody)
+			err := routeVisitor.validateParamsCombinations(params, definitions.PassedInBody)
 
 			// Assert
 			Expect(err).To(BeNil())
@@ -34,7 +34,7 @@ var _ = Describe("Route Tests", func() {
 			}
 
 			// Act
-			err := visitor.validateParamsCombinations(params, definitions.PassedInBody)
+			err := routeVisitor.validateParamsCombinations(params, definitions.PassedInBody)
 
 			// Assert
 			Expect(err).To(HaveOccurred())
@@ -46,7 +46,7 @@ var _ = Describe("Route Tests", func() {
 			params := []definitions.FuncParam{}
 
 			// Act
-			err := visitor.validateParamsCombinations(params, definitions.PassedInForm)
+			err := routeVisitor.validateParamsCombinations(params, definitions.PassedInForm)
 
 			// Assert
 			Expect(err).To(BeNil())
@@ -61,7 +61,7 @@ var _ = Describe("Route Tests", func() {
 			}
 
 			// Act
-			err := visitor.validateParamsCombinations(params, definitions.PassedInBody)
+			err := routeVisitor.validateParamsCombinations(params, definitions.PassedInBody)
 
 			// Assert
 			Expect(err).To(HaveOccurred())
@@ -77,7 +77,7 @@ var _ = Describe("Route Tests", func() {
 			}
 
 			// Act
-			err := visitor.validateParamsCombinations(params, definitions.PassedInForm)
+			err := routeVisitor.validateParamsCombinations(params, definitions.PassedInForm)
 
 			// Assert
 			Expect(err).To(HaveOccurred())
@@ -93,7 +93,7 @@ var _ = Describe("Route Tests", func() {
 			}
 
 			// Act
-			err := visitor.validateParamsCombinations(params, definitions.PassedInForm)
+			err := routeVisitor.validateParamsCombinations(params, definitions.PassedInForm)
 
 			// Assert
 			Expect(err).To(BeNil())
@@ -108,7 +108,7 @@ var _ = Describe("Route Tests", func() {
 			}
 
 			// Act
-			err := visitor.validateParamsCombinations(params, definitions.PassedInQuery)
+			err := routeVisitor.validateParamsCombinations(params, definitions.PassedInQuery)
 
 			// Assert
 			Expect(err).To(BeNil())
@@ -123,7 +123,7 @@ var _ = Describe("Route Tests", func() {
 			}
 
 			// Act
-			err := visitor.validateParamsCombinations(params, definitions.PassedInHeader)
+			err := routeVisitor.validateParamsCombinations(params, definitions.PassedInHeader)
 
 			// Assert
 			Expect(err).To(BeNil())
@@ -144,7 +144,7 @@ var _ = Describe("Route Tests", func() {
 			}
 
 			// Act
-			err := visitor.validateParamsCombinations(params, definitions.PassedInQuery)
+			err := routeVisitor.validateParamsCombinations(params, definitions.PassedInQuery)
 
 			// Assert
 			Expect(err).To(BeNil())

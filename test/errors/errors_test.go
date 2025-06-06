@@ -3,6 +3,7 @@ package imports_test
 import (
 	"testing"
 
+	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
 	"github.com/gopher-fleece/gleece/test/utils"
@@ -30,7 +31,7 @@ var _ = Describe("Errors Controller", func() {
 		Expect(route.Responses[0].TypeMetadata.Import).To(Equal(definitions.ImportTypeNone))
 		Expect(route.Responses[0].TypeMetadata.IsUniverseType).To(BeFalse())
 		Expect(route.Responses[0].TypeMetadata.IsByAddress).To(BeFalse())
-		Expect(route.Responses[0].TypeMetadata.SymbolKind).To(Equal(definitions.SymKindStruct))
+		Expect(route.Responses[0].TypeMetadata.SymbolKind).To(Equal(common.SymKindStruct))
 	})
 
 	It("Complex errors should be properly detected and resolved", func() {
@@ -43,7 +44,7 @@ var _ = Describe("Errors Controller", func() {
 		Expect(route.Responses[0].TypeMetadata.Import).To(Equal(definitions.ImportTypeNone))
 		Expect(route.Responses[0].TypeMetadata.IsUniverseType).To(BeFalse())
 		Expect(route.Responses[0].TypeMetadata.IsByAddress).To(BeFalse())
-		Expect(route.Responses[0].TypeMetadata.SymbolKind).To(Equal(definitions.SymKindStruct))
+		Expect(route.Responses[0].TypeMetadata.SymbolKind).To(Equal(common.SymKindStruct))
 	})
 })
 

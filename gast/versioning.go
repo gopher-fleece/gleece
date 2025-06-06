@@ -1,6 +1,8 @@
-package definitions
+package gast
 
 import (
+	"go/ast"
+	"go/token"
 	"os"
 	"time"
 
@@ -30,6 +32,15 @@ func NewFileVersion(fullPath string) (FileVersion, error) {
 		ModTime: stats.ModTime(),
 		Hash:    hash,
 	}, nil
+}
+
+func NewFileVersionFromAstFile(file *ast.File, fileSet *token.FileSet) (FileVersion, error) {
+	fullPath, err := GetFileFullPath(file, fileSet)
+	if err != nil {
+		return FileVersion{}, err
+	}
+
+	return NewFileVersion(fullPath)
 }
 
 func (v *FileVersion) HasChanged(selfUpdate bool) (bool, error) {

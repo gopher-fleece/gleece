@@ -1,4 +1,4 @@
-package controller
+package visitors
 
 import (
 	"fmt"
@@ -6,16 +6,48 @@ import (
 	"slices"
 	"strings"
 
+	MapSet "github.com/deckarep/golang-set/v2"
+	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/definitions"
-	"github.com/gopher-fleece/gleece/extractor"
 	"github.com/gopher-fleece/gleece/extractor/annotations"
+	"github.com/gopher-fleece/gleece/extractor/visitors/providers"
+	"github.com/gopher-fleece/gleece/gast"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
+	"github.com/gopher-fleece/runtime"
 )
 
+type RouteVisitor struct {
+	BaseVisitor
+
+	// The file currently being worked on
+	currentSourceFile *ast.File
+
+	parentController *definitions.ControllerMetadata
+	gleeceConfig     *definitions.GleeceConfig
+}
+
+func NewRouteVisitor(
+	arbitrationProvider *providers.ArbitrationProvider,
+	syncedProvider *providers.SyncedProvider,
+	parentController *definitions.ControllerMetadata,
+	gleeceConfig *definitions.GleeceConfig,
+) (*RouteVisitor, error) {
+	visitor := RouteVisitor{
+		parentController: parentController,
+		gleeceConfig:     gleeceConfig,
+	}
+
+	err := visitor.initializeWithArbitrationProvider(arbitrationProvider, syncedProvider)
+	return &visitor, err
+}
+
 // visitMethod Visits a controller route given as a FuncDecl and returns its metadata and whether it is an API endpoint
-func (v *ControllerVisitor) visitMethod(funcDecl *ast.FuncDecl) (definitions.RouteMetadata, bool, error) {
+func (v *RouteVisitor) VisitMethod(funcDecl *ast.FuncDecl, sourceFile *ast.File) (definitions.RouteMetadata, bool, error) {
 	v.enter(fmt.Sprintf("Method '%s'", funcDecl.Name.Name))
 	defer v.exit()
+
+	// Sets the context for the visit
+	v.currentSourceFile = sourceFile
 
 	// Check whether there are any comments on the method - we expect all API endpoints to contain comments.
 	// No comments - not an API endpoint.
@@ -23,7 +55,7 @@ func (v *ControllerVisitor) visitMethod(funcDecl *ast.FuncDecl) (definitions.Rou
 		return definitions.RouteMetadata{}, false, nil
 	}
 
-	comments := extractor.MapDocListToStrings(funcDecl.Doc.List)
+	comments := gast.MapDocListToStrings(funcDecl.Doc.List)
 	attributes, err := annotations.NewAnnotationHolder(comments, annotations.CommentSourceRoute)
 	if err != nil {
 		// Couldn't read comments. Fail.
@@ -55,36 +87,45 @@ func (v *ControllerVisitor) visitMethod(funcDecl *ast.FuncDecl) (definitions.Rou
 	// If the route does not have any security whatsoever and the `EnforceSecurityOnAllRoutes` setting is true, we must fail here.
 	//
 	// This is to prevent cases where a developer forgets to declare security for a controller/route.
-	if v.config.RoutesConfig.AuthorizationConfig.EnforceSecurityOnAllRoutes && len(security) <= 0 {
+	if v.gleeceConfig != nil && v.gleeceConfig.RoutesConfig.AuthorizationConfig.EnforceSecurityOnAllRoutes && len(security) <= 0 {
+		controllerName := "N/A"
+		if v.parentController != nil {
+			controllerName = v.parentController.Name
+		}
+
 		return definitions.RouteMetadata{}, true, v.getFrozenError(
 			"'enforceSecurityOnAllRoutes' setting is 'true'' but method '%s' on controller '%s'"+
 				"does not have any explicit or implicit (inherited) security attributes",
 			funcDecl.Name.Name,
-			v.currentController.Name,
+			controllerName,
 		)
 	}
 
 	// Template context is optional, additional information that can be accessed at the template level.
 	// This allows users to perform deep customizations on a per-route basis.
-	templateContext, err := v.getTemplateContextMetadata(&attributes)
+	templateContext, err := getTemplateContextMetadata(&attributes)
 	if err != nil {
-		return definitions.RouteMetadata{}, true, err
+		return definitions.RouteMetadata{}, true, v.frozenError(err)
 	}
 
-	fVer := definitions.FileVersion{}
+	fVer, err := gast.NewFileVersionFromAstFile(v.currentSourceFile, v.arbitrationProvider.FileSet())
+	if err != nil {
+		return definitions.RouteMetadata{}, true, v.frozenError(err)
+	}
 
 	meta := definitions.RouteMetadata{
 		OperationId:         funcDecl.Name.Name,
 		HttpVerb:            definitions.EnsureValidHttpVerb(methodAttr.Value),
 		Description:         attributes.GetDescription(),
-		Hiding:              v.getMethodHideOpts(&attributes),
-		Deprecation:         v.getDeprecationOpts(&attributes),
+		Hiding:              getMethodHideOpts(&attributes),
+		Deprecation:         getDeprecationOpts(&attributes),
 		RestMetadata:        definitions.RestMetadata{Path: routePath},
 		ErrorResponses:      errorResponses,
 		RequestContentType:  definitions.ContentTypeJSON, // Hardcoded for now, should be supported via annotations later on
 		ResponseContentType: definitions.ContentTypeJSON, // Hardcoded for now, should be supported via annotations later on
 		Security:            security,
 		TemplateContext:     templateContext,
+		FVersion:            &fVer,
 	}
 
 	// Check whether the method is an API endpoint, i.e., has all the relevant metadata.
@@ -109,7 +150,7 @@ func (v *ControllerVisitor) visitMethod(funcDecl *ast.FuncDecl) (definitions.Rou
 	meta.Responses = responses
 	meta.HasReturnValue = len(responses) > 1
 
-	successResponseCode, successDescription, err := v.getResponseStatusCodeAndDescription(&attributes, meta.HasReturnValue)
+	successResponseCode, successDescription, err := getResponseStatusCodeAndDescription(&attributes, meta.HasReturnValue)
 	if err != nil {
 		return meta, true, v.frozenError(err)
 	}
@@ -119,7 +160,7 @@ func (v *ControllerVisitor) visitMethod(funcDecl *ast.FuncDecl) (definitions.Rou
 	return meta, isApiEndpoint, nil
 }
 
-func (v *ControllerVisitor) getValidatedFuncParams(funcDecl *ast.FuncDecl, comments []string) ([]definitions.FuncParam, error) {
+func (v *RouteVisitor) getValidatedFuncParams(funcDecl *ast.FuncDecl, comments []string) ([]definitions.FuncParam, error) {
 	funcParams, err := v.getFuncParams(funcDecl, comments)
 	if err != nil {
 		return funcParams, v.frozenError(err)
@@ -148,9 +189,9 @@ func (v *ControllerVisitor) getValidatedFuncParams(funcDecl *ast.FuncDecl, comme
 	return funcParams, nil
 }
 
-func (v *ControllerVisitor) validateBodyParam(param definitions.FuncParam) error {
+func (v *RouteVisitor) validateBodyParam(param definitions.FuncParam) error {
 	// Verify the body is a struct
-	if param.ParamMeta.TypeMeta.SymbolKind != definitions.SymKindStruct {
+	if param.ParamMeta.TypeMeta.SymbolKind != common.SymKindStruct {
 		return v.getFrozenError(
 			"body parameters must be structs but '%s' (schema name '%s', type '%s') is of kind '%s'",
 			param.Name,
@@ -163,13 +204,13 @@ func (v *ControllerVisitor) validateBodyParam(param definitions.FuncParam) error
 	return nil
 }
 
-func (v *ControllerVisitor) validatePrimitiveParam(param definitions.FuncParam) error {
+func (v *RouteVisitor) validatePrimitiveParam(param definitions.FuncParam) error {
 	// Currently, we're limited to primitive header, path and query parameters.
 	// This is a simple and silly check for those.
 	// need to fully integrate the SymbolKind field..
 	isErrType := param.TypeMeta.PkgPath == "" && param.TypeMeta.Name == "error"
 	isMapType := param.TypeMeta.PkgPath == "" && strings.HasPrefix(param.TypeMeta.Name, "map[")
-	isAliasType := param.TypeMeta.SymbolKind == definitions.SymKindAlias
+	isAliasType := param.TypeMeta.SymbolKind == common.SymKindAlias
 	if (!param.TypeMeta.IsUniverseType && !isAliasType) || isErrType || isMapType {
 		return v.getFrozenError(
 			"header, path and query parameters are currently limited to primitives only but "+
@@ -186,7 +227,7 @@ func (v *ControllerVisitor) validatePrimitiveParam(param definitions.FuncParam) 
 }
 
 // This function is deprecated - no need to test here, all validation moved to the NewAnnotationHolder logic
-func (v *ControllerVisitor) validateParamsCombinations(funcParams []definitions.FuncParam, newParamType definitions.ParamPassedIn) error {
+func (v *RouteVisitor) validateParamsCombinations(funcParams []definitions.FuncParam, newParamType definitions.ParamPassedIn) error {
 
 	isBodyParamAlreadyExists := slices.ContainsFunc(funcParams, func(p definitions.FuncParam) bool {
 		return p.PassedIn == definitions.PassedInBody
@@ -213,13 +254,13 @@ func (v *ControllerVisitor) validateParamsCombinations(funcParams []definitions.
 	return nil
 }
 
-func (v *ControllerVisitor) getFuncParams(funcDecl *ast.FuncDecl, comments []string) ([]definitions.FuncParam, error) {
+func (v *RouteVisitor) getFuncParams(funcDecl *ast.FuncDecl, comments []string) ([]definitions.FuncParam, error) {
 	v.enter("")
 	defer v.exit()
 
 	funcParams := []definitions.FuncParam{}
 
-	paramTypes, err := v.astArbitrator.GetFuncParameterTypeList(v.currentSourceFile, funcDecl)
+	paramTypes, err := v.arbitrationProvider.Ast().GetFuncParameterTypeList(v.currentSourceFile, funcDecl)
 	if err != nil {
 		return funcParams, err
 	}
@@ -256,7 +297,7 @@ func (v *ControllerVisitor) getFuncParams(funcDecl *ast.FuncDecl, comments []str
 	return funcParams, nil
 }
 
-func (v *ControllerVisitor) processFuncParameter(
+func (v *RouteVisitor) processFuncParameter(
 	annotationHolder annotations.AnnotationHolder,
 	param definitions.ParamMeta,
 ) (definitions.FuncParam, error) {
@@ -307,18 +348,18 @@ func (v *ControllerVisitor) processFuncParameter(
 		PassedIn:           paramPassedIn,
 		Description:        paramAttrib.Description,
 		Validator:          appendParamRequiredValidation(&validatorString, param.TypeMeta.IsByAddress, paramPassedIn),
-		UniqueImportSerial: v.getNextImportId(),
+		UniqueImportSerial: v.syncedProvider.GetNextImportId(),
 	}, nil
 }
 
-func (v *ControllerVisitor) getFuncReturnValue(funcDecl *ast.FuncDecl) ([]definitions.FuncReturnValue, error) {
+func (v *RouteVisitor) getFuncReturnValue(funcDecl *ast.FuncDecl) ([]definitions.FuncReturnValue, error) {
 	v.enter("")
 	defer v.exit()
 
 	values := []definitions.FuncReturnValue{}
 	var errorRetTypeIndex int
 
-	returnTypes, err := v.astArbitrator.GetFuncReturnTypeList(v.currentSourceFile, funcDecl)
+	returnTypes, err := v.arbitrationProvider.Ast().GetFuncReturnTypeList(v.currentSourceFile, funcDecl)
 	if err != nil {
 		return values, err
 	}
@@ -347,7 +388,7 @@ func (v *ControllerVisitor) getFuncReturnValue(funcDecl *ast.FuncDecl) ([]defini
 
 	// Validate whether the method returns a proper error. This may be the first or second return type in the list
 	retType := returnTypes[errorRetTypeIndex]
-	isValidError, err := v.isAnErrorEmbeddingType(retType)
+	isValidError, err := isAnErrorEmbeddingType(v.arbitrationProvider.Pkg(), retType)
 	if err != nil {
 		return values, v.frozenError(err)
 	}
@@ -361,10 +402,60 @@ func (v *ControllerVisitor) getFuncReturnValue(funcDecl *ast.FuncDecl) ([]defini
 			values,
 			definitions.FuncReturnValue{
 				TypeMetadata:       value,
-				UniqueImportSerial: v.getNextImportId(),
+				UniqueImportSerial: v.syncedProvider.GetNextImportId(),
 			},
 		)
 	}
 
 	return values, nil
+}
+
+func (v RouteVisitor) getErrorResponseMetadata(attributes *annotations.AnnotationHolder) ([]definitions.ErrorResponse, error) {
+	responseAttributes := attributes.GetAll(annotations.AttributeErrorResponse)
+
+	responses := []definitions.ErrorResponse{}
+	encounteredCodes := MapSet.NewSet[runtime.HttpStatusCode]()
+
+	for _, attr := range responseAttributes {
+		code, err := definitions.ConvertToHttpStatus(attr.Value)
+		if err != nil {
+			return responses, err
+		}
+
+		if encounteredCodes.ContainsOne(code) {
+			logger.Warn(
+				"Status code '%d' appears multiple time on a controller receiver. Ignoring. Original Comment: %s",
+				code,
+				attr,
+			)
+			continue
+		}
+		responses = append(responses, definitions.ErrorResponse{HttpStatusCode: code, Description: attr.Description})
+		encounteredCodes.Add(code)
+	}
+
+	return responses, nil
+}
+
+// getRouteSecurityWithInheritance Gets the securities to be associated with the route annotated by the given AnnotationHolder.
+// Security is hierarchial and uses a 'first-match' approach:
+//
+// 1. Explicit, receiver level annotations
+// 2. Explicit, controller level annotations
+// 3. Default securities in Gleece configuration file.
+func (v *RouteVisitor) getRouteSecurityWithInheritance(attributes annotations.AnnotationHolder) ([]definitions.RouteSecurity, error) {
+	explicitSec, err := getSecurityFromContext(attributes)
+	if err != nil {
+		return []definitions.RouteSecurity{}, v.frozenError(err)
+	}
+
+	if len(explicitSec) > 0 {
+		return explicitSec, nil
+	}
+
+	if v.parentController != nil {
+		return v.parentController.Security, nil
+	}
+
+	return []definitions.RouteSecurity{}, nil
 }

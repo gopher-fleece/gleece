@@ -1,4 +1,4 @@
-package extractor
+package gast
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/gopher-fleece/gleece/definitions"
+	"github.com/gopher-fleece/gleece/common"
 	"golang.org/x/tools/go/packages"
 )
 
@@ -77,12 +77,19 @@ func GetDefaultPackageAlias(file *ast.File) (string, error) {
 	return "", fmt.Errorf("source file does not have a name")
 }
 
-func GetFullPackageName(file *ast.File, fileSet *token.FileSet) (string, error) {
+func GetFileFullPath(file *ast.File, fileSet *token.FileSet) (string, error) {
+	if file == nil || fileSet == nil {
+		return "", fmt.Errorf("GetFileFullPath was provided nil file or fileSet")
+	}
+
 	// Get the file's full path using the fileSet
 	position := fileSet.Position(file.Package)
 	relativePath := position.Filename
+	return filepath.Abs(relativePath)
+}
 
-	absFilePath, err := filepath.Abs(relativePath)
+func GetFullPackageName(file *ast.File, fileSet *token.FileSet) (string, error) {
+	absFilePath, err := GetFileFullPath(file, fileSet)
 	if err != nil {
 		// This is nearly impossible to break - filepath.Abs is extremely lenient.
 		return "", err
@@ -340,10 +347,10 @@ func GetTypeNameOrError(pkg *packages.Package, name string) (*types.TypeName, er
 	return typeName, nil
 }
 
-func GetSymbolKind(pkg *packages.Package, name string) (definitions.SymKind, error) {
+func GetSymbolKind(pkg *packages.Package, name string) (common.SymKind, error) {
 	typeName, err := GetTypeNameOrError(pkg, name)
 	if err != nil {
-		return definitions.SymKindUnknown, err
+		return common.SymKindUnknown, err
 	}
 
 	return GetSymbolKindFromObject(typeName), nil
@@ -504,47 +511,47 @@ func MapDocListToStrings(docList []*ast.Comment) []string {
 	return result
 }
 
-func GetSymbolKindFromObject(obj types.Object) definitions.SymKind {
+func GetSymbolKindFromObject(obj types.Object) common.SymKind {
 	switch o := obj.(type) {
 
 	case *types.PkgName:
-		return definitions.SymKindPackage
+		return common.SymKindPackage
 
 	case *types.Const:
-		return definitions.SymKindConstant
+		return common.SymKindConstant
 
 	case *types.Var:
 		if o.IsField() {
-			return definitions.SymKindField
+			return common.SymKindField
 		}
 		// Parameters are Vars too, but we must distinguish
 		// Parameters live in function signatures, not top-level scope
 		if isParameter(o) {
-			return definitions.SymKindParameter
+			return common.SymKindParameter
 		}
-		return definitions.SymKindVariable
+		return common.SymKindVariable
 
 	case *types.Func:
 		if sig, ok := o.Type().(*types.Signature); ok && sig.Recv() != nil {
-			return definitions.SymKindMethod
+			return common.SymKindMethod
 		}
-		return definitions.SymKindFunction
+		return common.SymKindFunction
 
 	case *types.TypeName:
 		if o.IsAlias() {
-			return definitions.SymKindAlias
+			return common.SymKindAlias
 		}
 		switch o.Type().Underlying().(type) {
 		case *types.Struct:
-			return definitions.SymKindStruct
+			return common.SymKindStruct
 		case *types.Interface:
-			return definitions.SymKindInterface
+			return common.SymKindInterface
 		default:
-			return definitions.SymKindAlias
+			return common.SymKindAlias
 		}
 	}
 
-	return definitions.SymKindUnknown
+	return common.SymKindUnknown
 }
 
 func isParameter(v *types.Var) bool {

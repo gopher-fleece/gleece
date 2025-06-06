@@ -4,16 +4,23 @@ import (
 	"go/ast"
 	"go/token"
 
-	"github.com/gopher-fleece/gleece/definitions"
+	"github.com/gopher-fleece/gleece/gast"
 )
+
+type DeclInfo struct {
+	FVersion  *gast.FileVersion
+	Pos       token.Pos // Start position in token.FileSet
+	ByteStart int       // Start offset (optional, useful for editors/tools)
+	ByteEnd   int       // End offset
+}
 
 type FileAstCache struct {
 	Files map[string]*ast.File
 }
 
 type SymbolLocationCache struct {
-	Funcs map[*ast.FuncDecl]*definitions.DeclInfo
-	Types map[*ast.TypeSpec]*definitions.DeclInfo
+	Funcs map[*ast.FuncDecl]*DeclInfo
+	Types map[*ast.TypeSpec]*DeclInfo
 }
 
 type PositionIndexCache struct {
@@ -25,4 +32,3 @@ type SymbolSpan struct {
 	End    token.Pos
 	Symbol ast.Node
 }
-

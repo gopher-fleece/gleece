@@ -1,4 +1,4 @@
-package controller
+package visitors
 
 import (
 	"github.com/gopher-fleece/gleece/definitions"
@@ -8,12 +8,6 @@ import (
 )
 
 var _ = Describe("Auxiliary Tests", func() {
-	var visitor ControllerVisitor
-
-	BeforeEach(func() {
-		visitor = ControllerVisitor{}
-	})
-
 	Context("when processing template context attributes", func() {
 		It("should successfully create template context map", func() {
 			attributes, _ := annotations.NewAnnotationHolder([]string{
@@ -21,7 +15,7 @@ var _ = Describe("Auxiliary Tests", func() {
 			}, annotations.CommentSourceRoute)
 
 			// Act
-			result, err := visitor.getTemplateContextMetadata(&attributes)
+			result, err := getTemplateContextMetadata(&attributes)
 
 			// Assert
 			Expect(err).To(BeNil())
@@ -41,11 +35,11 @@ var _ = Describe("Auxiliary Tests", func() {
 			}, annotations.CommentSourceRoute)
 
 			// Act
-			result, err := visitor.getTemplateContextMetadata(&attributes)
+			result, err := getTemplateContextMetadata(&attributes)
 
 			// Assert
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring("Duplicate template context attribute"))
+			Expect(err.Error()).To(ContainSubstring("duplicate template context attribute"))
 			Expect(result).To(BeNil())
 		})
 
@@ -54,7 +48,7 @@ var _ = Describe("Auxiliary Tests", func() {
 			attributes, _ := annotations.NewAnnotationHolder([]string{}, annotations.CommentSourceRoute)
 
 			// Act
-			result, err := visitor.getTemplateContextMetadata(&attributes)
+			result, err := getTemplateContextMetadata(&attributes)
 
 			// Assert
 			Expect(err).To(BeNil())

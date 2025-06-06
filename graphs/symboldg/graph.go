@@ -1,8 +1,10 @@
 package symboldag
 
 import (
+	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/extractor/annotations"
+	"github.com/gopher-fleece/gleece/gast"
 )
 
 type SymbolGraph struct {
@@ -11,8 +13,8 @@ type SymbolGraph struct {
 
 type SymbolNode struct {
 	Id          any // Key, like *ast.FuncDecl, *ast.TypeSpec, *ast.Ident
-	Kind        definitions.SymKind
-	Version     *definitions.FileVersion
+	Kind        common.SymKind
+	Version     *gast.FileVersion
 	Value       any // Actual metadata: RouteMetadata, TypeMetadata, etc.
 	Annotations *annotations.AnnotationHolder
 
@@ -32,7 +34,7 @@ func (g *SymbolGraph) AddDep(from, to *SymbolNode) {
 func (g *SymbolGraph) AddController(request CreateControllerNode) *SymbolNode {
 	ctrlNode := &SymbolNode{
 		Id:          request.Decl,
-		Kind:        definitions.SymKindStruct,
+		Kind:        common.SymKindStruct,
 		Version:     request.Data.FVersion,
 		Value:       request.Data,
 		Annotations: request.Annotations,

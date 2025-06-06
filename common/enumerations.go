@@ -1,4 +1,4 @@
-package definitions
+package common
 
 type SymKind string
 

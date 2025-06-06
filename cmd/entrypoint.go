@@ -8,7 +8,7 @@ import (
 
 	"github.com/gopher-fleece/gleece/cmd/arguments"
 	"github.com/gopher-fleece/gleece/definitions"
-	"github.com/gopher-fleece/gleece/extractor/visitors/controller"
+	"github.com/gopher-fleece/gleece/extractor/visitors"
 	"github.com/gopher-fleece/gleece/generator/routes"
 	"github.com/gopher-fleece/gleece/generator/swagen"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
@@ -42,12 +42,12 @@ func getConfig(configPath string) (*definitions.GleeceConfig, error) {
 }
 
 func getMetadata(config *definitions.GleeceConfig) ([]definitions.ControllerMetadata, *definitions.Models, bool, error) {
-	visitor, err := controller.NewControllerVisitor(config)
+	visitor, err := visitors.NewControllerVisitor(config, nil, nil)
 	if err != nil {
 		return []definitions.ControllerMetadata{}, nil, false, err
 	}
 
-	for _, file := range visitor.GetFiles() {
+	for _, file := range visitor.GetAllSourceFiles() {
 		ast.Walk(visitor, file)
 	}
 

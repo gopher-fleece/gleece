@@ -3,6 +3,7 @@ package imports_test
 import (
 	"testing"
 
+	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
 	"github.com/gopher-fleece/gleece/test/utils"
@@ -30,7 +31,7 @@ var _ = Describe("Imports Controller", func() {
 		Expect(route.FuncParams[0].TypeMeta.Import).To(Equal(definitions.ImportTypeDot))
 		Expect(route.FuncParams[0].TypeMeta.IsUniverseType).To(BeFalse())
 		Expect(route.FuncParams[0].TypeMeta.IsByAddress).To(BeFalse())
-		Expect(route.FuncParams[0].TypeMeta.SymbolKind).To(Equal(definitions.SymKindStruct))
+		Expect(route.FuncParams[0].TypeMeta.SymbolKind).To(Equal(common.SymKindStruct))
 
 		Expect(route.Responses).To(HaveLen(2))
 		Expect(route.Responses[0].TypeMetadata.Name).To(Equal("ImportedWithDot"))
@@ -39,7 +40,7 @@ var _ = Describe("Imports Controller", func() {
 		Expect(route.Responses[0].TypeMetadata.Import).To(Equal(definitions.ImportTypeDot))
 		Expect(route.Responses[0].TypeMetadata.IsUniverseType).To(BeFalse())
 		Expect(route.Responses[0].TypeMetadata.IsByAddress).To(BeFalse())
-		Expect(route.Responses[0].TypeMetadata.SymbolKind).To(Equal(definitions.SymKindStruct))
+		Expect(route.Responses[0].TypeMetadata.SymbolKind).To(Equal(common.SymKindStruct))
 	})
 
 	It("Default-alias-imported structs should be properly resolved", func() {
@@ -52,7 +53,7 @@ var _ = Describe("Imports Controller", func() {
 		Expect(route.FuncParams[0].TypeMeta.Import).To(Equal(definitions.ImportTypeAlias))
 		Expect(route.FuncParams[0].TypeMeta.IsUniverseType).To(BeFalse())
 		Expect(route.FuncParams[0].TypeMeta.IsByAddress).To(BeFalse())
-		Expect(route.FuncParams[0].TypeMeta.SymbolKind).To(Equal(definitions.SymKindStruct))
+		Expect(route.FuncParams[0].TypeMeta.SymbolKind).To(Equal(common.SymKindStruct))
 
 		Expect(route.Responses).To(HaveLen(2))
 		Expect(route.Responses[0].TypeMetadata.Name).To(Equal("ImportedWithDefaultAlias"))
@@ -61,7 +62,7 @@ var _ = Describe("Imports Controller", func() {
 		Expect(route.Responses[0].TypeMetadata.Import).To(Equal(definitions.ImportTypeAlias))
 		Expect(route.Responses[0].TypeMetadata.IsUniverseType).To(BeFalse())
 		Expect(route.Responses[0].TypeMetadata.IsByAddress).To(BeFalse())
-		Expect(route.Responses[0].TypeMetadata.SymbolKind).To(Equal(definitions.SymKindStruct))
+		Expect(route.Responses[0].TypeMetadata.SymbolKind).To(Equal(common.SymKindStruct))
 	})
 
 	It("Custom-alias-imported structs should be properly resolved", func() {
@@ -74,7 +75,7 @@ var _ = Describe("Imports Controller", func() {
 		Expect(route.FuncParams[0].TypeMeta.Import).To(Equal(definitions.ImportTypeAlias))
 		Expect(route.FuncParams[0].TypeMeta.IsUniverseType).To(BeFalse())
 		Expect(route.FuncParams[0].TypeMeta.IsByAddress).To(BeFalse())
-		Expect(route.FuncParams[0].TypeMeta.SymbolKind).To(Equal(definitions.SymKindStruct))
+		Expect(route.FuncParams[0].TypeMeta.SymbolKind).To(Equal(common.SymKindStruct))
 
 		Expect(route.Responses).To(HaveLen(2))
 		Expect(route.Responses[0].TypeMetadata.Name).To(Equal("ImportedWithCustomAlias"))
@@ -83,7 +84,7 @@ var _ = Describe("Imports Controller", func() {
 		Expect(route.Responses[0].TypeMetadata.Import).To(Equal(definitions.ImportTypeAlias))
 		Expect(route.Responses[0].TypeMetadata.IsUniverseType).To(BeFalse())
 		Expect(route.Responses[0].TypeMetadata.IsByAddress).To(BeFalse())
-		Expect(route.Responses[0].TypeMetadata.SymbolKind).To(Equal(definitions.SymKindStruct))
+		Expect(route.Responses[0].TypeMetadata.SymbolKind).To(Equal(common.SymKindStruct))
 	})
 })
 

@@ -3,6 +3,7 @@ package sanity_test
 import (
 	"testing"
 
+	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
 	"github.com/gopher-fleece/gleece/test/utils"
@@ -98,7 +99,7 @@ var _ = Describe("Sanity Controller", func() {
 		Expect(route.FuncParams[0].ParamMeta.TypeMeta.Import).To(Equal(definitions.ImportTypeNone))
 		Expect(route.FuncParams[0].ParamMeta.TypeMeta.IsUniverseType).To(BeTrue())
 		Expect(route.FuncParams[0].ParamMeta.TypeMeta.IsByAddress).To(BeFalse())
-		Expect(route.FuncParams[0].ParamMeta.TypeMeta.SymbolKind).To(Equal(definitions.SymKindUnknown))
+		Expect(route.FuncParams[0].ParamMeta.TypeMeta.SymbolKind).To(Equal(common.SymKindUnknown))
 
 		Expect(route.FuncParams[1].PassedIn).To(Equal(definitions.PassedInQuery))
 		Expect(route.FuncParams[1].NameInSchema).To(Equal("queryParam"))
@@ -114,7 +115,7 @@ var _ = Describe("Sanity Controller", func() {
 		Expect(route.FuncParams[1].ParamMeta.TypeMeta.Import).To(Equal(definitions.ImportTypeNone))
 		Expect(route.FuncParams[1].ParamMeta.TypeMeta.IsUniverseType).To(BeTrue())
 		Expect(route.FuncParams[1].ParamMeta.TypeMeta.IsByAddress).To(BeFalse())
-		Expect(route.FuncParams[1].ParamMeta.TypeMeta.SymbolKind).To(Equal(definitions.SymKindUnknown))
+		Expect(route.FuncParams[1].ParamMeta.TypeMeta.SymbolKind).To(Equal(common.SymKindUnknown))
 
 		Expect(route.FuncParams[2].PassedIn).To(Equal(definitions.PassedInHeader))
 		Expect(route.FuncParams[2].NameInSchema).To(Equal("headerParam"))
@@ -130,7 +131,7 @@ var _ = Describe("Sanity Controller", func() {
 		Expect(route.FuncParams[2].ParamMeta.TypeMeta.Import).To(Equal(definitions.ImportTypeNone))
 		Expect(route.FuncParams[2].ParamMeta.TypeMeta.IsUniverseType).To(BeTrue())
 		Expect(route.FuncParams[2].ParamMeta.TypeMeta.IsByAddress).To(BeFalse())
-		Expect(route.FuncParams[2].ParamMeta.TypeMeta.SymbolKind).To(Equal(definitions.SymKindUnknown))
+		Expect(route.FuncParams[2].ParamMeta.TypeMeta.SymbolKind).To(Equal(common.SymKindUnknown))
 
 		Expect(route.Responses[0].UniqueImportSerial).To(Equal(uint64(3)))
 		Expect(route.Responses[0].TypeMetadata.Name).To(Equal("SimpleResponseModel"))
@@ -140,7 +141,7 @@ var _ = Describe("Sanity Controller", func() {
 		Expect(route.Responses[0].TypeMetadata.Import).To(Equal(definitions.ImportTypeNone))
 		Expect(route.Responses[0].TypeMetadata.IsUniverseType).To(BeFalse())
 		Expect(route.Responses[0].TypeMetadata.IsByAddress).To(BeFalse())
-		Expect(route.Responses[0].TypeMetadata.SymbolKind).To(Equal(definitions.SymKindStruct))
+		Expect(route.Responses[0].TypeMetadata.SymbolKind).To(Equal(common.SymKindStruct))
 
 		Expect(route.Responses[1].UniqueImportSerial).To(Equal(uint64(4)))
 		Expect(route.Responses[1].TypeMetadata.Name).To(Equal("error"))
@@ -150,7 +151,7 @@ var _ = Describe("Sanity Controller", func() {
 		Expect(route.Responses[1].TypeMetadata.Import).To(Equal(definitions.ImportTypeNone))
 		Expect(route.Responses[1].TypeMetadata.IsUniverseType).To(BeTrue())
 		Expect(route.Responses[1].TypeMetadata.IsByAddress).To(BeFalse())
-		Expect(route.Responses[1].TypeMetadata.SymbolKind).To(Equal(definitions.SymKindUnknown))
+		Expect(route.Responses[1].TypeMetadata.SymbolKind).To(Equal(common.SymKindUnknown))
 	})
 
 	It("Produces correct models list", func() {

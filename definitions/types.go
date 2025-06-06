@@ -2,9 +2,10 @@ package definitions
 
 import (
 	"go/ast"
-	"go/token"
 	"go/types"
 
+	"github.com/gopher-fleece/gleece/common"
+	"github.com/gopher-fleece/gleece/gast"
 	"github.com/gopher-fleece/runtime"
 )
 
@@ -142,26 +143,6 @@ func (a AliasMetadata) Equals(other AliasMetadata) bool {
 	return true
 }
 
-type DeclInfo struct {
-	FVersion  *FileVersion
-	Pos       token.Pos // Start position in token.FileSet
-	ByteStart int       // Start offset (optional, useful for editors/tools)
-	ByteEnd   int       // End offset
-}
-
-type EnclosingSymbol struct {
-	Name    string // e.g. "User" or "MyStruct.MyMethod"
-	PkgPath string // e.g. "github.com/gopher-fleece/gleece/extractor
-	Kind    SymKind
-}
-
-type PackageInfo struct {
-	DefaultAlias string
-	Path         string // Canonical import path, e.g. "github.com/gopher-fleece/gleece/extractor
-	Import       ImportType
-	IsStd        bool
-}
-
 type TypeMetadata struct {
 	Name                string
 	PkgPath             string
@@ -170,9 +151,9 @@ type TypeMetadata struct {
 	Import              ImportType
 	IsUniverseType      bool
 	IsByAddress         bool
-	SymbolKind          SymKind
+	SymbolKind          common.SymKind
 	AliasMetadata       *AliasMetadata
-	FVersion            *FileVersion
+	FVersion            *gast.FileVersion
 }
 
 func (t TypeMetadata) Equals(other TypeMetadata) bool {
@@ -282,6 +263,8 @@ type RouteMetadata struct {
 
 	// Custom template context for the operation, provided by the route developer, used template extension/override
 	TemplateContext map[string]TemplateContext
+
+	FVersion *gast.FileVersion
 }
 
 func (m RouteMetadata) GetValueReturnType() *TypeMetadata {
@@ -329,7 +312,7 @@ type ControllerMetadata struct {
 	// May be overridden at the route level
 	Security []RouteSecurity
 
-	FVersion *FileVersion
+	FVersion *gast.FileVersion
 }
 
 type StructMetadata struct {

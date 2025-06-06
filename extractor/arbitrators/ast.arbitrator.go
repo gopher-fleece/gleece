@@ -8,9 +8,10 @@ import (
 	"go/types"
 	"strconv"
 
+	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/definitions"
-	"github.com/gopher-fleece/gleece/extractor"
 	"github.com/gopher-fleece/gleece/extractor/annotations"
+	"github.com/gopher-fleece/gleece/gast"
 	"golang.org/x/tools/go/packages"
 )
 
@@ -96,14 +97,14 @@ func (arb *AstArbitrator) GetTypeMetaForExpr(file *ast.File, expr ast.Expr) (def
 		meta.Name = "[]" + meta.Name // Passing the array information as a string - easy to unwrap later on.
 		return meta, err
 	default:
-		fieldTypeString := extractor.GetFieldTypeString(fieldType)
+		fieldTypeString := gast.GetFieldTypeString(fieldType)
 		return definitions.TypeMetadata{}, fmt.Errorf("field type '%s' is not currently supported", fieldTypeString)
 	}
 }
 
 // GetTypeMetaByIdent gets type metadata for the given Ident in the given AST file
 func (arb *AstArbitrator) GetTypeMetaByIdent(file *ast.File, ident *ast.Ident) (definitions.TypeMetadata, error) {
-	comments := extractor.GetCommentsFromIdent(arb.fileSet, file, ident)
+	comments := gast.GetCommentsFromIdent(arb.fileSet, file, ident)
 	holder, err := annotations.NewAnnotationHolder(comments, annotations.CommentSourceProperty)
 
 	meta := definitions.TypeMetadata{Name: ident.Name}
@@ -114,22 +115,26 @@ func (arb *AstArbitrator) GetTypeMetaByIdent(file *ast.File, ident *ast.Ident) (
 
 	meta.Description = holder.GetDescription()
 
-	if extractor.IsUniverseType(ident.Name) {
+	if gast.IsUniverseType(ident.Name) {
 		// The identifier is a member of the universe, e.g. 'error'.
 		// Nothing to do here. Leave the package empty so the downstream generator knows no import/alias is needed
 		meta.IsUniverseType = true
 		meta.Import = definitions.ImportTypeNone
-		meta.SymbolKind = definitions.SymKindUnknown
+		meta.SymbolKind = common.SymKindUnknown
 		return meta, nil
 	}
 
-	relevantPkg := arb.GetPackageFromDotImportedIdent(file, ident)
+	relevantPkg, err := arb.GetPackageFromDotImportedIdent(file, ident)
+	if err != nil {
+		return meta, err
+	}
+
 	if relevantPkg != nil {
 		// The identifier is a type from a dot imported package
 		meta.Import = definitions.ImportTypeDot
 		meta.PkgPath = relevantPkg.PkgPath
 		meta.DefaultPackageAlias = relevantPkg.Name
-		kind, err := extractor.GetSymbolKind(relevantPkg, ident.Name)
+		kind, err := gast.GetSymbolKind(relevantPkg, ident.Name)
 		if err != nil {
 			return meta, err
 		}
@@ -139,7 +144,7 @@ func (arb *AstArbitrator) GetTypeMetaByIdent(file *ast.File, ident *ast.Ident) (
 		//
 		// Were it a an aliased import, it've been resolved by GetTypeMetaBySelectorExpr.
 		// For dot-imports, we'd have flowed to the above 'if'.
-		currentPackageName, err := extractor.GetFullPackageName(file, arb.fileSet)
+		currentPackageName, err := gast.GetFullPackageName(file, arb.fileSet)
 		if err != nil {
 			return meta, err
 		}
@@ -153,25 +158,25 @@ func (arb *AstArbitrator) GetTypeMetaByIdent(file *ast.File, ident *ast.Ident) (
 			return meta, fmt.Errorf("could not find package '%s' in the given list of packages", currentPackageName)
 		}
 
-		typeName, err := extractor.GetTypeNameOrError(pkg, ident.Name)
+		typeName, err := gast.GetTypeNameOrError(pkg, ident.Name)
 		if err != nil {
 			return meta, err
 		}
 
 		// Verify the identifier does in fact exist in the current package.
 		// Not strictly needed but helps with safety.
-		symbolKind := extractor.GetSymbolKindFromObject(typeName)
+		symbolKind := gast.GetSymbolKindFromObject(typeName)
 
-		if symbolKind == definitions.SymKindUnknown {
+		if symbolKind == common.SymKindUnknown {
 			return meta, fmt.Errorf("could not determine entity kind for '%s.%s", currentPackageName, ident.Name)
 		}
 
 		meta.Import = definitions.ImportTypeNone
 		meta.PkgPath = currentPackageName
-		meta.DefaultPackageAlias = extractor.GetDefaultAlias(currentPackageName)
+		meta.DefaultPackageAlias = gast.GetDefaultAlias(currentPackageName)
 		meta.SymbolKind = symbolKind
 
-		if symbolKind == definitions.SymKindAlias {
+		if symbolKind == common.SymKindAlias {
 			aliasMetadata, err := arb.ExtractEnumAliasType(pkg, typeName)
 			if err != nil {
 				return meta, err
@@ -185,7 +190,7 @@ func (arb *AstArbitrator) GetTypeMetaByIdent(file *ast.File, ident *ast.Ident) (
 
 // GetTypeMetaBySelectorExpr gets type metadata for the given Selector Expression in the given AST file
 func (arb *AstArbitrator) GetTypeMetaBySelectorExpr(file *ast.File, selector *ast.SelectorExpr) (definitions.TypeMetadata, error) {
-	aliasedImports := extractor.GetImportAliases(file)
+	aliasedImports := gast.GetImportAliases(file)
 
 	entityName := selector.Sel.Name
 
@@ -194,7 +199,7 @@ func (arb *AstArbitrator) GetTypeMetaBySelectorExpr(file *ast.File, selector *as
 		Import: definitions.ImportTypeAlias,
 	}
 
-	comments := extractor.GetCommentsFromIdent(arb.fileSet, file, selector.Sel)
+	comments := gast.GetCommentsFromIdent(arb.fileSet, file, selector.Sel)
 	holder, err := annotations.NewAnnotationHolder(comments, annotations.CommentSourceProperty)
 	if err != nil {
 		return meta, err
@@ -213,7 +218,7 @@ func (arb *AstArbitrator) GetTypeMetaBySelectorExpr(file *ast.File, selector *as
 	aliasedFullName := aliasedImports[importAlias.Name]
 	if len(aliasedFullName) == 0 { // If there's no alias, the string will be empty
 		for maybeFullPackageName, fullPackageName := range aliasedImports {
-			if maybeFullPackageName == fullPackageName && extractor.IsAliasDefault(maybeFullPackageName, importAlias.Name) {
+			if maybeFullPackageName == fullPackageName && gast.IsAliasDefault(maybeFullPackageName, importAlias.Name) {
 				// A reverse check - if the import uses a default alias, we look in the map in reverse;
 				// Since the SelectorExpr's X is the default alias, we can check each import to see if its default alias matches the X.
 				// If it does, it's a match.
@@ -229,7 +234,7 @@ func (arb *AstArbitrator) GetTypeMetaBySelectorExpr(file *ast.File, selector *as
 	}
 
 	meta.PkgPath = realFullPackageName
-	meta.DefaultPackageAlias = extractor.GetDefaultAlias(realFullPackageName)
+	meta.DefaultPackageAlias = gast.GetDefaultAlias(realFullPackageName)
 
 	pkg, err := arb.pkgFacade.GetPackage(realFullPackageName)
 	if err != nil {
@@ -240,22 +245,19 @@ func (arb *AstArbitrator) GetTypeMetaBySelectorExpr(file *ast.File, selector *as
 		return meta, fmt.Errorf("could not find package '%s' whilst processing '%s'", realFullPackageName, entityName)
 	}
 
-	kind, err := extractor.GetSymbolKind(pkg, entityName)
+	kind, err := gast.GetSymbolKind(pkg, entityName)
 	if err != nil {
 		return meta, err
 	}
 
 	meta.SymbolKind = kind
 
-	if kind == definitions.SymKindAlias {
-		typeName, err := extractor.LookupTypeName(pkg, entityName)
+	if kind == common.SymKindAlias {
+		typeName, err := gast.GetTypeNameOrError(pkg, entityName)
 		if err != nil {
 			return meta, err
 		}
 
-		if typeName == nil {
-			return meta, fmt.Errorf("type '%s' was not found in package %s", entityName, pkg.Name)
-		}
 		aliasMetadata, err := arb.ExtractEnumAliasType(pkg, typeName)
 		if err != nil {
 			return meta, err
@@ -269,17 +271,22 @@ func (arb *AstArbitrator) GetTypeMetaBySelectorExpr(file *ast.File, selector *as
 // the ident is not a dot-imported one.
 //
 // This method can be used as a "Is this Ident from a dot-import?"
-func (arb *AstArbitrator) GetPackageFromDotImportedIdent(file *ast.File, ident *ast.Ident) *packages.Package {
-	dotImports := extractor.GetDotImportedPackageNames(file)
+func (arb *AstArbitrator) GetPackageFromDotImportedIdent(file *ast.File, ident *ast.Ident) (*packages.Package, error) {
+	dotImports := gast.GetDotImportedPackageNames(file)
 	for _, dotImport := range dotImports {
-		pkg := extractor.FilterPackageByFullName(arb.pkgFacade.GetAllPackages(), dotImport)
+		pkg, err := arb.pkgFacade.GetPackage(dotImport)
+		if err != nil {
+			return nil, err
+		}
+
 		if pkg != nil {
-			if extractor.IsIdentInPackage(pkg, ident) {
-				return pkg
+			if gast.IsIdentInPackage(pkg, ident) {
+				return pkg, nil
 			}
 		}
 	}
-	return nil
+
+	return nil, nil
 }
 
 // ExtractEnumAliasType attempts to determine the underlying type and possible value for the given TypeName,

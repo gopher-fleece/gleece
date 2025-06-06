@@ -7,9 +7,9 @@ import (
 
 	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/definitions"
-	"github.com/gopher-fleece/gleece/extractor"
 	"github.com/gopher-fleece/gleece/extractor/annotations"
-	"github.com/gopher-fleece/gleece/extractor/arbitrators"
+	"github.com/gopher-fleece/gleece/extractor/visitors/providers"
+	"github.com/gopher-fleece/gleece/gast"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
 	"golang.org/x/tools/go/packages"
 )
@@ -28,12 +28,7 @@ type StructInfo struct {
 
 // TypeVisitor handles recursive 'visitation' of types (structs, enums, aliases)
 type TypeVisitor struct {
-	// A facade for managing packages.Package
-	packagesFacade *arbitrators.PackagesFacade
-
-	// An arbitrator providing logic for working with Go's AST
-	astArbitrator *arbitrators.AstArbitrator
-
+	BaseVisitor
 	// A map of struct names to metadata
 	structsByName map[string]*definitions.StructMetadata
 
@@ -48,13 +43,30 @@ type StructAttributeHolders struct {
 }
 
 // NewTypeVisitor Initializes a new visitor
-func NewTypeVisitor(packagesFacade *arbitrators.PackagesFacade, astArbitrator *arbitrators.AstArbitrator) *TypeVisitor {
-	return &TypeVisitor{
-		packagesFacade: packagesFacade,
-		astArbitrator:  astArbitrator,
-		structsByName:  make(map[string]*definitions.StructMetadata),
-		enumsByName:    make(map[string]*definitions.EnumMetadata),
+func NewTypeVisitorFromGlobs(
+	sourceFileGlobs []string,
+	arbitrationProvider *providers.ArbitrationProvider,
+	syncedProvider *providers.SyncedProvider,
+) (*TypeVisitor, error) {
+	visitor := &TypeVisitor{
+		structsByName: make(map[string]*definitions.StructMetadata),
+		enumsByName:   make(map[string]*definitions.EnumMetadata),
 	}
+	err := visitor.initializeWithGlobs(sourceFileGlobs, syncedProvider)
+	return visitor, err
+}
+
+// NewTypeVisitor Initializes a new visitor
+func NewTypeVisitorFromArbitrationProvider(
+	arbitrationProvider *providers.ArbitrationProvider,
+	syncedProvider *providers.SyncedProvider,
+) (*TypeVisitor, error) {
+	visitor := &TypeVisitor{
+		structsByName: make(map[string]*definitions.StructMetadata),
+		enumsByName:   make(map[string]*definitions.EnumMetadata),
+	}
+	err := visitor.initializeWithArbitrationProvider(arbitrationProvider, syncedProvider)
+	return visitor, err
 }
 
 // VisitStruct dives into the given struct in the given package and recursively parses it to obtain metadata,
@@ -74,7 +86,7 @@ func (v *TypeVisitor) VisitStruct(fullPackageName string, structName string, str
 		Name:        structName,
 		PkgPath:     fullPackageName,
 		Description: attributeHolders.StructHolder.GetDescription(),
-		Deprecation: getDeprecationOpts(attributeHolders.StructHolder),
+		Deprecation: getDeprecationOpts(&attributeHolders.StructHolder),
 	}
 
 	// Iterate the struct's fields
@@ -103,7 +115,7 @@ func (v *TypeVisitor) VisitStruct(fullPackageName string, structName string, str
 			}
 
 			// Field type string is for the parent model's metadata
-			fieldTypeString = extractor.GetIterableElementType(t)
+			fieldTypeString = gast.GetIterableElementType(t)
 
 			// Dive into the slice and recurse into nested structs, if required
 			err := v.processIterableField(field, iterable, fieldTypeString, &structInfo, tag)
@@ -138,7 +150,7 @@ func (v *TypeVisitor) VisitStruct(fullPackageName string, structName string, str
 		fieldAttr := attributeHolders.FieldHolders[field.Name()]
 		if fieldAttr != nil {
 			fieldMeta.Description = fieldAttr.GetDescription()
-			deprecationOpts := getDeprecationOpts(*fieldAttr)
+			deprecationOpts := getDeprecationOpts(fieldAttr)
 			fieldMeta.Deprecation = &deprecationOpts
 		} else {
 			fieldMeta.Deprecation = &definitions.DeprecationOptions{}
@@ -158,18 +170,18 @@ func (v *TypeVisitor) processIterableField(
 	structInfo *definitions.StructMetadata,
 	fieldTag string,
 ) error {
-	if extractor.IsBasic(fieldType) {
+	if gast.IsBasic(fieldType) {
 		return nil
 	}
 
-	pkg := extractor.GetPackageOwnerOfType(fieldType)
+	pkg := gast.GetPackageOwnerOfType(fieldType)
 	if pkg == nil {
 		baseTypeName := sliceElementTypeNameString
 		if strings.HasPrefix(sliceElementTypeNameString, "[]") {
 			baseTypeName = sliceElementTypeNameString[2:]
 		}
 
-		if extractor.IsUniverseType(baseTypeName) {
+		if gast.IsUniverseType(baseTypeName) {
 			// If there's no owner package, this might be a universe type. If so, just ignore it
 			return nil
 		}
@@ -205,7 +217,7 @@ func (v *TypeVisitor) processNamedEntity(
 ) (bool, error) {
 	// If the type's an enum.
 	// This is pretty nasty - there needs to be a stricter separation between simple aliases and actual enums.
-	if extractor.IsAliasType(node) {
+	if gast.IsAliasType(node) {
 		aliasModel := createAliasModel(node, fieldTag)
 		err := v.visitNestedEnum(node, aliasModel)
 		if err != nil {
@@ -219,7 +231,7 @@ func (v *TypeVisitor) processNamedEntity(
 	// Check if the named type is a struct.
 	if underlying, ok := node.Underlying().(*types.Struct); ok {
 		// Recursively process the nested struct.
-		nestedPackageName, err := v.packagesFacade.GetPackageNameByNamedEntity(node)
+		nestedPackageName, err := v.arbitrationProvider.Pkg().GetPackageNameByNamedEntity(node)
 		if err != nil {
 			return false, err
 		}
@@ -257,7 +269,7 @@ func (v *TypeVisitor) VisitEnum(enumName string, model definitions.TypeMetadata)
 }
 
 func (v *TypeVisitor) getAttributeHolderFromEntityGenDecl(pkg *packages.Package, name string) (annotations.AnnotationHolder, error) {
-	genDecl := extractor.FindGenDeclByName(pkg, name)
+	genDecl := gast.FindGenDeclByName(pkg, name)
 	if genDecl == nil {
 		return annotations.AnnotationHolder{},
 			fmt.Errorf("could not find GenDecl node for struct '%s.%s'", pkg.PkgPath, name)
@@ -268,7 +280,7 @@ func (v *TypeVisitor) getAttributeHolderFromEntityGenDecl(pkg *packages.Package,
 	}
 
 	holder, err := annotations.NewAnnotationHolder(
-		extractor.MapDocListToStrings(genDecl.Doc.List),
+		gast.MapDocListToStrings(genDecl.Doc.List),
 		annotations.CommentSourceSchema,
 	)
 
@@ -283,7 +295,7 @@ func (v *TypeVisitor) getAttributeHolderFromEntityGenDecl(pkg *packages.Package,
 func (v *TypeVisitor) getAttributeHolders(fullPackageName string, structName string) (StructAttributeHolders, error) {
 	holders := StructAttributeHolders{FieldHolders: make(map[string]*annotations.AnnotationHolder)}
 
-	relevantPackage, err := v.packagesFacade.GetPackage(fullPackageName)
+	relevantPackage, err := v.arbitrationProvider.Pkg().GetPackage(fullPackageName)
 	if err != nil {
 		return holders, err
 	}
@@ -296,12 +308,12 @@ func (v *TypeVisitor) getAttributeHolders(fullPackageName string, structName str
 		)
 	}
 
-	genDecl := extractor.FindGenDeclByName(relevantPackage, structName)
+	genDecl := gast.FindGenDeclByName(relevantPackage, structName)
 	if genDecl == nil {
 		return holders, fmt.Errorf("could not find GenDecl node for struct '%s' in package '%s'", structName, fullPackageName)
 	}
 
-	structNode := extractor.GetStructFromGenDecl(genDecl)
+	structNode := gast.GetStructFromGenDecl(genDecl)
 	if structNode == nil {
 		return holders, fmt.Errorf(
 			"could not obtain StructType node from the GenDecl of struct '%s' in package '%s'",
@@ -311,7 +323,7 @@ func (v *TypeVisitor) getAttributeHolders(fullPackageName string, structName str
 	}
 
 	if genDecl.Doc != nil && genDecl.Doc.List != nil && len(genDecl.Doc.List) > 0 {
-		structAttributes, err := annotations.NewAnnotationHolder(extractor.MapDocListToStrings(genDecl.Doc.List), annotations.CommentSourceSchema)
+		structAttributes, err := annotations.NewAnnotationHolder(gast.MapDocListToStrings(genDecl.Doc.List), annotations.CommentSourceSchema)
 		if err != nil {
 			logger.Error("Could not create an attribute holder for struct '%s' - %v", structName, err)
 			return holders, err
@@ -339,7 +351,7 @@ func (v *TypeVisitor) getAttributeHolders(fullPackageName string, structName str
 				continue
 			}
 			fieldName := field.Names[0].Name
-			fieldHolder, err := annotations.NewAnnotationHolder(extractor.MapDocListToStrings(field.Doc.List), annotations.CommentSourceProperty)
+			fieldHolder, err := annotations.NewAnnotationHolder(gast.MapDocListToStrings(field.Doc.List), annotations.CommentSourceProperty)
 			if err != nil {
 				logger.Error("Could not create an attribute holder for field %s on struct '%s' - %v", fieldName, structName, err)
 				return holders, err
@@ -369,24 +381,12 @@ func (v *TypeVisitor) GetEnums() []definitions.EnumMetadata {
 	return models
 }
 
-func getDeprecationOpts(attributes annotations.AnnotationHolder) definitions.DeprecationOptions {
-	deprecationAttr := attributes.GetFirst(annotations.AttributeDeprecated)
-	if deprecationAttr == nil {
-		return definitions.DeprecationOptions{}
-	}
-
-	return definitions.DeprecationOptions{
-		Deprecated:  true,
-		Description: deprecationAttr.Description,
-	}
-}
-
 func createAliasModel(node *types.Named, tag string) definitions.FieldMetadata {
 	name := node.Obj().Name()
 
 	underlying := node.Underlying()
 
-	typeName := extractor.GetUnderlyingTypeName(underlying)
+	typeName := gast.GetUnderlyingTypeName(underlying)
 
 	// In case of an alias to a primitive type, we need to use the alias name.
 	_, isBasic := underlying.(*types.Basic)
@@ -402,7 +402,7 @@ func createAliasModel(node *types.Named, tag string) definitions.FieldMetadata {
 }
 
 func (v *TypeVisitor) visitNestedEnum(t *types.Named, aliasModel definitions.FieldMetadata) error {
-	pkg, err := v.packagesFacade.GetPackageByTypeName(t.Obj())
+	pkg, err := v.arbitrationProvider.Pkg().GetPackageByTypeName(t.Obj())
 	if err != nil {
 		return err
 	}
@@ -416,12 +416,12 @@ func (v *TypeVisitor) visitNestedEnum(t *types.Named, aliasModel definitions.Fie
 		return nil // Already processed, ignore
 	}
 
-	typeName, err := extractor.GetTypeNameOrError(pkg, aliasModel.Name)
+	typeName, err := gast.GetTypeNameOrError(pkg, aliasModel.Name)
 	if err != nil {
 		return err
 	}
 
-	aliasMetadata, err := v.astArbitrator.ExtractEnumAliasType(pkg, typeName)
+	aliasMetadata, err := v.arbitrationProvider.Ast().ExtractEnumAliasType(pkg, typeName)
 	if err != nil {
 		return err
 	}
