@@ -8,7 +8,6 @@ import (
 	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/extractor/annotations"
-	"github.com/gopher-fleece/gleece/extractor/visitors/providers"
 	"github.com/gopher-fleece/gleece/gast"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
 	"golang.org/x/tools/go/packages"
@@ -43,29 +42,12 @@ type StructAttributeHolders struct {
 }
 
 // NewTypeVisitor Initializes a new visitor
-func NewTypeVisitorFromGlobs(
-	sourceFileGlobs []string,
-	arbitrationProvider *providers.ArbitrationProvider,
-	syncedProvider *providers.SyncedProvider,
-) (*TypeVisitor, error) {
+func NewTypeVisitor(context *VisitContext) (*TypeVisitor, error) {
 	visitor := &TypeVisitor{
 		structsByName: make(map[string]*definitions.StructMetadata),
 		enumsByName:   make(map[string]*definitions.EnumMetadata),
 	}
-	err := visitor.initializeWithGlobs(sourceFileGlobs, syncedProvider)
-	return visitor, err
-}
-
-// NewTypeVisitor Initializes a new visitor
-func NewTypeVisitorFromArbitrationProvider(
-	arbitrationProvider *providers.ArbitrationProvider,
-	syncedProvider *providers.SyncedProvider,
-) (*TypeVisitor, error) {
-	visitor := &TypeVisitor{
-		structsByName: make(map[string]*definitions.StructMetadata),
-		enumsByName:   make(map[string]*definitions.EnumMetadata),
-	}
-	err := visitor.initializeWithArbitrationProvider(arbitrationProvider, syncedProvider)
+	err := visitor.initialize(context)
 	return visitor, err
 }
 
@@ -231,7 +213,7 @@ func (v *TypeVisitor) processNamedEntity(
 	// Check if the named type is a struct.
 	if underlying, ok := node.Underlying().(*types.Struct); ok {
 		// Recursively process the nested struct.
-		nestedPackageName, err := v.arbitrationProvider.Pkg().GetPackageNameByNamedEntity(node)
+		nestedPackageName, err := v.context.ArbitrationProvider.Pkg().GetPackageNameByNamedEntity(node)
 		if err != nil {
 			return false, err
 		}
@@ -295,7 +277,7 @@ func (v *TypeVisitor) getAttributeHolderFromEntityGenDecl(pkg *packages.Package,
 func (v *TypeVisitor) getAttributeHolders(fullPackageName string, structName string) (StructAttributeHolders, error) {
 	holders := StructAttributeHolders{FieldHolders: make(map[string]*annotations.AnnotationHolder)}
 
-	relevantPackage, err := v.arbitrationProvider.Pkg().GetPackage(fullPackageName)
+	relevantPackage, err := v.context.ArbitrationProvider.Pkg().GetPackage(fullPackageName)
 	if err != nil {
 		return holders, err
 	}
@@ -402,7 +384,7 @@ func createAliasModel(node *types.Named, tag string) definitions.FieldMetadata {
 }
 
 func (v *TypeVisitor) visitNestedEnum(t *types.Named, aliasModel definitions.FieldMetadata) error {
-	pkg, err := v.arbitrationProvider.Pkg().GetPackageByTypeName(t.Obj())
+	pkg, err := v.context.ArbitrationProvider.Pkg().GetPackageByTypeName(t.Obj())
 	if err != nil {
 		return err
 	}
@@ -421,7 +403,7 @@ func (v *TypeVisitor) visitNestedEnum(t *types.Named, aliasModel definitions.Fie
 		return err
 	}
 
-	aliasMetadata, err := v.arbitrationProvider.Ast().ExtractEnumAliasType(pkg, typeName)
+	aliasMetadata, err := v.context.ArbitrationProvider.Ast().ExtractEnumAliasType(pkg, typeName)
 	if err != nil {
 		return err
 	}

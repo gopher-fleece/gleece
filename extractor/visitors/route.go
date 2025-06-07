@@ -10,7 +10,7 @@ import (
 	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/extractor/annotations"
-	"github.com/gopher-fleece/gleece/extractor/visitors/providers"
+	"github.com/gopher-fleece/gleece/extractor/arbitrators"
 	"github.com/gopher-fleece/gleece/gast"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
 	"github.com/gopher-fleece/runtime"
@@ -27,17 +27,12 @@ type RouteVisitor struct {
 }
 
 func NewRouteVisitor(
-	arbitrationProvider *providers.ArbitrationProvider,
-	syncedProvider *providers.SyncedProvider,
+	context *VisitContext,
 	parentController *definitions.ControllerMetadata,
-	gleeceConfig *definitions.GleeceConfig,
 ) (*RouteVisitor, error) {
-	visitor := RouteVisitor{
-		parentController: parentController,
-		gleeceConfig:     gleeceConfig,
-	}
+	visitor := RouteVisitor{parentController: parentController}
 
-	err := visitor.initializeWithArbitrationProvider(arbitrationProvider, syncedProvider)
+	err := visitor.initializeWithArbitrationProvider(context)
 	return &visitor, err
 }
 
@@ -108,7 +103,7 @@ func (v *RouteVisitor) VisitMethod(funcDecl *ast.FuncDecl, sourceFile *ast.File)
 		return definitions.RouteMetadata{}, true, v.frozenError(err)
 	}
 
-	fVer, err := gast.NewFileVersionFromAstFile(v.currentSourceFile, v.arbitrationProvider.FileSet())
+	fVer, err := gast.NewFileVersionFromAstFile(v.currentSourceFile, v.context.ArbitrationProvider.FileSet())
 	if err != nil {
 		return definitions.RouteMetadata{}, true, v.frozenError(err)
 	}
@@ -140,15 +135,24 @@ func (v *RouteVisitor) VisitMethod(funcDecl *ast.FuncDecl, sourceFile *ast.File)
 	if err != nil {
 		return meta, true, v.frozenError(err)
 	}
-	meta.FuncParams = funcParams
+
+	meta.FuncParams = []definitions.FuncParam{}
+	for _, fParam := range funcParams {
+		meta.FuncParams = append(meta.FuncParams, fParam.Reduce())
+	}
 
 	// Set the function's return types
-	responses, err := v.getFuncReturnValue(funcDecl)
+	returnValues, err := v.getFuncReturnValue(funcDecl)
 	if err != nil {
 		return meta, true, v.frozenError(err)
 	}
-	meta.Responses = responses
-	meta.HasReturnValue = len(responses) > 1
+
+	meta.Responses = []definitions.FuncReturnValue{}
+	for _, fRetVal := range returnValues {
+		meta.Responses = append(meta.Responses, fRetVal.Reduce())
+	}
+
+	meta.HasReturnValue = len(returnValues) > 1
 
 	successResponseCode, successDescription, err := getResponseStatusCodeAndDescription(&attributes, meta.HasReturnValue)
 	if err != nil {
@@ -160,7 +164,7 @@ func (v *RouteVisitor) VisitMethod(funcDecl *ast.FuncDecl, sourceFile *ast.File)
 	return meta, isApiEndpoint, nil
 }
 
-func (v *RouteVisitor) getValidatedFuncParams(funcDecl *ast.FuncDecl, comments []string) ([]definitions.FuncParam, error) {
+func (v *RouteVisitor) getValidatedFuncParams(funcDecl *ast.FuncDecl, comments []string) ([]arbitrators.FuncParamWithAst, error) {
 	funcParams, err := v.getFuncParams(funcDecl, comments)
 	if err != nil {
 		return funcParams, v.frozenError(err)
@@ -189,37 +193,37 @@ func (v *RouteVisitor) getValidatedFuncParams(funcDecl *ast.FuncDecl, comments [
 	return funcParams, nil
 }
 
-func (v *RouteVisitor) validateBodyParam(param definitions.FuncParam) error {
+func (v *RouteVisitor) validateBodyParam(param arbitrators.FuncParamWithAst) error {
 	// Verify the body is a struct
-	if param.ParamMeta.TypeMeta.SymbolKind != common.SymKindStruct {
+	if param.ParamMetaWithAst.TypeMetadata.SymbolKind != common.SymKindStruct {
 		return v.getFrozenError(
 			"body parameters must be structs but '%s' (schema name '%s', type '%s') is of kind '%s'",
 			param.Name,
 			param.NameInSchema,
-			param.TypeMeta.Name,
-			param.TypeMeta.SymbolKind,
+			param.TypeMetadata.Name,
+			param.TypeMetadata.SymbolKind,
 		)
 	}
 
 	return nil
 }
 
-func (v *RouteVisitor) validatePrimitiveParam(param definitions.FuncParam) error {
+func (v *RouteVisitor) validatePrimitiveParam(param arbitrators.FuncParamWithAst) error {
 	// Currently, we're limited to primitive header, path and query parameters.
 	// This is a simple and silly check for those.
 	// need to fully integrate the SymbolKind field..
-	isErrType := param.TypeMeta.PkgPath == "" && param.TypeMeta.Name == "error"
-	isMapType := param.TypeMeta.PkgPath == "" && strings.HasPrefix(param.TypeMeta.Name, "map[")
-	isAliasType := param.TypeMeta.SymbolKind == common.SymKindAlias
-	if (!param.TypeMeta.IsUniverseType && !isAliasType) || isErrType || isMapType {
+	isErrType := param.TypeMetadata.PkgPath == "" && param.TypeMetadata.Name == "error"
+	isMapType := param.TypeMetadata.PkgPath == "" && strings.HasPrefix(param.TypeMetadata.Name, "map[")
+	isAliasType := param.TypeMetadata.SymbolKind == common.SymKindAlias
+	if (!param.TypeMetadata.IsUniverseType && !isAliasType) || isErrType || isMapType {
 		return v.getFrozenError(
 			"header, path and query parameters are currently limited to primitives only but "+
 				"%s parameter '%s' (schema name '%s', type '%s') is of kind '%s'",
 			param.PassedIn,
 			param.Name,
 			param.NameInSchema,
-			param.TypeMeta.Name,
-			param.TypeMeta.SymbolKind,
+			param.TypeMetadata.Name,
+			param.TypeMetadata.SymbolKind,
 		)
 	}
 
@@ -227,13 +231,13 @@ func (v *RouteVisitor) validatePrimitiveParam(param definitions.FuncParam) error
 }
 
 // This function is deprecated - no need to test here, all validation moved to the NewAnnotationHolder logic
-func (v *RouteVisitor) validateParamsCombinations(funcParams []definitions.FuncParam, newParamType definitions.ParamPassedIn) error {
+func (v *RouteVisitor) validateParamsCombinations(funcParams []arbitrators.FuncParamWithAst, newParamType definitions.ParamPassedIn) error {
 
-	isBodyParamAlreadyExists := slices.ContainsFunc(funcParams, func(p definitions.FuncParam) bool {
+	isBodyParamAlreadyExists := slices.ContainsFunc(funcParams, func(p arbitrators.FuncParamWithAst) bool {
 		return p.PassedIn == definitions.PassedInBody
 	})
 
-	isFormParamAlreadyExists := slices.ContainsFunc(funcParams, func(p definitions.FuncParam) bool {
+	isFormParamAlreadyExists := slices.ContainsFunc(funcParams, func(p arbitrators.FuncParamWithAst) bool {
 		return p.PassedIn == definitions.PassedInForm
 	})
 
@@ -254,13 +258,13 @@ func (v *RouteVisitor) validateParamsCombinations(funcParams []definitions.FuncP
 	return nil
 }
 
-func (v *RouteVisitor) getFuncParams(funcDecl *ast.FuncDecl, comments []string) ([]definitions.FuncParam, error) {
+func (v *RouteVisitor) getFuncParams(funcDecl *ast.FuncDecl, comments []string) ([]arbitrators.FuncParamWithAst, error) {
 	v.enter("")
 	defer v.exit()
 
-	funcParams := []definitions.FuncParam{}
+	funcParams := []arbitrators.FuncParamWithAst{}
 
-	paramTypes, err := v.arbitrationProvider.Ast().GetFuncParameterTypeList(v.currentSourceFile, funcDecl)
+	paramTypes, err := v.context.ArbitrationProvider.Ast().GetFuncParameterTypeList(v.currentSourceFile, funcDecl)
 	if err != nil {
 		return funcParams, err
 	}
@@ -275,14 +279,14 @@ func (v *RouteVisitor) getFuncParams(funcDecl *ast.FuncDecl, comments []string) 
 		v.enter(fmt.Sprintf("Param %s", param.Name))
 		defer v.exit()
 
-		var finalParamMeta definitions.FuncParam
+		var finalParamMeta arbitrators.FuncParamWithAst
 
 		if param.IsContext {
 			// Special handling for contexts - a context parameter doesn't have nor need much of the metadata or validations
-			finalParamMeta = definitions.FuncParam{ParamMeta: param}
+			finalParamMeta = arbitrators.FuncParamWithAst{ParamMetaWithAst: param.ParamMetaWithAst}
 		} else {
 			// Normal params do require further processing (comments, validator strings) and validations
-			if finalParamMeta, err = v.processFuncParameter(holder, param); err != nil {
+			if finalParamMeta, err = v.processFuncParameter(holder, param.ParamMetaWithAst); err != nil {
 				return funcParams, v.frozenError(err)
 			}
 
@@ -299,16 +303,16 @@ func (v *RouteVisitor) getFuncParams(funcDecl *ast.FuncDecl, comments []string) 
 
 func (v *RouteVisitor) processFuncParameter(
 	annotationHolder annotations.AnnotationHolder,
-	param definitions.ParamMeta,
-) (definitions.FuncParam, error) {
+	param arbitrators.ParamMetaWithAst,
+) (arbitrators.FuncParamWithAst, error) {
 	paramAttrib := annotationHolder.FindFirstByValue(param.Name)
 	if paramAttrib == nil {
-		return definitions.FuncParam{}, v.getFrozenError("parameter '%s' does not have a matching documentation attribute", param.Name)
+		return arbitrators.FuncParamWithAst{}, v.getFrozenError("parameter '%s' does not have a matching documentation attribute", param.Name)
 	}
 
 	castValidator, err := annotations.GetCastProperty[string](paramAttrib, annotations.PropertyValidatorString)
 	if err != nil {
-		return definitions.FuncParam{}, v.frozenError(err)
+		return arbitrators.FuncParamWithAst{}, v.frozenError(err)
 	}
 
 	validatorString := ""
@@ -318,7 +322,7 @@ func (v *RouteVisitor) processFuncParameter(
 
 	castName, err := annotations.GetCastProperty[string](paramAttrib, annotations.PropertyName)
 	if err != nil {
-		return definitions.FuncParam{}, v.frozenError(err)
+		return arbitrators.FuncParamWithAst{}, v.frozenError(err)
 	}
 
 	nameString := param.Name
@@ -342,24 +346,24 @@ func (v *RouteVisitor) processFuncParameter(
 		paramPassedIn = definitions.PassedInForm
 	}
 
-	return definitions.FuncParam{
+	return arbitrators.FuncParamWithAst{
 		NameInSchema:       nameString,
-		ParamMeta:          param,
+		ParamMetaWithAst:   param,
 		PassedIn:           paramPassedIn,
 		Description:        paramAttrib.Description,
-		Validator:          appendParamRequiredValidation(&validatorString, param.TypeMeta.IsByAddress, paramPassedIn),
-		UniqueImportSerial: v.syncedProvider.GetNextImportId(),
+		Validator:          appendParamRequiredValidation(&validatorString, param.TypeMetadata.IsByAddress, paramPassedIn),
+		UniqueImportSerial: v.context.SyncedProvider.GetNextImportId(),
 	}, nil
 }
 
-func (v *RouteVisitor) getFuncReturnValue(funcDecl *ast.FuncDecl) ([]definitions.FuncReturnValue, error) {
+func (v *RouteVisitor) getFuncReturnValue(funcDecl *ast.FuncDecl) ([]arbitrators.FuncReturnValueWithAst, error) {
 	v.enter("")
 	defer v.exit()
 
-	values := []definitions.FuncReturnValue{}
+	values := []arbitrators.FuncReturnValueWithAst{}
 	var errorRetTypeIndex int
 
-	returnTypes, err := v.arbitrationProvider.Ast().GetFuncReturnTypeList(v.currentSourceFile, funcDecl)
+	returnTypes, err := v.context.ArbitrationProvider.Ast().GetFuncReturnTypeList(v.currentSourceFile, funcDecl)
 	if err != nil {
 		return values, err
 	}
@@ -388,7 +392,7 @@ func (v *RouteVisitor) getFuncReturnValue(funcDecl *ast.FuncDecl) ([]definitions
 
 	// Validate whether the method returns a proper error. This may be the first or second return type in the list
 	retType := returnTypes[errorRetTypeIndex]
-	isValidError, err := isAnErrorEmbeddingType(v.arbitrationProvider.Pkg(), retType)
+	isValidError, err := isAnErrorEmbeddingType(v.context.ArbitrationProvider.Pkg(), retType.TypeMetadata)
 	if err != nil {
 		return values, v.frozenError(err)
 	}
@@ -400,9 +404,9 @@ func (v *RouteVisitor) getFuncReturnValue(funcDecl *ast.FuncDecl) ([]definitions
 	for _, value := range returnTypes {
 		values = append(
 			values,
-			definitions.FuncReturnValue{
-				TypeMetadata:       value,
-				UniqueImportSerial: v.syncedProvider.GetNextImportId(),
+			arbitrators.FuncReturnValueWithAst{
+				TypeMetadataWithAst: value,
+				UniqueImportSerial:  v.context.SyncedProvider.GetNextImportId(),
 			},
 		)
 	}

@@ -1,6 +1,7 @@
 package gast
 
 import (
+	"fmt"
 	"go/ast"
 	"go/token"
 	"os"
@@ -13,6 +14,10 @@ type FileVersion struct {
 	Path    string    // The file's full path
 	ModTime time.Time // The file's last modification time
 	Hash    string    // Content hash, used when ModTime differs
+}
+
+func (fv FileVersion) String() string {
+	return fmt.Sprintf("%s-%d-%s", fv.Path, fv.ModTime.Unix(), fv.Hash)
 }
 
 func NewFileVersion(fullPath string) (FileVersion, error) {

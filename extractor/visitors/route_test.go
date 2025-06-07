@@ -2,6 +2,7 @@ package visitors
 
 import (
 	"github.com/gopher-fleece/gleece/definitions"
+	"github.com/gopher-fleece/gleece/extractor/arbitrators"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -16,7 +17,7 @@ var _ = Describe("Route Tests", func() {
 	Context("when validating parameter combinations", func() {
 		It("should allow first body parameter", func() {
 			// Arrange
-			params := []definitions.FuncParam{}
+			params := []arbitrators.FuncParamWithAst{}
 
 			// Act
 			err := routeVisitor.validateParamsCombinations(params, definitions.PassedInBody)
@@ -27,7 +28,7 @@ var _ = Describe("Route Tests", func() {
 
 		It("should reject second body parameter", func() {
 			// Arrange
-			params := []definitions.FuncParam{
+			params := []arbitrators.FuncParamWithAst{
 				{
 					PassedIn: definitions.PassedInBody,
 				},
@@ -43,7 +44,7 @@ var _ = Describe("Route Tests", func() {
 
 		It("should allow first form parameter", func() {
 			// Arrange
-			params := []definitions.FuncParam{}
+			params := []arbitrators.FuncParamWithAst{}
 
 			// Act
 			err := routeVisitor.validateParamsCombinations(params, definitions.PassedInForm)
@@ -54,7 +55,7 @@ var _ = Describe("Route Tests", func() {
 
 		It("should reject body parameter when form parameter exists", func() {
 			// Arrange
-			params := []definitions.FuncParam{
+			params := []arbitrators.FuncParamWithAst{
 				{
 					PassedIn: definitions.PassedInForm,
 				},
@@ -70,7 +71,7 @@ var _ = Describe("Route Tests", func() {
 
 		It("should reject form parameter when body parameter exists", func() {
 			// Arrange
-			params := []definitions.FuncParam{
+			params := []arbitrators.FuncParamWithAst{
 				{
 					PassedIn: definitions.PassedInBody,
 				},
@@ -86,7 +87,7 @@ var _ = Describe("Route Tests", func() {
 
 		It("should allow multiple form parameters", func() {
 			// Arrange
-			params := []definitions.FuncParam{
+			params := []arbitrators.FuncParamWithAst{
 				{
 					PassedIn: definitions.PassedInForm,
 				},
@@ -101,7 +102,7 @@ var _ = Describe("Route Tests", func() {
 
 		It("should allow other parameter types with body", func() {
 			// Arrange
-			params := []definitions.FuncParam{
+			params := []arbitrators.FuncParamWithAst{
 				{
 					PassedIn: definitions.PassedInBody,
 				},
@@ -116,7 +117,7 @@ var _ = Describe("Route Tests", func() {
 
 		It("should allow other parameter types with form", func() {
 			// Arrange
-			params := []definitions.FuncParam{
+			params := []arbitrators.FuncParamWithAst{
 				{
 					PassedIn: definitions.PassedInForm,
 				},
@@ -131,7 +132,7 @@ var _ = Describe("Route Tests", func() {
 
 		It("should allow multiple non-body and non-form parameters", func() {
 			// Arrange
-			params := []definitions.FuncParam{
+			params := []arbitrators.FuncParamWithAst{
 				{
 					PassedIn: definitions.PassedInQuery,
 				},

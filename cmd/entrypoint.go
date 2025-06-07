@@ -42,7 +42,7 @@ func getConfig(configPath string) (*definitions.GleeceConfig, error) {
 }
 
 func getMetadata(config *definitions.GleeceConfig) ([]definitions.ControllerMetadata, *definitions.Models, bool, error) {
-	visitor, err := visitors.NewControllerVisitor(config, nil, nil)
+	visitor, err := visitors.NewControllerVisitor(&visitors.VisitContext{GleeceConfig: config})
 	if err != nil {
 		return []definitions.ControllerMetadata{}, nil, false, err
 	}

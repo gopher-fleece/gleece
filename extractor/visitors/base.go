@@ -23,6 +23,8 @@ type Visitor interface {
 }
 
 type BaseVisitor struct {
+	context *VisitContext
+
 	// Determines whether the diagnostic stack is currently frozen.
 	stackFrozen bool
 
@@ -37,41 +39,55 @@ type BaseVisitor struct {
 	//
 	// When setting this value, we also freeze the stack so we don't loose context
 	lastError *error
+}
 
-	arbitrationProvider *providers.ArbitrationProvider
+func (v *BaseVisitor) initialize(context *VisitContext) error {
+	err := contextInitGuard(context)
+	if err != nil {
+		return err
+	}
 
-	// syncedProvider is a struct that provides thread-safe answers for question like "What's the next unique import ID?"
-	// It can be provided and chained from visitor to visitor to ensure no import naming collisions or omitted which
-	// may be useful for certain use-cases
-	syncedProvider *providers.SyncedProvider
+	// If an arbitration provider was given, we use that, otherwise, we enumerate the configuration globs and create
+	// the rest of the context ourselves.
+	if context.ArbitrationProvider != nil {
+		return v.initializeWithArbitrationProvider(context)
+	}
+
+	return v.initializeWithGlobs(context)
 }
 
 // init Prepares the visitor by enumerating files and loading their packages
-func (v *BaseVisitor) initializeWithArbitrationProvider(
-	arbitrationProvider *providers.ArbitrationProvider,
-	syncedProvider *providers.SyncedProvider,
-) error {
-	if arbitrationProvider == nil {
-		return fmt.Errorf("arbitrationProvider may not be nil")
+func (v *BaseVisitor) initializeWithArbitrationProvider(context *VisitContext) error {
+	err := contextInitGuard(context)
+	if err != nil {
+		return err
 	}
 
-	v.arbitrationProvider = arbitrationProvider
-	v.syncedProvider = syncedProvider
+	v.context = context
 	return nil
 }
 
 // init Prepares the visitor by enumerating files and loading their packages
-func (v *BaseVisitor) initializeWithGlobs(
-	sourceFileGlobs []string,
-	syncedProvider *providers.SyncedProvider,
-) error {
+func (v *BaseVisitor) initializeWithGlobs(context *VisitContext) error {
+	err := contextInitGuard(context)
+	if err != nil {
+		return err
+	}
+
 	sourceFiles := make(map[string]*ast.File)
 	fileSet := token.NewFileSet()
 
 	packages := MapSet.NewSet[string]()
 
+	var globs []string
+	if len(context.GleeceConfig.CommonConfig.ControllerGlobs) > 0 {
+		globs = context.GleeceConfig.CommonConfig.ControllerGlobs
+	} else {
+		globs = []string{"./*.go", "./**/*.go"}
+	}
+
 	// For each glob expression (provided via gleece.config), parse all matching files
-	for _, globExpr := range sourceFileGlobs {
+	for _, globExpr := range globs {
 		globbedSources, err := doublestar.FilepathGlob(globExpr)
 		if err != nil {
 			return err
@@ -94,12 +110,11 @@ func (v *BaseVisitor) initializeWithGlobs(
 		}
 	}
 
-	v.arbitrationProvider = providers.NewArbitrationProvider(sourceFiles, fileSet)
+	v.context = context
+	v.context.ArbitrationProvider = providers.NewArbitrationProvider(sourceFiles, fileSet)
 
-	if syncedProvider != nil {
-		v.syncedProvider = syncedProvider
-	} else {
-		v.syncedProvider = &providers.SyncedProvider{}
+	if v.context.SyncedProvider == nil {
+		v.context.SyncedProvider = &providers.SyncedProvider{}
 	}
 
 	return nil
@@ -171,5 +186,13 @@ func (v *BaseVisitor) GetLastError() *error {
 }
 
 func (v *BaseVisitor) GetAllSourceFiles() []*ast.File {
-	return v.arbitrationProvider.GetAllSourceFiles()
+	return v.context.ArbitrationProvider.GetAllSourceFiles()
+}
+
+func contextInitGuard(context *VisitContext) error {
+	if context == nil {
+		return fmt.Errorf("nil context was given to initializeWithGlobs")
+	}
+
+	return nil
 }

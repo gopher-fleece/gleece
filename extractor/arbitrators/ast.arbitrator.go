@@ -31,8 +31,8 @@ func NewAstArbitrator(pkgFacade *PackagesFacade, fileSet *token.FileSet) AstArbi
 }
 
 // GetFuncParameterTypeList gets metadata for all parameters of the given function in the given AST file
-func (arb *AstArbitrator) GetFuncParameterTypeList(file *ast.File, funcDecl *ast.FuncDecl) ([]definitions.ParamMeta, error) {
-	paramTypes := []definitions.ParamMeta{}
+func (arb *AstArbitrator) GetFuncParameterTypeList(file *ast.File, funcDecl *ast.FuncDecl) ([]FuncParamWithAst, error) {
+	paramTypes := []FuncParamWithAst{}
 
 	if funcDecl.Type.Params == nil || funcDecl.Type.Params.List == nil {
 		return paramTypes, nil
@@ -46,10 +46,15 @@ func (arb *AstArbitrator) GetFuncParameterTypeList(file *ast.File, funcDecl *ast
 
 		paramTypes = append(
 			paramTypes,
-			definitions.ParamMeta{
-				Name: field.Names[0].Name, TypeMeta: meta,
-				// A special case- Go Contexts should be explicitly marked so they can be injected via the template
-				IsContext: meta.Name == "Context" && meta.PkgPath == "context",
+			FuncParamWithAst{
+				ParamMetaWithAst: ParamMetaWithAst{
+					Name:                field.Names[0].Name,
+					TypeMetadataWithAst: meta,
+					// A special case- Go Contexts should be explicitly marked so they can be injected via the template
+					IsContext: meta.Name == "Context" && meta.PkgPath == "context",
+				},
+
+				Expr: field.Type,
 			},
 		)
 	}
@@ -58,8 +63,8 @@ func (arb *AstArbitrator) GetFuncParameterTypeList(file *ast.File, funcDecl *ast
 }
 
 // GetFuncReturnTypesMetadata gets type metadata for all return values of the given function in the given AST file
-func (arb *AstArbitrator) GetFuncReturnTypeList(file *ast.File, funcDecl *ast.FuncDecl) ([]definitions.TypeMetadata, error) {
-	returnTypes := []definitions.TypeMetadata{}
+func (arb *AstArbitrator) GetFuncReturnTypeList(file *ast.File, funcDecl *ast.FuncDecl) ([]TypeMetadataWithAst, error) {
+	returnTypes := []TypeMetadataWithAst{}
 
 	if funcDecl.Type.Results == nil {
 		return returnTypes, nil
@@ -76,13 +81,13 @@ func (arb *AstArbitrator) GetFuncReturnTypeList(file *ast.File, funcDecl *ast.Fu
 }
 
 // GetFieldMetadata gets metadata for the given field in the given AST file
-func (arb *AstArbitrator) GetFieldMetadata(file *ast.File, value *ast.Field) (definitions.TypeMetadata, error) {
+func (arb *AstArbitrator) GetFieldMetadata(file *ast.File, value *ast.Field) (TypeMetadataWithAst, error) {
 	return arb.GetTypeMetaForExpr(file, value.Type)
 }
 
 // GetTypeMetaForExpr gets type metadata for the given expression in the given AST file
 // Note that if the type of expression is not currently supported, an error will be returned.
-func (arb *AstArbitrator) GetTypeMetaForExpr(file *ast.File, expr ast.Expr) (definitions.TypeMetadata, error) {
+func (arb *AstArbitrator) GetTypeMetaForExpr(file *ast.File, expr ast.Expr) (TypeMetadataWithAst, error) {
 	switch fieldType := expr.(type) {
 	case *ast.Ident:
 		return arb.GetTypeMetaByIdent(file, fieldType)
@@ -98,16 +103,20 @@ func (arb *AstArbitrator) GetTypeMetaForExpr(file *ast.File, expr ast.Expr) (def
 		return meta, err
 	default:
 		fieldTypeString := gast.GetFieldTypeString(fieldType)
-		return definitions.TypeMetadata{}, fmt.Errorf("field type '%s' is not currently supported", fieldTypeString)
+		return TypeMetadataWithAst{}, fmt.Errorf("field type '%s' is not currently supported", fieldTypeString)
 	}
 }
 
 // GetTypeMetaByIdent gets type metadata for the given Ident in the given AST file
-func (arb *AstArbitrator) GetTypeMetaByIdent(file *ast.File, ident *ast.Ident) (definitions.TypeMetadata, error) {
+func (arb *AstArbitrator) GetTypeMetaByIdent(file *ast.File, ident *ast.Ident) (TypeMetadataWithAst, error) {
 	comments := gast.GetCommentsFromIdent(arb.fileSet, file, ident)
 	holder, err := annotations.NewAnnotationHolder(comments, annotations.CommentSourceProperty)
 
-	meta := definitions.TypeMetadata{Name: ident.Name}
+	meta := TypeMetadataWithAst{
+		TypeMetadata: definitions.TypeMetadata{Name: ident.Name},
+		Expr:         ident,
+		Annotations:  &holder,
+	}
 
 	if err != nil {
 		return meta, err
@@ -189,14 +198,17 @@ func (arb *AstArbitrator) GetTypeMetaByIdent(file *ast.File, ident *ast.Ident) (
 }
 
 // GetTypeMetaBySelectorExpr gets type metadata for the given Selector Expression in the given AST file
-func (arb *AstArbitrator) GetTypeMetaBySelectorExpr(file *ast.File, selector *ast.SelectorExpr) (definitions.TypeMetadata, error) {
+func (arb *AstArbitrator) GetTypeMetaBySelectorExpr(file *ast.File, selector *ast.SelectorExpr) (TypeMetadataWithAst, error) {
 	aliasedImports := gast.GetImportAliases(file)
 
 	entityName := selector.Sel.Name
 
-	meta := definitions.TypeMetadata{
-		Name:   entityName,
-		Import: definitions.ImportTypeAlias,
+	meta := TypeMetadataWithAst{
+		TypeMetadata: definitions.TypeMetadata{
+			Name:   entityName,
+			Import: definitions.ImportTypeAlias,
+		},
+		Expr: selector,
 	}
 
 	comments := gast.GetCommentsFromIdent(arb.fileSet, file, selector.Sel)
@@ -205,6 +217,8 @@ func (arb *AstArbitrator) GetTypeMetaBySelectorExpr(file *ast.File, selector *as
 		return meta, err
 	}
 
+	// Link the annotation holder to the type
+	meta.Annotations = &holder
 	meta.Description = holder.GetDescription()
 
 	// Resolve the importAlias part to a full package

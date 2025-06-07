@@ -10,7 +10,6 @@ import (
 	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/extractor/annotations"
-	"github.com/gopher-fleece/gleece/extractor/visitors/providers"
 	"github.com/gopher-fleece/gleece/gast"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
 )
@@ -19,9 +18,6 @@ import (
 // This construct serves as the main business logic for Gleece's context generation
 type ControllerVisitor struct {
 	BaseVisitor
-
-	// The project's configuration, as specified in the user's gleece.config.json
-	config *definitions.GleeceConfig
 
 	// The file currently being worked on
 	currentSourceFile *ast.File
@@ -40,33 +36,9 @@ type ControllerVisitor struct {
 }
 
 // NewControllerVisitor Instantiates a new Gleece Controller visitor.
-func NewControllerVisitor(
-	config *definitions.GleeceConfig,
-	arbitrationProvider *providers.ArbitrationProvider,
-	syncedProvider *providers.SyncedProvider,
-) (*ControllerVisitor, error) {
+func NewControllerVisitor(context *VisitContext) (*ControllerVisitor, error) {
 	visitor := ControllerVisitor{}
-	visitor.config = config
-
-	var globs []string
-	if len(config.CommonConfig.ControllerGlobs) > 0 {
-		globs = config.CommonConfig.ControllerGlobs
-	} else {
-		globs = []string{"./*.go", "./**/*.go"}
-	}
-
-	if len(globs) > 0 && arbitrationProvider != nil {
-		return nil, fmt.Errorf("NewControllerVisitor received both globs and arbitration provider - expected either/or but not both")
-	}
-
-	// A bit hacky- we either fully initialize with the given sources or rely on the given provider
-	// for incremental rebuilds and such but never both at once (at-least not for now)
-	var err error
-	if len(globs) > 0 {
-		err = visitor.initializeWithGlobs(globs, syncedProvider)
-	} else {
-		err = visitor.initializeWithArbitrationProvider(arbitrationProvider, syncedProvider)
-	}
+	err := visitor.initialize((context))
 	return &visitor, err
 }
 
@@ -134,7 +106,7 @@ func (v *ControllerVisitor) GetModelsFlat() (*definitions.Models, bool, error) {
 		}
 	}
 
-	typeVisitor, err := NewTypeVisitorFromArbitrationProvider(v.arbitrationProvider, v.syncedProvider)
+	typeVisitor, err := NewTypeVisitor(v.context)
 	if err != nil {
 		logger.Error("Could not create a new TypeVisitor by Arbitration Provider - %v", err)
 		return nil, false, v.frozenError(err)
@@ -148,7 +120,7 @@ func (v *ControllerVisitor) GetModelsFlat() (*definitions.Models, bool, error) {
 			continue
 		}
 
-		pkg, err := v.arbitrationProvider.Pkg().GetPackage(model.PkgPath)
+		pkg, err := v.context.ArbitrationProvider.Pkg().GetPackage(model.PkgPath)
 		if err != nil {
 			return nil, hasAnyErrorTypes, v.frozenError(err)
 		}
@@ -230,12 +202,7 @@ func (v *ControllerVisitor) visitController(controllerNode *ast.TypeSpec) (defin
 		return controller, err
 	}
 
-	routeVisitor, err := NewRouteVisitor(
-		v.arbitrationProvider,
-		v.syncedProvider,
-		v.currentController,
-		v.config,
-	)
+	routeVisitor, err := NewRouteVisitor(v.context, v.currentController)
 
 	if err != nil {
 		logger.Error("Could not initialize a new route visitor - %v", err)
@@ -243,7 +210,7 @@ func (v *ControllerVisitor) visitController(controllerNode *ast.TypeSpec) (defin
 	}
 
 	// Go over all enumerated source files and look for receivers for the controller
-	for _, file := range v.arbitrationProvider.GetAllSourceFiles() {
+	for _, file := range v.context.ArbitrationProvider.GetAllSourceFiles() {
 		for _, declaration := range file.Decls {
 			switch funcDeclaration := declaration.(type) {
 			case *ast.FuncDecl:
@@ -275,7 +242,7 @@ func (v *ControllerVisitor) visitController(controllerNode *ast.TypeSpec) (defin
 
 // createControllerMetadata Creates a standard ControllerMetadata struct for the given node
 func (v *ControllerVisitor) createControllerMetadata(controllerNode *ast.TypeSpec) (definitions.ControllerMetadata, error) {
-	fullPackageName, fullNameErr := gast.GetFullPackageName(v.currentSourceFile, v.arbitrationProvider.FileSet())
+	fullPackageName, fullNameErr := gast.GetFullPackageName(v.currentSourceFile, v.context.ArbitrationProvider.FileSet())
 	packageAlias, aliasErr := gast.GetDefaultPackageAlias(v.currentSourceFile)
 
 	if fullNameErr != nil || aliasErr != nil {
@@ -316,7 +283,7 @@ func (v *ControllerVisitor) createControllerMetadata(controllerNode *ast.TypeSpe
 		// If there are no explicitly defined securities, check for inherited ones
 		if len(security) <= 0 {
 			logger.Debug("Controller %s does not have explicit security; Using user-defined defaults", meta.Name)
-			security = getDefaultSecurity(v.config)
+			security = getDefaultSecurity(v.context.GleeceConfig)
 		}
 
 		meta.Tag = holder.GetFirstValueOrEmpty(annotations.AttributeTag)

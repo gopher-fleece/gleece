@@ -1,21 +1,38 @@
-package symboldag
+package symboldg
 
 import (
+	"fmt"
+	"go/ast"
+	"strings"
+
 	"github.com/gopher-fleece/gleece/common"
-	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/extractor/annotations"
 	"github.com/gopher-fleece/gleece/gast"
 )
 
-type SymbolGraph struct {
-	nodes map[any]*SymbolNode // keyed by ast node
+type SymbolGraphBuilder interface {
+	AddController(request CreateControllerNode) *SymbolNode
+	AddRoute(request CreateRouteNode) *SymbolNode
+	AddRouteParam(request CreateParameterNode) *SymbolNode
+	AddRouteRetVal(request CreateReturnValueNode) *SymbolNode
+	AddType(request CreateTypeNode) *SymbolNode
 }
 
+type SymbolGraph struct {
+	nodes map[SymbolKey]*SymbolNode // keyed by ast node
+}
+
+func (g *SymbolGraph) NewSymbolGraph() {
+	g.nodes = make(map[SymbolKey]*SymbolNode)
+}
+
+type SymbolKey string
+
 type SymbolNode struct {
-	Id          any // Key, like *ast.FuncDecl, *ast.TypeSpec, *ast.Ident
+	Id          SymbolKey
 	Kind        common.SymKind
 	Version     *gast.FileVersion
-	Value       any // Actual metadata: RouteMetadata, TypeMetadata, etc.
+	Data        any // Actual metadata: RouteMetadata, TypeMetadata, etc.
 	Annotations *annotations.AnnotationHolder
 
 	Deps    map[*SymbolNode]struct{} // Points to symbols this one depends on
@@ -32,72 +49,175 @@ func (g *SymbolGraph) AddDep(from, to *SymbolNode) {
 }
 
 func (g *SymbolGraph) AddController(request CreateControllerNode) *SymbolNode {
+	g.idempotencyGuard(request.Decl, request.Data.FVersion)
+
 	ctrlNode := &SymbolNode{
-		Id:          request.Decl,
+		Id:          SymbolKeyFor(request.Decl, request.Data.FVersion),
 		Kind:        common.SymKindStruct,
 		Version:     request.Data.FVersion,
-		Value:       request.Data,
+		Data:        request.Data,
 		Annotations: request.Annotations,
-		Deps:        map[*SymbolNode]struct{}{},
-		RevDeps:     map[*SymbolNode]struct{}{},
+		Deps:        make(map[*SymbolNode]struct{}),
+		RevDeps:     make(map[*SymbolNode]struct{}),
 	}
-
-	for _, route := range request.Data.Routes {
-		depNode := g.addRoute(&route, ctrlNode)
-		ctrlNode.Deps[depNode] = struct{}{} // Add the route as a dependency for the controller
-	}
-
 	g.addNode(ctrlNode)
 	return ctrlNode
 }
 
-func (g *SymbolGraph) addRoute(route *definitions.RouteMetadata, ctrlNode *SymbolNode) *SymbolNode {
-	routeNode := NewRouteNode(route.Decl, route)
+func (g *SymbolGraph) AddRoute(request CreateRouteNode) *SymbolNode {
+	g.idempotencyGuard(request.Decl, request.Data.FVersion)
+
+	routeNode := &SymbolNode{
+		Id:          SymbolKeyFor(request.Decl, request.Data.FVersion),
+		Kind:        common.SymKindFunction,
+		Version:     request.Data.FVersion,
+		Data:        request.Data,
+		Annotations: request.Annotations,
+		Deps:        make(map[*SymbolNode]struct{}),
+		RevDeps:     make(map[*SymbolNode]struct{}),
+	}
+
 	g.addNode(routeNode)
-	g.AddDep(ctrlNode, routeNode)
-
-	for _, param := range route.FuncParams {
-		paramNode := NewParamNode(param.Ident, param)
-		g.addNode(paramNode)
-		g.AddDep(routeNode, paramNode)
-
-		if typeNode := g.AddTypeRecursive(param.TypeMeta); typeNode != nil {
-			g.AddDep(paramNode, typeNode)
-		}
-	}
-
-	for _, ret := range route.Responses {
-		retNode := NewRetValNode(ret.Ident, ret)
-		g.addNode(retNode)
-		g.AddDep(routeNode, retNode)
-
-		if typeNode := g.AddTypeRecursive(ret.TypeMetadata); typeNode != nil {
-			g.AddDep(retNode, typeNode)
-		}
-	}
-
+	g.AddDep(request.ParentController, routeNode)
 	return routeNode
 }
 
-func (g *SymbolGraph) AddTypeRecursive(meta *definitions.TypeMetadata) *SymbolNode {
-	if meta == nil || meta.Decl == nil {
-		return nil
+func (g *SymbolGraph) AddRouteParam(request CreateParameterNode) *SymbolNode {
+	g.idempotencyGuard(request.Decl, request.ParentRoute.Version)
+
+	paramNode := &SymbolNode{
+		Id:      SymbolKeyFor(request.Decl, request.Data.FVersion),
+		Kind:    common.SymKindParameter,
+		Version: request.ParentRoute.Version,
+		Data: &FuncParamSymbolicMetadata{
+			OrderedIdent:       request.Data.OrderedIdent,
+			Name:               request.Data.Name,
+			IsContext:          request.Data.IsContext,
+			PassedIn:           request.Data.PassedIn,
+			NameInSchema:       request.Data.NameInSchema,
+			Description:        request.Data.Description,
+			UniqueImportSerial: request.Data.UniqueImportSerial,
+			Validator:          request.Data.Validator,
+			Deprecation:        request.Data.Deprecation,
+		},
+		Annotations: request.Annotations,
+		Deps:        make(map[*SymbolNode]struct{}),
+		RevDeps:     make(map[*SymbolNode]struct{}),
 	}
 
-	if existing, ok := g.nodes[meta.Decl]; ok {
-		return existing
+	g.addNode(paramNode)
+	g.AddDep(request.ParentRoute, paramNode)
+
+	g.AddType(CreateTypeNode{
+		Data:        request.Data.TypeMetadataWithAst,
+		Annotations: request.Data.Annotations,
+	})
+
+	return paramNode
+}
+
+func (g *SymbolGraph) AddRouteRetVal(request CreateReturnValueNode) *SymbolNode {
+	g.idempotencyGuard(request.Decl, request.ParentRoute.Version)
+
+	retValNode := &SymbolNode{
+		Id:          SymbolKeyFor(request.Decl, request.Data.FVersion),
+		Kind:        common.SymKindVariable,
+		Version:     request.ParentRoute.Version,
+		Data:        request,
+		Annotations: request.Annotations,
+		Deps:        make(map[*SymbolNode]struct{}),
+		RevDeps:     make(map[*SymbolNode]struct{}),
+	}
+	g.addNode(retValNode)
+	g.AddDep(request.ParentRoute, retValNode)
+	return retValNode
+}
+
+func (g *SymbolGraph) AddType(request CreateTypeNode) *SymbolNode {
+	g.idempotencyGuard(request.Data.Expr, request.Data.FVersion)
+
+	node := &SymbolNode{
+		Id:          SymbolKeyFor(request.Data.Expr, request.Data.FVersion),
+		Kind:        request.Data.SymbolKind,
+		Version:     request.Data.FVersion,
+		Data:        request.Data,
+		Annotations: request.Annotations,
+		Deps:        make(map[*SymbolNode]struct{}),
+		RevDeps:     make(map[*SymbolNode]struct{}),
 	}
 
-	typeNode := NewTypeNode(meta.Decl, meta)
-	g.addNode(typeNode)
+	g.addNode(node)
+	return node
+}
 
-	for _, field := range meta.Fields {
-		if field.TypeMeta != nil {
-			if dep := g.AddTypeRecursive(field.TypeMeta); dep != nil {
-				g.AddDep(typeNode, dep)
+// idempotencyGuard checks if the given node with the given version exists in the graph.
+// If the node exists but has a different FVersion, the old node will be evicted, alongside its dependents.
+func (g *SymbolGraph) idempotencyGuard(decl any, version *gast.FileVersion) *SymbolNode {
+	key := SymbolKeyFor(decl, version)
+	if existing := g.nodes[key]; existing != nil {
+		if existing.Version.Equals(version) {
+			return existing
+		}
+		g.evictNode(existing)
+	}
+	return nil
+}
+
+func (g *SymbolGraph) Dump() string {
+	var sb strings.Builder
+	sb.WriteString("=== SymbolGraph Dump ===\n")
+
+	for _, node := range g.nodes {
+		// Basic node info
+		sb.WriteString(fmt.Sprintf("- [%s] %T | Version: %s\n", node.Kind, node.Id, node.Version))
+
+		// Dependencies
+		if len(node.Deps) > 0 {
+			sb.WriteString("    -> Deps:\n")
+			for dep := range node.Deps {
+				sb.WriteString(fmt.Sprintf("        - [%s] %T | Version: %s\n", dep.Kind, dep.Id, dep.Version))
+			}
+		}
+
+		// Reverse dependencies (who depends on this)
+		if len(node.RevDeps) > 0 {
+			sb.WriteString("    <- RevDeps:\n")
+			for rev := range node.RevDeps {
+				sb.WriteString(fmt.Sprintf("        - [%s] %T | Version: %s\n", rev.Kind, rev.Id, rev.Version))
 			}
 		}
 	}
 
-	return typeNode
+	sb.WriteString("=== End SymbolGraph ===\n")
+	return sb.String()
+}
+
+func (g *SymbolGraph) evictNode(n *SymbolNode) {
+	delete(g.nodes, n.Id)
+	for dep := range n.Deps {
+		delete(dep.RevDeps, n)
+	}
+	for rev := range n.RevDeps {
+		delete(rev.Deps, n)
+	}
+}
+
+func SymbolKeyFor(decl any, version *gast.FileVersion) SymbolKey {
+	switch node := decl.(type) {
+	case *ast.FuncDecl:
+		return SymbolKey(fmt.Sprintf("Func:%s@%s", node.Name.Name, version.String()))
+	case *ast.TypeSpec:
+		return SymbolKey(fmt.Sprintf("Type:%s@%s", node.Name.Name, version.String()))
+	case *ast.Field:
+		// Field has no name always (e.g., return values), fallback to position
+		return SymbolKey(fmt.Sprintf("Field@%d:%s", node.Pos(), version.String()))
+	case *ast.Ident:
+		return SymbolKey(fmt.Sprintf("Ident:%s@%s", node.Name, version.String()))
+	case ast.Expr:
+		return SymbolKey(fmt.Sprintf("Expr:%T@%d:%s", node, node.Pos(), version.String()))
+	case nil:
+		return SymbolKey("nil")
+	default:
+		return SymbolKey(fmt.Sprintf("%T@%p", node, node)) // fallback on pointer identity
+	}
 }
