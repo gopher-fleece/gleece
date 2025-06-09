@@ -263,8 +263,6 @@ type RouteMetadata struct {
 
 	// Custom template context for the operation, provided by the route developer, used template extension/override
 	TemplateContext map[string]TemplateContext
-
-	FVersion *gast.FileVersion
 }
 
 func (m RouteMetadata) GetValueReturnType() *TypeMetadata {
@@ -311,8 +309,6 @@ type ControllerMetadata struct {
 	// The default security schema/s used for the controller's operations.
 	// May be overridden at the route level
 	Security []RouteSecurity
-
-	FVersion *gast.FileVersion
 }
 
 type StructMetadata struct {

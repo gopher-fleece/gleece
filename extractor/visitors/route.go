@@ -12,9 +12,16 @@ import (
 	"github.com/gopher-fleece/gleece/extractor/annotations"
 	"github.com/gopher-fleece/gleece/extractor/arbitrators"
 	"github.com/gopher-fleece/gleece/gast"
+	"github.com/gopher-fleece/gleece/graphs/symboldg"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
 	"github.com/gopher-fleece/runtime"
 )
+
+type RouteParentContext struct {
+	FVersion gast.FileVersion
+	Decl     *ast.TypeSpec
+	Metadata *definitions.ControllerMetadata
+}
 
 type RouteVisitor struct {
 	BaseVisitor
@@ -22,15 +29,15 @@ type RouteVisitor struct {
 	// The file currently being worked on
 	currentSourceFile *ast.File
 
-	parentController *definitions.ControllerMetadata
-	gleeceConfig     *definitions.GleeceConfig
+	parent       RouteParentContext
+	gleeceConfig *definitions.GleeceConfig
 }
 
 func NewRouteVisitor(
 	context *VisitContext,
-	parentController *definitions.ControllerMetadata,
+	parent RouteParentContext,
 ) (*RouteVisitor, error) {
-	visitor := RouteVisitor{parentController: parentController}
+	visitor := RouteVisitor{parent: parent}
 
 	err := visitor.initializeWithArbitrationProvider(context)
 	return &visitor, err
@@ -83,27 +90,17 @@ func (v *RouteVisitor) VisitMethod(funcDecl *ast.FuncDecl, sourceFile *ast.File)
 	//
 	// This is to prevent cases where a developer forgets to declare security for a controller/route.
 	if v.gleeceConfig != nil && v.gleeceConfig.RoutesConfig.AuthorizationConfig.EnforceSecurityOnAllRoutes && len(security) <= 0 {
-		controllerName := "N/A"
-		if v.parentController != nil {
-			controllerName = v.parentController.Name
-		}
-
 		return definitions.RouteMetadata{}, true, v.getFrozenError(
 			"'enforceSecurityOnAllRoutes' setting is 'true'' but method '%s' on controller '%s'"+
 				"does not have any explicit or implicit (inherited) security attributes",
 			funcDecl.Name.Name,
-			controllerName,
+			v.parent.Metadata.Name,
 		)
 	}
 
 	// Template context is optional, additional information that can be accessed at the template level.
 	// This allows users to perform deep customizations on a per-route basis.
 	templateContext, err := getTemplateContextMetadata(&attributes)
-	if err != nil {
-		return definitions.RouteMetadata{}, true, v.frozenError(err)
-	}
-
-	fVer, err := gast.NewFileVersionFromAstFile(v.currentSourceFile, v.context.ArbitrationProvider.FileSet())
 	if err != nil {
 		return definitions.RouteMetadata{}, true, v.frozenError(err)
 	}
@@ -120,7 +117,6 @@ func (v *RouteVisitor) VisitMethod(funcDecl *ast.FuncDecl, sourceFile *ast.File)
 		ResponseContentType: definitions.ContentTypeJSON, // Hardcoded for now, should be supported via annotations later on
 		Security:            security,
 		TemplateContext:     templateContext,
-		FVersion:            &fVer,
 	}
 
 	// Check whether the method is an API endpoint, i.e., has all the relevant metadata.
@@ -131,28 +127,28 @@ func (v *RouteVisitor) VisitMethod(funcDecl *ast.FuncDecl, sourceFile *ast.File)
 	}
 
 	// Retrieve parameter information
-	funcParams, err := v.getValidatedFuncParams(funcDecl, comments)
+	funcParamsWithAst, err := v.getValidatedFuncParams(funcDecl, comments)
 	if err != nil {
 		return meta, true, v.frozenError(err)
 	}
 
 	meta.FuncParams = []definitions.FuncParam{}
-	for _, fParam := range funcParams {
+	for _, fParam := range funcParamsWithAst {
 		meta.FuncParams = append(meta.FuncParams, fParam.Reduce())
 	}
 
 	// Set the function's return types
-	returnValues, err := v.getFuncReturnValue(funcDecl)
+	returnValuesWithAst, err := v.getFuncReturnValue(funcDecl)
 	if err != nil {
 		return meta, true, v.frozenError(err)
 	}
 
 	meta.Responses = []definitions.FuncReturnValue{}
-	for _, fRetVal := range returnValues {
+	for _, fRetVal := range returnValuesWithAst {
 		meta.Responses = append(meta.Responses, fRetVal.Reduce())
 	}
 
-	meta.HasReturnValue = len(returnValues) > 1
+	meta.HasReturnValue = len(returnValuesWithAst) > 1
 
 	successResponseCode, successDescription, err := getResponseStatusCodeAndDescription(&attributes, meta.HasReturnValue)
 	if err != nil {
@@ -161,7 +157,108 @@ func (v *RouteVisitor) VisitMethod(funcDecl *ast.FuncDecl, sourceFile *ast.File)
 	meta.ResponseSuccessCode = successResponseCode
 	meta.ResponseDescription = successDescription
 
+	if isApiEndpoint && v.context.GraphBuilder != nil {
+		v.insertIntoGraph(funcDecl, meta, funcParamsWithAst, returnValuesWithAst)
+	}
+
 	return meta, isApiEndpoint, nil
+}
+
+func (v *RouteVisitor) insertIntoGraph(
+	routeDecl *ast.FuncDecl,
+	route definitions.RouteMetadata,
+	params []arbitrators.FuncParamWithAst,
+	returnValues []arbitrators.FuncReturnValueWithAst,
+) error {
+
+	routeVersion, err := gast.NewFileVersionFromAstFile(v.currentSourceFile, v.context.ArbitrationProvider.FileSet())
+	if err != nil {
+		return v.frozenError(err)
+	}
+
+	_, err = v.context.GraphBuilder.AddRoute(
+		symboldg.CreateRouteNode{
+			Decl: routeDecl,
+			ParentController: symboldg.KeyableNodeMeta{
+				Decl:     v.parent.Decl,
+				FVersion: v.parent.FVersion,
+			},
+			Data: symboldg.RouteSymbolicMetadata{
+				OperationId:         route.OperationId,
+				HttpVerb:            route.HttpVerb,
+				Hiding:              route.Hiding,
+				Deprecation:         route.Deprecation,
+				Description:         route.Description,
+				RestMetadata:        route.RestMetadata,
+				HasReturnValue:      route.HasReturnValue,
+				ResponseDescription: route.ResponseDescription,
+				ResponseSuccessCode: route.ResponseSuccessCode,
+				ErrorResponses:      route.ErrorResponses,
+				RequestContentType:  route.RequestContentType,
+				ResponseContentType: route.ResponseContentType,
+				Security:            route.Security,
+				TemplateContext:     route.TemplateContext,
+				FVersion:            &routeVersion,
+			},
+		},
+	)
+
+	if err != nil {
+		return v.frozenError(err)
+	}
+
+	err = v.insertRouteParamsIntoGraph(routeDecl, routeVersion, params)
+	if err != nil {
+		return v.frozenError(err)
+	}
+
+	err = v.insertRouteRetValsIntoGraph(routeDecl, routeVersion, returnValues)
+	if err != nil {
+		return v.frozenError(err)
+	}
+
+	return nil
+}
+
+func (v *RouteVisitor) insertRouteParamsIntoGraph(
+	routeDecl *ast.FuncDecl,
+	routeVersion gast.FileVersion,
+	params []arbitrators.FuncParamWithAst,
+) error {
+	for _, param := range params {
+		_, err := v.context.GraphBuilder.AddRouteParam(symboldg.CreateParameterNode{
+			Data:        param,
+			Decl:        param.ParamExpr,
+			ParentRoute: symboldg.KeyableNodeMeta{Decl: routeDecl, FVersion: routeVersion},
+		})
+
+		if err != nil {
+			return v.frozenError(err)
+		}
+	}
+
+	return nil
+}
+
+func (v *RouteVisitor) insertRouteRetValsIntoGraph(
+	routeDecl *ast.FuncDecl,
+	routeVersion gast.FileVersion,
+	retVals []arbitrators.FuncReturnValueWithAst,
+) error {
+
+	for _, param := range retVals {
+		_, err := v.context.GraphBuilder.AddRouteRetVal(symboldg.CreateReturnValueNode{
+			Data:        param,
+			Decl:        param.Expr,
+			ParentRoute: symboldg.KeyableNodeMeta{Decl: routeDecl, FVersion: routeVersion},
+		})
+
+		if err != nil {
+			return v.frozenError(err)
+		}
+	}
+
+	return nil
 }
 
 func (v *RouteVisitor) getValidatedFuncParams(funcDecl *ast.FuncDecl, comments []string) ([]arbitrators.FuncParamWithAst, error) {
@@ -286,9 +383,11 @@ func (v *RouteVisitor) getFuncParams(funcDecl *ast.FuncDecl, comments []string) 
 			finalParamMeta = arbitrators.FuncParamWithAst{ParamMetaWithAst: param.ParamMetaWithAst}
 		} else {
 			// Normal params do require further processing (comments, validator strings) and validations
-			if finalParamMeta, err = v.processFuncParameter(holder, param.ParamMetaWithAst); err != nil {
+			if finalParamMeta, err = v.processFuncParameter(holder, param); err != nil {
 				return funcParams, v.frozenError(err)
 			}
+
+			// finalParamMeta.Expr missing here!
 
 			if err := v.validateParamsCombinations(funcParams, finalParamMeta.PassedIn); err != nil {
 				return funcParams, v.frozenError(err)
@@ -303,7 +402,7 @@ func (v *RouteVisitor) getFuncParams(funcDecl *ast.FuncDecl, comments []string) 
 
 func (v *RouteVisitor) processFuncParameter(
 	annotationHolder annotations.AnnotationHolder,
-	param arbitrators.ParamMetaWithAst,
+	param arbitrators.FuncParamWithAst,
 ) (arbitrators.FuncParamWithAst, error) {
 	paramAttrib := annotationHolder.FindFirstByValue(param.Name)
 	if paramAttrib == nil {
@@ -348,11 +447,12 @@ func (v *RouteVisitor) processFuncParameter(
 
 	return arbitrators.FuncParamWithAst{
 		NameInSchema:       nameString,
-		ParamMetaWithAst:   param,
+		ParamMetaWithAst:   param.ParamMetaWithAst,
 		PassedIn:           paramPassedIn,
 		Description:        paramAttrib.Description,
 		Validator:          appendParamRequiredValidation(&validatorString, param.TypeMetadata.IsByAddress, paramPassedIn),
 		UniqueImportSerial: v.context.SyncedProvider.GetNextImportId(),
+		ParamExpr:          param.ParamExpr,
 	}, nil
 }
 
@@ -457,9 +557,5 @@ func (v *RouteVisitor) getRouteSecurityWithInheritance(attributes annotations.An
 		return explicitSec, nil
 	}
 
-	if v.parentController != nil {
-		return v.parentController.Security, nil
-	}
-
-	return []definitions.RouteSecurity{}, nil
+	return v.parent.Metadata.Security, nil
 }

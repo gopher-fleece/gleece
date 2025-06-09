@@ -17,7 +17,7 @@ type FileVersion struct {
 }
 
 func (fv FileVersion) String() string {
-	return fmt.Sprintf("%s-%d-%s", fv.Path, fv.ModTime.Unix(), fv.Hash)
+	return fmt.Sprintf("%s|%d|%s", fv.Path, fv.ModTime.Unix(), fv.Hash)
 }
 
 func NewFileVersion(fullPath string) (FileVersion, error) {

@@ -10,6 +10,8 @@ import (
 	"github.com/gopher-fleece/gleece/cmd"
 	"github.com/gopher-fleece/gleece/cmd/arguments"
 	"github.com/gopher-fleece/gleece/definitions"
+	"github.com/gopher-fleece/gleece/extractor/visitors"
+	"github.com/gopher-fleece/gleece/graphs/symboldg"
 	. "github.com/onsi/ginkgo/v2"
 	"golang.org/x/tools/go/packages"
 )
@@ -182,4 +184,38 @@ func GetAstFieldByNameOrFail(pkg *packages.Package, structName string, fieldName
 
 	FailWithTestCodeError(fmt.Sprintf("Struct %q not found in package", structName))
 	return nil
+}
+
+func GetGraphByGleeceConfigOrFail() *symboldg.SymbolGraph {
+	configPath := constructFullPathOrFail("gleece.test.config.json")
+	config, err := cmd.LoadGleeceConfig(configPath)
+	if err != nil {
+		Fail(fmt.Sprintf("could not load Gleece Config - %v", err))
+	}
+
+	symGraph := symboldg.NewSymbolGraph()
+	controllerVisitor, err := visitors.NewControllerVisitor(&visitors.VisitContext{
+		GleeceConfig: config,
+		GraphBuilder: &symGraph,
+	})
+
+	if err != nil {
+		Fail(fmt.Sprintf("could create a controller visitor - %v", err))
+	}
+
+	for _, file := range controllerVisitor.GetAllSourceFiles() {
+		ast.Walk(controllerVisitor, file)
+		lastErr := controllerVisitor.GetLastError()
+		if lastErr != nil {
+			Fail(
+				fmt.Sprintf(
+					"Visitor encountered at-least one error. Last error:\n%v\n\t%s",
+					*lastErr,
+					controllerVisitor.GetFormattedDiagnosticStack(),
+				),
+			)
+		}
+	}
+
+	return &symGraph
 }

@@ -10,7 +10,7 @@ import (
 type TypeMetadataWithAst struct {
 	definitions.TypeMetadata
 	// The AST expression for the type itself
-	Expr        ast.Expr
+	TypeExpr    ast.Expr
 	Annotations *annotations.AnnotationHolder
 }
 
@@ -45,7 +45,7 @@ type FuncParamWithAst struct {
 	Deprecation        *definitions.DeprecationOptions
 
 	// The AST expression for the parameter itself
-	Expr ast.Expr
+	ParamExpr ast.Expr
 }
 
 func (s FuncParamWithAst) Reduce() definitions.FuncParam {

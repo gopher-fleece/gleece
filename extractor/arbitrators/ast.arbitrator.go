@@ -54,7 +54,7 @@ func (arb *AstArbitrator) GetFuncParameterTypeList(file *ast.File, funcDecl *ast
 					IsContext: meta.Name == "Context" && meta.PkgPath == "context",
 				},
 
-				Expr: field.Type,
+				ParamExpr: field.Type,
 			},
 		)
 	}
@@ -114,7 +114,7 @@ func (arb *AstArbitrator) GetTypeMetaByIdent(file *ast.File, ident *ast.Ident) (
 
 	meta := TypeMetadataWithAst{
 		TypeMetadata: definitions.TypeMetadata{Name: ident.Name},
-		Expr:         ident,
+		TypeExpr:     ident,
 		Annotations:  &holder,
 	}
 
@@ -208,7 +208,7 @@ func (arb *AstArbitrator) GetTypeMetaBySelectorExpr(file *ast.File, selector *as
 			Name:   entityName,
 			Import: definitions.ImportTypeAlias,
 		},
-		Expr: selector,
+		TypeExpr: selector,
 	}
 
 	comments := gast.GetCommentsFromIdent(arb.fileSet, file, selector.Sel)

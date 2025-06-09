@@ -16,8 +16,8 @@ import (
 	"github.com/titanous/json5"
 )
 
-// getConfig gets the currently relevant Gleece Config file
-func getConfig(configPath string) (*definitions.GleeceConfig, error) {
+// LoadGleeceConfig gets the currently relevant Gleece Config file
+func LoadGleeceConfig(configPath string) (*definitions.GleeceConfig, error) {
 
 	// Read the JSON file
 	fileContent, err := os.ReadFile(configPath)
@@ -78,7 +78,7 @@ func GetConfigAndMetadata(args arguments.CliArguments) (
 	bool,
 	error,
 ) {
-	config, err := getConfig(args.ConfigPath)
+	config, err := LoadGleeceConfig(args.ConfigPath)
 	if err != nil {
 		return nil, nil, nil, false, err
 	}

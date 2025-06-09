@@ -16,7 +16,7 @@ type ControllerSymbolicMetadata struct {
 	Description  string
 	RestMetadata definitions.RestMetadata
 	Security     []definitions.RouteSecurity
-	FVersion     *gast.FileVersion
+	FVersion     gast.FileVersion
 }
 
 type RouteSymbolicMetadata struct {

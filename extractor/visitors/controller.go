@@ -11,8 +11,14 @@ import (
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/extractor/annotations"
 	"github.com/gopher-fleece/gleece/gast"
+	"github.com/gopher-fleece/gleece/graphs/symboldg"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
 )
+
+type ControllerWithSymbolNode struct {
+	Controller definitions.ControllerMetadata
+	SymbolNode *symboldg.SymbolNode
+}
 
 // ControllerVisitor locates and walks over Gleece controllers to extract metadata and route information
 // This construct serves as the main business logic for Gleece's context generation
@@ -31,8 +37,10 @@ type ControllerVisitor struct {
 	// The current Gleece Controller being processed
 	currentController *definitions.ControllerMetadata
 
+	currentFVersion gast.FileVersion
+
 	// A list of fully processed controller metadata, ready to be passed to the routes/spec generators
-	controllers []definitions.ControllerMetadata
+	controllers []ControllerWithSymbolNode
 }
 
 // NewControllerVisitor Instantiates a new Gleece Controller visitor.
@@ -43,7 +51,13 @@ func NewControllerVisitor(context *VisitContext) (*ControllerVisitor, error) {
 }
 
 func (v ControllerVisitor) GetControllers() []definitions.ControllerMetadata {
-	return v.controllers
+	var metadata []definitions.ControllerMetadata
+
+	for _, controller := range v.controllers {
+		metadata = append(metadata, controller.Controller)
+	}
+
+	return metadata
 }
 
 func (v ControllerVisitor) DumpContext() (string, error) {
@@ -75,11 +89,47 @@ func (v *ControllerVisitor) Visit(node ast.Node) ast.Visitor {
 					v.lastError = &err
 					return v
 				}
-				v.controllers = append(v.controllers, controller)
+
+				symNode, err := v.insertControllerToGraph(currentNode, controller)
+				if err != nil {
+					v.lastError = &err
+				}
+
+				v.controllers = append(
+					v.controllers,
+					ControllerWithSymbolNode{
+						Controller: controller,
+						SymbolNode: symNode,
+					},
+				)
 			}
 		}
 	}
 	return v
+}
+
+func (v *ControllerVisitor) insertControllerToGraph(
+	node *ast.TypeSpec,
+	metadata definitions.ControllerMetadata,
+) (*symboldg.SymbolNode, error) {
+	v.enter(fmt.Sprintf("Graph insertion - Controller %s", metadata.Name))
+	defer v.exit()
+
+	return v.context.GraphBuilder.AddController(
+		symboldg.CreateControllerNode{
+			Decl: node,
+			Data: symboldg.ControllerSymbolicMetadata{
+				Name:         metadata.Name,
+				Package:      metadata.Package,
+				PkgPath:      metadata.PkgPath,
+				Tag:          metadata.Tag,
+				Description:  metadata.Description,
+				RestMetadata: metadata.RestMetadata,
+				Security:     metadata.Security,
+				FVersion:     v.currentFVersion,
+			},
+		},
+	)
 }
 
 func (v *ControllerVisitor) GetModelsFlat() (*definitions.Models, bool, error) {
@@ -95,7 +145,7 @@ func (v *ControllerVisitor) GetModelsFlat() (*definitions.Models, bool, error) {
 
 	hasAnyErrorTypes := false
 	for _, controller := range v.controllers {
-		for _, route := range controller.Routes {
+		for _, route := range controller.Controller.Routes {
 			encounteredErrorType, err := v.insertRouteTypeList(&existingTypesMap, &models, &route)
 			if err != nil {
 				return nil, false, v.frozenError(err)
@@ -195,6 +245,13 @@ func (v *ControllerVisitor) visitController(controllerNode *ast.TypeSpec) (defin
 	v.enter(fmt.Sprintf("Controller '%s'", controllerNode.Name.Name))
 	defer v.exit()
 
+	fVersion, err := gast.NewFileVersionFromAstFile(v.currentSourceFile, v.context.ArbitrationProvider.FileSet())
+	if err != nil {
+		return definitions.ControllerMetadata{}, v.frozenError(err)
+	}
+
+	v.currentFVersion = fVersion
+
 	controller, err := v.createControllerMetadata(controllerNode)
 	v.currentController = &controller
 
@@ -202,7 +259,13 @@ func (v *ControllerVisitor) visitController(controllerNode *ast.TypeSpec) (defin
 		return controller, err
 	}
 
-	routeVisitor, err := NewRouteVisitor(v.context, v.currentController)
+	routeVisitor, err := NewRouteVisitor(
+		v.context, RouteParentContext{
+			Decl:     controllerNode,
+			FVersion: fVersion,
+			Metadata: &controller,
+		},
+	)
 
 	if err != nil {
 		logger.Error("Could not initialize a new route visitor - %v", err)
