@@ -51,6 +51,23 @@ func NewTypeVisitor(context *VisitContext) (*TypeVisitor, error) {
 	return visitor, err
 }
 
+func (v *TypeVisitor) VisitType(fullPackageName string, name string) error {
+	pkg, err := v.context.ArbitrationProvider.Pkg().GetPackage(fullPackageName)
+	if err != nil {
+		return v.frozenError(err)
+	}
+
+	typeName, err := gast.GetTypeNameOrError(pkg, name)
+	if err != nil {
+		return v.frozenError(err)
+	}
+
+	switch gast.GetSymbolKindFromObject(typeName) {
+	case common.SymKindStruct:
+		v.VisitStruct(fullPackageName, nam)
+	}
+}
+
 // VisitStruct dives into the given struct in the given package and recursively parses it to obtain metadata,
 // storing the results in the visitor's internal fields.
 func (v *TypeVisitor) VisitStruct(fullPackageName string, structName string, structType *types.Struct) error {

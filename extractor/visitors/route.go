@@ -31,6 +31,8 @@ type RouteVisitor struct {
 
 	parent       RouteParentContext
 	gleeceConfig *definitions.GleeceConfig
+
+	typeVisitor TypeVisitor
 }
 
 func NewRouteVisitor(
@@ -40,6 +42,13 @@ func NewRouteVisitor(
 	visitor := RouteVisitor{parent: parent}
 
 	err := visitor.initializeWithArbitrationProvider(context)
+	if err != nil {
+		return &visitor, err
+	}
+
+	typeVisitor, err = NewTypeVisitor(v.context)
+	visitor.typeVisitor = typeVisitor
+
 	return &visitor, err
 }
 
@@ -158,10 +167,10 @@ func (v *RouteVisitor) VisitMethod(funcDecl *ast.FuncDecl, sourceFile *ast.File)
 	meta.ResponseDescription = successDescription
 
 	if isApiEndpoint && v.context.GraphBuilder != nil {
-		v.insertIntoGraph(funcDecl, meta, funcParamsWithAst, returnValuesWithAst)
+		err = v.insertIntoGraph(funcDecl, meta, funcParamsWithAst, returnValuesWithAst)
 	}
 
-	return meta, isApiEndpoint, nil
+	return meta, isApiEndpoint, err
 }
 
 func (v *RouteVisitor) insertIntoGraph(
@@ -235,6 +244,7 @@ func (v *RouteVisitor) insertRouteParamsIntoGraph(
 		if err != nil {
 			return v.frozenError(err)
 		}
+
 	}
 
 	return nil
@@ -249,7 +259,7 @@ func (v *RouteVisitor) insertRouteRetValsIntoGraph(
 	for _, param := range retVals {
 		_, err := v.context.GraphBuilder.AddRouteRetVal(symboldg.CreateReturnValueNode{
 			Data:        param,
-			Decl:        param.Expr,
+			Decl:        param.RetValExpr,
 			ParentRoute: symboldg.KeyableNodeMeta{Decl: routeDecl, FVersion: routeVersion},
 		})
 
@@ -259,6 +269,26 @@ func (v *RouteVisitor) insertRouteRetValsIntoGraph(
 	}
 
 	return nil
+}
+
+func (v *RouteVisitor) visitParamOrRetValType(target arbitrators.TypeMetadataWithAst) {
+	switch target.SymbolKind {
+	case common.SymKindStruct:
+		gast.FindTypesStructInPackage()
+		v.typeVisitor.VisitStruct(target.PkgPath, target.Name, )
+	case common.SymKindAlias:
+	case common.SymKindFunction:
+	case common.SymKindReceiver:
+	case common.SymKindField:
+	case common.SymKindParameter:
+	case common.SymKindVariable:
+	case common.SymKindConstant:
+	case common.SymKindBuiltin:
+
+	}
+
+	//if param.SymbolKind == common.SymKindStruct || param.SymbolKind == common.
+	//v.typeVisitor.VisitStruct((param.PkgPath,
 }
 
 func (v *RouteVisitor) getValidatedFuncParams(funcDecl *ast.FuncDecl, comments []string) ([]arbitrators.FuncParamWithAst, error) {
@@ -501,12 +531,13 @@ func (v *RouteVisitor) getFuncReturnValue(funcDecl *ast.FuncDecl) ([]arbitrators
 		return values, v.getFrozenError("return type '%s' expected to be an error or directly embed it", retType.Name)
 	}
 
-	for _, value := range returnTypes {
+	for paramIndex, value := range returnTypes {
 		values = append(
 			values,
 			arbitrators.FuncReturnValueWithAst{
 				TypeMetadataWithAst: value,
 				UniqueImportSerial:  v.context.SyncedProvider.GetNextImportId(),
+				RetValExpr:          funcDecl.Type.Results.List[paramIndex].Type,
 			},
 		)
 	}

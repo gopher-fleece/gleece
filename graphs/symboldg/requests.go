@@ -10,7 +10,7 @@ import (
 
 type KeyableNodeMeta struct {
 	// Decl is the node's AST decl (*ast.Field, *ast.StructType)
-	Decl any
+	Decl ast.Node
 
 	// FVersion is the version of the AST file the decl was found on
 	FVersion gast.FileVersion
@@ -35,13 +35,13 @@ type CreateRouteNode struct {
 
 type CreateParameterNode struct {
 	Data        arbitrators.FuncParamWithAst
-	Decl        ast.Expr
+	Decl        ast.Node
 	ParentRoute KeyableNodeMeta
 }
 
 type CreateReturnValueNode struct {
 	Data        arbitrators.FuncReturnValueWithAst
-	Decl        ast.Expr
+	Decl        ast.Node
 	ParentRoute KeyableNodeMeta
 }
 

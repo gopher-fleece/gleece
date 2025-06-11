@@ -1,6 +1,7 @@
 package graph_test
 
 import (
+	"github.com/gopher-fleece/gleece/test/units"
 	"github.com/gopher-fleece/runtime"
 )
 
@@ -26,4 +27,11 @@ func (ec *GraphController) ValidMethodWithSimpleRouteQueryAndHeaderParameters(
 	headerParam float32,
 ) error {
 	return nil
+}
+
+// @Method(POST)
+// @Route(/r1)
+// @Body(body)
+func (ec *GraphController) MethodWithComplexExternalTypes(body units.StructWithStructSlice) (units.EnumTypeA, error) {
+	return "", nil
 }

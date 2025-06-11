@@ -5,13 +5,32 @@ import (
 
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/extractor/annotations"
+	"github.com/gopher-fleece/gleece/gast"
 )
 
 type TypeMetadataWithAst struct {
 	definitions.TypeMetadata
-	// The AST expression for the type itself
-	TypeExpr    ast.Expr
+	// The AST node for the type itself
+	TypeExpr    ast.Node
 	Annotations *annotations.AnnotationHolder
+	FVersion    *gast.FileVersion
+}
+
+func (s TypeMetadataWithAst) Equals(other TypeMetadataWithAst) bool {
+	if s.TypeExpr != other.TypeExpr {
+		return false
+	}
+
+	// Is this... correct?
+	if s.Annotations != other.Annotations {
+		return false
+	}
+
+	if !s.FVersion.Equals(other.FVersion) {
+		return false
+	}
+
+	return s.TypeMetadata.Equals(other.TypeMetadata)
 }
 
 func (s TypeMetadataWithAst) Reduce() definitions.TypeMetadata {
@@ -44,8 +63,8 @@ type FuncParamWithAst struct {
 	Validator          string
 	Deprecation        *definitions.DeprecationOptions
 
-	// The AST expression for the parameter itself
-	ParamExpr ast.Expr
+	// The AST node for the parameter itself
+	ParamExpr ast.Node
 }
 
 func (s FuncParamWithAst) Reduce() definitions.FuncParam {
@@ -65,8 +84,8 @@ type FuncReturnValueWithAst struct {
 	TypeMetadataWithAst
 	UniqueImportSerial uint64
 
-	// The AST expression for the return value itself
-	Expr ast.Expr
+	// The AST node for the return value itself
+	RetValExpr ast.Node
 }
 
 func (s FuncReturnValueWithAst) Reduce() definitions.FuncReturnValue {

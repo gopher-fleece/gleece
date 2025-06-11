@@ -14,6 +14,7 @@ var _ = Describe("Graph Controller", func() {
 		graph := utils.GetGraphByGleeceConfigOrFail()
 		Expect(graph).ToNot(BeNil())
 		dump := graph.Dump()
+		utils.WriteFileByRelativePathOrFail("./dump.txt", []byte(dump))
 		Expect(dump).To(BeEquivalentTo(""))
 	})
 })

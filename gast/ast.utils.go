@@ -212,6 +212,50 @@ func GetCommentsFromIdent(files *token.FileSet, file *ast.File, ident *ast.Ident
 	return nil
 }
 
+// FindDeclNodeByIdent looks up ident.Name in pkg.Types.Scope(), and if found,
+// finds the AST node (FuncDecl, TypeSpec, or ValueSpec) whose Pos() contains
+// the object’s position. Returns nil if nothing matches.
+func FindDeclNodeByIdent(pkg *packages.Package, ident *ast.Ident) ast.Node {
+	if pkg.Types == nil || pkg.Types.Scope() == nil {
+		return nil
+	}
+	obj := pkg.Types.Scope().Lookup(ident.Name)
+	if obj == nil {
+		return nil
+	}
+	pos := obj.Pos()
+	// Find which AST file contains this position
+	for _, f := range pkg.Syntax {
+		if pos < f.Pos() || pos >= f.End() {
+			continue
+		}
+		// Walk only that file
+		return FindDeclAtPos(f, pos)
+	}
+	return nil
+}
+
+// FindDeclForPos returns the *ast.FuncDecl, *ast.TypeSpec, or *ast.ValueSpec
+// whose source-range encloses pos, or nil if none.
+func FindDeclAtPos(file *ast.File, pos token.Pos) ast.Node {
+	var found ast.Node
+	ast.Inspect(file, func(n ast.Node) bool {
+		if found != nil || n == nil {
+			return false
+		}
+		if pos < n.Pos() || pos >= n.End() {
+			return false
+		}
+		switch n := n.(type) {
+		case *ast.FuncDecl, *ast.TypeSpec, *ast.ValueSpec:
+			found = n
+			return false
+		}
+		return true
+	})
+	return found
+}
+
 func IsIdentInPackage(pkg *packages.Package, ident *ast.Ident) bool {
 	return pkg.Types.Scope().Lookup(ident.Name) != nil
 }
@@ -276,6 +320,24 @@ func FindGenDeclByIdent(fileSet *token.FileSet, file *ast.File, ident *ast.Ident
 	})
 
 	return decl
+}
+
+// FindTypeSpecByIdent walks 'file' and returns the *ast.TypeSpec
+// whose Name matches ident.Name (or nil if not found).
+func FindTypeSpecByIdent(file *ast.File, ident *ast.Ident) *ast.TypeSpec {
+	var found *ast.TypeSpec
+	ast.Inspect(file, func(n ast.Node) bool {
+		ts, ok := n.(*ast.TypeSpec)
+		if !ok {
+			return true
+		}
+		if ts.Name.Name == ident.Name {
+			found = ts
+			return false // stop walking
+		}
+		return true
+	})
+	return found
 }
 
 func GetStructFromGenDecl(decl *ast.GenDecl) *ast.StructType {
@@ -533,7 +595,7 @@ func GetSymbolKindFromObject(obj types.Object) common.SymKind {
 
 	case *types.Func:
 		if sig, ok := o.Type().(*types.Signature); ok && sig.Recv() != nil {
-			return common.SymKindMethod
+			return common.SymKindReceiver
 		}
 		return common.SymKindFunction
 

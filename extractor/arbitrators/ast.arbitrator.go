@@ -54,7 +54,7 @@ func (arb *AstArbitrator) GetFuncParameterTypeList(file *ast.File, funcDecl *ast
 					IsContext: meta.Name == "Context" && meta.PkgPath == "context",
 				},
 
-				ParamExpr: field.Type,
+				ParamExpr: field,
 			},
 		)
 	}
@@ -111,15 +111,24 @@ func (arb *AstArbitrator) GetTypeMetaForExpr(file *ast.File, expr ast.Expr) (Typ
 func (arb *AstArbitrator) GetTypeMetaByIdent(file *ast.File, ident *ast.Ident) (TypeMetadataWithAst, error) {
 	comments := gast.GetCommentsFromIdent(arb.fileSet, file, ident)
 	holder, err := annotations.NewAnnotationHolder(comments, annotations.CommentSourceProperty)
+	if err != nil {
+		return TypeMetadataWithAst{}, err
+	}
+
+	fVer, err := gast.NewFileVersionFromAstFile(file, arb.fileSet)
+	if err != nil {
+		return TypeMetadataWithAst{}, err
+	}
+
+	// refTypeSpec := gast.FindTypeSpecByIdent(file, ident)
 
 	meta := TypeMetadataWithAst{
 		TypeMetadata: definitions.TypeMetadata{Name: ident.Name},
-		TypeExpr:     ident,
-		Annotations:  &holder,
-	}
-
-	if err != nil {
-		return meta, err
+		// This is probably incorrect - for external types, this gets replaced with the referenced typespec (or similar),
+		// but what about local ones?
+		TypeExpr:    ident,
+		FVersion:    &fVer,
+		Annotations: &holder,
 	}
 
 	meta.Description = holder.GetDescription()
@@ -202,13 +211,18 @@ func (arb *AstArbitrator) GetTypeMetaBySelectorExpr(file *ast.File, selector *as
 	aliasedImports := gast.GetImportAliases(file)
 
 	entityName := selector.Sel.Name
+	fVer, err := gast.NewFileVersionFromAstFile(file, arb.fileSet)
+	if err != nil {
+		return TypeMetadataWithAst{}, err
+	}
 
 	meta := TypeMetadataWithAst{
 		TypeMetadata: definitions.TypeMetadata{
 			Name:   entityName,
 			Import: definitions.ImportTypeAlias,
 		},
-		TypeExpr: selector,
+		// TypeExpr must be set later, after package resolution
+		FVersion: &fVer,
 	}
 
 	comments := gast.GetCommentsFromIdent(arb.fileSet, file, selector.Sel)
@@ -278,6 +292,10 @@ func (arb *AstArbitrator) GetTypeMetaBySelectorExpr(file *ast.File, selector *as
 		}
 		meta.AliasMetadata = aliasMetadata
 	}
+
+	// Finally, set the actual underlying type node
+	meta.TypeExpr = gast.FindDeclNodeByIdent(pkg, selector.Sel)
+
 	return meta, nil
 }
 

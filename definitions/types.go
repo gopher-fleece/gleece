@@ -5,7 +5,6 @@ import (
 	"go/types"
 
 	"github.com/gopher-fleece/gleece/common"
-	"github.com/gopher-fleece/gleece/gast"
 	"github.com/gopher-fleece/runtime"
 )
 
@@ -153,7 +152,6 @@ type TypeMetadata struct {
 	IsByAddress         bool
 	SymbolKind          common.SymKind
 	AliasMetadata       *AliasMetadata
-	FVersion            *gast.FileVersion
 }
 
 func (t TypeMetadata) Equals(other TypeMetadata) bool {
@@ -187,10 +185,6 @@ func (t TypeMetadata) Equals(other TypeMetadata) bool {
 	}
 
 	if t.AliasMetadata != nil && !t.AliasMetadata.Equals(*other.AliasMetadata) {
-		return false
-	}
-
-	if !t.FVersion.Equals(other.FVersion) {
 		return false
 	}
 

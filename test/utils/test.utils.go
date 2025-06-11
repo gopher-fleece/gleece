@@ -30,7 +30,7 @@ func GetConfigAndMetadataOrFail(relativeConfigPath string) (
 ) {
 	config, controllers, flatModels, hasStdError, err := cmd.GetConfigAndMetadata(
 		arguments.CliArguments{
-			ConfigPath: constructFullPathOrFail(relativeConfigPath),
+			ConfigPath: constructFullPathOrFail(relativeConfigPath, true),
 		},
 	)
 
@@ -66,14 +66,15 @@ func GetControllersAndModelsOrFail() ([]definitions.ControllerMetadata, []defini
 	return GetMetadataByRelativeConfigOrFail("gleece.test.config.json")
 }
 
-func constructFullPathOrFail(relativePath string) string {
+func constructFullPathOrFail(relativePath string, failIfNotExists bool) string {
 	cwd, err := os.Getwd()
 	if err != nil {
 		Fail(fmt.Sprintf("Could not determine process working directory - %v", err))
 	}
 
 	fullPath := filepath.Join(cwd, relativePath)
-	if !FileOrFolderExists(fullPath) {
+
+	if failIfNotExists && !FileOrFolderExists(fullPath) {
 		Fail(fmt.Sprintf("Path %s does not exist", fullPath))
 	}
 
@@ -88,13 +89,31 @@ func FileOrFolderExists(fullPath string) bool {
 }
 
 func ReadFileByRelativePathOrFail(relativePath string) string {
-	filePath := constructFullPathOrFail(relativePath)
+	filePath := constructFullPathOrFail(relativePath, true)
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		Fail(fmt.Sprintf("Could not read file from '%s' - %v", filePath, err))
 	}
 
 	return string(data)
+}
+
+func WriteFileByRelativePathOrFail(relativePath string, data []byte) {
+	filePath := constructFullPathOrFail(relativePath, false)
+	_, err := os.Stat(filePath)
+	if err != nil {
+		dirPath := filepath.Dir(filePath)
+		err = os.MkdirAll(dirPath, 0644)
+		if err != nil {
+			Fail(fmt.Sprintf("Could not mkdir %s - %v", dirPath, err))
+		}
+
+	}
+
+	err = os.WriteFile(filePath, data, 0644)
+	if err != nil {
+		Fail(fmt.Sprintf("Could not write to '%s' - %v", filePath, err))
+	}
 }
 
 func GetAbsPathByRelativeOrFail(relativePath string) string {
@@ -187,7 +206,7 @@ func GetAstFieldByNameOrFail(pkg *packages.Package, structName string, fieldName
 }
 
 func GetGraphByGleeceConfigOrFail() *symboldg.SymbolGraph {
-	configPath := constructFullPathOrFail("gleece.test.config.json")
+	configPath := constructFullPathOrFail("gleece.test.config.json", true)
 	config, err := cmd.LoadGleeceConfig(configPath)
 	if err != nil {
 		Fail(fmt.Sprintf("could not load Gleece Config - %v", err))

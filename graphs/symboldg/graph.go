@@ -32,8 +32,6 @@ func NewSymbolGraph() SymbolGraph {
 	}
 }
 
-type SymbolKey string
-
 func (g *SymbolGraph) addNode(n *SymbolNode) {
 	g.nodes[n.Id] = n
 }
@@ -75,7 +73,7 @@ func (g *SymbolGraph) AddRoute(request CreateRouteNode) (*SymbolNode, error) {
 
 	routeNode := &SymbolNode{
 		Id:          SymbolKeyFor(request.Decl, request.Data.FVersion),
-		Kind:        common.SymKindFunction,
+		Kind:        common.SymKindReceiver,
 		Version:     request.Data.FVersion,
 		Data:        request.Data,
 		Annotations: request.Annotations,
@@ -92,8 +90,10 @@ func (g *SymbolGraph) AddRouteParam(request CreateParameterNode) (*SymbolNode, e
 		return existing, err
 	}
 
+	paramKey := SymbolKeyFor(request.Decl, &request.ParentRoute.FVersion)
+
 	paramNode := &SymbolNode{
-		Id:      SymbolKeyFor(request.Decl, &request.ParentRoute.FVersion),
+		Id:      paramKey,
 		Kind:    common.SymKindParameter,
 		Version: &request.ParentRoute.FVersion,
 		Data: &FuncParamSymbolicMetadata{
@@ -117,6 +117,10 @@ func (g *SymbolGraph) AddRouteParam(request CreateParameterNode) (*SymbolNode, e
 		Annotations: request.Data.Annotations,
 	})
 
+	// Also derived in AddType. Need to optimize.
+	underlyingTypeKey := SymbolKeyFor(request.Data.TypeMetadataWithAst.TypeExpr, request.Data.TypeMetadataWithAst.FVersion)
+	g.AddDep(paramKey, underlyingTypeKey)
+
 	return paramNode, nil
 }
 
@@ -128,7 +132,7 @@ func (g *SymbolGraph) AddRouteRetVal(request CreateReturnValueNode) (*SymbolNode
 
 	retValNode := &SymbolNode{
 		Id:      SymbolKeyFor(request.Decl, request.Data.FVersion),
-		Kind:    common.SymKindVariable,
+		Kind:    common.SymKindReturnType,
 		Version: &request.ParentRoute.FVersion,
 		Data:    request,
 	}
@@ -157,7 +161,7 @@ func (g *SymbolGraph) AddType(request CreateTypeNode) (*SymbolNode, error) {
 
 // idempotencyGuard checks if the given node with the given version exists in the graph.
 // If the node exists but has a different FVersion, the old node will be evicted, alongside its dependents.
-func (g *SymbolGraph) idempotencyGuard(decl any, version *gast.FileVersion) (*SymbolNode, error) {
+func (g *SymbolGraph) idempotencyGuard(decl ast.Node, version *gast.FileVersion) (*SymbolNode, error) {
 	if decl == nil {
 		return nil, fmt.Errorf("idempotencyGuard received a nil decl parameter")
 	}
@@ -211,7 +215,6 @@ func (g *SymbolGraph) Dump() string {
 	for key, node := range g.nodes {
 		prettyKey := PrettyPrintSymbolKey(key)
 		sb.WriteString(fmt.Sprintf("[%s] %s\n", node.Kind, prettyKey))
-
 		// Outgoing dependencies
 		if deps, ok := g.deps[key]; ok && len(deps) > 0 {
 			sb.WriteString("  Dependencies:\n")
@@ -241,26 +244,6 @@ func (g *SymbolGraph) Dump() string {
 
 	sb.WriteString("=== End SymbolGraph ===\n")
 	return sb.String()
-}
-
-func SymbolKeyFor(decl any, version *gast.FileVersion) SymbolKey {
-	switch node := decl.(type) {
-	case *ast.FuncDecl:
-		return SymbolKey(fmt.Sprintf("Func:%s@%s", node.Name.Name, version.String()))
-	case *ast.TypeSpec:
-		return SymbolKey(fmt.Sprintf("Type:%s@%s", node.Name.Name, version.String()))
-	case *ast.Field:
-		// Field has no name always (e.g., return values), fallback to position
-		return SymbolKey(fmt.Sprintf("Field@%d:%s", node.Pos(), version.String()))
-	case *ast.Ident:
-		return SymbolKey(fmt.Sprintf("Ident:%s@%s", node.Name, version.String()))
-	case ast.Expr:
-		return SymbolKey(fmt.Sprintf("Expr:%T@%d:%s", node, node.Pos(), version.String()))
-	case nil:
-		return SymbolKey("nil")
-	default:
-		return SymbolKey(fmt.Sprintf("%T@%p", node, node)) // fallback on pointer identity
-	}
 }
 
 func PrettyPrintSymbolKey(key SymbolKey) string {

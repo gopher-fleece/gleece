@@ -3,17 +3,19 @@ package common
 type SymKind string
 
 const (
-	SymKindUnknown   SymKind = "Unknown"
-	SymKindPackage   SymKind = "Package"
-	SymKindStruct    SymKind = "Struct"
-	SymKindInterface SymKind = "Interface"
-	SymKindAlias     SymKind = "Alias"
-	SymKindFunction  SymKind = "Function"
-	SymKindMethod    SymKind = "Method"
-	SymKindField     SymKind = "Field"
-	SymKindParameter SymKind = "Parameter"
-	SymKindVariable  SymKind = "Variable"
-	SymKindConstant  SymKind = "Constant"
+	SymKindUnknown    SymKind = "Unknown"
+	SymKindPackage    SymKind = "Package"
+	SymKindStruct     SymKind = "Struct"
+	SymKindInterface  SymKind = "Interface"
+	SymKindAlias      SymKind = "Alias"
+	SymKindFunction   SymKind = "Function"
+	SymKindReceiver   SymKind = "Receiver"
+	SymKindField      SymKind = "Field"
+	SymKindParameter  SymKind = "Parameter"
+	SymKindVariable   SymKind = "Variable"
+	SymKindConstant   SymKind = "Constant"
+	SymKindReturnType SymKind = "RetType"
+	SymKindBuiltin    SymKind = "Builtin"
 )
 
 type AstNodeKind string
