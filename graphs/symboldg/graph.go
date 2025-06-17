@@ -20,6 +20,8 @@ type SymbolGraphBuilder interface {
 type SymbolGraph struct {
 	nodes map[SymbolKey]*SymbolNode // keyed by ast node
 
+	edges map[SymbolKey][]SymbolEdge // Node relations
+
 	deps    map[SymbolKey]map[SymbolKey]struct{} // from → set of to
 	revDeps map[SymbolKey]map[SymbolKey]struct{} // to   → set of from
 }

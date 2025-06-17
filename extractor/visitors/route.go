@@ -32,7 +32,7 @@ type RouteVisitor struct {
 	parent       RouteParentContext
 	gleeceConfig *definitions.GleeceConfig
 
-	typeVisitor TypeVisitor
+	typeVisitor *TypeVisitor
 }
 
 func NewRouteVisitor(
@@ -46,9 +46,12 @@ func NewRouteVisitor(
 		return &visitor, err
 	}
 
-	typeVisitor, err = NewTypeVisitor(v.context)
-	visitor.typeVisitor = typeVisitor
+	typeVisitor, err := NewTypeVisitor(visitor.context)
+	if err != nil {
+		return &visitor, nil
+	}
 
+	visitor.typeVisitor = typeVisitor
 	return &visitor, err
 }
 
@@ -272,23 +275,6 @@ func (v *RouteVisitor) insertRouteRetValsIntoGraph(
 }
 
 func (v *RouteVisitor) visitParamOrRetValType(target arbitrators.TypeMetadataWithAst) {
-	switch target.SymbolKind {
-	case common.SymKindStruct:
-		gast.FindTypesStructInPackage()
-		v.typeVisitor.VisitStruct(target.PkgPath, target.Name, )
-	case common.SymKindAlias:
-	case common.SymKindFunction:
-	case common.SymKindReceiver:
-	case common.SymKindField:
-	case common.SymKindParameter:
-	case common.SymKindVariable:
-	case common.SymKindConstant:
-	case common.SymKindBuiltin:
-
-	}
-
-	//if param.SymbolKind == common.SymKindStruct || param.SymbolKind == common.
-	//v.typeVisitor.VisitStruct((param.PkgPath,
 }
 
 func (v *RouteVisitor) getValidatedFuncParams(funcDecl *ast.FuncDecl, comments []string) ([]arbitrators.FuncParamWithAst, error) {

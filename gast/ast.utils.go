@@ -390,6 +390,24 @@ func LookupTypeName(pkg *packages.Package, name string) (*types.TypeName, error)
 	return typeName, nil
 }
 
+func LookupIdentForObject(pkg *packages.Package, obj types.Object) *ast.Ident {
+	for ident, definedObj := range pkg.TypesInfo.Defs {
+		if definedObj == obj {
+			return ident
+		}
+	}
+	return nil
+}
+
+func FindContainingFile(pkg *packages.Package, ident *ast.Ident) *ast.File {
+	for _, file := range pkg.Syntax {
+		if ident.Pos() >= file.Pos() && ident.Pos() <= file.End() {
+			return file
+		}
+	}
+	return nil
+}
+
 func GetTypeNameOrError(pkg *packages.Package, name string) (*types.TypeName, error) {
 	typeName, err := LookupTypeName(pkg, name)
 	if err != nil {

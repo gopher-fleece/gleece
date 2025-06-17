@@ -29,10 +29,10 @@ type StructInfo struct {
 type TypeVisitor struct {
 	BaseVisitor
 	// A map of struct names to metadata
-	structsByName map[string]*definitions.StructMetadata
+	structsByName map[string]*StructMetadataWithAst
 
 	// A map of 'enum' names to metadata
-	enumsByName map[string]*definitions.EnumMetadata
+	enumsByName map[string]*EnumMetadataWithAst
 }
 
 // StructAttributeHolders serves as a container for tracking AnnotationHolders for a struct and its fields
@@ -44,8 +44,8 @@ type StructAttributeHolders struct {
 // NewTypeVisitor Initializes a new visitor
 func NewTypeVisitor(context *VisitContext) (*TypeVisitor, error) {
 	visitor := &TypeVisitor{
-		structsByName: make(map[string]*definitions.StructMetadata),
-		enumsByName:   make(map[string]*definitions.EnumMetadata),
+		structsByName: make(map[string]*StructMetadataWithAst),
+		enumsByName:   make(map[string]*EnumMetadataWithAst),
 	}
 	err := visitor.initialize(context)
 	return visitor, err
@@ -62,10 +62,16 @@ func (v *TypeVisitor) VisitType(fullPackageName string, name string) error {
 		return v.frozenError(err)
 	}
 
-	switch gast.GetSymbolKindFromObject(typeName) {
-	case common.SymKindStruct:
-		v.VisitStruct(fullPackageName, nam)
-	}
+	/*
+		switch gast.GetSymbolKindFromObject(typeName) {
+		case common.SymKindStruct:
+		//	v.VisitStruct(...)
+		case common.SymKindAlias:
+			//v.VisitEnum(...)
+		}
+	*/
+	typeName.Exported()
+	return nil
 }
 
 // VisitStruct dives into the given struct in the given package and recursively parses it to obtain metadata,
@@ -81,11 +87,9 @@ func (v *TypeVisitor) VisitStruct(fullPackageName string, structName string, str
 		return err
 	}
 
-	structInfo := definitions.StructMetadata{
-		Name:        structName,
-		PkgPath:     fullPackageName,
-		Description: attributeHolders.StructHolder.GetDescription(),
-		Deprecation: getDeprecationOpts(&attributeHolders.StructHolder),
+	structMeta := StructMetadataWithAst{
+		Name:    structName,
+		PkgPath: fullPackageName,
 	}
 
 	// Iterate the struct's fields
@@ -117,13 +121,13 @@ func (v *TypeVisitor) VisitStruct(fullPackageName string, structName string, str
 			fieldTypeString = gast.GetIterableElementType(t)
 
 			// Dive into the slice and recurse into nested structs, if required
-			err := v.processIterableField(field, iterable, fieldTypeString, &structInfo, tag)
+			err := v.processIterableField(field, iterable, fieldTypeString, &structMeta, tag)
 			if err != nil {
 				return err
 			}
 
 		case *types.Named:
-			isEnumOrAlias, err := v.processNamedEntity(t, &structInfo, tag)
+			isEnumOrAlias, err := v.processNamedEntity(t, &structMeta, tag)
 			if err != nil {
 				return err
 			}
@@ -139,26 +143,53 @@ func (v *TypeVisitor) VisitStruct(fullPackageName string, structName string, str
 			fieldTypeString = fieldType.String()
 		}
 
-		fieldMeta := definitions.FieldMetadata{
-			Name:       field.Name(),
-			Type:       fieldTypeString,
-			Tag:        tag,
-			IsEmbedded: field.Anonymous(),
+		pkg, err := v.context.ArbitrationProvider.Pkg().GetPackage(fullPackageName)
+		if err != nil {
+			return err
 		}
 
-		fieldAttr := attributeHolders.FieldHolders[field.Name()]
-		if fieldAttr != nil {
-			fieldMeta.Description = fieldAttr.GetDescription()
-			deprecationOpts := getDeprecationOpts(fieldAttr)
-			fieldMeta.Deprecation = &deprecationOpts
-		} else {
-			fieldMeta.Deprecation = &definitions.DeprecationOptions{}
+		if pkg == nil {
+			return v.getFrozenError("could not get a packages.Package for '%s'", fullPackageName)
 		}
 
-		structInfo.Fields = append(structInfo.Fields, fieldMeta)
+		identForField := gast.LookupIdentForObject(pkg, field)
+		astFile := gast.FindContainingFile(pkg, identForField)
+		if astFile == nil {
+			return v.getFrozenError(
+				"could not locate the ast.File for ident of package '%s', type '%s', field '%s'",
+				fullPackageName,
+				structName,
+				field.Name(),
+			)
+		}
+
+		fieldTypeMeta, err := v.context.ArbitrationProvider.Ast().GetTypeMetaByIdent(astFile, identForField)
+		if err != nil {
+			return v.frozenError(err)
+		}
+
+		fieldMeta := FieldMetadataWithAst{
+			Name:        field.Name(),
+			Type:        fieldTypeMeta,
+			Tag:         tag,
+			IsEmbedded:  field.Anonymous(),
+			Annotations: attributeHolders.FieldHolders[field.Name()],
+		}
+
+		/*
+			if fieldAttr != nil {
+				fieldMeta.Description = fieldAttr.GetDescription()
+				deprecationOpts := getDeprecationOpts(fieldAttr)
+				fieldMeta.Deprecation = &deprecationOpts
+			} else {
+				fieldMeta.Deprecation = &definitions.DeprecationOptions{}
+			}
+		*/
+
+		structMeta.Fields = append(structMeta.Fields, fieldMeta)
 	}
 
-	v.structsByName[fullStructName] = &structInfo
+	v.structsByName[fullStructName] = &structMeta
 	return nil
 }
 
@@ -166,7 +197,7 @@ func (v *TypeVisitor) processIterableField(
 	field *types.Var,
 	fieldType definitions.Iterable,
 	sliceElementTypeNameString string,
-	structInfo *definitions.StructMetadata,
+	structInfo *StructMetadataWithAst,
 	fieldTag string,
 ) error {
 	if gast.IsBasic(fieldType) {
@@ -211,7 +242,7 @@ func (v *TypeVisitor) processIterableField(
 // To clarify, an enum/alias is NOT appended to the struct list.
 func (v *TypeVisitor) processNamedEntity(
 	node *types.Named,
-	structInfo *definitions.StructMetadata,
+	structInfo *StructMetadataWithAst,
 	fieldTag string,
 ) (bool, error) {
 	// If the type's an enum.
@@ -254,12 +285,12 @@ func (v *TypeVisitor) VisitEnum(enumName string, model definitions.TypeMetadata)
 		return nil // Already processed, ignore
 	}
 
-	enumModel := &definitions.EnumMetadata{
-		Name:        model.Name,
-		PkgPath:     model.PkgPath,
-		Description: model.Description,
-		Values:      model.AliasMetadata.Values,
-		Type:        model.AliasMetadata.AliasType,
+	enumModel := &EnumMetadataWithAst{
+		Name:    model.Name,
+		PkgPath: model.PkgPath,
+		//Description: model.Description,
+		Values: model.AliasMetadata.Values,
+		//Type:        model.AliasMetadata.AliasType,
 		// Deprecation         ?
 	}
 
@@ -367,7 +398,8 @@ func (v *TypeVisitor) getAttributeHolders(fullPackageName string, structName str
 func (v *TypeVisitor) GetStructs() []definitions.StructMetadata {
 	models := []definitions.StructMetadata{}
 	for _, value := range v.structsByName {
-		models = append(models, *value)
+		model := value.Reduce()
+		models = append(models, model)
 	}
 	return models
 }
@@ -375,12 +407,13 @@ func (v *TypeVisitor) GetStructs() []definitions.StructMetadata {
 func (v *TypeVisitor) GetEnums() []definitions.EnumMetadata {
 	models := []definitions.EnumMetadata{}
 	for _, value := range v.enumsByName {
-		models = append(models, *value)
+		model := value.Reduce()
+		models = append(models, model)
 	}
 	return models
 }
 
-func createAliasModel(node *types.Named, tag string) definitions.FieldMetadata {
+func createAliasModel(node *types.Named, tag string) FieldMetadataWithAst {
 	name := node.Obj().Name()
 
 	underlying := node.Underlying()
@@ -393,14 +426,14 @@ func createAliasModel(node *types.Named, tag string) definitions.FieldMetadata {
 		typeName = name
 	}
 
-	return definitions.FieldMetadata{
+	return FieldMetadataWithAst{
 		Name: name,
-		Type: typeName,
-		Tag:  tag,
+		//Type: typeName,
+		Tag: tag,
 	}
 }
 
-func (v *TypeVisitor) visitNestedEnum(t *types.Named, aliasModel definitions.FieldMetadata) error {
+func (v *TypeVisitor) visitNestedEnum(t *types.Named, aliasModel FieldMetadataWithAst) error {
 	pkg, err := v.context.ArbitrationProvider.Pkg().GetPackageByTypeName(t.Obj())
 	if err != nil {
 		return err
@@ -425,17 +458,17 @@ func (v *TypeVisitor) visitNestedEnum(t *types.Named, aliasModel definitions.Fie
 		return err
 	}
 
-	holder, err := v.getAttributeHolderFromEntityGenDecl(pkg, cleanedModelName)
+	//holder, err := v.getAttributeHolderFromEntityGenDecl(pkg, cleanedModelName)
 	if err != nil {
 		return err
 	}
 
-	enumModel := &definitions.EnumMetadata{
-		Name:        cleanedModelName,
-		PkgPath:     pkg.PkgPath,
-		Description: holder.GetDescription(),
-		Values:      aliasMetadata.Values,
-		Type:        aliasMetadata.AliasType,
+	enumModel := &EnumMetadataWithAst{
+		Name:    cleanedModelName,
+		PkgPath: pkg.PkgPath,
+		//Description: holder.GetDescription(),
+		Values: aliasMetadata.Values,
+		//Type:        aliasMetadata.AliasType,
 		// Deprecation         ?
 	}
 
