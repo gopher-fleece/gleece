@@ -201,6 +201,33 @@
         "title": "OtherModel",
         "type": "object"
       },
+      "RecursiveModelWithPointer": {
+        "properties": {
+          "prop0": {
+            "type": "string"
+          },
+          "prop1": {
+            "type": "string"
+          },
+          "prop2": {
+            "type": "string"
+          },
+          "prop3": {
+            "type": "string"
+          },
+          "prop4": {
+            "$ref": "#/components/schemas/TheModel"
+          }
+        },
+        "required": [
+          "prop1",
+          "prop2",
+          "prop3",
+          "prop4"
+        ],
+        "title": "RecursiveModelWithPointer",
+        "type": "object"
+      },
       "ResponseTest": {
         "properties": {
           "index": {
@@ -352,6 +379,24 @@
             "$ref": "#/components/schemas/OtherModel"
           }
         ]
+      },
+      "TheModelWithInnerPointer": {
+        "properties": {
+          "field1": {
+            "type": "string"
+          },
+          "field2": {
+            "type": "string"
+          },
+          "recursiveModelWithPointer": {
+            "$ref": "#/components/schemas/RecursiveModelWithPointer"
+          },
+          "theModel": {
+            "$ref": "#/components/schemas/TheModel"
+          }
+        },
+        "title": "TheModelWithInnerPointer",
+        "type": "object"
       },
       "UniqueExternalUsage": {
         "description": "Test the recursive import process on first-and-ever-used type in struct only",
@@ -1954,6 +1999,56 @@
               "application/json": {
                 "schema": {
                   "type": "string"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          ""
+        ]
+      }
+    },
+    "/e2e/structs-with-inner-pointer": {
+      "post": {
+        "operationId": "StructsWithInnerPointer",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TheModelWithInnerPointer"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": ""
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rfc7807Error"
                 }
               }
             },

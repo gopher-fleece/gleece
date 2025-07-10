@@ -89,43 +89,33 @@ func (v *TypeVisitor) VisitStruct(fullPackageName string, structName string, str
 		}
 
 		var fieldTypeString string
+		var skip bool
 
 		switch t := fieldType.(type) {
 		case *types.Pointer:
-			// Raise error for pointer fields.
-			return fmt.Errorf("field %q in struct %q is a pointer, which is not allowed", field.Name(), structName)
+			// Unwrap pointer to get the underlying type using the utility function
+			elemType := extractor.UnwrapPointerType(t)
 
-		case *types.Slice, *types.Array:
-			// Go's rigid typing makes reuse pretty difficult...
-			iterable, ok := t.(definitions.Iterable)
-			if !ok {
-				return fmt.Errorf("expected slice or array to implement Iterable, got %T", t)
-			}
+			// Process the unwrapped type based on what it actually is
 
-			// Field type string is for the parent model's metadata
-			fieldTypeString = extractor.GetIterableElementType(t)
-
-			// Dive into the slice and recurse into nested structs, if required
-			err := v.processIterableField(field, iterable, fieldTypeString, &structInfo, tag)
+			fieldTypeString, skip, err = v.processType(elemType, field, &structInfo, tag)
 			if err != nil {
 				return err
 			}
-
-		case *types.Named:
-			isEnumOrAlias, err := v.processNamedEntity(t, &structInfo, tag)
-			if err != nil {
-				return err
-			}
-			if isEnumOrAlias {
-				// Enums and aliases have already been processed at this point - continue to the next field.
+			if skip {
+				// If the field is an enum or alias, skip it
 				continue
 			}
-			// Add the field as a reference to another struct.
-			fieldTypeString = t.Obj().Name()
 
 		default:
-			// Primitive field
-			fieldTypeString = fieldType.String()
+			fieldTypeString, skip, err = v.processType(fieldType, field, &structInfo, tag)
+			if err != nil {
+				return err
+			}
+			if skip {
+				// If the field is an enum or alias, skip it
+				continue
+			}
 		}
 
 		fieldMeta := definitions.FieldMetadata{
@@ -442,4 +432,52 @@ func (v *TypeVisitor) visitNestedEnum(t *types.Named, aliasModel definitions.Fie
 
 	v.enumsByName[cleanedModelName] = enumModel
 	return nil
+}
+
+// processType handles processing of types based on their kind, whether they're coming
+// from a pointer dereference or directly. It processes slices, arrays, named types, etc.
+// and returns the field type string along with any error encountered.
+func (v *TypeVisitor) processType(
+	elemType types.Type,
+	field *types.Var,
+	structInfo *definitions.StructMetadata,
+	tag string,
+) (string, bool, error) {
+	var fieldTypeString string
+
+	switch et := elemType.(type) {
+	case *types.Slice, *types.Array:
+		// Go's rigid typing makes reuse pretty difficult...
+		iterable, ok := et.(definitions.Iterable)
+		if !ok {
+			return "", false, fmt.Errorf("expected slice or array to implement Iterable, got %T", et)
+		}
+
+		// Field type string is for the parent model's metadata
+		fieldTypeString = extractor.GetIterableElementType(et)
+
+		// Dive into the slice and recurse into nested structs, if required
+		err := v.processIterableField(field, iterable, fieldTypeString, structInfo, tag)
+		if err != nil {
+			return "", false, err
+		}
+	case *types.Named:
+		isEnumOrAlias, err := v.processNamedEntity(et, structInfo, tag)
+		if err != nil {
+			return "", false, err
+		}
+		if isEnumOrAlias {
+			// Enums and aliases have already been processed at this point - return empty string
+			// to signal that this field should be skipped in the caller
+			return "", true, nil
+		}
+		// Add the field as a reference to another struct.
+		fieldTypeString = et.Obj().Name()
+
+	default:
+		// Primitive field
+		fieldTypeString = elemType.String()
+	}
+
+	return fieldTypeString, false, nil
 }
