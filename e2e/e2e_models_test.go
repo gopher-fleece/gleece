@@ -191,6 +191,73 @@ var _ = Describe("E2E Models Spec", func() {
 		})
 	})
 
+	It("Should test struct with pointer fields", func() {
+
+		data := "data"
+		dataPtr := &data
+		model := assets.TheModel{
+			ModelField: "model field",
+			FirstLevelModel: assets.FirstLevelModel{
+				FirstLevelModelField: "first level",
+				SecondLevelModel: assets.SecondLevelModel{
+					SecondLevelModelField: "second level",
+				},
+			},
+			OtherModel: assets.OtherModel{
+				OtherModelField: "other model",
+			},
+		}
+		body := assets.TheModelWithInnerPointer{
+			Field1: &data,
+			Field2: &dataPtr,
+			Model:  &model,
+			RecursiveModelWithPointer: &assets.RecursiveModelWithPointer{
+				Prop1: data,
+				Prop2: dataPtr,
+				Prop3: &dataPtr,
+				Prop4: &model,
+			},
+		}
+
+		RunRouterTest(common.RouterTest{
+			Name:                "Should return status code",
+			ExpectedStatus:      200,
+			ExpectedBodyContain: "data",
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/structs-with-inner-pointer",
+			Method:              "POST",
+			Body:                body,
+			Query:               map[string]string{},
+			Headers:             map[string]string{},
+			RunningMode:         &allRouting,
+		})
+
+		body2 := assets.TheModelWithInnerPointer{
+			Field1: &data,
+			Field2: &dataPtr,
+			Model:  &model,
+			RecursiveModelWithPointer: &assets.RecursiveModelWithPointer{
+				Prop1: data,
+				Prop3: &dataPtr,
+				Prop4: &model,
+			},
+		}
+
+		RunRouterTest(common.RouterTest{
+			Name:                "Should return status code",
+			ExpectedStatus:      422,
+			ExpectedBodyContain: "Prop2",
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/structs-with-inner-pointer",
+			Method:              "POST",
+			Body:                body2,
+			Query:               map[string]string{},
+			Headers:             map[string]string{},
+			RunningMode:         &allRouting,
+		})
+
+	})
+
 	It("Should return status code 422 for missing embedded models fields", func() {
 
 		body := assets.TheModel{

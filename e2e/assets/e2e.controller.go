@@ -649,6 +649,30 @@ func (ec *E2EController) EmbeddedStructs(data TheModel) (TheModel, error) {
 	return data, nil
 }
 
+type RecursiveModelWithPointer struct {
+	Prop0 *string   `json:"prop0" validate:""`
+	Prop1 string    `json:"prop1" validate:"required"`
+	Prop2 *string   `json:"prop2" validate:"required"`
+	Prop3 **string  `json:"prop3" validate:"required"`
+	Prop4 *TheModel `json:"prop4" validate:"required"`
+}
+
+type TheModelWithInnerPointer struct {
+	Field1                    *string                    `json:"field1"`
+	Field2                    **string                   `json:"field2"`
+	Model                     *TheModel                  `json:"theModel"`
+	RecursiveModelWithPointer *RecursiveModelWithPointer `json:"recursiveModelWithPointer"`
+}
+
+// @Method(POST)
+// @Route(/structs-with-inner-pointer)
+// @Body(data)
+// @Response(200)
+// @ErrorResponse(500)
+func (ec *E2EController) StructsWithInnerPointer(data TheModelWithInnerPointer) (string, error) {
+	return *data.RecursiveModelWithPointer.Prop2, nil
+}
+
 type ContextAuthInjectType int
 type ContextMiddlewareInjectType int
 
