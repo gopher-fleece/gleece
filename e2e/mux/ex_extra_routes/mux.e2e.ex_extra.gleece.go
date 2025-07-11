@@ -9,7 +9,7 @@ Generated Date: 2025-07-11
 Target Engine: Gorilla Mux (https://github.com/gorilla/mux)
 --
 Usage:
-Refer to the Gleece documentation for details on how to use the generated routes and handlers.
+Refer to the Gleece documentation https://docs.gleece.dev for details on how to use the generated routes and handlers.
 --
 Repository: https://github.com/gopher-fleece/gleece
 --

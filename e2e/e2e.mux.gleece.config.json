@@ -31,7 +31,8 @@
 			"JsonErrorResponseExtension": "./mux/assets/JsonErrorResponseExtension.hbs",
 			"ResponseHeadersExtension": "./mux/assets/ResponseHeadersExtension.hbs"
 		},
-		"validateResponsePayload": true
+		"validateResponsePayload": true,
+		"skipGenerateDateComment": true
 	},
 	"openapiGeneratorConfig": {
 		"openapi": "3.0.0",

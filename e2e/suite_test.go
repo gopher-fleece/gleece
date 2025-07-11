@@ -105,6 +105,7 @@ func GenerateE2ERoutes(args arguments.CliArguments, engineName string) error {
 	config.RoutesConfig.TemplateExtensions = nil
 	config.RoutesConfig.AuthorizationConfig.EnforceSecurityOnAllRoutes = false
 	config.RoutesConfig.ValidateResponsePayload = false
+	config.RoutesConfig.SkipGenerateDateComment = false
 
 	config.RoutesConfig.OutputPath = fmt.Sprintf("./%s/ex_extra_routes/%s.e2e.ex_extra.gleece.go", engineName, engineName)
 	config.RoutesConfig.PackageName = "ex_extra_routes"

@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"fmt"
 	"sort"
 	"time"
 
@@ -77,7 +78,9 @@ func GetTemplateContext(
 		ctx.PackageName = "routes"
 	}
 
-	ctx.GenerationDate = time.Now().Format(time.DateOnly)
+	if !config.RoutesConfig.SkipGenerateDateComment {
+		ctx.GenerationDate = fmt.Sprintf("Generated Date: %s", time.Now().Format(time.DateOnly))
+	}
 
 	return ctx, nil
 }
