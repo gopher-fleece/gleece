@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"go/ast"
 	"go/constant"
-	"go/token"
 	"go/types"
 	"strconv"
 
@@ -20,20 +19,18 @@ import (
 // The arbitrator is used to obtain high level metadata for given AST structures like FuncDecls
 type AstArbitrator struct {
 	pkgFacade *PackagesFacade
-	fileSet   *token.FileSet
 }
 
 // Creates a new AST Arbitrator
-func NewAstArbitrator(pkgFacade *PackagesFacade, fileSet *token.FileSet) AstArbitrator {
+func NewAstArbitrator(pkgFacade *PackagesFacade) AstArbitrator {
 	return AstArbitrator{
 		pkgFacade: pkgFacade,
-		fileSet:   fileSet,
 	}
 }
 
 func (arb *AstArbitrator) GetFuncParametersMeta(
 	typeVisitor TypeVisitor,
-	pkgPath string,
+	pkg *packages.Package,
 	file *ast.File,
 	funcDecl *ast.FuncDecl,
 	funcAnnotations *annotations.AnnotationHolder,
@@ -45,7 +42,7 @@ func (arb *AstArbitrator) GetFuncParametersMeta(
 	}
 
 	for paramOrdinal, field := range funcDecl.Type.Params.List {
-		fields, err := typeVisitor.VisitField(file, field, pkgPath)
+		fields, err := typeVisitor.VisitField(pkg, file, field)
 		if err != nil {
 			return nil, err
 		}
@@ -74,7 +71,7 @@ func (arb *AstArbitrator) GetFuncParametersMeta(
 
 func (arb *AstArbitrator) GetFuncRetValMeta(
 	typeVisitor TypeVisitor,
-	pkgPath string,
+	pkg *packages.Package,
 	file *ast.File,
 	funcDecl *ast.FuncDecl,
 	funcAnnotations *annotations.AnnotationHolder,
@@ -86,7 +83,7 @@ func (arb *AstArbitrator) GetFuncRetValMeta(
 	}
 
 	for index, field := range funcDecl.Type.Results.List {
-		fields, err := typeVisitor.VisitField(file, field, pkgPath)
+		fields, err := typeVisitor.VisitField(pkg, file, field)
 		if err != nil {
 			return nil, err
 		}
@@ -255,13 +252,13 @@ func (arb *AstArbitrator) GetImportType(file *ast.File, expr ast.Expr) (common.I
 
 // GetTypeMetaByIdent gets type metadata for the given Ident in the given AST file
 func (arb *AstArbitrator) GetTypeMetaByIdent(file *ast.File, ident *ast.Ident) (TypeMetadataWithAst, error) {
-	comments := gast.GetCommentsFromIdent(arb.fileSet, file, ident)
+	comments := gast.GetCommentsFromIdent(arb.pkgFacade.FSet(), file, ident)
 	holder, err := annotations.NewAnnotationHolder(comments, annotations.CommentSourceProperty)
 	if err != nil {
 		return TypeMetadataWithAst{}, err
 	}
 
-	fVer, err := gast.NewFileVersionFromAstFile(file, arb.fileSet)
+	fVer, err := gast.NewFileVersionFromAstFile(file, arb.pkgFacade.FSet())
 	if err != nil {
 		return TypeMetadataWithAst{}, err
 	}
@@ -308,7 +305,7 @@ func (arb *AstArbitrator) GetTypeMetaByIdent(file *ast.File, ident *ast.Ident) (
 		//
 		// Were it a an aliased import, it've been resolved by GetTypeMetaBySelectorExpr.
 		// For dot-imports, we'd have flowed to the above 'if'.
-		currentPackageName, err := gast.GetFullPackageName(file, arb.fileSet)
+		currentPackageName, err := gast.GetFullPackageName(file, arb.pkgFacade.FSet())
 		if err != nil {
 			return meta, err
 		}
@@ -357,7 +354,7 @@ func (arb *AstArbitrator) GetTypeMetaBySelectorExpr(file *ast.File, selector *as
 	aliasedImports := gast.GetImportAliases(file)
 
 	entityName := selector.Sel.Name
-	fVer, err := gast.NewFileVersionFromAstFile(file, arb.fileSet)
+	fVer, err := gast.NewFileVersionFromAstFile(file, arb.pkgFacade.FSet())
 	if err != nil {
 		return TypeMetadataWithAst{}, err
 	}
@@ -371,7 +368,7 @@ func (arb *AstArbitrator) GetTypeMetaBySelectorExpr(file *ast.File, selector *as
 		FVersion: &fVer,
 	}
 
-	comments := gast.GetCommentsFromIdent(arb.fileSet, file, selector.Sel)
+	comments := gast.GetCommentsFromIdent(arb.pkgFacade.FSet(), file, selector.Sel)
 	holder, err := annotations.NewAnnotationHolder(comments, annotations.CommentSourceProperty)
 	if err != nil {
 		return meta, err

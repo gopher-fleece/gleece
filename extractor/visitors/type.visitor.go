@@ -9,6 +9,7 @@ import (
 	"github.com/gopher-fleece/gleece/extractor/metadata"
 	"github.com/gopher-fleece/gleece/gast"
 	"github.com/gopher-fleece/gleece/graphs"
+	"golang.org/x/tools/go/packages"
 )
 
 type ControllerWithStructMeta struct {
@@ -71,14 +72,24 @@ func (v *RecursiveTypeVisitor) Visit(node ast.Node) ast.Visitor {
 }
 
 func (v *RecursiveTypeVisitor) VisitStructType(file *ast.File, node *ast.TypeSpec) (*metadata.StructMeta, error) {
-	fVersion, err := v.context.MetadataCache.GetFileVersion(file, v.context.ArbitrationProvider.FileSet())
+	fVersion, err := v.context.MetadataCache.GetFileVersion(file, v.context.ArbitrationProvider.Pkg().FSet())
 	if err != nil {
 		return nil, v.frozenError(err)
 	}
 
-	pkgPath, err := gast.GetFullPackageName(file, v.context.ArbitrationProvider.FileSet())
+	pkg, err := v.context.ArbitrationProvider.Pkg().GetPackageForFile(file)
 	if err != nil {
 		return nil, v.frozenError(err)
+	}
+
+	if pkg == nil {
+		return nil, v.getFrozenError(
+			"could not determine package for file %s",
+			gast.GetAstFileName(
+				v.context.ArbitrationProvider.Pkg().FSet(),
+				file,
+			),
+		)
 	}
 
 	holder, err := v.getComments(node.Doc, v.currentGenDecl)
@@ -91,7 +102,7 @@ func (v *RecursiveTypeVisitor) VisitStructType(file *ast.File, node *ast.TypeSpe
 		return nil, v.getFrozenError("non-struct node '%v' was provided to VisitStructType", node.Name.Name)
 	}
 
-	fields, err := v.buildFields(file, structType, pkgPath)
+	fields, err := v.buildFields(pkg, file, structType)
 	if err != nil {
 		return nil, v.frozenError(err)
 	}
@@ -101,7 +112,7 @@ func (v *RecursiveTypeVisitor) VisitStructType(file *ast.File, node *ast.TypeSpe
 			Name:        node.Name.Name,
 			Node:        node,
 			SymbolKind:  common.SymKindStruct,
-			PkgPath:     pkgPath,
+			PkgPath:     pkg.PkgPath,
 			Annotations: holder,
 			FVersion:    fVersion,
 		},
@@ -114,9 +125,9 @@ func (v *RecursiveTypeVisitor) VisitStructType(file *ast.File, node *ast.TypeSpe
 }
 
 func (v *RecursiveTypeVisitor) VisitField(
+	pkg *packages.Package,
 	file *ast.File,
 	field *ast.Field,
-	pkgPath string,
 ) ([]metadata.FieldMeta, error) {
 	var results []metadata.FieldMeta
 
@@ -159,7 +170,7 @@ func (v *RecursiveTypeVisitor) VisitField(
 			SymNodeMeta: metadata.SymNodeMeta{
 				Name:        typeIdentName,
 				Node:        field.Type,
-				PkgPath:     pkgPath,
+				PkgPath:     pkg.PkgPath,
 				SymbolKind:  common.SymKindField,
 				Annotations: holder,
 			},
@@ -171,7 +182,7 @@ func (v *RecursiveTypeVisitor) VisitField(
 			SymNodeMeta: metadata.SymNodeMeta{
 				Name:        name,
 				Node:        field,
-				PkgPath:     pkgPath,
+				PkgPath:     pkg.PkgPath,
 				SymbolKind:  common.SymKindField,
 				Annotations: holder,
 			},
@@ -181,7 +192,7 @@ func (v *RecursiveTypeVisitor) VisitField(
 
 		results = append(results, fieldMeta)
 
-		err = v.processTypeUsage(pkgPath, file, field, typeUsage)
+		err = v.processTypeUsage(pkg, file, field, typeUsage)
 		if err != nil {
 			return results, v.frozenError(err)
 		}
@@ -191,14 +202,14 @@ func (v *RecursiveTypeVisitor) VisitField(
 }
 
 func (v *RecursiveTypeVisitor) buildFields(
+	pkg *packages.Package,
 	file *ast.File,
 	node *ast.StructType,
-	pkgPath string,
 ) ([]metadata.FieldMeta, error) {
 	var results []metadata.FieldMeta
 
 	for _, field := range node.Fields.List {
-		fields, err := v.VisitField(file, field, pkgPath)
+		fields, err := v.VisitField(pkg, file, field)
 		if err != nil {
 			return results, err
 		}
@@ -209,7 +220,7 @@ func (v *RecursiveTypeVisitor) buildFields(
 }
 
 func (v *RecursiveTypeVisitor) processTypeUsage(
-	pkgPath string,
+	pkg *packages.Package,
 	file *ast.File,
 	field *ast.Field,
 	typeUsage metadata.TypeUsageMeta,
@@ -230,10 +241,10 @@ func (v *RecursiveTypeVisitor) processTypeUsage(
 	}
 
 	typePkg, underlyingAstFile, typeSpec, err := gast.ResolveTypeSpecFromField(
-		field,
+		pkg,
 		file,
+		field,
 		v.context.ArbitrationProvider.Pkg().GetPackage,
-		pkgPath,
 	)
 
 	if err != nil {

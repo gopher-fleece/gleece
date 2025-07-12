@@ -234,7 +234,10 @@ func (v *ControllerVisitor) visitController(controllerNode *ast.TypeSpec) (Contr
 	v.enter(fmt.Sprintf("Controller '%s'", controllerNode.Name.Name))
 	defer v.exit()
 
-	fVersion, err := gast.NewFileVersionFromAstFile(v.currentSourceFile, v.context.ArbitrationProvider.FileSet())
+	fVersion, err := gast.NewFileVersionFromAstFile(
+		v.currentSourceFile,
+		v.context.ArbitrationProvider.Pkg().FSet(),
+	)
 	if err != nil {
 		return ControllerWithStructMeta{}, v.frozenError(err)
 	}
@@ -305,7 +308,7 @@ func (v *ControllerVisitor) visitController(controllerNode *ast.TypeSpec) (Contr
 
 // createControllerMetadata Creates a standard ControllerMetadata struct for the given node
 func (v *ControllerVisitor) createControllerMetadata(controllerNode *ast.TypeSpec) (ControllerWithStructMeta, error) {
-	fullPackageName, fullNameErr := gast.GetFullPackageName(v.currentSourceFile, v.context.ArbitrationProvider.FileSet())
+	fullPackageName, fullNameErr := gast.GetFullPackageName(v.currentSourceFile, v.context.ArbitrationProvider.Pkg().FSet())
 	packageAlias, aliasErr := gast.GetDefaultPackageAlias(v.currentSourceFile)
 
 	if fullNameErr != nil || aliasErr != nil {

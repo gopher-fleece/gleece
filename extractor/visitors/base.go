@@ -3,18 +3,13 @@ package visitors
 import (
 	"fmt"
 	"go/ast"
-	"go/parser"
-	"go/token"
 	"runtime"
 	"slices"
 	"strings"
 
-	"github.com/bmatcuk/doublestar/v4"
-	MapSet "github.com/deckarep/golang-set/v2"
 	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/extractor/arbitrators/caching"
 	"github.com/gopher-fleece/gleece/extractor/visitors/providers"
-	"github.com/gopher-fleece/gleece/gast"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
 )
 
@@ -76,11 +71,6 @@ func (v *BaseVisitor) initializeWithGlobs(context *VisitContext) error {
 		return err
 	}
 
-	sourceFiles := make(map[string]*ast.File)
-	fileSet := token.NewFileSet()
-
-	packages := MapSet.NewSet[string]()
-
 	var globs []string
 	if len(context.GleeceConfig.CommonConfig.ControllerGlobs) > 0 {
 		globs = context.GleeceConfig.CommonConfig.ControllerGlobs
@@ -88,32 +78,14 @@ func (v *BaseVisitor) initializeWithGlobs(context *VisitContext) error {
 		globs = []string{"./*.go", "./**/*.go"}
 	}
 
-	// For each glob expression (provided via gleece.config), parse all matching files
-	for _, globExpr := range globs {
-		globbedSources, err := doublestar.FilepathGlob(globExpr)
-		if err != nil {
-			return err
-		}
+	v.context = context
 
-		for _, sourceFile := range globbedSources {
-			file, err := parser.ParseFile(fileSet, sourceFile, nil, parser.ParseComments)
-			if err != nil {
-				logger.Error("Error parsing file %s - %v", sourceFile, err)
-				return err
-			}
-
-			sourceFiles[sourceFile] = file
-
-			packageName, err := gast.GetFullPackageName(file, fileSet)
-			if err != nil {
-				return err
-			}
-			packages.Add(packageName)
-		}
+	pkgFacade, err := providers.NewArbitrationProvider(globs)
+	if err != nil {
+		return err
 	}
 
-	v.context = context
-	v.context.ArbitrationProvider = providers.NewArbitrationProvider(sourceFiles, fileSet)
+	v.context.ArbitrationProvider = pkgFacade
 
 	if v.context.SyncedProvider == nil {
 		v.context.SyncedProvider = common.Ptr(providers.NewSyncedProvider())

@@ -10,6 +10,7 @@ import (
 	"github.com/gopher-fleece/gleece/gast"
 	"github.com/gopher-fleece/gleece/graphs/symboldg"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
+	"golang.org/x/tools/go/packages"
 )
 
 type RouteParentContext struct {
@@ -28,7 +29,7 @@ type RouteVisitor struct {
 
 	currentFVersion *gast.FileVersion
 
-	currentPackagePath string
+	currentPackage *packages.Package
 
 	parent RouteParentContext
 	// gleeceConfig *definitions.GleeceConfig
@@ -84,12 +85,24 @@ func (v *RouteVisitor) initializeInnerContext(sourceFile *ast.File, funcDecl *as
 		return false, nil
 	}
 
-	pkgPath, err := gast.GetFullPackageName(v.currentSourceFile, v.context.ArbitrationProvider.FileSet())
+	pkgPath, err := gast.GetFullPackageName(
+		v.currentSourceFile,
+		v.context.ArbitrationProvider.Pkg().FSet(),
+	)
 	if err != nil {
 		return false, v.frozenError(err)
 	}
 
-	v.currentPackagePath = pkgPath
+	pkg, err := v.context.ArbitrationProvider.Pkg().GetPackage(pkgPath)
+	if err != nil {
+		return false, v.frozenError(err)
+	}
+
+	if pkg == nil {
+		return false, v.getFrozenError("could not obtain package object for path %s", pkgPath)
+	}
+
+	v.currentPackage = pkg
 
 	comments := gast.MapDocListToStrings(funcDecl.Doc.List)
 	holder, err := annotations.NewAnnotationHolder(comments, annotations.CommentSourceRoute)
@@ -113,7 +126,10 @@ func (v *RouteVisitor) initializeInnerContext(sourceFile *ast.File, funcDecl *as
 
 	v.currentAnnotationHolder = &holder
 
-	fVersion, err := gast.NewFileVersionFromAstFile(v.currentSourceFile, v.context.ArbitrationProvider.FileSet())
+	fVersion, err := gast.NewFileVersionFromAstFile(
+		v.currentSourceFile,
+		v.context.ArbitrationProvider.Pkg().FSet(),
+	)
 	if err != nil {
 		return true, v.frozenError(err)
 	}
@@ -138,7 +154,7 @@ func (v *RouteVisitor) constructRouteMetadata() (*metadata.ReceiverMeta, error) 
 			Name:        v.currentFuncDecl.Name.Name,
 			Node:        v.currentFuncDecl,
 			SymbolKind:  common.SymKindReceiver,
-			PkgPath:     v.currentPackagePath,
+			PkgPath:     v.currentPackage.PkgPath,
 			Annotations: v.currentAnnotationHolder,
 			FVersion:    v.currentFVersion,
 		},
@@ -155,10 +171,9 @@ func (v *RouteVisitor) getFuncParams() ([]metadata.FuncParam, error) {
 	v.enter("")
 	defer v.exit()
 
-	v.typeVisitor.SetCurrentFile(v.currentSourceFile)
 	paramTypes, err := v.context.ArbitrationProvider.Ast().GetFuncParametersMeta(
 		v.typeVisitor,
-		v.currentPackagePath,
+		v.currentPackage,
 		v.currentSourceFile,
 		v.currentFuncDecl,
 		v.currentAnnotationHolder,
@@ -188,7 +203,7 @@ func (v *RouteVisitor) getFuncRetVals() ([]metadata.FuncReturnValue, error) {
 	v.typeVisitor.SetCurrentFile(v.currentSourceFile)
 	retVals, err := v.context.ArbitrationProvider.Ast().GetFuncRetValMeta(
 		v.typeVisitor,
-		v.currentPackagePath,
+		v.currentPackage,
 		v.currentSourceFile,
 		v.currentFuncDecl,
 		v.currentAnnotationHolder,

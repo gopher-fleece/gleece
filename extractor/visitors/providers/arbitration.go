@@ -2,22 +2,11 @@ package providers
 
 import (
 	"go/ast"
-	"go/token"
 
 	"github.com/gopher-fleece/gleece/extractor/arbitrators"
 )
 
 type ArbitrationProvider struct {
-	// The source files being included/processed by the visitor
-	//
-	// Used by AST-level functions
-	sourceFiles map[string]*ast.File
-
-	// The file set being included/processed by the visitor.
-	//
-	// Used by AST-level functions
-	fileSet *token.FileSet
-
 	packagesFacade *arbitrators.PackagesFacade
 
 	// An arbitrator providing logic for working with Go's AST
@@ -32,29 +21,20 @@ func (p *ArbitrationProvider) Ast() *arbitrators.AstArbitrator {
 	return p.astArbitrator
 }
 
-func (p *ArbitrationProvider) FileSet() *token.FileSet {
-	return p.fileSet
-}
+func NewArbitrationProvider(globs []string) (*ArbitrationProvider, error) {
+	packagesFacade, err := arbitrators.NewPackagesFacade(globs)
+	if err != nil {
+		return nil, err
+	}
 
-func NewArbitrationProvider(
-	sourceFiles map[string]*ast.File,
-	fileSet *token.FileSet,
-) *ArbitrationProvider {
-	packagesFacade := arbitrators.NewPackagesFacade()
-	astArbitrator := arbitrators.NewAstArbitrator(&packagesFacade, fileSet)
+	astArbitrator := arbitrators.NewAstArbitrator(&packagesFacade)
 
 	return &ArbitrationProvider{
-		sourceFiles:    sourceFiles,
-		fileSet:        fileSet,
 		packagesFacade: &packagesFacade,
 		astArbitrator:  &astArbitrator,
-	}
+	}, nil
 }
 
 func (v *ArbitrationProvider) GetAllSourceFiles() []*ast.File {
-	result := []*ast.File{}
-	for _, file := range v.sourceFiles {
-		result = append(result, file)
-	}
-	return result
+	return v.Pkg().GetAllSourceFiles()
 }

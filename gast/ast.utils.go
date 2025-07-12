@@ -86,6 +86,10 @@ func GetFileFullPath(file *ast.File, fileSet *token.FileSet) (string, error) {
 	// Get the file's full path using the fileSet
 	position := fileSet.Position(file.Package)
 	relativePath := position.Filename
+	if relativePath == "" {
+		return "", fmt.Errorf("could not determine full path for file %v", file.Name.Name)
+	}
+
 	return filepath.Abs(relativePath)
 }
 
@@ -711,10 +715,10 @@ func FindTypeSpecInPackage(pkg *packages.Package, typeName string) (*ast.TypeSpe
 }
 
 func ResolveTypeSpecFromField(
+	declaringPkg *packages.Package, // <<<< Used only for locally defined type references
+	declaringFile *ast.File,
 	field *ast.Field,
-	sourceFile *ast.File,
 	pkgResolver func(pkgPath string) (*packages.Package, error),
-	defaultPkgPath string, // <<<< This is only for fallback if pkgPath is still ""
 ) (*packages.Package, *ast.File, *ast.TypeSpec, error) {
 	expr := UnwrapFirstNamed(field.Type)
 	if expr == nil {
@@ -728,14 +732,14 @@ func ResolveTypeSpecFromField(
 	switch t := expr.(type) {
 	case *ast.Ident:
 		ident = t
-		pkgPath, err = ResolveUnqualifiedIdentPackage(sourceFile, ident)
+		pkgPath, err = ResolveUnqualifiedIdentPackage(declaringFile, ident)
 		if err != nil {
 			return nil, nil, nil, err
 		}
 
 	case *ast.SelectorExpr:
 		ident = t.Sel
-		pkgPath, err = ResolveImportPathForSelector(sourceFile, t)
+		pkgPath, err = ResolveImportPathForSelector(declaringFile, t)
 		if err != nil {
 			return nil, nil, nil, err
 		}
@@ -750,7 +754,7 @@ func ResolveTypeSpecFromField(
 
 	// If still blank, fallback to caller-supplied context (i.e., current file's package)
 	if pkgPath == "" {
-		pkgPath = defaultPkgPath
+		pkgPath = declaringPkg.PkgPath
 	}
 
 	pkg, err := pkgResolver(pkgPath)
@@ -834,4 +838,8 @@ func ResolveUnqualifiedIdentPackage(source *ast.File, ident *ast.Ident) (string,
 	// If not dot-imported, assume it's local
 	// We can't resolve the actual import path from here alone, so:
 	return "", nil // Signal: try local package (caller must patch it later)
+}
+
+func GetAstFileName(fSet *token.FileSet, file *ast.File) string {
+	return fSet.Position(file.Package).Filename
 }
