@@ -8,6 +8,7 @@ import (
 	"github.com/gopher-fleece/gleece/extractor/annotations"
 	"github.com/gopher-fleece/gleece/extractor/metadata"
 	"github.com/gopher-fleece/gleece/gast"
+	"github.com/gopher-fleece/gleece/graphs"
 	"github.com/gopher-fleece/gleece/graphs/symboldg"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
 	"golang.org/x/tools/go/packages"
@@ -65,6 +66,11 @@ func (v *RouteVisitor) VisitMethod(funcDecl *ast.FuncDecl, sourceFile *ast.File)
 	isRoute, err := v.initializeInnerContext(sourceFile, funcDecl)
 	if !isRoute || err != nil {
 		return nil, err
+	}
+
+	cached := v.context.MetadataCache.GetReceiver(graphs.SymbolKeyFor(v.currentFuncDecl, v.currentFVersion))
+	if cached != nil {
+		return cached, nil
 	}
 
 	metadata, err := v.constructRouteMetadata()
@@ -164,6 +170,40 @@ func (v *RouteVisitor) constructRouteMetadata() (*metadata.ReceiverMeta, error) 
 
 	v.context.MetadataCache.AddReceiver(meta)
 
+	_, err = v.context.GraphBuilder.AddRoute(
+		symboldg.CreateRouteNode{
+			Data: meta,
+			ParentController: symboldg.KeyableNodeMeta{
+				Decl:     v.parent.Controller.StructMeta.Node,
+				FVersion: *v.parent.Controller.StructMeta.FVersion,
+			},
+		},
+	)
+
+	if err != nil {
+		return nil, v.frozenError(err)
+	}
+
+	for _, param := range params {
+		v.context.GraphBuilder.AddRouteParam(symboldg.CreateParameterNode{
+			Data: param,
+			ParentRoute: symboldg.KeyableNodeMeta{
+				Decl:     meta.Node,
+				FVersion: *meta.FVersion,
+			},
+		})
+	}
+
+	for _, retVal := range retVals {
+		v.context.GraphBuilder.AddRouteRetVal(symboldg.CreateReturnValueNode{
+			Data: retVal,
+			ParentRoute: symboldg.KeyableNodeMeta{
+				Decl:     meta.Node,
+				FVersion: *meta.FVersion,
+			},
+		})
+	}
+
 	return meta, nil
 }
 
@@ -182,20 +222,6 @@ func (v *RouteVisitor) getFuncParams() ([]metadata.FuncParam, error) {
 	return paramTypes, err
 }
 
-func (v *RouteVisitor) createParametersGraph() ([]metadata.FuncParam, error) {
-	v.enter("")
-	defer v.exit()
-
-	params, err := v.getFuncParams()
-	if err != nil {
-		return nil, v.frozenError(err)
-	}
-
-	err = v.insertRouteParamsIntoGraph(params)
-	return params, err
-
-}
-
 func (v *RouteVisitor) getFuncRetVals() ([]metadata.FuncReturnValue, error) {
 	v.enter("")
 	defer v.exit()
@@ -210,65 +236,4 @@ func (v *RouteVisitor) getFuncRetVals() ([]metadata.FuncReturnValue, error) {
 	)
 
 	return retVals, err
-}
-
-func (v *RouteVisitor) createRetValGraph() ([]metadata.FuncReturnValue, error) {
-	v.enter("")
-	defer v.exit()
-
-	retVals, err := v.getFuncRetVals()
-	if err != nil {
-		return nil, v.frozenError(err)
-	}
-
-	err = v.insertRouteRetValsIntoGraph(retVals)
-	return retVals, err
-
-}
-
-func (v *RouteVisitor) insertRouteIntoGraph(meta metadata.ReceiverMeta) error {
-
-	_, err := v.context.GraphBuilder.AddRoute(
-		symboldg.CreateRouteNode{
-			Data: meta,
-			ParentController: symboldg.KeyableNodeMeta{
-				Decl:     v.parent.Controller.StructMeta.Node,
-				FVersion: *v.parent.Controller.StructMeta.FVersion,
-			},
-		},
-	)
-
-	return v.frozenIfError(err)
-}
-
-func (v *RouteVisitor) insertRouteParamsIntoGraph(params []metadata.FuncParam) error {
-	for _, param := range params {
-		_, err := v.context.GraphBuilder.AddRouteParam(symboldg.CreateParameterNode{
-			Data:        param,
-			ParentRoute: symboldg.KeyableNodeMeta{Decl: v.currentFuncDecl, FVersion: *v.currentFVersion},
-		})
-
-		if err != nil {
-			return v.frozenError(err)
-		}
-
-	}
-
-	return nil
-}
-
-func (v *RouteVisitor) insertRouteRetValsIntoGraph(retVals []metadata.FuncReturnValue) error {
-
-	for _, retVal := range retVals {
-		_, err := v.context.GraphBuilder.AddRouteRetVal(symboldg.CreateReturnValueNode{
-			Data:        retVal,
-			ParentRoute: symboldg.KeyableNodeMeta{Decl: v.currentFuncDecl, FVersion: *v.currentFVersion},
-		})
-
-		if err != nil {
-			return v.frozenError(err)
-		}
-	}
-
-	return nil
 }

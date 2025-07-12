@@ -79,6 +79,12 @@ func (v *RecursiveTypeVisitor) VisitStructType(file *ast.File, node *ast.TypeSpe
 		return nil, v.frozenError(err)
 	}
 
+	// Check cache first
+	cached := v.context.MetadataCache.GetStruct(graphs.SymbolKeyFor(node, fVersion))
+	if cached != nil {
+		return cached, nil
+	}
+
 	pkg, err := v.context.ArbitrationProvider.Pkg().GetPackageForFile(file)
 	if err != nil {
 		return nil, v.frozenError(err)
@@ -266,7 +272,7 @@ func (v *RecursiveTypeVisitor) VisitField(
 			SymNodeMeta: metadata.SymNodeMeta{
 				Name:        typeIdentName,
 				Node:        field.Type,
-				PkgPath:     pkg.PkgPath,
+				PkgPath:     pkg.PkgPath, // So, this actually needs to be the underlying types pkg path...?
 				SymbolKind:  common.SymKindField,
 				Annotations: holder,
 			},
@@ -305,6 +311,8 @@ func (v *RecursiveTypeVisitor) buildFields(
 	var results []metadata.FieldMeta
 
 	for _, field := range node.Fields.List {
+		// Note that fields may have fields, like:
+		// a, b, c int
 		fields, err := v.VisitField(pkg, file, field)
 		if err != nil {
 			return results, err

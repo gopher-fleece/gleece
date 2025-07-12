@@ -35,6 +35,10 @@ func (c *MetadataCache) GetStruct(key graphs.SymbolKey) *metadata.StructMeta {
 	return c.structs[key]
 }
 
+func (c *MetadataCache) GetReceiver(key graphs.SymbolKey) *metadata.ReceiverMeta {
+	return c.receivers[key]
+}
+
 func (c *MetadataCache) GetEnum(key graphs.SymbolKey) *metadata.EnumMeta {
 	return c.enums[key]
 }
@@ -44,13 +48,11 @@ func (c *MetadataCache) HasController(meta *metadata.ControllerMeta) bool {
 	return c.controllers[key] != nil
 }
 
-func (c *MetadataCache) HasReceiver(meta *metadata.ReceiverMeta) bool {
-	key := graphs.SymbolKeyFor(meta.Node, meta.FVersion)
+func (c *MetadataCache) HasReceiver(key graphs.SymbolKey) bool {
 	return c.receivers[key] != nil
 }
 
-func (c *MetadataCache) HasStruct(meta *metadata.StructMeta) bool {
-	key := graphs.SymbolKeyFor(meta.Node, meta.FVersion)
+func (c *MetadataCache) HasStruct(key graphs.SymbolKey) bool {
 	return c.structs[key] != nil
 }
 

@@ -27,7 +27,7 @@ type CreateControllerNode struct {
 }
 
 type CreateRouteNode struct {
-	Data             metadata.ReceiverMeta
+	Data             *metadata.ReceiverMeta
 	Annotations      *annotations.AnnotationHolder
 	ParentController KeyableNodeMeta
 }
