@@ -1,4 +1,4 @@
-package symboldg
+package graphs
 
 import (
 	"fmt"

@@ -245,7 +245,7 @@ func (v *Validator) ValidateAnnotationCollection(attrs []Attribute, commentSourc
 		}
 
 		// Make sure Path annotations are used with Route URL
-		if attr.Name == AttributePath {
+		if attr.Name == GleeceAnnotationPath {
 			matchingURLPath := false
 			pathName := attr.Value
 			nameProp := attr.GetProperty(PropertyName)
@@ -256,7 +256,7 @@ func (v *Validator) ValidateAnnotationCollection(attrs []Attribute, commentSourc
 			}
 			expectedContains := fmt.Sprintf("{%s}", pathName)
 			for _, otherAttr := range attrs {
-				if otherAttr.Name == AttributeRoute && strings.Contains(otherAttr.Value, expectedContains) {
+				if otherAttr.Name == GleeceAnnotationRoute && strings.Contains(otherAttr.Value, expectedContains) {
 					matchingURLPath = true
 					break
 				}
@@ -276,21 +276,21 @@ func (v *Validator) ValidateAnnotationCollection(attrs []Attribute, commentSourc
 func initializeAnnotations() map[string]annotationDefinition {
 	return map[string]annotationDefinition{
 		// Controller (Class-Level) Annotations
-		AttributeTag: {
+		GleeceAnnotationTag: {
 			contexts:            []CommentSource{"controller"},
 			requiresValue:       true,
 			allowedProperties:   map[string]PropertyDefinition{},
 			allowsMultiple:      false,
 			requiresUniqueValue: false,
 		},
-		AttributeRoute: {
+		GleeceAnnotationRoute: {
 			contexts:            []CommentSource{"controller", "route"},
 			requiresValue:       true,
 			allowedProperties:   map[string]PropertyDefinition{},
 			allowsMultiple:      false,
 			requiresUniqueValue: false,
 		},
-		AttributeSecurity: {
+		GleeceAnnotationSecurity: {
 			contexts:      []CommentSource{"controller", "route"},
 			requiresValue: true,
 			allowedProperties: map[string]PropertyDefinition{
@@ -303,14 +303,14 @@ func initializeAnnotations() map[string]annotationDefinition {
 			allowsMultiple:      true,
 			requiresUniqueValue: false,
 		},
-		AttributeDescription: {
+		GleeceAnnotationDescription: {
 			contexts:            []CommentSource{"controller", "route", "schema", "property"},
 			requiresValue:       false,
 			allowedProperties:   map[string]PropertyDefinition{},
 			allowsMultiple:      false,
 			requiresUniqueValue: false,
 		},
-		AttributeDeprecated: {
+		GleeceAnnotationDeprecated: {
 			contexts:            []CommentSource{"controller", "route", "schema", "property"},
 			requiresValue:       false,
 			allowedProperties:   map[string]PropertyDefinition{},
@@ -319,14 +319,14 @@ func initializeAnnotations() map[string]annotationDefinition {
 		},
 
 		// Route (Function-Level) Annotations
-		AttributeMethod: {
+		GleeceAnnotationMethod: {
 			contexts:            []CommentSource{"route"},
 			requiresValue:       true,
 			allowedProperties:   map[string]PropertyDefinition{},
 			allowsMultiple:      false,
 			requiresUniqueValue: false,
 		},
-		AttributeQuery: {
+		GleeceAnnotationQuery: {
 			contexts:      []CommentSource{"route"},
 			requiresValue: true,
 			allowedProperties: map[string]PropertyDefinition{
@@ -344,7 +344,7 @@ func initializeAnnotations() map[string]annotationDefinition {
 			allowsMultiple:      true,
 			requiresUniqueValue: true, // Values must be unique across all HTTP params annotations
 		},
-		AttributeHeader: {
+		GleeceAnnotationHeader: {
 			contexts:      []CommentSource{"route"},
 			requiresValue: true,
 			allowedProperties: map[string]PropertyDefinition{
@@ -362,7 +362,7 @@ func initializeAnnotations() map[string]annotationDefinition {
 			allowsMultiple:      true,
 			requiresUniqueValue: true, // Values must be unique across all HTTP params annotations
 		},
-		AttributePath: {
+		GleeceAnnotationPath: {
 			contexts:      []CommentSource{"route"},
 			requiresValue: true,
 			allowedProperties: map[string]PropertyDefinition{
@@ -380,7 +380,7 @@ func initializeAnnotations() map[string]annotationDefinition {
 			allowsMultiple:      true,
 			requiresUniqueValue: true, // Values must be unique across all HTTP params annotations
 		},
-		AttributeBody: {
+		GleeceAnnotationBody: {
 			contexts:      []CommentSource{"route"},
 			requiresValue: true,
 			allowedProperties: map[string]PropertyDefinition{
@@ -391,10 +391,10 @@ func initializeAnnotations() map[string]annotationDefinition {
 				},
 			},
 			allowsMultiple:      false,
-			mutuallyExclusive:   []string{AttributeFormField},
+			mutuallyExclusive:   []string{GleeceAnnotationFormField},
 			requiresUniqueValue: true, // Values must be unique across all HTTP params annotations
 		},
-		AttributeFormField: {
+		GleeceAnnotationFormField: {
 			contexts:      []CommentSource{"route"},
 			requiresValue: true,
 			allowedProperties: map[string]PropertyDefinition{
@@ -410,31 +410,31 @@ func initializeAnnotations() map[string]annotationDefinition {
 				},
 			},
 			allowsMultiple:      true,
-			mutuallyExclusive:   []string{AttributeBody},
+			mutuallyExclusive:   []string{GleeceAnnotationBody},
 			requiresUniqueValue: true, // Values must be unique across all HTTP params annotations
 		},
-		AttributeResponse: {
+		GleeceAnnotationResponse: {
 			contexts:            []CommentSource{"route"},
 			requiresValue:       true,
 			allowedProperties:   map[string]PropertyDefinition{},
 			allowsMultiple:      true,
 			requiresUniqueValue: false,
 		},
-		AttributeErrorResponse: {
+		GleeceAnnotationErrorResponse: {
 			contexts:            []CommentSource{"route"},
 			requiresValue:       true,
 			allowedProperties:   map[string]PropertyDefinition{},
 			allowsMultiple:      true,
 			requiresUniqueValue: false,
 		},
-		AttributeHidden: {
+		GleeceAnnotationHidden: {
 			contexts:            []CommentSource{"route"},
 			requiresValue:       false,
 			allowedProperties:   map[string]PropertyDefinition{},
 			allowsMultiple:      false,
 			requiresUniqueValue: false,
 		},
-		AttributeTemplateContext: {
+		GleeceAnnotationTemplateContext: {
 			contexts:            []CommentSource{"route"},
 			requiresValue:       true,
 			allowedProperties:   nil, // Any properties are allowed

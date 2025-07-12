@@ -17,7 +17,7 @@ func getResponseStatusCodeAndDescription(
 	hasReturnValue bool,
 ) (runtime.HttpStatusCode, string, error) {
 	// Set the success attrib code based on whether function returns a value or only error (200 vs 204)
-	attrib := attributes.GetFirst(annotations.AttributeResponse)
+	attrib := attributes.GetFirst(annotations.GleeceAnnotationResponse)
 	if attrib == nil {
 		if hasReturnValue {
 			return runtime.StatusOK, "", nil
@@ -43,7 +43,7 @@ func getSecurityFromContext(holder annotations.AnnotationHolder) ([]definitions.
 	securities := []definitions.RouteSecurity{}
 
 	// Process @Security annotations. In the future, we'll support @AdvancedSecurity
-	normalSec := holder.GetAll(annotations.AttributeSecurity)
+	normalSec := holder.GetAll(annotations.GleeceAnnotationSecurity)
 	if len(normalSec) > 0 {
 		for _, secAttrib := range normalSec {
 			schemaName := secAttrib.Value
@@ -76,7 +76,7 @@ func getSecurityFromContext(holder annotations.AnnotationHolder) ([]definitions.
 }
 
 func getTemplateContextMetadata(attributes *annotations.AnnotationHolder) (map[string]definitions.TemplateContext, error) {
-	customAttributes := attributes.GetAll(annotations.AttributeTemplateContext)
+	customAttributes := attributes.GetAll(annotations.GleeceAnnotationTemplateContext)
 
 	templateContext := map[string]definitions.TemplateContext{}
 
@@ -96,40 +96,6 @@ func getTemplateContextMetadata(attributes *annotations.AnnotationHolder) (map[s
 	}
 
 	return templateContext, nil
-}
-
-func getDeprecationOpts(attributes *annotations.AnnotationHolder) definitions.DeprecationOptions {
-	deprecationAttr := attributes.GetFirst(annotations.AttributeDeprecated)
-	if deprecationAttr == nil {
-		return definitions.DeprecationOptions{}
-	}
-
-	return definitions.DeprecationOptions{
-		Deprecated:  true,
-		Description: deprecationAttr.Description,
-	}
-}
-
-func getMethodHideOpts(attributes *annotations.AnnotationHolder) definitions.MethodHideOptions {
-	attr := attributes.GetFirst(annotations.AttributeHidden)
-	if attr == nil {
-		// No '@Hidden' attribute
-		return definitions.MethodHideOptions{Type: definitions.HideMethodNever}
-	}
-
-	if attr.Properties == nil || len(attr.Properties) <= 0 {
-		return definitions.MethodHideOptions{Type: definitions.HideMethodAlways}
-	}
-
-	// Technically a bit redundant since we know by length whether there's a condition defined
-	// but nothing stops user from adding text to the comment so this mostly serves as a validation
-	if len(attr.Value) <= 0 {
-		// Standard '@Hidden' attribute; Always hide.
-		return definitions.MethodHideOptions{Type: definitions.HideMethodAlways}
-	}
-
-	// A '@Hidden(condition)' attribute
-	return definitions.MethodHideOptions{Type: definitions.HideMethodCondition, Condition: attr.Value}
 }
 
 // For now, all params are required, later we will support nil for pointers and slices params

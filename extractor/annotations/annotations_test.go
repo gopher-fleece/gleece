@@ -22,13 +22,13 @@ var _ = Describe("Annotation Holder", func() {
 			It("Correctly detects attribute exists", func() {
 				comments := []string{"// @Description Abcd"}
 				holder, _ := annotations.NewAnnotationHolder(comments, annotations.CommentSourceController)
-				Expect(holder.Has(annotations.AttributeDescription)).To(BeTrue())
+				Expect(holder.Has(annotations.GleeceAnnotationDescription)).To(BeTrue())
 			})
 
 			It("Correctly gets the attribute", func() {
 				comments := []string{"// @Description Abcd"}
 				holder, _ := annotations.NewAnnotationHolder(comments, annotations.CommentSourceController)
-				attrib := holder.GetFirst(annotations.AttributeDescription)
+				attrib := holder.GetFirst(annotations.GleeceAnnotationDescription)
 				Expect(attrib).ToNot(BeNil())
 			})
 
@@ -41,13 +41,13 @@ var _ = Describe("Annotation Holder", func() {
 			It("GetFirstValueOrEmpty returns correct value when a single instance of the attribute exists", func() {
 				comments := []string{"// @Method(POST)"}
 				holder, _ := annotations.NewAnnotationHolder(comments, annotations.CommentSourceRoute)
-				Expect(holder.GetFirstValueOrEmpty(annotations.AttributeMethod)).To(Equal("POST"))
+				Expect(holder.GetFirstValueOrEmpty(annotations.GleeceAnnotationMethod)).To(Equal("POST"))
 			})
 
 			It("GetFirstValueOrEmpty returns empty string when attribute does not exist", func() {
 				comments := []string{"// @Route(/route)"}
 				holder, _ := annotations.NewAnnotationHolder(comments, annotations.CommentSourceRoute)
-				Expect(holder.GetFirstValueOrEmpty(annotations.AttributeMethod)).To(BeEmpty())
+				Expect(holder.GetFirstValueOrEmpty(annotations.GleeceAnnotationMethod)).To(BeEmpty())
 			})
 		})
 
@@ -61,22 +61,22 @@ var _ = Describe("Annotation Holder", func() {
 			It("Correctly detects attribute exists", func() {
 				comments := []string{`// @Security(securitySchemaName, { scopes: ["read:users", "write:users"] }) Abcd`}
 				holder, _ := annotations.NewAnnotationHolder(comments, annotations.CommentSourceRoute)
-				Expect(holder.Has(annotations.AttributeSecurity)).To(BeTrue())
+				Expect(holder.Has(annotations.GleeceAnnotationSecurity)).To(BeTrue())
 			})
 
 			It("Correctly gets the attribute", func() {
 				comments := []string{`// @Security(securitySchemaName, { scopes: ["read:users", "write:users"] }) Abcd`}
 				holder, _ := annotations.NewAnnotationHolder(comments, annotations.CommentSourceRoute)
-				attrib := holder.GetFirst(annotations.AttributeSecurity)
+				attrib := holder.GetFirst(annotations.GleeceAnnotationSecurity)
 				Expect(attrib).ToNot(BeNil())
 			})
 
 			It("Attribute has correct basic values", func() {
 				comments := []string{`// @Security(securitySchemaName, { scopes: ["read:users", "write:users"] }) Abcd`}
 				holder, _ := annotations.NewAnnotationHolder(comments, annotations.CommentSourceRoute)
-				attrib := holder.GetFirst(annotations.AttributeSecurity)
+				attrib := holder.GetFirst(annotations.GleeceAnnotationSecurity)
 
-				Expect(attrib.Name).To(Equal(annotations.AttributeSecurity))
+				Expect(attrib.Name).To(Equal(annotations.GleeceAnnotationSecurity))
 				Expect(attrib.Value).To(Equal("securitySchemaName"))
 				Expect(attrib.Description).To(Equal("Abcd"))
 			})
@@ -84,7 +84,7 @@ var _ = Describe("Annotation Holder", func() {
 			It("Attribute has correct properties", func() {
 				comments := []string{`// @Security(securitySchemaName, { scopes: ["read:users", "write:users"] }) Abcd`}
 				holder, _ := annotations.NewAnnotationHolder(comments, annotations.CommentSourceRoute)
-				attrib := holder.GetFirst(annotations.AttributeSecurity)
+				attrib := holder.GetFirst(annotations.GleeceAnnotationSecurity)
 
 				Expect(len(attrib.Properties)).To(Equal(1))
 				Expect(attrib.HasProperty(annotations.PropertySecurityScopes)).To(BeTrue())
@@ -96,7 +96,7 @@ var _ = Describe("Annotation Holder", func() {
 			It("Returns nil if property does not exist", func() {
 				comments := []string{`// @Security(securitySchemaName, { scopes: ["read:users", "write:users"] }) Abcd`}
 				holder, _ := annotations.NewAnnotationHolder(comments, annotations.CommentSourceRoute)
-				attrib := holder.GetFirst(annotations.AttributeSecurity)
+				attrib := holder.GetFirst(annotations.GleeceAnnotationSecurity)
 
 				value, err := annotations.GetCastProperty[[]string](attrib, "DoesNotExist")
 				Expect(err).To(BeNil())
@@ -106,7 +106,7 @@ var _ = Describe("Annotation Holder", func() {
 			It("Returns an error if a slice property exists but cannot be cast to the requested non-slice type", func() {
 				comments := []string{`// @Security(securitySchemaName, { scopes: ["read:users", "write:users"] }) Abcd`}
 				holder, _ := annotations.NewAnnotationHolder(comments, annotations.CommentSourceRoute)
-				attrib := holder.GetFirst(annotations.AttributeSecurity)
+				attrib := holder.GetFirst(annotations.GleeceAnnotationSecurity)
 
 				value, err := annotations.GetCastProperty[int](attrib, annotations.PropertySecurityScopes)
 				Expect(err).To(MatchError(ContainSubstring("exists but cannot be cast")))
@@ -116,7 +116,7 @@ var _ = Describe("Annotation Holder", func() {
 			It("Returns an error if a slice property exists but cannot be cast to the requested slice type", func() {
 				comments := []string{`// @Security(securitySchemaName, { scopes: ["read:users", "write:users"] }) Abcd`}
 				holder, _ := annotations.NewAnnotationHolder(comments, annotations.CommentSourceRoute)
-				attrib := holder.GetFirst(annotations.AttributeSecurity)
+				attrib := holder.GetFirst(annotations.GleeceAnnotationSecurity)
 
 				value, err := annotations.GetCastProperty[[]int](attrib, annotations.PropertySecurityScopes)
 				Expect(err).To(MatchError(ContainSubstring("cannot be converted to type")))
@@ -126,7 +126,7 @@ var _ = Describe("Annotation Holder", func() {
 			It("Returns an error if attempting to convert a non-slice property to a slice", func() {
 				comments := []string{`// @TemplateContext(securitySchemaName, { scopes: "V" }) Abcd`}
 				holder, _ := annotations.NewAnnotationHolder(comments, annotations.CommentSourceRoute)
-				attrib := holder.GetFirst(annotations.AttributeTemplateContext)
+				attrib := holder.GetFirst(annotations.GleeceAnnotationTemplateContext)
 
 				value, err := annotations.GetCastProperty[[]string](attrib, annotations.PropertySecurityScopes)
 				Expect(err).To(MatchError(ContainSubstring("cannot be converted to type")))
@@ -169,28 +169,28 @@ var _ = Describe("Annotation Holder", func() {
 		It("Correctly detects all attributes exist", func() {
 			holder, _ := annotations.NewAnnotationHolder(stdComments, annotations.CommentSourceRoute)
 
-			Expect(holder.Has(annotations.AttributeDescription)).To(BeTrue())
-			Expect(holder.Has(annotations.AttributeMethod)).To(BeTrue())
-			Expect(holder.Has(annotations.AttributeRoute)).To(BeTrue())
-			Expect(holder.Has(annotations.AttributeQuery)).To(BeTrue())
-			Expect(holder.Has(annotations.AttributePath)).To(BeTrue())
-			Expect(holder.Has(annotations.AttributeBody)).To(BeTrue())
-			Expect(holder.Has(annotations.AttributeHeader)).To(BeTrue())
-			Expect(holder.Has(annotations.AttributeResponse)).To(BeTrue())
-			Expect(holder.Has(annotations.AttributeErrorResponse)).To(BeTrue())
-			Expect(holder.Has(annotations.AttributeSecurity)).To(BeTrue())
-			Expect(holder.Has(annotations.AttributeTemplateContext)).To(BeTrue())
+			Expect(holder.Has(annotations.GleeceAnnotationDescription)).To(BeTrue())
+			Expect(holder.Has(annotations.GleeceAnnotationMethod)).To(BeTrue())
+			Expect(holder.Has(annotations.GleeceAnnotationRoute)).To(BeTrue())
+			Expect(holder.Has(annotations.GleeceAnnotationQuery)).To(BeTrue())
+			Expect(holder.Has(annotations.GleeceAnnotationPath)).To(BeTrue())
+			Expect(holder.Has(annotations.GleeceAnnotationBody)).To(BeTrue())
+			Expect(holder.Has(annotations.GleeceAnnotationHeader)).To(BeTrue())
+			Expect(holder.Has(annotations.GleeceAnnotationResponse)).To(BeTrue())
+			Expect(holder.Has(annotations.GleeceAnnotationErrorResponse)).To(BeTrue())
+			Expect(holder.Has(annotations.GleeceAnnotationSecurity)).To(BeTrue())
+			Expect(holder.Has(annotations.GleeceAnnotationTemplateContext)).To(BeTrue())
 		})
 
 		It("Correctly gets all attributes of the same type", func() {
 			holder, _ := annotations.NewAnnotationHolder(stdComments, annotations.CommentSourceRoute)
-			attributes := holder.GetAll(annotations.AttributePath)
+			attributes := holder.GetAll(annotations.GleeceAnnotationPath)
 			Expect(attributes).To(HaveLen(3))
 		})
 
 		It("Attributes of the same type are ordered and have correct values", func() {
 			holder, _ := annotations.NewAnnotationHolder(stdComments, annotations.CommentSourceRoute)
-			allAttributes := holder.GetAll(annotations.AttributePath)
+			allAttributes := holder.GetAll(annotations.GleeceAnnotationPath)
 
 			Expect(allAttributes[0].Value).To(Equal("id"))
 			Expect(allAttributes[1].Value).To(Equal("id2"))
@@ -282,7 +282,7 @@ var _ = Describe("Annotation Holder", func() {
 			}
 
 			holder, _ := annotations.NewAnnotationHolder(comments, annotations.CommentSourceRoute)
-			Expect(holder.GetFirstDescriptionOrEmpty(annotations.AttributeRoute)).To(Equal("Some description1"))
+			Expect(holder.GetFirstDescriptionOrEmpty(annotations.GleeceAnnotationRoute)).To(Equal("Some description1"))
 		})
 
 		It("GetFirstDescriptionOrEmpty returns empty string if attribute is not present", func() {
@@ -297,7 +297,7 @@ var _ = Describe("Annotation Holder", func() {
 			}
 
 			holder, _ := annotations.NewAnnotationHolder(comments, annotations.CommentSourceRoute)
-			Expect(holder.GetFirstDescriptionOrEmpty(annotations.AttributeRoute)).To(BeEmpty())
+			Expect(holder.GetFirstDescriptionOrEmpty(annotations.GleeceAnnotationRoute)).To(BeEmpty())
 		})
 
 		It("FindFirstByValue returns the first attribute who's value matches the search parameter", func() {
@@ -353,10 +353,10 @@ var _ = Describe("Annotation Holder", func() {
 			}
 
 			holder, _ := annotations.NewAnnotationHolder(comments, annotations.CommentSourceRoute)
-			methodAttr := holder.GetFirst(annotations.AttributeMethod)
-			routeAttr := holder.GetFirst(annotations.AttributeRoute)
-			Expect(methodAttr.Name).To(Equal(annotations.AttributeMethod))
-			Expect(routeAttr.Name).To(Equal(annotations.AttributeRoute))
+			methodAttr := holder.GetFirst(annotations.GleeceAnnotationMethod)
+			routeAttr := holder.GetFirst(annotations.GleeceAnnotationRoute)
+			Expect(methodAttr.Name).To(Equal(annotations.GleeceAnnotationMethod))
+			Expect(routeAttr.Name).To(Equal(annotations.GleeceAnnotationRoute))
 		})
 	})
 

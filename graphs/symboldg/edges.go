@@ -1,5 +1,7 @@
 package symboldg
 
+import "github.com/gopher-fleece/gleece/graphs"
+
 type SymbolEdgeKind string
 
 const (
@@ -10,7 +12,7 @@ const (
 )
 
 type SymbolEdge struct {
-	To       SymbolKey
+	To       graphs.SymbolKey
 	Kind     SymbolEdgeKind
 	Metadata map[string]string
 }

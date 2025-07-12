@@ -2,6 +2,7 @@ package visitors
 
 import (
 	"github.com/gopher-fleece/gleece/definitions"
+	"github.com/gopher-fleece/gleece/extractor/arbitrators/caching"
 	"github.com/gopher-fleece/gleece/extractor/visitors/providers"
 	"github.com/gopher-fleece/gleece/graphs/symboldg"
 )
@@ -20,4 +21,6 @@ type VisitContext struct {
 
 	// The project's configuration, as specified in the user's gleece.config.json
 	GleeceConfig *definitions.GleeceConfig
+
+	MetadataCache *caching.MetadataCache
 }

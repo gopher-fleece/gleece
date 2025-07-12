@@ -46,10 +46,10 @@ type ParamMetaWithAst struct {
 
 func (s ParamMetaWithAst) Reduce() definitions.ParamMeta {
 	return definitions.ParamMeta{
-		OrderedIdent: s.OrderedIdent,
-		Name:         s.Name,
-		IsContext:    s.IsContext,
-		TypeMeta:     s.TypeMetadata,
+		// OrderedIdent: s.OrderedIdent,
+		Name:      s.Name,
+		IsContext: s.IsContext,
+		TypeMeta:  s.TypeMetadata,
 	}
 }
 
@@ -90,7 +90,7 @@ type FuncReturnValueWithAst struct {
 
 func (s FuncReturnValueWithAst) Reduce() definitions.FuncReturnValue {
 	return definitions.FuncReturnValue{
-		OrderedIdent:       s.OrderedIdent,
+		//	OrderedIdent:       s.OrderedIdent,
 		TypeMetadata:       s.TypeMetadata,
 		UniqueImportSerial: s.UniqueImportSerial,
 	}

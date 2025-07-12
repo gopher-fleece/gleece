@@ -1,13 +1,5 @@
 package definitions
 
-type ImportType string
-
-const (
-	ImportTypeNone  ImportType = "None"
-	ImportTypeAlias ImportType = "Alias"
-	ImportTypeDot   ImportType = "Dot"
-)
-
 // Enum of HTTP parma type (header, query, path, body)
 type ParamPassedIn string
 

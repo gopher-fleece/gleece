@@ -1,477 +1,279 @@
 package visitors
 
 import (
-	"fmt"
-	"go/types"
-	"strings"
+	"go/ast"
 
 	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/extractor/annotations"
+	"github.com/gopher-fleece/gleece/extractor/metadata"
 	"github.com/gopher-fleece/gleece/gast"
-	"github.com/gopher-fleece/gleece/infrastructure/logger"
-	"golang.org/x/tools/go/packages"
+	"github.com/gopher-fleece/gleece/graphs"
 )
 
-// Field represents a field in a struct
-type Field struct {
-	Name string
-	Type string
+type ControllerWithStructMeta struct {
+	Controller definitions.ControllerMetadata
+	StructMeta metadata.StructMeta
 }
 
-// StructInfo represents a struct with its fields
-type StructInfo struct {
-	Name   string
-	Fields []Field
+type NodeWithComments struct {
+	Doc *ast.CommentGroup
 }
 
-// TypeVisitor handles recursive 'visitation' of types (structs, enums, aliases)
-type TypeVisitor struct {
+type RecursiveTypeVisitor struct {
 	BaseVisitor
-	// A map of struct names to metadata
-	structsByName map[string]*StructMetadataWithAst
 
-	// A map of 'enum' names to metadata
-	enumsByName map[string]*EnumMetadataWithAst
+	// The file currently being worked on
+	currentSourceFile *ast.File
+
+	// The last-encountered GenDecl.
+	//
+	// Documentation may be placed on TypeDecl or their parent GenDecl so we track these,
+	// in case we need to fetch the docs from the TypeDecl's parent.
+	currentGenDecl *ast.GenDecl
+
+	// The current Gleece Controller being processed
+	// currentController *definitions.ControllerMetadata
+
+	// currentFVersion gast.FileVersion
 }
 
-// StructAttributeHolders serves as a container for tracking AnnotationHolders for a struct and its fields
-type StructAttributeHolders struct {
-	StructHolder annotations.AnnotationHolder
-	FieldHolders map[string]*annotations.AnnotationHolder
+// NewTypeVisitor Instantiates a new type visitor.
+func NewTypeVisitor(context *VisitContext) (*RecursiveTypeVisitor, error) {
+	visitor := RecursiveTypeVisitor{}
+	err := visitor.initialize((context))
+	return &visitor, err
 }
 
-// NewTypeVisitor Initializes a new visitor
-func NewTypeVisitor(context *VisitContext) (*TypeVisitor, error) {
-	visitor := &TypeVisitor{
-		structsByName: make(map[string]*StructMetadataWithAst),
-		enumsByName:   make(map[string]*EnumMetadataWithAst),
-	}
-	err := visitor.initialize(context)
-	return visitor, err
+func (v *RecursiveTypeVisitor) SetCurrentFile(file *ast.File) {
+	// This breaks encapsulation and is a hack...
+	v.currentSourceFile = file
 }
 
-func (v *TypeVisitor) VisitType(fullPackageName string, name string) error {
-	pkg, err := v.context.ArbitrationProvider.Pkg().GetPackage(fullPackageName)
-	if err != nil {
-		return v.frozenError(err)
-	}
-
-	typeName, err := gast.GetTypeNameOrError(pkg, name)
-	if err != nil {
-		return v.frozenError(err)
-	}
-
-	/*
-		switch gast.GetSymbolKindFromObject(typeName) {
-		case common.SymKindStruct:
-		//	v.VisitStruct(...)
-		case common.SymKindAlias:
-			//v.VisitEnum(...)
-		}
-	*/
-	typeName.Exported()
-	return nil
-}
-
-// VisitStruct dives into the given struct in the given package and recursively parses it to obtain metadata,
-// storing the results in the visitor's internal fields.
-func (v *TypeVisitor) VisitStruct(fullPackageName string, structName string, structType *types.Struct) error {
-	fullStructName := fmt.Sprintf("%s.%s", fullPackageName, structName)
-	if v.structsByName[fullStructName] != nil {
-		return nil // Already processed, ignore
-	}
-
-	attributeHolders, err := v.getAttributeHolders(fullPackageName, structName)
-	if err != nil {
-		return err
-	}
-
-	structMeta := StructMetadataWithAst{
-		Name:    structName,
-		PkgPath: fullPackageName,
-	}
-
-	// Iterate the struct's fields
-	for i := range structType.NumFields() {
-		field := structType.Field(i)
-		fieldType := field.Type()
-		tag := structType.Tag(i)
-
-		// Skip embedded 'error' fields.
-		if field.Name() == "error" && field.Type().String() == "error" {
-			continue
-		}
-
-		var fieldTypeString string
-
-		switch t := fieldType.(type) {
-		case *types.Pointer:
-			// Raise error for pointer fields.
-			return fmt.Errorf("field %q in struct %q is a pointer, which is not allowed", field.Name(), structName)
-
-		case *types.Slice, *types.Array:
-			// Go's rigid typing makes reuse pretty difficult...
-			iterable, ok := t.(definitions.Iterable)
-			if !ok {
-				return fmt.Errorf("expected slice or array to implement Iterable, got %T", t)
-			}
-
-			// Field type string is for the parent model's metadata
-			fieldTypeString = gast.GetIterableElementType(t)
-
-			// Dive into the slice and recurse into nested structs, if required
-			err := v.processIterableField(field, iterable, fieldTypeString, &structMeta, tag)
+func (v *RecursiveTypeVisitor) Visit(node ast.Node) ast.Visitor {
+	switch currentNode := node.(type) {
+	case *ast.File:
+		// Update the current file when visiting an *ast.File node
+		v.currentSourceFile = currentNode
+	case *ast.GenDecl:
+		v.currentGenDecl = currentNode
+	case *ast.TypeSpec:
+		// Check if it's a struct and if it embeds GleeceController
+		if _, isStruct := currentNode.Type.(*ast.StructType); isStruct {
+			_, err := v.VisitStructType(v.currentSourceFile, currentNode)
 			if err != nil {
-				return err
+				v.setLastError(err)
+				return v
 			}
-
-		case *types.Named:
-			isEnumOrAlias, err := v.processNamedEntity(t, &structMeta, tag)
-			if err != nil {
-				return err
-			}
-			if isEnumOrAlias {
-				// Enums and aliases have already been processed at this point - continue to the next field.
-				continue
-			}
-			// Add the field as a reference to another struct.
-			fieldTypeString = t.Obj().Name()
-
-		default:
-			// Primitive field
-			fieldTypeString = fieldType.String()
 		}
-
-		pkg, err := v.context.ArbitrationProvider.Pkg().GetPackage(fullPackageName)
-		if err != nil {
-			return err
-		}
-
-		if pkg == nil {
-			return v.getFrozenError("could not get a packages.Package for '%s'", fullPackageName)
-		}
-
-		identForField := gast.LookupIdentForObject(pkg, field)
-		astFile := gast.FindContainingFile(pkg, identForField)
-		if astFile == nil {
-			return v.getFrozenError(
-				"could not locate the ast.File for ident of package '%s', type '%s', field '%s'",
-				fullPackageName,
-				structName,
-				field.Name(),
-			)
-		}
-
-		fieldTypeMeta, err := v.context.ArbitrationProvider.Ast().GetTypeMetaByIdent(astFile, identForField)
-		if err != nil {
-			return v.frozenError(err)
-		}
-
-		fieldMeta := FieldMetadataWithAst{
-			Name:        field.Name(),
-			Type:        fieldTypeMeta,
-			Tag:         tag,
-			IsEmbedded:  field.Anonymous(),
-			Annotations: attributeHolders.FieldHolders[field.Name()],
-		}
-
-		/*
-			if fieldAttr != nil {
-				fieldMeta.Description = fieldAttr.GetDescription()
-				deprecationOpts := getDeprecationOpts(fieldAttr)
-				fieldMeta.Deprecation = &deprecationOpts
-			} else {
-				fieldMeta.Deprecation = &definitions.DeprecationOptions{}
-			}
-		*/
-
-		structMeta.Fields = append(structMeta.Fields, fieldMeta)
 	}
-
-	v.structsByName[fullStructName] = &structMeta
-	return nil
+	return v
 }
 
-func (v *TypeVisitor) processIterableField(
-	field *types.Var,
-	fieldType definitions.Iterable,
-	sliceElementTypeNameString string,
-	structInfo *StructMetadataWithAst,
-	fieldTag string,
+func (v *RecursiveTypeVisitor) VisitStructType(file *ast.File, node *ast.TypeSpec) (*metadata.StructMeta, error) {
+	fVersion, err := v.context.MetadataCache.GetFileVersion(file, v.context.ArbitrationProvider.FileSet())
+	if err != nil {
+		return nil, v.frozenError(err)
+	}
+
+	pkgPath, err := gast.GetFullPackageName(file, v.context.ArbitrationProvider.FileSet())
+	if err != nil {
+		return nil, v.frozenError(err)
+	}
+
+	holder, err := v.getComments(node.Doc, v.currentGenDecl)
+	if err != nil {
+		return nil, v.frozenError(err)
+	}
+
+	structType, isStruct := node.Type.(*ast.StructType)
+	if !isStruct {
+		return nil, v.getFrozenError("non-struct node '%v' was provided to VisitStructType", node.Name.Name)
+	}
+
+	fields, err := v.buildFields(file, structType, pkgPath)
+	if err != nil {
+		return nil, v.frozenError(err)
+	}
+
+	structMeta := &metadata.StructMeta{
+		SymNodeMeta: metadata.SymNodeMeta{
+			Name:        node.Name.Name,
+			Node:        node,
+			SymbolKind:  common.SymKindStruct,
+			PkgPath:     pkgPath,
+			Annotations: holder,
+			FVersion:    fVersion,
+		},
+		Fields: fields,
+	}
+
+	v.context.MetadataCache.AddStruct(structMeta)
+
+	return structMeta, nil
+}
+
+func (v *RecursiveTypeVisitor) VisitField(
+	file *ast.File,
+	field *ast.Field,
+	pkgPath string,
+) ([]metadata.FieldMeta, error) {
+	var results []metadata.FieldMeta
+
+	// Get doc/comments on the field
+	holder, err := v.getComments(field.Doc, nil)
+	if err != nil {
+		return nil, v.frozenError(err)
+	}
+
+	// Determine embedded vs named
+	isEmbedded := len(field.Names) == 0
+
+	// This supports multiple names: `Name1, Name2 string`
+	// or embedded anonymous fields which have no name
+	names := field.Names
+	if isEmbedded {
+		// For embedded fields, Names is nil – we still need to resolve the type name
+		ident := gast.GetIdentFromExpr(field.Type)
+		if ident != nil {
+			names = []*ast.Ident{{Name: ident.Name}}
+		}
+	}
+
+	for _, nameIdent := range names {
+		name := nameIdent.Name
+
+		typeIdentName := ""
+		typeIdent := gast.GetIdentFromExpr(field.Type)
+		if typeIdent != nil {
+			typeIdentName = typeIdent.Name
+		}
+
+		importType, err := v.context.ArbitrationProvider.Ast().GetImportType(file, field.Type)
+		if err != nil {
+			return nil, v.frozenError(err)
+		}
+
+		// Create TypeUsageMeta (AST part only)
+		typeUsage := metadata.TypeUsageMeta{
+			SymNodeMeta: metadata.SymNodeMeta{
+				Name:        typeIdentName,
+				Node:        field.Type,
+				PkgPath:     pkgPath,
+				SymbolKind:  common.SymKindField,
+				Annotations: holder,
+			},
+			TypeRefKey: graphs.SymbolKeyFor(field.Type, nil /*THIS NEEDS TO BE THE AST FILE FOR THE UNDERLYING TYPE?*/),
+			Import:     importType,
+		}
+
+		fieldMeta := metadata.FieldMeta{
+			SymNodeMeta: metadata.SymNodeMeta{
+				Name:        name,
+				Node:        field,
+				PkgPath:     pkgPath,
+				SymbolKind:  common.SymKindField,
+				Annotations: holder,
+			},
+			Type:       typeUsage,
+			IsEmbedded: isEmbedded,
+		}
+
+		results = append(results, fieldMeta)
+
+		err = v.processTypeUsage(pkgPath, file, field, typeUsage)
+		if err != nil {
+			return results, v.frozenError(err)
+		}
+	}
+
+	return results, nil
+}
+
+func (v *RecursiveTypeVisitor) buildFields(
+	file *ast.File,
+	node *ast.StructType,
+	pkgPath string,
+) ([]metadata.FieldMeta, error) {
+	var results []metadata.FieldMeta
+
+	for _, field := range node.Fields.List {
+		fields, err := v.VisitField(file, field, pkgPath)
+		if err != nil {
+			return results, err
+		}
+		results = append(results, fields...)
+	}
+
+	return results, nil
+}
+
+func (v *RecursiveTypeVisitor) processTypeUsage(
+	pkgPath string,
+	file *ast.File,
+	field *ast.Field,
+	typeUsage metadata.TypeUsageMeta,
 ) error {
-	if gast.IsBasic(fieldType) {
+	// Don't dive into built-in types
+	if typeUsage.IsUniverseType() {
 		return nil
 	}
 
-	pkg := gast.GetPackageOwnerOfType(fieldType)
-	if pkg == nil {
-		baseTypeName := sliceElementTypeNameString
-		if strings.HasPrefix(sliceElementTypeNameString, "[]") {
-			baseTypeName = sliceElementTypeNameString[2:]
-		}
-
-		if gast.IsUniverseType(baseTypeName) {
-			// If there's no owner package, this might be a universe type. If so, just ignore it
-			return nil
-		}
-
-		// Otherwise, we've a problem.
-		return fmt.Errorf(
-			"could not deduce package for the type of field %s of type %s on struct %s",
-			field.Name(),
-			sliceElementTypeNameString,
-			structInfo.Name,
-		)
+	// This is the identifier you need to resolve
+	underlyingIdent := gast.GetIdentFromExpr(field.Type)
+	if underlyingIdent == nil {
+		return nil // No ident to resolve
 	}
 
-	if named, ok := fieldType.Elem().(*types.Named); ok {
-		_, err := v.processNamedEntity(named, structInfo, fieldTag)
-		if err != nil {
-			return err
-		}
+	if len(field.Names) > 1 {
+		return v.getFrozenError("field '%v' is a multi-variable declaration which is currently not supported", field.Names)
 	}
 
-	return nil
-}
-
-// processNamedEntity receives a Named node and translates it into an enum/alias model.
-// Returns a boolean indicating whether the node is considered an enum/alias which indicates
-// whether it should be appended to the visitor's struct list or not.
-//
-// To clarify, an enum/alias is NOT appended to the struct list.
-func (v *TypeVisitor) processNamedEntity(
-	node *types.Named,
-	structInfo *StructMetadataWithAst,
-	fieldTag string,
-) (bool, error) {
-	// If the type's an enum.
-	// This is pretty nasty - there needs to be a stricter separation between simple aliases and actual enums.
-	if gast.IsAliasType(node) {
-		aliasModel := createAliasModel(node, fieldTag)
-		err := v.visitNestedEnum(node, aliasModel)
-		if err != nil {
-			return true, err
-		}
-
-		structInfo.Fields = append(structInfo.Fields, aliasModel)
-		return true, nil
-	}
-
-	// Check if the named type is a struct.
-	if underlying, ok := node.Underlying().(*types.Struct); ok {
-		// Recursively process the nested struct.
-		nestedPackageName, err := v.context.ArbitrationProvider.Pkg().GetPackageNameByNamedEntity(node)
-		if err != nil {
-			return false, err
-		}
-
-		if len(nestedPackageName) == 0 {
-			return false, fmt.Errorf("could not determine package for named entity '%s'", node.Obj().Name())
-		}
-
-		err = v.VisitStruct(nestedPackageName, node.Obj().Name(), underlying)
-		return false, err
-	}
-
-	return false, fmt.Errorf(
-		"node '%s' is of kind 'Named' but is neither an alias-like nor struct and cannot be used",
-		node.Obj().Name(),
-	)
-}
-
-func (v *TypeVisitor) VisitEnum(enumName string, model definitions.TypeMetadata) error {
-	if v.enumsByName[enumName] != nil {
-		return nil // Already processed, ignore
-	}
-
-	enumModel := &EnumMetadataWithAst{
-		Name:    model.Name,
-		PkgPath: model.PkgPath,
-		//Description: model.Description,
-		Values: model.AliasMetadata.Values,
-		//Type:        model.AliasMetadata.AliasType,
-		// Deprecation         ?
-	}
-
-	v.enumsByName[enumName] = enumModel
-	return nil
-}
-
-func (v *TypeVisitor) getAttributeHolderFromEntityGenDecl(pkg *packages.Package, name string) (annotations.AnnotationHolder, error) {
-	genDecl := gast.FindGenDeclByName(pkg, name)
-	if genDecl == nil {
-		return annotations.AnnotationHolder{},
-			fmt.Errorf("could not find GenDecl node for struct '%s.%s'", pkg.PkgPath, name)
-	}
-
-	if genDecl.Doc == nil || genDecl.Doc.List == nil || len(genDecl.Doc.List) <= 0 {
-		return annotations.AnnotationHolder{}, nil
-	}
-
-	holder, err := annotations.NewAnnotationHolder(
-		gast.MapDocListToStrings(genDecl.Doc.List),
-		annotations.CommentSourceSchema,
+	typePkg, underlyingAstFile, typeSpec, err := gast.ResolveTypeSpecFromField(
+		field,
+		file,
+		v.context.ArbitrationProvider.Pkg().GetPackage,
+		pkgPath,
 	)
 
 	if err != nil {
-		logger.Error("Could not create an attribute holder for struct '%s.%s' - %v", pkg.PkgPath, name, err)
-		return annotations.AnnotationHolder{}, err
+		return v.frozenError(err)
 	}
 
-	return holder, nil
-}
-
-func (v *TypeVisitor) getAttributeHolders(fullPackageName string, structName string) (StructAttributeHolders, error) {
-	holders := StructAttributeHolders{FieldHolders: make(map[string]*annotations.AnnotationHolder)}
-
-	relevantPackage, err := v.context.ArbitrationProvider.Pkg().GetPackage(fullPackageName)
+	fVersion, err := v.context.MetadataCache.GetFileVersion(underlyingAstFile, typePkg.Fset)
 	if err != nil {
-		return holders, err
+		return v.frozenError(err)
 	}
 
-	if relevantPackage == nil {
-		return holders, fmt.Errorf(
-			"could not find package object for '%s' whilst looking for struct '%s'",
-			fullPackageName,
-			structName,
-		)
+	key := graphs.SymbolKeyFor(typeSpec, fVersion)
+	if v.context.MetadataCache.HasVisited(key) {
+		return nil
 	}
 
-	genDecl := gast.FindGenDeclByName(relevantPackage, structName)
-	if genDecl == nil {
-		return holders, fmt.Errorf("could not find GenDecl node for struct '%s' in package '%s'", structName, fullPackageName)
-	}
-
-	structNode := gast.GetStructFromGenDecl(genDecl)
-	if structNode == nil {
-		return holders, fmt.Errorf(
-			"could not obtain StructType node from the GenDecl of struct '%s' in package '%s'",
-			structName,
-			fullPackageName,
-		)
-	}
-
-	if genDecl.Doc != nil && genDecl.Doc.List != nil && len(genDecl.Doc.List) > 0 {
-		structAttributes, err := annotations.NewAnnotationHolder(gast.MapDocListToStrings(genDecl.Doc.List), annotations.CommentSourceSchema)
-		if err != nil {
-			logger.Error("Could not create an attribute holder for struct '%s' - %v", structName, err)
-			return holders, err
-		}
-
-		holders.StructHolder = structAttributes
-	}
-
-	for _, field := range structNode.Fields.List {
-		if field.Doc != nil && field.Doc.List != nil && len(field.Doc.List) > 0 {
-			if len(field.Names) > 1 {
-				names := []string{}
-				for _, nameIdent := range field.Names {
-					names = append(names, nameIdent.Name)
-				}
-				return holders, fmt.Errorf(
-					"field/s [%s] on struct %s has more than one name i.e., is a multi-var declaration. This is not currently supported",
-					strings.Join(names, ", "),
-					structName,
-				)
-			}
-
-			if len(field.Names) == 0 {
-				// Embedded/Anonymous field, skip
-				continue
-			}
-			fieldName := field.Names[0].Name
-			fieldHolder, err := annotations.NewAnnotationHolder(gast.MapDocListToStrings(field.Doc.List), annotations.CommentSourceProperty)
-			if err != nil {
-				logger.Error("Could not create an attribute holder for field %s on struct '%s' - %v", fieldName, structName, err)
-				return holders, err
-			}
-
-			holders.FieldHolders[fieldName] = &fieldHolder
-		}
-	}
-
-	return holders, nil
-}
-
-// GetStructs returns the list of processed structs.
-func (v *TypeVisitor) GetStructs() []definitions.StructMetadata {
-	models := []definitions.StructMetadata{}
-	for _, value := range v.structsByName {
-		model := value.Reduce()
-		models = append(models, model)
-	}
-	return models
-}
-
-func (v *TypeVisitor) GetEnums() []definitions.EnumMetadata {
-	models := []definitions.EnumMetadata{}
-	for _, value := range v.enumsByName {
-		model := value.Reduce()
-		models = append(models, model)
-	}
-	return models
-}
-
-func createAliasModel(node *types.Named, tag string) FieldMetadataWithAst {
-	name := node.Obj().Name()
-
-	underlying := node.Underlying()
-
-	typeName := gast.GetUnderlyingTypeName(underlying)
-
-	// In case of an alias to a primitive type, we need to use the alias name.
-	_, isBasic := underlying.(*types.Basic)
-	if isBasic && name != typeName {
-		typeName = name
-	}
-
-	return FieldMetadataWithAst{
-		Name: name,
-		//Type: typeName,
-		Tag: tag,
-	}
-}
-
-func (v *TypeVisitor) visitNestedEnum(t *types.Named, aliasModel FieldMetadataWithAst) error {
-	pkg, err := v.context.ArbitrationProvider.Pkg().GetPackageByTypeName(t.Obj())
+	// Ok, recurse
+	_, err = v.VisitStructType(underlyingAstFile, typeSpec)
 	if err != nil {
-		return err
+		return v.frozenError(err)
 	}
 
-	if pkg == nil {
-		return fmt.Errorf("could not obtain package for entity '%v'", t)
-	}
-
-	cleanedModelName := common.UnwrapArrayTypeString(aliasModel.Name)
-	if v.enumsByName[cleanedModelName] != nil {
-		return nil // Already processed, ignore
-	}
-
-	typeName, err := gast.GetTypeNameOrError(pkg, aliasModel.Name)
-	if err != nil {
-		return err
-	}
-
-	aliasMetadata, err := v.context.ArbitrationProvider.Ast().ExtractEnumAliasType(pkg, typeName)
-	if err != nil {
-		return err
-	}
-
-	//holder, err := v.getAttributeHolderFromEntityGenDecl(pkg, cleanedModelName)
-	if err != nil {
-		return err
-	}
-
-	enumModel := &EnumMetadataWithAst{
-		Name:    cleanedModelName,
-		PkgPath: pkg.PkgPath,
-		//Description: holder.GetDescription(),
-		Values: aliasMetadata.Values,
-		//Type:        aliasMetadata.AliasType,
-		// Deprecation         ?
-	}
-
-	v.enumsByName[cleanedModelName] = enumModel
 	return nil
+}
+
+func (v *RecursiveTypeVisitor) getComments(onNodeDoc *ast.CommentGroup, nodeGenDecl *ast.GenDecl) (*annotations.AnnotationHolder, error) {
+	var commentSource *ast.CommentGroup
+	if onNodeDoc != nil {
+		commentSource = onNodeDoc
+	} else {
+		if nodeGenDecl != nil {
+			commentSource = nodeGenDecl.Doc
+		}
+	}
+
+	if commentSource != nil {
+		comments := gast.MapDocListToStrings(commentSource.List)
+		holder, err := annotations.NewAnnotationHolder(comments, annotations.CommentSourceController)
+		return &holder, err
+	}
+
+	return nil, nil
 }

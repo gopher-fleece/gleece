@@ -6,7 +6,9 @@ import (
 	"strings"
 
 	"github.com/gopher-fleece/gleece/common"
+	"github.com/gopher-fleece/gleece/extractor/annotations"
 	"github.com/gopher-fleece/gleece/gast"
+	"github.com/gopher-fleece/gleece/graphs"
 )
 
 type SymbolGraphBuilder interface {
@@ -14,23 +16,24 @@ type SymbolGraphBuilder interface {
 	AddRoute(request CreateRouteNode) (*SymbolNode, error)
 	AddRouteParam(request CreateParameterNode) (*SymbolNode, error)
 	AddRouteRetVal(request CreateReturnValueNode) (*SymbolNode, error)
-	AddType(request CreateTypeNode) (*SymbolNode, error)
+	AddStruct(request CreateStructNode) (*SymbolNode, error)
 }
 
 type SymbolGraph struct {
-	nodes map[SymbolKey]*SymbolNode // keyed by ast node
+	nodes map[graphs.SymbolKey]*SymbolNode // keyed by ast node
 
-	edges map[SymbolKey][]SymbolEdge // Node relations
+	edges map[graphs.SymbolKey][]SymbolEdge // Node relations
 
-	deps    map[SymbolKey]map[SymbolKey]struct{} // from → set of to
-	revDeps map[SymbolKey]map[SymbolKey]struct{} // to   → set of from
+	deps    map[graphs.SymbolKey]map[graphs.SymbolKey]struct{} // from → set of to
+	revDeps map[graphs.SymbolKey]map[graphs.SymbolKey]struct{} // to   → set of from
 }
 
 func NewSymbolGraph() SymbolGraph {
 	return SymbolGraph{
-		nodes:   make(map[SymbolKey]*SymbolNode),
-		deps:    make(map[SymbolKey]map[SymbolKey]struct{}),
-		revDeps: make(map[SymbolKey]map[SymbolKey]struct{}),
+		edges:   make(map[graphs.SymbolKey][]SymbolEdge),
+		nodes:   make(map[graphs.SymbolKey]*SymbolNode),
+		deps:    make(map[graphs.SymbolKey]map[graphs.SymbolKey]struct{}),
+		revDeps: make(map[graphs.SymbolKey]map[graphs.SymbolKey]struct{}),
 	}
 }
 
@@ -38,153 +41,176 @@ func (g *SymbolGraph) addNode(n *SymbolNode) {
 	g.nodes[n.Id] = n
 }
 
-func (g *SymbolGraph) AddDep(from, to SymbolKey) {
+func (g *SymbolGraph) AddDep(from, to graphs.SymbolKey) {
 	if g.deps[from] == nil {
-		g.deps[from] = make(map[SymbolKey]struct{})
+		g.deps[from] = make(map[graphs.SymbolKey]struct{})
 	}
 	g.deps[from][to] = struct{}{}
 
 	if g.revDeps[to] == nil {
-		g.revDeps[to] = make(map[SymbolKey]struct{})
+		g.revDeps[to] = make(map[graphs.SymbolKey]struct{})
 	}
 	g.revDeps[to][from] = struct{}{}
 }
 
 func (g *SymbolGraph) AddController(request CreateControllerNode) (*SymbolNode, error) {
-	existing, err := g.idempotencyGuard(request.Decl, &request.Data.FVersion)
-	if existing != nil || err != nil {
-		return existing, err
+	symNode, err := g.createAndAddSymNode(
+		request.Data.Node,
+		common.SymKindStruct,
+		request.Data.FVersion,
+		request.Annotations,
+		request.Data,
+	)
+
+	if err != nil {
+		return nil, err
 	}
 
-	ctrlNode := &SymbolNode{
-		Id:          SymbolKeyFor(request.Decl, &request.Data.FVersion),
-		Kind:        common.SymKindStruct,
-		Version:     &request.Data.FVersion,
-		Data:        request.Data,
-		Annotations: request.Annotations,
-	}
-	g.addNode(ctrlNode)
-	return ctrlNode, nil
+	// Add the controller to the graph
+	g.addNode(symNode)
+
+	return symNode, nil
 }
 
 func (g *SymbolGraph) AddRoute(request CreateRouteNode) (*SymbolNode, error) {
-	existing, err := g.idempotencyGuard(request.Decl, request.Data.FVersion)
-	if existing != nil || err != nil {
-		return existing, err
+	symNode, err := g.createAndAddSymNode(
+		request.Data.Node,
+		common.SymKindReceiver,
+		request.Data.FVersion,
+		request.Annotations,
+		request.Data,
+	)
+
+	if err != nil {
+		return nil, err
 	}
 
-	routeNode := &SymbolNode{
-		Id:          SymbolKeyFor(request.Decl, request.Data.FVersion),
-		Kind:        common.SymKindReceiver,
-		Version:     request.Data.FVersion,
-		Data:        request.Data,
-		Annotations: request.Annotations,
-	}
+	// Add the route to the graph
+	g.addNode(symNode)
 
-	g.addNode(routeNode)
-	g.AddDep(request.ParentController.SymbolKey(), routeNode.Id)
-	return routeNode, nil
+	// Add a dependency FROM the parent controller TO the route
+	g.AddDep(request.ParentController.SymbolKey(), symNode.Id)
+
+	return symNode, nil
 }
 
 func (g *SymbolGraph) AddRouteParam(request CreateParameterNode) (*SymbolNode, error) {
-	existing, err := g.idempotencyGuard(request.Decl, &request.ParentRoute.FVersion)
-	if existing != nil || err != nil {
-		return existing, err
+	symNode, err := g.createAndAddSymNode(
+		request.Data.Node,
+		common.SymKindParameter,
+		&request.ParentRoute.FVersion,
+		nil,
+		request.Data,
+	)
+
+	if err != nil {
+		return nil, err
 	}
 
-	paramKey := SymbolKeyFor(request.Decl, &request.ParentRoute.FVersion)
+	// Add a dependency FROM the route TO the parameter node itself
+	g.AddDep(request.ParentRoute.SymbolKey(), symNode.Id)
 
-	paramNode := &SymbolNode{
-		Id:      paramKey,
-		Kind:    common.SymKindParameter,
-		Version: &request.ParentRoute.FVersion,
-		Data: &FuncParamSymbolicMetadata{
-			OrderedIdent:       request.Data.OrderedIdent,
-			Name:               request.Data.Name,
-			IsContext:          request.Data.IsContext,
-			PassedIn:           request.Data.PassedIn,
-			NameInSchema:       request.Data.NameInSchema,
-			Description:        request.Data.Description,
-			UniqueImportSerial: request.Data.UniqueImportSerial,
-			Validator:          request.Data.Validator,
-			Deprecation:        request.Data.Deprecation,
-		},
-	}
+	// Add a dependency FROM the route TO the parameter's type node
+	g.AddDep(symNode.Id, request.Data.Type.TypeRefKey)
 
-	g.addNode(paramNode)
-	g.AddDep(request.ParentRoute.SymbolKey(), paramNode.Id)
-
-	g.AddType(CreateTypeNode{
-		Data:        request.Data.TypeMetadataWithAst,
-		Annotations: request.Data.Annotations,
-	})
-
-	// Also derived in AddType. Need to optimize.
-	underlyingTypeKey := SymbolKeyFor(request.Data.TypeMetadataWithAst.TypeExpr, request.Data.TypeMetadataWithAst.FVersion)
-	g.AddDep(paramKey, underlyingTypeKey)
-
-	return paramNode, nil
+	return symNode, nil
 }
 
 func (g *SymbolGraph) AddRouteRetVal(request CreateReturnValueNode) (*SymbolNode, error) {
-	existing, err := g.idempotencyGuard(request.Decl, &request.ParentRoute.FVersion)
-	if existing != nil || err != nil {
-		return existing, err
+	symNode, err := g.createAndAddSymNode(
+		request.Data.Node,
+		common.SymKindReturnType,
+		&request.ParentRoute.FVersion,
+		nil,
+		request.Data,
+	)
+
+	if err != nil {
+		return nil, err
 	}
 
-	retValNode := &SymbolNode{
-		Id:      SymbolKeyFor(request.Decl, request.Data.FVersion),
-		Kind:    common.SymKindReturnType,
-		Version: &request.ParentRoute.FVersion,
-		Data:    request,
-	}
-	g.addNode(retValNode)
-	g.AddDep(request.ParentRoute.SymbolKey(), retValNode.Id)
-	return retValNode, nil
+	g.AddDep(request.ParentRoute.SymbolKey(), symNode.Id)
+	return symNode, nil
 }
 
-func (g *SymbolGraph) AddType(request CreateTypeNode) (*SymbolNode, error) {
-	existing, err := g.idempotencyGuard(request.Data.TypeExpr, request.Data.FVersion)
+func (g *SymbolGraph) AddStruct(request CreateStructNode) (*SymbolNode, error) {
+	return g.createAndAddSymNode(
+		request.Data.Node,
+		common.SymKindStruct,
+		request.Data.FVersion,
+		request.Annotations,
+		request.Data,
+	)
+}
+
+func (g *SymbolGraph) AddEnum(request CreateEnumNode) (*SymbolNode, error) {
+	return g.createAndAddSymNode(
+		request.Data.Node,
+		common.SymKindEnum,
+		request.Data.FVersion,
+		request.Annotations,
+		request.Data,
+	)
+}
+
+func (g *SymbolGraph) AddConst(request CreateConstNode) (*SymbolNode, error) {
+	return g.createAndAddSymNode(
+		request.Data.Node,
+		common.SymKindConstant,
+		request.Data.FVersion, // For constants, the FVersion is the Constants'- not the underlying type's
+		request.Annotations,
+		request.Data,
+	)
+}
+
+func (g *SymbolGraph) createAndAddSymNode(
+	node ast.Node,
+	kind common.SymKind,
+	fVersion *gast.FileVersion,
+	annotations *annotations.AnnotationHolder,
+	data any,
+) (*SymbolNode, error) {
+	existing, key, err := g.idempotencyGuard(node, fVersion)
 	if existing != nil || err != nil {
 		return existing, err
 	}
 
-	node := &SymbolNode{
-		Id:          SymbolKeyFor(request.Data.TypeExpr, request.Data.FVersion),
-		Kind:        request.Data.SymbolKind,
-		Version:     request.Data.FVersion,
-		Data:        request.Data,
-		Annotations: request.Annotations,
+	symNode := &SymbolNode{
+		Id:          key,
+		Kind:        kind,
+		Version:     fVersion,
+		Data:        data,
+		Annotations: annotations,
 	}
 
-	g.addNode(node)
-	return node, nil
+	g.addNode(symNode)
+	return symNode, nil
 }
 
 // idempotencyGuard checks if the given node with the given version exists in the graph.
 // If the node exists but has a different FVersion, the old node will be evicted, alongside its dependents.
-func (g *SymbolGraph) idempotencyGuard(decl ast.Node, version *gast.FileVersion) (*SymbolNode, error) {
+func (g *SymbolGraph) idempotencyGuard(decl ast.Node, version *gast.FileVersion) (*SymbolNode, graphs.SymbolKey, error) {
 	if decl == nil {
-		return nil, fmt.Errorf("idempotencyGuard received a nil decl parameter")
+		return nil, "", fmt.Errorf("idempotencyGuard received a nil decl parameter")
 	}
 
 	if version == nil {
-		return nil, fmt.Errorf("idempotencyGuard received a nil version parameter")
+		return nil, "", fmt.Errorf("idempotencyGuard received a nil version parameter")
 	}
 
-	key := SymbolKeyFor(decl, version)
+	key := graphs.SymbolKeyFor(decl, version)
 	if existing := g.nodes[key]; existing != nil {
 		if existing.Version.Equals(version) {
-			return existing, nil
+			return existing, key, nil
 		}
 		g.evict(existing.Id)
 	}
 
-	return nil, nil
+	return nil, key, nil
 }
 
 // evict removes the given node *and* recursively evicts any nodes that depend on it.
-func (g *SymbolGraph) evict(key SymbolKey) {
+func (g *SymbolGraph) evict(key graphs.SymbolKey) {
 	// if already gone, stop
 	if _, exists := g.nodes[key]; !exists {
 		return
@@ -248,7 +274,7 @@ func (g *SymbolGraph) Dump() string {
 	return sb.String()
 }
 
-func PrettyPrintSymbolKey(key SymbolKey) string {
+func PrettyPrintSymbolKey(key graphs.SymbolKey) string {
 	keyParts := strings.Split(string(key), "@")
 	// Expected 3-length
 	fVerParts := strings.Split(keyParts[1], "|")

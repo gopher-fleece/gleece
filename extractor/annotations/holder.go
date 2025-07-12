@@ -13,23 +13,25 @@ const (
 	PropertyValidatorString = "validate"
 )
 
+type GleeceAnnotation = string
+
 const (
-	AttributeTag             = "Tag"
-	AttributeQuery           = "Query"
-	AttributePath            = "Path"
-	AttributeBody            = "Body"
-	AttributeHeader          = "Header"
-	AttributeFormField       = "FormField"
-	AttributeDeprecated      = "Deprecated"
-	AttributeHidden          = "Hidden"
-	AttributeSecurity        = "Security"
-	AttributeRoute           = "Route"
-	AttributeResponse        = "Response"
-	AttributeDescription     = "Description"
-	AttributeMethod          = "Method"
-	AttributeErrorResponse   = "ErrorResponse"
-	AttributeTemplateContext = "TemplateContext"
-	// AttributeAdvancedSecurity = "AdvancedSecurity"
+	GleeceAnnotationTag             GleeceAnnotation = "Tag"
+	GleeceAnnotationQuery           GleeceAnnotation = "Query"
+	GleeceAnnotationPath            GleeceAnnotation = "Path"
+	GleeceAnnotationBody            GleeceAnnotation = "Body"
+	GleeceAnnotationHeader          GleeceAnnotation = "Header"
+	GleeceAnnotationFormField       GleeceAnnotation = "FormField"
+	GleeceAnnotationDeprecated      GleeceAnnotation = "Deprecated"
+	GleeceAnnotationHidden          GleeceAnnotation = "Hidden"
+	GleeceAnnotationSecurity        GleeceAnnotation = "Security"
+	GleeceAnnotationRoute           GleeceAnnotation = "Route"
+	GleeceAnnotationResponse        GleeceAnnotation = "Response"
+	GleeceAnnotationDescription     GleeceAnnotation = "Description"
+	GleeceAnnotationMethod          GleeceAnnotation = "Method"
+	GleeceAnnotationErrorResponse   GleeceAnnotation = "ErrorResponse"
+	GleeceAnnotationTemplateContext GleeceAnnotation = "TemplateContext"
+	// AttributeAdvancedSecurity GleeceAnnotation = "AdvancedSecurity"
 )
 
 type Attribute struct {
@@ -140,7 +142,7 @@ func parseComment(parsingRegex *regexp.Regexp, comment string) (Attribute, bool,
 	}, true, nil
 }
 
-func (holder AnnotationHolder) GetFirst(attribute string) *Attribute {
+func (holder AnnotationHolder) GetFirst(attribute GleeceAnnotation) *Attribute {
 	for _, attrib := range holder.attributes {
 		if attrib.Name == attribute {
 			return &attrib
@@ -202,7 +204,7 @@ func (holder AnnotationHolder) FindFirstByProperty(key string, value string) *At
 }
 
 func (holder AnnotationHolder) GetDescription() string {
-	descriptionAttr := holder.GetFirst(AttributeDescription)
+	descriptionAttr := holder.GetFirst(GleeceAnnotationDescription)
 	if descriptionAttr != nil {
 		// If there's a description attribute, even an empty one, use that
 		return descriptionAttr.Description

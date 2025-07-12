@@ -11,6 +11,8 @@ import (
 
 	"github.com/bmatcuk/doublestar/v4"
 	MapSet "github.com/deckarep/golang-set/v2"
+	"github.com/gopher-fleece/gleece/common"
+	"github.com/gopher-fleece/gleece/extractor/arbitrators/caching"
 	"github.com/gopher-fleece/gleece/extractor/visitors/providers"
 	"github.com/gopher-fleece/gleece/gast"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
@@ -38,7 +40,7 @@ type BaseVisitor struct {
 	// The last error encountered by the visitor.
 	//
 	// When setting this value, we also freeze the stack so we don't loose context
-	lastError *error
+	lastError error
 }
 
 func (v *BaseVisitor) initialize(context *VisitContext) error {
@@ -114,7 +116,11 @@ func (v *BaseVisitor) initializeWithGlobs(context *VisitContext) error {
 	v.context.ArbitrationProvider = providers.NewArbitrationProvider(sourceFiles, fileSet)
 
 	if v.context.SyncedProvider == nil {
-		v.context.SyncedProvider = &providers.SyncedProvider{}
+		v.context.SyncedProvider = common.Ptr(providers.NewSyncedProvider())
+	}
+
+	if v.context.MetadataCache == nil {
+		v.context.MetadataCache = caching.NewMetadataCache()
 	}
 
 	return nil
@@ -175,18 +181,33 @@ func (v *BaseVisitor) frozenError(err error) error {
 	return err
 }
 
+// frozenError is an idempotent function that returns the provided error unmodified
+// and freezes the visitor's diagnostic stack if the error was not nil
+func (v *BaseVisitor) frozenIfError(err error) error {
+	if err != nil {
+		// Just a convenient way to freeze the diagnostic stack while returning the same error
+		v.stackFrozen = true
+	}
+	return err
+}
+
 func (v BaseVisitor) GetFormattedDiagnosticStack() string {
 	stack := slices.Clone(v.diagnosticStack)
 	slices.Reverse(stack)
 	return strings.Join(stack, "\n\t")
 }
 
-func (v *BaseVisitor) GetLastError() *error {
+func (v *BaseVisitor) GetLastError() error {
 	return v.lastError
 }
 
 func (v *BaseVisitor) GetAllSourceFiles() []*ast.File {
 	return v.context.ArbitrationProvider.GetAllSourceFiles()
+}
+
+func (v *BaseVisitor) setLastError(err error) {
+	v.lastError = err
+	v.stackFrozen = true
 }
 
 func contextInitGuard(context *VisitContext) error {

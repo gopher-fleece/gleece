@@ -1,0 +1,353 @@
+package metadata
+
+import (
+	"fmt"
+	"go/ast"
+
+	"github.com/gopher-fleece/gleece/common"
+	"github.com/gopher-fleece/gleece/definitions"
+	"github.com/gopher-fleece/gleece/extractor/annotations"
+	"github.com/gopher-fleece/gleece/gast"
+	"github.com/gopher-fleece/gleece/graphs"
+)
+
+type IdProvider interface {
+	GetIdForKey(key graphs.SymbolKey) uint64
+}
+
+// Go's insane package system forces us to get... creative.
+type MetaCache interface {
+	GetStruct(key graphs.SymbolKey) *StructMeta
+	GetEnum(key graphs.SymbolKey) *EnumMeta
+}
+
+type EnumValueKind string
+
+const (
+	EnumValueKindString  EnumValueKind = "string"
+	EnumValueKindInt     EnumValueKind = "int"
+	EnumValueKindInt8    EnumValueKind = "int8"
+	EnumValueKindInt16   EnumValueKind = "int16"
+	EnumValueKindInt32   EnumValueKind = "int32"
+	EnumValueKindInt64   EnumValueKind = "int64"
+	EnumValueKindUInt    EnumValueKind = "uint"
+	EnumValueKindUInt8   EnumValueKind = "uint8"
+	EnumValueKindUInt16  EnumValueKind = "uint16"
+	EnumValueKindUInt32  EnumValueKind = "uint32"
+	EnumValueKindUInt64  EnumValueKind = "uint64"
+	EnumValueKindFloat32 EnumValueKind = "float32"
+	EnumValueKindFloat64 EnumValueKind = "float64"
+	EnumValueKindBool    EnumValueKind = "bool"
+)
+
+type SymNodeMeta struct {
+	Name        string
+	Node        ast.Node
+	SymbolKind  common.SymKind
+	PkgPath     string
+	Annotations *annotations.AnnotationHolder
+	FVersion    *gast.FileVersion
+}
+
+type StructMeta struct {
+	SymNodeMeta
+	Fields []FieldMeta
+}
+
+type ConstMeta struct {
+	SymNodeMeta
+	Value any
+	Type  TypeUsageMeta
+}
+
+type ControllerMeta struct {
+	Struct    StructMeta
+	Receivers []ReceiverMeta
+}
+
+type ReceiverMeta struct {
+	SymNodeMeta
+	Params  []FuncParam
+	RetVals []FuncReturnValue
+}
+
+func (v ReceiverMeta) Reduce(
+	parentAnnotations *annotations.AnnotationHolder,
+	metaCache MetaCache,
+	syncedProvider IdProvider,
+) (definitions.RouteMetadata, error) {
+
+	verbAnnotation := v.Annotations.GetFirst(annotations.GleeceAnnotationMethod)
+	if verbAnnotation == nil || verbAnnotation.Value == "" {
+		// Not ideal- we'd like to separate visitation, reduction and validation but typing currently doesn't
+		// cleanly allow it so we have to embed a bit of validation in a few other places as well
+		return definitions.RouteMetadata{}, fmt.Errorf("receiver %s has not @Method annotation", v.Name)
+	}
+
+	security, err := GetRouteSecurityWithInheritance(parentAnnotations, v.Annotations)
+	if err != nil {
+		return definitions.RouteMetadata{}, err
+	}
+
+	templateCtx, err := GetTemplateContextMetadata(v.Annotations)
+	if err != nil {
+		return definitions.RouteMetadata{}, err
+	}
+
+	hasReturnValue := len(v.RetVals) > 1
+
+	responses := []definitions.FuncReturnValue{}
+	for _, fRetVal := range v.RetVals {
+		response, err := fRetVal.Reduce(metaCache, syncedProvider)
+		if err != nil {
+			return definitions.RouteMetadata{}, err
+		}
+		responses = append(responses, response)
+	}
+
+	reducedParams := []definitions.FuncParam{}
+	for _, param := range v.Params {
+		reducedParam, err := param.Reduce(metaCache, syncedProvider)
+		if err != nil {
+			return definitions.RouteMetadata{}, err
+		}
+		reducedParams = append(reducedParams, reducedParam)
+	}
+
+	successResponseCode, successResponseDescription, err := GetResponseStatusCodeAndDescription(v.Annotations, hasReturnValue)
+	if err != nil {
+		return definitions.RouteMetadata{}, err
+	}
+
+	errorResponses, err := GetErrorResponses(v.Annotations)
+	if err != nil {
+		return definitions.RouteMetadata{}, err
+	}
+
+	return definitions.RouteMetadata{
+		OperationId: v.Name,
+		HttpVerb:    definitions.HttpVerb(verbAnnotation.Value),
+		Hiding:      GetMethodHideOpts(v.Annotations),
+		Deprecation: GetDeprecationOpts(v.Annotations),
+		Description: v.Annotations.GetDescription(),
+		RestMetadata: definitions.RestMetadata{
+			Path: v.Annotations.GetFirstValueOrEmpty(annotations.GleeceAnnotationRoute),
+		},
+		HasReturnValue:      hasReturnValue,
+		RequestContentType:  definitions.ContentTypeJSON, // Hardcoded for now, should be supported via annotations later on
+		ResponseContentType: definitions.ContentTypeJSON, // Hardcoded for now, should be supported via annotations later on
+		Security:            security,
+		TemplateContext:     templateCtx,
+		ResponseSuccessCode: successResponseCode,
+		ResponseDescription: successResponseDescription,
+		FuncParams:          reducedParams,
+		Responses:           responses,
+		ErrorResponses:      errorResponses,
+	}, nil
+}
+
+type FuncParam struct {
+	SymNodeMeta
+	Ordinal int
+	Type    TypeUsageMeta
+}
+
+func (v FuncParam) Reduce(metaCache MetaCache, syncedProvider IdProvider) (definitions.FuncParam, error) {
+	typeMeta, err := v.Type.Resolve(metaCache)
+	if err != nil {
+		return definitions.FuncParam{}, err
+	}
+
+	nameInSchema, err := GetParameterSchemaName(v.Name, v.Annotations)
+	if err != nil {
+		return definitions.FuncParam{}, err
+	}
+
+	passedIn, err := GetParamPassedIn(v.Name, v.Annotations)
+	if err != nil {
+		return definitions.FuncParam{}, err
+	}
+
+	validator, err := GetParamValidator(v.Name, v.Annotations, passedIn, v.Type.IsByAddress())
+	if err != nil {
+		return definitions.FuncParam{}, err
+	}
+
+	return definitions.FuncParam{
+		ParamMeta: definitions.ParamMeta{
+			Name:      v.Name,
+			Ordinal:   v.Ordinal,
+			TypeMeta:  typeMeta,
+			IsContext: v.Name == "Context" && v.PkgPath == "context",
+		},
+		PassedIn:           passedIn,
+		NameInSchema:       nameInSchema,
+		Description:        v.Annotations.GetDescription(),
+		UniqueImportSerial: syncedProvider.GetIdForKey(v.Type.TypeRefKey),
+		Validator:          validator,
+		Deprecation:        common.Ptr(GetDeprecationOpts(v.Annotations)),
+	}, nil
+}
+
+type FuncReturnValue struct {
+	SymNodeMeta
+	Ordinal int
+	Type    TypeUsageMeta
+}
+
+func (v FuncReturnValue) Reduce(metaCache MetaCache, syncedProvider IdProvider) (definitions.FuncReturnValue, error) {
+	typeMeta, err := v.Type.Resolve(metaCache)
+	if err != nil {
+		return definitions.FuncReturnValue{}, err
+	}
+
+	return definitions.FuncReturnValue{
+		Ordinal:            v.Ordinal,
+		UniqueImportSerial: syncedProvider.GetIdForKey(v.Type.TypeRefKey),
+		TypeMetadata:       typeMeta,
+	}, nil
+}
+
+type EnumValueDefinition struct {
+	// The enum's value definition node meta, e.g. EnumValueA SomeEnumType = "Abc"
+	SymNodeMeta
+	Value any // e.g. ["Meter", "Kilometer"]
+	// TODO: An exact textual representation of the value. For example "1 << 2"
+	//RawLiteralValue string
+}
+
+type EnumMeta struct {
+	// The enum's type definition's node meta e.g. type SomeEnumType string
+	SymNodeMeta
+	ValueKind EnumValueKind // e.g. string, int, etc.
+	Values    []EnumValueDefinition
+}
+
+type TypeUsageMeta struct {
+	SymNodeMeta
+	TypeRefKey graphs.SymbolKey
+	Import     common.ImportType
+}
+
+func (t TypeUsageMeta) Resolve(metaCache MetaCache) (definitions.TypeMetadata, error) {
+	underlyingEnum := metaCache.GetEnum(t.TypeRefKey)
+
+	alias := definitions.AliasMetadata{}
+	if underlyingEnum != nil {
+		alias.Name = underlyingEnum.Name
+		alias.AliasType = string(underlyingEnum.ValueKind)
+
+		values := []string{}
+		for v := range underlyingEnum.Values {
+			values = append(values, fmt.Sprintf("%v", v))
+		}
+		alias.Values = values
+	}
+
+	description := ""
+	if t.Annotations != nil {
+		description = t.Annotations.GetDescription()
+	}
+
+	return definitions.TypeMetadata{
+		Name:                t.Name,
+		PkgPath:             t.PkgPath,
+		DefaultPackageAlias: gast.GetDefaultPkgAliasByName(t.PkgPath),
+		Description:         description,
+		Import:              t.Import,
+		IsUniverseType:      t.PkgPath == "" && gast.IsUniverseType(t.Name),
+		IsByAddress:         t.IsByAddress(),
+		SymbolKind:          t.SymbolKind,
+		AliasMetadata:       &alias,
+	}, nil
+}
+
+type FieldMeta struct {
+	SymNodeMeta
+	Type       TypeUsageMeta
+	IsEmbedded bool
+}
+
+func (m TypeUsageMeta) IsUniverseType() bool {
+	return gast.IsUniverseType(m.Name)
+}
+
+func (m TypeUsageMeta) IsByAddress() bool {
+	_, isStar := m.Node.(*ast.StarExpr)
+	return isStar
+}
+
+/*
+func (t TypeMetadata) Equals(other TypeMetadata) bool {
+	if t.Name != other.Name {
+		return false
+	}
+	if t.PkgPath != other.PkgPath {
+		return false
+	}
+	if t.DefaultPackageAlias != other.DefaultPackageAlias {
+		return false
+	}
+	if t.Description != other.Description {
+		return false
+	}
+	if t.Import != other.Import {
+		return false
+	}
+	if t.IsUniverseType != other.IsUniverseType {
+		return false
+	}
+	if t.IsByAddress != other.IsByAddress {
+		return false
+	}
+	if t.SymbolKind != other.SymbolKind {
+		return false
+	}
+
+	if (t.AliasMetadata == nil) != (other.AliasMetadata == nil) {
+		return false
+	}
+
+	if t.AliasMetadata != nil && !t.AliasMetadata.Equals(*other.AliasMetadata) {
+		return false
+	}
+
+	return true
+}
+
+func (s StructMeta) Reduce() definitions.StructMetadata {
+	reducedFields := []definitions.FieldMetadata{}
+	for _, f := range s.Fields {
+		reducedFields = append(reducedFields, f.Reduce())
+	}
+
+	return definitions.StructMetadata{
+		Name:        s.Name,
+		PkgPath:     s.PkgPath,
+		Description: s.Annotations.GetDescription(),
+		Fields:      reducedFields,
+		Deprecation: getDeprecationOpts(s.Annotations),
+	}
+}
+
+func (s EnumMetadataWithAst) Reduce() definitions.EnumMetadata {
+	return definitions.EnumMetadata{
+		Name:        s.Name,
+		PkgPath:     s.PkgPath,
+		Description: s.Annotations.GetDescription(),
+		Values:      s.Values,
+		Type:        s.Type.Name,
+		Deprecation: getDeprecationOpts(s.Annotations),
+	}
+}
+
+func (s FieldMeta) Reduce() definitions.FieldMetadata {
+	return definitions.FieldMetadata{
+		Name:        s.Name,
+		Description: s.Annotations.GetDescription(),
+		Tag:         s.Tag,
+		IsEmbedded:  s.IsEmbedded,
+		Deprecation: common.Ptr(getDeprecationOpts(s.Annotations)),
+	}
+}
+*/

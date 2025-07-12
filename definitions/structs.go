@@ -29,7 +29,7 @@ type OrderedIdent struct {
 
 // This struct describes a function parameter's metadata without Gleece's additions
 type ParamMeta struct {
-	OrderedIdent
+	Ordinal   int
 	Name      string
 	IsContext bool
 	TypeMeta  TypeMetadata
@@ -47,7 +47,7 @@ type FuncParam struct {
 }
 
 type FuncReturnValue struct {
-	OrderedIdent
+	Ordinal int
 	TypeMetadata
 	UniqueImportSerial uint64
 }
@@ -84,7 +84,7 @@ type TypeMetadata struct {
 	PkgPath             string
 	DefaultPackageAlias string
 	Description         string
-	Import              ImportType
+	Import              common.ImportType
 	IsUniverseType      bool
 	IsByAddress         bool
 	SymbolKind          common.SymKind

@@ -8,6 +8,7 @@ const (
 	SymKindStruct     SymKind = "Struct"
 	SymKindInterface  SymKind = "Interface"
 	SymKindAlias      SymKind = "Alias"
+	SymKindEnum       SymKind = "Enum"
 	SymKindFunction   SymKind = "Function"
 	SymKindReceiver   SymKind = "Receiver"
 	SymKindField      SymKind = "Field"
@@ -33,4 +34,12 @@ const (
 	AstNodeKindFunction    AstNodeKind = "Function"
 	AstNodeKindVariadic    AstNodeKind = "Variadic"
 	AstNodeKindParenthesis AstNodeKind = "Parenthesis"
+)
+
+type ImportType string
+
+const (
+	ImportTypeNone  ImportType = "None"
+	ImportTypeAlias ImportType = "Alias"
+	ImportTypeDot   ImportType = "Dot"
 )

@@ -1,0 +1,224 @@
+=== SymbolGraph Dump ===
+Total nodes: 13
+
+[Unknown] Ident:int
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1749515733
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+  Dependencies: (none)
+  Dependents:
+    • [Parameter] Field:queryParam
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1749515733
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+
+[Parameter] Field:headerParam
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1749515733
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+  Dependencies:
+    • [Unknown] Ident:float32
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1749515733
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+  Dependents:
+    • [Receiver] Func:ValidMethodWithSimpleRouteQueryAndHeaderParameters
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1749515733
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+
+[Unknown] Ident:float32
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1749515733
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+  Dependencies: (none)
+  Dependents:
+    • [Parameter] Field:headerParam
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1749515733
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+
+[Parameter] Field:body
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1749515733
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+  Dependencies:
+    • [Struct] Type:StructWithStructSlice
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1749515733
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+  Dependents:
+    • [Receiver] Func:MethodWithComplexExternalTypes
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1749515733
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+
+[Parameter] Field:routeParam
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1749515733
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+  Dependencies:
+    • [Unknown] Ident:string
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1749515733
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+  Dependents:
+    • [Receiver] Func:ValidMethodWithSimpleRouteQueryAndHeaderParameters
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1749515733
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+
+[Unknown] Ident:string
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1749515733
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+  Dependencies: (none)
+  Dependents:
+    • [Parameter] Field:routeParam
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1749515733
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+
+[RetType] Ident:error
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1749515733
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+  Dependencies: (none)
+  Dependents:
+    • [Receiver] Func:ValidMethodWithSimpleRouteQueryAndHeaderParameters
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1749515733
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+
+[Receiver] Func:MethodWithComplexExternalTypes
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1749515733
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+  Dependencies:
+    • [Parameter] Field:body
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1749515733
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+    • [RetType] Expr:*ast.SelectorExpr
+    • 910
+
+  Dependents:
+    • [Struct] Type:GraphController
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1749515733
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+
+[Struct] Type:StructWithStructSlice
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1749515733
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+  Dependencies: (none)
+  Dependents:
+    • [Parameter] Field:body
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1749515733
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+
+[RetType] Expr:*ast.SelectorExpr
+    • 910
+
+  Dependencies: (none)
+  Dependents:
+    • [Receiver] Func:MethodWithComplexExternalTypes
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1749515733
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+
+[Struct] Type:GraphController
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1749515733
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+  Dependencies:
+    • [Receiver] Func:ValidMethodWithSimpleRouteQueryAndHeaderParameters
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1749515733
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+    • [Receiver] Func:MethodWithComplexExternalTypes
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1749515733
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+  Dependents: (none)
+
+[Receiver] Func:ValidMethodWithSimpleRouteQueryAndHeaderParameters
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1749515733
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+  Dependencies:
+    • [Parameter] Field:routeParam
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1749515733
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+    • [Parameter] Field:queryParam
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1749515733
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+    • [Parameter] Field:headerParam
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1749515733
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+    • [RetType] Ident:error
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1749515733
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+  Dependents:
+    • [Struct] Type:GraphController
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1749515733
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+
+[Parameter] Field:queryParam
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1749515733
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+  Dependencies:
+    • [Unknown] Ident:int
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1749515733
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+  Dependents:
+    • [Receiver] Func:ValidMethodWithSimpleRouteQueryAndHeaderParameters
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1749515733
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+
+=== End SymbolGraph ===

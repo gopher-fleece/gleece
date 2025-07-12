@@ -53,8 +53,8 @@ func getMetadata(config *definitions.GleeceConfig) ([]definitions.ControllerMeta
 
 	lastErr := visitor.GetLastError()
 	if lastErr != nil {
-		logger.Error("Visitor encountered at-least one error. Last error:\n%v\n\t%s", *lastErr, visitor.GetFormattedDiagnosticStack())
-		return nil, nil, false, *lastErr
+		logger.Error("Visitor encountered at-least one error. Last error:\n%v\n\t%s", lastErr, visitor.GetFormattedDiagnosticStack())
+		return nil, nil, false, lastErr
 	}
 
 	flatModels, hasAnyErrorTypes, err := visitor.GetModelsFlat()

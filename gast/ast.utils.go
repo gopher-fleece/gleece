@@ -6,6 +6,7 @@ import (
 	"go/token"
 	"go/types"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/gopher-fleece/gleece/common"
@@ -72,7 +73,7 @@ func DoesStructEmbedStruct(
 // GetDefaultPackageAlias returns the default import alias for the given file
 func GetDefaultPackageAlias(file *ast.File) (string, error) {
 	if file.Name != nil {
-		return GetDefaultAlias(file.Name.Name), nil
+		return GetDefaultPkgAliasByName(file.Name.Name), nil
 	}
 	return "", fmt.Errorf("source file does not have a name")
 }
@@ -137,12 +138,12 @@ func IsPackageDotImported(file *ast.File, packageName string) (bool, string) {
 }
 
 func IsAliasDefault(fullPackageName string, alias string) bool {
-	packageName := GetDefaultAlias(fullPackageName)
+	packageName := GetDefaultPkgAliasByName(fullPackageName)
 	return alias == packageName
 }
 
-func GetDefaultAlias(PkgPath string) string {
-	segments := strings.Split(PkgPath, "/")
+func GetDefaultPkgAliasByName(pkgPath string) string {
+	segments := strings.Split(pkgPath, "/")
 	last := segments[len(segments)-1]
 
 	// Check if last segment is a version (v2, v3, etc.)
@@ -494,11 +495,12 @@ func GetFieldTypeString(fieldType ast.Expr) string {
 
 	case *ast.ChanType:
 		dir := ""
-		if t.Dir == ast.SEND {
+		switch t.Dir {
+		case ast.SEND:
 			dir = "send-only"
-		} else if t.Dir == ast.RECV {
+		case ast.RECV:
 			dir = "receive-only"
-		} else {
+		default:
 			dir = "bidirectional"
 		}
 		return fmt.Sprintf("Channel (%s, type: %s)", dir, GetFieldTypeString(t.Value))
@@ -649,4 +651,187 @@ func isParameter(v *types.Var) bool {
 		}
 	}
 	return false
+}
+
+func GetIdentFromExpr(expr ast.Expr) *ast.Ident {
+	switch t := expr.(type) {
+	case *ast.Ident:
+		return t
+
+	case *ast.StarExpr:
+		return GetIdentFromExpr(t.X)
+
+	case *ast.SelectorExpr:
+		// Returns the selector's "Baz" (e.g. `otherpkg.Baz`)
+		return t.Sel
+
+	case *ast.ArrayType:
+		return GetIdentFromExpr(t.Elt)
+
+	case *ast.MapType:
+		// optional: you could return key or value ident
+		return GetIdentFromExpr(t.Value)
+
+	case *ast.ChanType:
+		return GetIdentFromExpr(t.Value)
+
+	case *ast.FuncType:
+		// function types have no identifier
+		return nil
+	}
+
+	return nil
+}
+
+// FindTypeSpecInPackage finds the AST TypeSpec for the given type name
+// in the provided packages.Package. It returns the *ast.TypeSpec and
+// the *ast.File it was found in, or (nil, nil) if not found.
+func FindTypeSpecInPackage(pkg *packages.Package, typeName string) (*ast.TypeSpec, *ast.File) {
+	for _, f := range pkg.Syntax {
+		// fast-path: if the file’s token.File doesn’t contain any
+		// decls that start near “typeName”, we could skip—but
+		// for simplicity we just scan all TYPE decls here.
+		for _, decl := range f.Decls {
+			gen, ok := decl.(*ast.GenDecl)
+			if !ok || gen.Tok != token.TYPE {
+				continue
+			}
+			for _, spec := range gen.Specs {
+				ts, ok := spec.(*ast.TypeSpec)
+				if !ok {
+					continue
+				}
+				if ts.Name.Name == typeName {
+					return ts, f
+				}
+			}
+		}
+	}
+	return nil, nil
+}
+
+func ResolveTypeSpecFromField(
+	field *ast.Field,
+	sourceFile *ast.File,
+	pkgResolver func(pkgPath string) (*packages.Package, error),
+	defaultPkgPath string, // <<<< This is only for fallback if pkgPath is still ""
+) (*packages.Package, *ast.File, *ast.TypeSpec, error) {
+	expr := UnwrapFirstNamed(field.Type)
+	if expr == nil {
+		return nil, nil, nil, fmt.Errorf("could not resolve named type from field")
+	}
+
+	var ident *ast.Ident
+	var pkgPath string
+	var err error
+
+	switch t := expr.(type) {
+	case *ast.Ident:
+		ident = t
+		pkgPath, err = ResolveUnqualifiedIdentPackage(sourceFile, ident)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+
+	case *ast.SelectorExpr:
+		ident = t.Sel
+		pkgPath, err = ResolveImportPathForSelector(sourceFile, t)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+
+	default:
+		return nil, nil, nil, fmt.Errorf("unsupported resolved expression: %T", expr)
+	}
+
+	if ident == nil {
+		return nil, nil, nil, fmt.Errorf("could not extract identifier")
+	}
+
+	// If still blank, fallback to caller-supplied context (i.e., current file's package)
+	if pkgPath == "" {
+		pkgPath = defaultPkgPath
+	}
+
+	pkg, err := pkgResolver(pkgPath)
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("failed to resolve package %q: %w", pkgPath, err)
+	}
+
+	spec, file := FindTypeSpecInPackage(pkg, ident.Name)
+	if spec == nil || file == nil {
+		return nil, nil, nil, fmt.Errorf("type %q not found in package %q", ident.Name, pkgPath)
+	}
+
+	return pkg, file, spec, nil
+}
+
+// unwrapFirstNamed walks through container expressions (e.g. *T, []T, map[K]V)
+// and returns the first inner expression that is either *ast.Ident or *ast.SelectorExpr.
+func UnwrapFirstNamed(expr ast.Expr) ast.Expr {
+	for {
+		switch t := expr.(type) {
+		case *ast.ArrayType:
+			expr = t.Elt
+		case *ast.MapType:
+			expr = t.Value
+		case *ast.ChanType:
+			expr = t.Value
+		case *ast.StarExpr:
+			// Only unwrap star if inner type is NOT a SelectorExpr
+			if _, isSelector := t.X.(*ast.SelectorExpr); isSelector {
+				// stop here — we need the selector to resolve the package alias
+				return expr
+			}
+			expr = t.X
+		default:
+			return expr
+		}
+	}
+}
+
+func ResolveImportPathForSelector(source *ast.File, sel *ast.SelectorExpr) (string, error) {
+	ident, ok := sel.X.(*ast.Ident)
+	if !ok {
+		return "", fmt.Errorf("selector base is not an ident: %T", sel.X)
+	}
+
+	alias := ident.Name
+
+	for _, imp := range source.Imports {
+		rawPath, err := strconv.Unquote(imp.Path.Value)
+		if err != nil {
+			continue
+		}
+
+		// Handle explicit alias
+		if imp.Name != nil && imp.Name.Name == alias {
+			return rawPath, nil
+		}
+
+		// Handle default alias
+		if imp.Name == nil {
+			parts := strings.Split(rawPath, "/")
+			if len(parts) > 0 && parts[len(parts)-1] == alias {
+				return rawPath, nil
+			}
+		}
+	}
+
+	return "", fmt.Errorf("no matching import for alias %q", alias)
+}
+
+func ResolveUnqualifiedIdentPackage(source *ast.File, ident *ast.Ident) (string, error) {
+	for _, imp := range source.Imports {
+		if imp.Name != nil && imp.Name.Name == "." {
+			rawPath, err := strconv.Unquote(imp.Path.Value)
+			if err == nil {
+				return rawPath, nil // dot-import wins
+			}
+		}
+	}
+
+	// If not dot-imported, assume it's local
+	// We can't resolve the actual import path from here alone, so:
+	return "", nil // Signal: try local package (caller must patch it later)
 }

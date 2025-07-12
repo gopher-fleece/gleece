@@ -229,7 +229,7 @@ func GetGraphByGleeceConfigOrFail() *symboldg.SymbolGraph {
 			Fail(
 				fmt.Sprintf(
 					"Visitor encountered at-least one error. Last error:\n%v\n\t%s",
-					*lastErr,
+					lastErr,
 					controllerVisitor.GetFormattedDiagnosticStack(),
 				),
 			)

@@ -4,8 +4,9 @@ import (
 	"go/ast"
 
 	"github.com/gopher-fleece/gleece/extractor/annotations"
-	"github.com/gopher-fleece/gleece/extractor/arbitrators"
+	"github.com/gopher-fleece/gleece/extractor/metadata"
 	"github.com/gopher-fleece/gleece/gast"
+	"github.com/gopher-fleece/gleece/graphs"
 )
 
 type KeyableNodeMeta struct {
@@ -16,36 +17,42 @@ type KeyableNodeMeta struct {
 	FVersion gast.FileVersion
 }
 
-func (k KeyableNodeMeta) SymbolKey() SymbolKey {
-	return SymbolKeyFor(k.Decl, &k.FVersion)
+func (k KeyableNodeMeta) SymbolKey() graphs.SymbolKey {
+	return graphs.SymbolKeyFor(k.Decl, &k.FVersion)
 }
 
 type CreateControllerNode struct {
-	Data        ControllerSymbolicMetadata
-	Decl        *ast.TypeSpec
+	Data        metadata.StructMeta
 	Annotations *annotations.AnnotationHolder
 }
 
 type CreateRouteNode struct {
-	Data             RouteSymbolicMetadata
-	Decl             *ast.FuncDecl
+	Data             metadata.ReceiverMeta
 	Annotations      *annotations.AnnotationHolder
 	ParentController KeyableNodeMeta
 }
 
 type CreateParameterNode struct {
-	Data        arbitrators.FuncParamWithAst
-	Decl        ast.Node
+	Data        metadata.FuncParam
 	ParentRoute KeyableNodeMeta
 }
 
 type CreateReturnValueNode struct {
-	Data        arbitrators.FuncReturnValueWithAst
-	Decl        ast.Node
+	Data        metadata.FuncReturnValue
 	ParentRoute KeyableNodeMeta
 }
 
-type CreateTypeNode struct {
-	Data        arbitrators.TypeMetadataWithAst // full type info
-	Annotations *annotations.AnnotationHolder   // comments on that type, if any
+type CreateStructNode struct {
+	Data        metadata.StructMeta
+	Annotations *annotations.AnnotationHolder
+}
+
+type CreateEnumNode struct {
+	Data        metadata.EnumMeta
+	Annotations *annotations.AnnotationHolder
+}
+
+type CreateConstNode struct {
+	Data        metadata.ConstMeta
+	Annotations *annotations.AnnotationHolder
 }

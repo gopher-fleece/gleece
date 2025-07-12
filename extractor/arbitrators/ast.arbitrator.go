@@ -11,6 +11,7 @@ import (
 	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/extractor/annotations"
+	"github.com/gopher-fleece/gleece/extractor/metadata"
 	"github.com/gopher-fleece/gleece/gast"
 	"golang.org/x/tools/go/packages"
 )
@@ -28,6 +29,104 @@ func NewAstArbitrator(pkgFacade *PackagesFacade, fileSet *token.FileSet) AstArbi
 		pkgFacade: pkgFacade,
 		fileSet:   fileSet,
 	}
+}
+
+func (arb *AstArbitrator) GetFuncParametersMeta(
+	typeVisitor TypeVisitor,
+	pkgPath string,
+	file *ast.File,
+	funcDecl *ast.FuncDecl,
+	funcAnnotations *annotations.AnnotationHolder,
+) ([]metadata.FuncParam, error) {
+	params := []metadata.FuncParam{}
+
+	if funcDecl.Type.Params == nil || funcDecl.Type.Params.List == nil {
+		return params, nil
+	}
+
+	for paramOrdinal, field := range funcDecl.Type.Params.List {
+		fields, err := typeVisitor.VisitField(file, field, pkgPath)
+		if err != nil {
+			return nil, err
+		}
+
+		for index, f := range fields {
+			params = append(
+				params,
+				metadata.FuncParam{
+					SymNodeMeta: metadata.SymNodeMeta{
+						Name:        f.Name,
+						Node:        f.Node,
+						SymbolKind:  common.SymKindParameter,
+						PkgPath:     f.PkgPath,
+						Annotations: funcAnnotations,
+						FVersion:    f.FVersion,
+					},
+					Ordinal: paramOrdinal + index, // This accounts for params like "a, b string"
+					Type:    f.Type,
+				},
+			)
+		}
+	}
+
+	return params, nil
+}
+
+func (arb *AstArbitrator) GetFuncRetValMeta(
+	typeVisitor TypeVisitor,
+	pkgPath string,
+	file *ast.File,
+	funcDecl *ast.FuncDecl,
+	funcAnnotations *annotations.AnnotationHolder,
+) ([]metadata.FuncReturnValue, error) {
+	params := []metadata.FuncReturnValue{}
+
+	if funcDecl.Type.Params == nil || funcDecl.Type.Params.List == nil {
+		return params, nil
+	}
+
+	for index, field := range funcDecl.Type.Results.List {
+		fields, err := typeVisitor.VisitField(file, field, pkgPath)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(fields) < 1 {
+			return nil, fmt.Errorf(
+				"return value %d on function %s did not yield any information and could not be processed",
+				index,
+				funcDecl.Name,
+			)
+		}
+
+		if len(fields) > 1 {
+			return nil, fmt.Errorf(
+				"return value %d on function %s is a multi-variable declaration which is not currently supported",
+				index,
+				funcDecl.Name,
+			)
+		}
+
+		retValField := fields[0]
+		params = append(
+			params,
+			metadata.FuncReturnValue{
+				SymNodeMeta: metadata.SymNodeMeta{
+					Name:        retValField.Name,
+					Node:        retValField.Node,
+					SymbolKind:  common.SymKindParameter,
+					PkgPath:     retValField.PkgPath,
+					Annotations: funcAnnotations,
+					FVersion:    retValField.FVersion,
+				},
+				Ordinal: index, // This accounts for params like "a, b string"
+				Type:    retValField.Type,
+			},
+		)
+
+	}
+
+	return params, nil
 }
 
 // GetFuncParameterTypeList gets metadata for all parameters of the given function in the given AST file
@@ -107,6 +206,53 @@ func (arb *AstArbitrator) GetTypeMetaForExpr(file *ast.File, expr ast.Expr) (Typ
 	}
 }
 
+func (arb *AstArbitrator) GetImportType(file *ast.File, expr ast.Expr) (common.ImportType, error) {
+	switch e := expr.(type) {
+
+	case *ast.Ident:
+		// Check for universe type first
+		if gast.IsUniverseType(e.Name) {
+			return common.ImportTypeNone, nil
+		}
+
+		// Try to detect dot-import
+		relevantPkg, err := arb.GetPackageFromDotImportedIdent(file, e)
+		if err != nil {
+			return common.ImportTypeNone, err
+		}
+		if relevantPkg != nil {
+			return common.ImportTypeDot, nil
+		}
+
+		// If not dot, and not selector, assume it's local
+		return common.ImportTypeNone, nil
+
+	case *ast.SelectorExpr:
+		// If it's a selector, assume it's an aliased import (either default or custom alias)
+		return common.ImportTypeAlias, nil
+
+	case *ast.StarExpr:
+		// Dereference and recurse
+		return arb.GetImportType(file, e.X)
+
+	case *ast.ArrayType:
+		return arb.GetImportType(file, e.Elt)
+
+	case *ast.MapType:
+		// IMPORTANT NOTE: Maps CAN have two separate import types! (Key & Value)
+		// Currently, we're making a pretty ugly assumption that the key is a universe type and not an imported one!
+		//
+		// Return the import type of the value type
+		return arb.GetImportType(file, e.Value)
+
+	case *ast.ChanType:
+		return arb.GetImportType(file, e.Value)
+
+	default:
+		return common.ImportTypeNone, fmt.Errorf("unsupported expression type: %T", expr)
+	}
+}
+
 // GetTypeMetaByIdent gets type metadata for the given Ident in the given AST file
 func (arb *AstArbitrator) GetTypeMetaByIdent(file *ast.File, ident *ast.Ident) (TypeMetadataWithAst, error) {
 	comments := gast.GetCommentsFromIdent(arb.fileSet, file, ident)
@@ -137,7 +283,7 @@ func (arb *AstArbitrator) GetTypeMetaByIdent(file *ast.File, ident *ast.Ident) (
 		// The identifier is a member of the universe, e.g. 'error'.
 		// Nothing to do here. Leave the package empty so the downstream generator knows no import/alias is needed
 		meta.IsUniverseType = true
-		meta.Import = definitions.ImportTypeNone
+		meta.Import = common.ImportTypeNone
 		meta.SymbolKind = common.SymKindUnknown
 		return meta, nil
 	}
@@ -149,7 +295,7 @@ func (arb *AstArbitrator) GetTypeMetaByIdent(file *ast.File, ident *ast.Ident) (
 
 	if relevantPkg != nil {
 		// The identifier is a type from a dot imported package
-		meta.Import = definitions.ImportTypeDot
+		meta.Import = common.ImportTypeDot
 		meta.PkgPath = relevantPkg.PkgPath
 		meta.DefaultPackageAlias = relevantPkg.Name
 		kind, err := gast.GetSymbolKind(relevantPkg, ident.Name)
@@ -189,9 +335,9 @@ func (arb *AstArbitrator) GetTypeMetaByIdent(file *ast.File, ident *ast.Ident) (
 			return meta, fmt.Errorf("could not determine entity kind for '%s.%s", currentPackageName, ident.Name)
 		}
 
-		meta.Import = definitions.ImportTypeNone
+		meta.Import = common.ImportTypeNone
 		meta.PkgPath = currentPackageName
-		meta.DefaultPackageAlias = gast.GetDefaultAlias(currentPackageName)
+		meta.DefaultPackageAlias = gast.GetDefaultPkgAliasByName(currentPackageName)
 		meta.SymbolKind = symbolKind
 
 		if symbolKind == common.SymKindAlias {
@@ -219,7 +365,7 @@ func (arb *AstArbitrator) GetTypeMetaBySelectorExpr(file *ast.File, selector *as
 	meta := TypeMetadataWithAst{
 		TypeMetadata: definitions.TypeMetadata{
 			Name:   entityName,
-			Import: definitions.ImportTypeAlias,
+			Import: common.ImportTypeAlias,
 		},
 		// TypeExpr must be set later, after package resolution
 		FVersion: &fVer,
@@ -262,7 +408,7 @@ func (arb *AstArbitrator) GetTypeMetaBySelectorExpr(file *ast.File, selector *as
 	}
 
 	meta.PkgPath = realFullPackageName
-	meta.DefaultPackageAlias = gast.GetDefaultAlias(realFullPackageName)
+	meta.DefaultPackageAlias = gast.GetDefaultPkgAliasByName(realFullPackageName)
 
 	pkg, err := arb.pkgFacade.GetPackage(realFullPackageName)
 	if err != nil {
