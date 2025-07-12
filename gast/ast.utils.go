@@ -3,6 +3,7 @@ package gast
 import (
 	"fmt"
 	"go/ast"
+	"go/constant"
 	"go/token"
 	"go/types"
 	"path/filepath"
@@ -842,4 +843,72 @@ func ResolveUnqualifiedIdentPackage(source *ast.File, ident *ast.Ident) (string,
 
 func GetAstFileName(fSet *token.FileSet, file *ast.File) string {
 	return fSet.Position(file.Package).Filename
+}
+
+func ExtractConstValue(kind types.BasicKind, constVal *types.Const) any {
+	switch kind {
+	case types.String:
+		return constant.StringVal(constVal.Val())
+	case types.Int, types.Int8, types.Int16, types.Int32, types.Int64:
+		if val, ok := constant.Int64Val(constVal.Val()); ok {
+			return val
+		}
+	case types.Uint, types.Uint8, types.Uint16, types.Uint32, types.Uint64:
+		if val, ok := constant.Uint64Val(constVal.Val()); ok {
+			return val
+		}
+	case types.Float32, types.Float64:
+		if val, ok := constant.Float64Val(constVal.Val()); ok {
+			return val
+		}
+	case types.Bool:
+		return constant.BoolVal(constVal.Val())
+	}
+	return nil
+}
+
+func FindConstSpecNode(pkg *packages.Package, constName string) ast.Node {
+	for _, file := range pkg.Syntax {
+		for _, decl := range file.Decls {
+			genDecl, ok := decl.(*ast.GenDecl)
+			if !ok || genDecl.Tok != token.CONST {
+				continue
+			}
+			for _, spec := range genDecl.Specs {
+				valSpec, ok := spec.(*ast.ValueSpec)
+				if !ok {
+					continue
+				}
+				for _, name := range valSpec.Names {
+					if name.Name == constName {
+						return valSpec
+					}
+				}
+			}
+		}
+	}
+	return nil
+}
+
+// GetCommentsFromNode extracts comments attached directly to the AST node (like FuncDecl.Doc).
+// Returns a slice of comment texts or empty if none.
+func GetCommentsFromNode(node ast.Node) []string {
+	if node == nil {
+		return nil
+	}
+
+	// Many node types have a Doc field of type *ast.CommentGroup.
+	// We'll use a type switch to get the Doc comment group.
+	switch n := node.(type) {
+	case *ast.FuncDecl:
+	case *ast.GenDecl:
+	case *ast.TypeSpec:
+	case *ast.ValueSpec:
+	case *ast.Field:
+		if n.Doc != nil {
+			return MapDocListToStrings(n.Doc.List)
+		}
+	}
+
+	return nil
 }

@@ -3,6 +3,7 @@ package metadata
 import (
 	"fmt"
 	"go/ast"
+	"go/types"
 
 	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/definitions"
@@ -39,6 +40,41 @@ const (
 	EnumValueKindFloat64 EnumValueKind = "float64"
 	EnumValueKindBool    EnumValueKind = "bool"
 )
+
+func NewEnumValueKind(kind types.BasicKind) (EnumValueKind, error) {
+	switch kind {
+	case types.String:
+		return EnumValueKindString, nil
+	case types.Int:
+		return EnumValueKindInt, nil
+	case types.Int8:
+		return EnumValueKindInt8, nil
+	case types.Int16:
+		return EnumValueKindInt16, nil
+	case types.Int32:
+		return EnumValueKindInt32, nil
+	case types.Int64:
+		return EnumValueKindInt64, nil
+	case types.Uint:
+		return EnumValueKindUInt, nil
+	case types.Uint8:
+		return EnumValueKindUInt8, nil
+	case types.Uint16:
+		return EnumValueKindUInt16, nil
+	case types.Uint32:
+		return EnumValueKindUInt32, nil
+	case types.Uint64:
+		return EnumValueKindUInt64, nil
+	case types.Float32:
+		return EnumValueKindFloat32, nil
+	case types.Float64:
+		return EnumValueKindFloat64, nil
+	case types.Bool:
+		return EnumValueKindBool, nil
+	default:
+		return "", fmt.Errorf("unsupported basic kind: %v", kind)
+	}
+}
 
 type SymNodeMeta struct {
 	Name        string

@@ -9,6 +9,7 @@ const (
 	SymKindInterface  SymKind = "Interface"
 	SymKindAlias      SymKind = "Alias"
 	SymKindEnum       SymKind = "Enum"
+	SymKindEnumValue  SymKind = "EnumValue"
 	SymKindFunction   SymKind = "Function"
 	SymKindReceiver   SymKind = "Receiver"
 	SymKindField      SymKind = "Field"

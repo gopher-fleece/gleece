@@ -1,7 +1,9 @@
 package visitors
 
 import (
+	"fmt"
 	"go/ast"
+	"go/types"
 
 	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/definitions"
@@ -124,6 +126,100 @@ func (v *RecursiveTypeVisitor) VisitStructType(file *ast.File, node *ast.TypeSpe
 	return structMeta, nil
 }
 
+func (v *RecursiveTypeVisitor) VisitEnumType(
+	pkg *packages.Package,
+	file *ast.File,
+	fVersion *gast.FileVersion,
+	node *ast.TypeSpec,
+) (metadata.EnumMeta, error) {
+	typeName, err := gast.GetTypeNameOrError(pkg, node.Name.Name)
+	if err != nil {
+		return metadata.EnumMeta{}, err
+	}
+
+	meta, err := v.extractEnumAliasType(pkg, fVersion, node, typeName)
+	if err != nil {
+		return meta, err
+	}
+
+	v.context.MetadataCache.AddEnum(&meta)
+	return meta, nil
+}
+func (v *RecursiveTypeVisitor) extractEnumAliasType(
+	pkg *packages.Package,
+	fVersion *gast.FileVersion,
+	node ast.Node,
+	typeName *types.TypeName,
+) (metadata.EnumMeta, error) {
+
+	basic, isBasicType := typeName.Type().Underlying().(*types.Basic)
+	if !isBasicType {
+		return metadata.EnumMeta{}, fmt.Errorf("type %s is not a basic type", typeName.Name())
+	}
+
+	kind, err := metadata.NewEnumValueKind(basic.Kind())
+	if err != nil {
+		return metadata.EnumMeta{}, err
+	}
+
+	enum := metadata.EnumMeta{
+		SymNodeMeta: metadata.SymNodeMeta{
+			Name:       typeName.Name(),
+			Node:       node,
+			SymbolKind: common.SymKindEnum,
+			PkgPath:    pkg.PkgPath,
+			FVersion:   fVersion,
+		},
+		ValueKind: kind,
+		Values:    []metadata.EnumValueDefinition{},
+	}
+
+	scope := pkg.Types.Scope()
+	for _, name := range scope.Names() {
+		obj := scope.Lookup(name)
+		constVal, isConst := obj.(*types.Const)
+		if !isConst || !types.Identical(constVal.Type(), typeName.Type()) {
+			continue
+		}
+
+		val := gast.ExtractConstValue(basic.Kind(), constVal)
+		if val == nil {
+			continue
+		}
+
+		// Attempt to find the AST node
+		var constNode ast.Node
+		if v.context != nil && v.context.ArbitrationProvider != nil {
+			constNode = gast.FindConstSpecNode(pkg, constVal.Name())
+		}
+
+		// Attempt to extract annotations
+		var holder *annotations.AnnotationHolder
+		if constNode != nil {
+			comments := gast.GetCommentsFromNode(constNode)
+			if h, err := annotations.NewAnnotationHolder(comments, annotations.CommentSourceProperty); err == nil {
+				holder = &h
+			} else {
+				return metadata.EnumMeta{}, err
+			}
+		}
+
+		enum.Values = append(enum.Values, metadata.EnumValueDefinition{
+			SymNodeMeta: metadata.SymNodeMeta{
+				Name:        constVal.Name(),
+				Node:        constNode,
+				SymbolKind:  common.SymKindEnumValue,
+				PkgPath:     pkg.PkgPath,
+				Annotations: holder,
+				FVersion:    fVersion,
+			},
+			Value: val,
+		})
+	}
+
+	return enum, nil
+}
+
 func (v *RecursiveTypeVisitor) VisitField(
 	pkg *packages.Package,
 	file *ast.File,
@@ -240,7 +336,7 @@ func (v *RecursiveTypeVisitor) processTypeUsage(
 		return v.getFrozenError("field '%v' is a multi-variable declaration which is currently not supported", field.Names)
 	}
 
-	typePkg, underlyingAstFile, typeSpec, err := gast.ResolveTypeSpecFromField(
+	underlyingTypePkg, underlyingAstFile, typeSpec, err := gast.ResolveTypeSpecFromField(
 		pkg,
 		file,
 		field,
@@ -251,7 +347,7 @@ func (v *RecursiveTypeVisitor) processTypeUsage(
 		return v.frozenError(err)
 	}
 
-	fVersion, err := v.context.MetadataCache.GetFileVersion(underlyingAstFile, typePkg.Fset)
+	fVersion, err := v.context.MetadataCache.GetFileVersion(underlyingAstFile, underlyingTypePkg.Fset)
 	if err != nil {
 		return v.frozenError(err)
 	}
@@ -262,12 +358,40 @@ func (v *RecursiveTypeVisitor) processTypeUsage(
 	}
 
 	// Ok, recurse
-	_, err = v.VisitStructType(underlyingAstFile, typeSpec)
+	err = v.visitTypeSpec(underlyingTypePkg, underlyingAstFile, fVersion, typeSpec)
 	if err != nil {
 		return v.frozenError(err)
 	}
 
 	return nil
+}
+
+func (v *RecursiveTypeVisitor) visitTypeSpec(
+	pkg *packages.Package,
+	file *ast.File,
+	fVersion *gast.FileVersion,
+	spec *ast.TypeSpec,
+) error {
+	var err error
+
+	switch t := spec.Type.(type) {
+	case *ast.StructType:
+		_, err := v.VisitStructType(file, spec)
+		if err != nil {
+			return v.frozenError(err)
+		}
+	case *ast.Ident:
+		// Enum-like: alias of primitive (string, int, etc)
+		// Optional: Check constants with the same name prefix to confirm it's "really" enum-like
+		_, err := v.VisitEnumType(pkg, file, fVersion, spec)
+		if err != nil {
+			return v.frozenError(err)
+		}
+	default:
+		err = fmt.Errorf("unhandled TypeSpec type: %T", t)
+	}
+
+	return err
 }
 
 func (v *RecursiveTypeVisitor) getComments(onNodeDoc *ast.CommentGroup, nodeGenDecl *ast.GenDecl) (*annotations.AnnotationHolder, error) {
