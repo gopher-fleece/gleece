@@ -715,6 +715,13 @@ func FindTypeSpecInPackage(pkg *packages.Package, typeName string) (*ast.TypeSpe
 	return nil, nil
 }
 
+// ResolveTypeSpecFromField Resolves type information from the given field.
+// Returns the declaring *packages.Package, *ast.File and the associated *ast.TypeSpec
+// Has 3 possible outcomes:
+//
+// * Returns all of the above (the field references a concrete type somewhere)
+// * Returns 4 nils - the field's type is a 'Universe' one
+// * Returns an error
 func ResolveTypeSpecFromField(
 	declaringPkg *packages.Package, // <<<< Used only for locally defined type references
 	declaringFile *ast.File,
@@ -753,8 +760,13 @@ func ResolveTypeSpecFromField(
 		return nil, nil, nil, fmt.Errorf("could not extract identifier")
 	}
 
-	// If still blank, fallback to caller-supplied context (i.e., current file's package)
+	// If still blank, check whether the type is a universe one.
 	if pkgPath == "" {
+		if IsUniverseType(ident.Name) {
+			// Universe types are a special case
+			return nil, nil, nil, nil
+		}
+		// Fallback to the field's declaring package
 		pkgPath = declaringPkg.PkgPath
 	}
 

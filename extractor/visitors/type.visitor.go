@@ -267,16 +267,46 @@ func (v *RecursiveTypeVisitor) VisitField(
 			return nil, v.frozenError(err)
 		}
 
+		// These results will either be full, for real types, nil for universe ones or an outright error
+		typeDeclaringPkg, underlyingAstFile, typeSpec, err := gast.ResolveTypeSpecFromField(
+			pkg,
+			file,
+			field,
+			v.context.ArbitrationProvider.Pkg().GetPackage,
+		)
+
+		// If we're looking at a universe type, there's no package and PkgPath is left empty
+		typeRefPkgPath := ""
+		if typeDeclaringPkg != nil {
+			typeRefPkgPath = typeDeclaringPkg.PkgPath
+		}
+
+		if err != nil {
+			return nil, v.frozenError(err)
+		}
+
+		// If we're looking at a universe type, there's no AST file nor FVersion. Special case.
+		var typeRefKey graphs.SymbolKey
+		if underlyingAstFile != nil {
+			typeFileFVersion, err := v.context.MetadataCache.GetFileVersion(underlyingAstFile, typeDeclaringPkg.Fset)
+			typeRefKey = graphs.SymbolKeyFor(typeSpec, typeFileFVersion)
+			if err != nil {
+				return nil, v.frozenError(err)
+			}
+		} else {
+			typeRefKey = graphs.SymbolKeyForUniverseType("something")
+		}
+
 		// Create TypeUsageMeta (AST part only)
 		typeUsage := metadata.TypeUsageMeta{
 			SymNodeMeta: metadata.SymNodeMeta{
 				Name:        typeIdentName,
 				Node:        field.Type,
-				PkgPath:     pkg.PkgPath, // So, this actually needs to be the underlying types pkg path...?
+				PkgPath:     typeRefPkgPath,
 				SymbolKind:  common.SymKindField,
 				Annotations: holder,
 			},
-			TypeRefKey: graphs.SymbolKeyFor(field.Type, nil /*THIS NEEDS TO BE THE AST FILE FOR THE UNDERLYING TYPE?*/),
+			TypeRefKey: typeRefKey,
 			Import:     importType,
 		}
 

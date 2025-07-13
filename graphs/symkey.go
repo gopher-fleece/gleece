@@ -11,6 +11,10 @@ import (
 // SymbolKey uniquely identifies a symbol by its AST node and file version.
 type SymbolKey string
 
+func SymbolKeyForUniverseType(name string) SymbolKey {
+	return SymbolKey(fmt.Sprintf("UniverseType:%s", name))
+}
+
 // SymbolKeyFor builds a stable key for any AST node of interest
 // using its kind, position, and the file version.
 func SymbolKeyFor(node ast.Node, version *gast.FileVersion) SymbolKey {
