@@ -715,6 +715,14 @@ func FindTypeSpecInPackage(pkg *packages.Package, typeName string) (*ast.TypeSpe
 	return nil, nil
 }
 
+type FieldTypeSpecResolution struct {
+	IsUniverse       bool
+	TypeName         string
+	DeclaringPackage *packages.Package
+	DeclaringAstFile *ast.File
+	TypeSpec         *ast.TypeSpec
+}
+
 // ResolveTypeSpecFromField Resolves type information from the given field.
 // Returns the declaring *packages.Package, *ast.File and the associated *ast.TypeSpec
 // Has 3 possible outcomes:
@@ -727,10 +735,10 @@ func ResolveTypeSpecFromField(
 	declaringFile *ast.File,
 	field *ast.Field,
 	pkgResolver func(pkgPath string) (*packages.Package, error),
-) (*packages.Package, *ast.File, *ast.TypeSpec, error) {
+) (FieldTypeSpecResolution, error) {
 	expr := UnwrapFirstNamed(field.Type)
 	if expr == nil {
-		return nil, nil, nil, fmt.Errorf("could not resolve named type from field")
+		return FieldTypeSpecResolution{}, fmt.Errorf("could not resolve named type from field")
 	}
 
 	var ident *ast.Ident
@@ -742,29 +750,29 @@ func ResolveTypeSpecFromField(
 		ident = t
 		pkgPath, err = ResolveUnqualifiedIdentPackage(declaringFile, ident)
 		if err != nil {
-			return nil, nil, nil, err
+			return FieldTypeSpecResolution{}, err
 		}
 
 	case *ast.SelectorExpr:
 		ident = t.Sel
 		pkgPath, err = ResolveImportPathForSelector(declaringFile, t)
 		if err != nil {
-			return nil, nil, nil, err
+			return FieldTypeSpecResolution{}, err
 		}
 
 	default:
-		return nil, nil, nil, fmt.Errorf("unsupported resolved expression: %T", expr)
+		return FieldTypeSpecResolution{}, fmt.Errorf("unsupported resolved expression: %T", expr)
 	}
 
 	if ident == nil {
-		return nil, nil, nil, fmt.Errorf("could not extract identifier")
+		return FieldTypeSpecResolution{}, fmt.Errorf("could not extract identifier")
 	}
 
 	// If still blank, check whether the type is a universe one.
 	if pkgPath == "" {
 		if IsUniverseType(ident.Name) {
 			// Universe types are a special case
-			return nil, nil, nil, nil
+			return FieldTypeSpecResolution{IsUniverse: true, TypeName: ident.Name}, nil
 		}
 		// Fallback to the field's declaring package
 		pkgPath = declaringPkg.PkgPath
@@ -772,15 +780,21 @@ func ResolveTypeSpecFromField(
 
 	pkg, err := pkgResolver(pkgPath)
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("failed to resolve package %q: %w", pkgPath, err)
+		return FieldTypeSpecResolution{}, fmt.Errorf("failed to resolve package %q: %w", pkgPath, err)
 	}
 
 	spec, file := FindTypeSpecInPackage(pkg, ident.Name)
 	if spec == nil || file == nil {
-		return nil, nil, nil, fmt.Errorf("type %q not found in package %q", ident.Name, pkgPath)
+		return FieldTypeSpecResolution{}, fmt.Errorf("type %q not found in package %q", ident.Name, pkgPath)
 	}
 
-	return pkg, file, spec, nil
+	return FieldTypeSpecResolution{
+		IsUniverse:       false,
+		TypeName:         ident.Name,
+		DeclaringPackage: pkg,
+		DeclaringAstFile: file,
+		TypeSpec:         spec,
+	}, nil
 }
 
 // unwrapFirstNamed walks through container expressions (e.g. *T, []T, map[K]V)

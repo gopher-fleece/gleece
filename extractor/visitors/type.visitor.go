@@ -268,33 +268,40 @@ func (v *RecursiveTypeVisitor) VisitField(
 		}
 
 		// These results will either be full, for real types, nil for universe ones or an outright error
-		typeDeclaringPkg, underlyingAstFile, typeSpec, err := gast.ResolveTypeSpecFromField(
+		resolvedField, err := gast.ResolveTypeSpecFromField(
 			pkg,
 			file,
 			field,
 			v.context.ArbitrationProvider.Pkg().GetPackage,
 		)
 
-		// If we're looking at a universe type, there's no package and PkgPath is left empty
-		typeRefPkgPath := ""
-		if typeDeclaringPkg != nil {
-			typeRefPkgPath = typeDeclaringPkg.PkgPath
-		}
-
 		if err != nil {
 			return nil, v.frozenError(err)
 		}
 
+		// If we're looking at a universe type, there's no package and PkgPath is left empty
+		typeRefPkgPath := ""
+		if !resolvedField.IsUniverse {
+			typeRefPkgPath = resolvedField.DeclaringPackage.PkgPath
+		}
+
 		// If we're looking at a universe type, there's no AST file nor FVersion. Special case.
 		var typeRefKey graphs.SymbolKey
-		if underlyingAstFile != nil {
-			typeFileFVersion, err := v.context.MetadataCache.GetFileVersion(underlyingAstFile, typeDeclaringPkg.Fset)
-			typeRefKey = graphs.SymbolKeyFor(typeSpec, typeFileFVersion)
+		if resolvedField.DeclaringAstFile != nil {
+			if resolvedField.TypeSpec == nil {
+				return nil, v.getFrozenError("nil TypeSpec unexpectedly returned from ResolveTypeSpecFromField")
+			}
+
+			typeFileFVersion, err := v.context.MetadataCache.GetFileVersion(
+				resolvedField.DeclaringAstFile,
+				resolvedField.DeclaringPackage.Fset,
+			)
+			typeRefKey = graphs.SymbolKeyFor(resolvedField.TypeSpec, typeFileFVersion)
 			if err != nil {
 				return nil, v.frozenError(err)
 			}
 		} else {
-			typeRefKey = graphs.SymbolKeyForUniverseType("something")
+			typeRefKey = graphs.SymbolKeyForUniverseType(resolvedField.TypeName)
 		}
 
 		// Create TypeUsageMeta (AST part only)
@@ -374,7 +381,7 @@ func (v *RecursiveTypeVisitor) processTypeUsage(
 		return v.getFrozenError("field '%v' is a multi-variable declaration which is currently not supported", field.Names)
 	}
 
-	underlyingTypePkg, underlyingAstFile, typeSpec, err := gast.ResolveTypeSpecFromField(
+	resolvedField, err := gast.ResolveTypeSpecFromField(
 		pkg,
 		file,
 		field,
@@ -385,18 +392,30 @@ func (v *RecursiveTypeVisitor) processTypeUsage(
 		return v.frozenError(err)
 	}
 
-	fVersion, err := v.context.MetadataCache.GetFileVersion(underlyingAstFile, underlyingTypePkg.Fset)
+	if resolvedField.IsUniverse {
+		return nil
+	}
+
+	if resolvedField.DeclaringPackage == nil || resolvedField.DeclaringAstFile == nil || resolvedField.TypeSpec == nil {
+		return v.getFrozenError("result of ResolveTypeSpecFromField for field [%v] is missing values", field.Names)
+	}
+
+	fVersion, err := v.context.MetadataCache.GetFileVersion(
+		resolvedField.DeclaringAstFile,
+		resolvedField.DeclaringPackage.Fset,
+	)
+
 	if err != nil {
 		return v.frozenError(err)
 	}
 
-	key := graphs.SymbolKeyFor(typeSpec, fVersion)
+	key := graphs.SymbolKeyFor(resolvedField.TypeSpec, fVersion)
 	if v.context.MetadataCache.HasVisited(key) {
 		return nil
 	}
 
 	// Ok, recurse
-	err = v.visitTypeSpec(underlyingTypePkg, underlyingAstFile, fVersion, typeSpec)
+	err = v.visitTypeSpec(resolvedField.DeclaringPackage, resolvedField.DeclaringAstFile, fVersion, resolvedField.TypeSpec)
 	if err != nil {
 		return v.frozenError(err)
 	}

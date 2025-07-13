@@ -8,11 +8,13 @@ import (
 	"github.com/gopher-fleece/gleece/gast"
 )
 
+const UniverseTypeSymKeyPrefix = "UniverseType:"
+
 // SymbolKey uniquely identifies a symbol by its AST node and file version.
 type SymbolKey string
 
 func SymbolKeyForUniverseType(name string) SymbolKey {
-	return SymbolKey(fmt.Sprintf("UniverseType:%s", name))
+	return SymbolKey(fmt.Sprintf("%s%s", UniverseTypeSymKeyPrefix, name))
 }
 
 // SymbolKeyFor builds a stable key for any AST node of interest

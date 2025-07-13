@@ -249,7 +249,13 @@ func (g *SymbolGraph) Dump() string {
 			for toKey := range deps {
 				toNode := g.nodes[toKey]
 				linkedPrettyKey := PrettyPrintSymbolKey(toKey)
-				sb.WriteString(fmt.Sprintf("    • [%s] %s\n", toNode.Kind, linkedPrettyKey))
+
+				// The 'to' node can be null if it's a Universe type - those are 'leaves'
+				if toNode == nil {
+					sb.WriteString(fmt.Sprintf("    • [%s]\n", linkedPrettyKey))
+				} else {
+					sb.WriteString(fmt.Sprintf("    • [%s] %s\n", toNode.Kind, linkedPrettyKey))
+				}
 			}
 		} else {
 			sb.WriteString("  Dependencies: (none)\n")
@@ -275,6 +281,11 @@ func (g *SymbolGraph) Dump() string {
 }
 
 func PrettyPrintSymbolKey(key graphs.SymbolKey) string {
+	withoutPrefix, hasPrefix := strings.CutPrefix(string(key), graphs.UniverseTypeSymKeyPrefix)
+	if hasPrefix {
+		return withoutPrefix
+	}
+
 	keyParts := strings.Split(string(key), "@")
 	// Expected 3-length
 	fVerParts := strings.Split(keyParts[1], "|")
