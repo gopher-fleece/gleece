@@ -17,6 +17,7 @@ type SymbolGraphBuilder interface {
 	AddRouteParam(request CreateParameterNode) (*SymbolNode, error)
 	AddRouteRetVal(request CreateReturnValueNode) (*SymbolNode, error)
 	AddStruct(request CreateStructNode) (*SymbolNode, error)
+	AddEnum(request CreateEnumNode) (*SymbolNode, error)
 }
 
 type SymbolGraph struct {

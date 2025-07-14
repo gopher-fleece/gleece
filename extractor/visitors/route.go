@@ -226,7 +226,6 @@ func (v *RouteVisitor) getFuncRetVals() ([]metadata.FuncReturnValue, error) {
 	v.enter("")
 	defer v.exit()
 
-	v.typeVisitor.SetCurrentFile(v.currentSourceFile)
 	retVals, err := v.context.ArbitrationProvider.Ast().GetFuncRetValMeta(
 		v.typeVisitor,
 		v.currentPackage,

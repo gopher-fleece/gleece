@@ -11,6 +11,7 @@ import (
 	"github.com/gopher-fleece/gleece/extractor/metadata"
 	"github.com/gopher-fleece/gleece/gast"
 	"github.com/gopher-fleece/gleece/graphs"
+	"github.com/gopher-fleece/gleece/graphs/symboldg"
 	"golang.org/x/tools/go/packages"
 )
 
@@ -63,7 +64,7 @@ func (v *RecursiveTypeVisitor) Visit(node ast.Node) ast.Visitor {
 	case *ast.TypeSpec:
 		// Check if it's a struct and if it embeds GleeceController
 		if _, isStruct := currentNode.Type.(*ast.StructType); isStruct {
-			_, err := v.VisitStructType(v.currentSourceFile, currentNode)
+			_, _, err := v.VisitStructType(v.currentSourceFile, currentNode)
 			if err != nil {
 				v.setLastError(err)
 				return v
@@ -73,25 +74,29 @@ func (v *RecursiveTypeVisitor) Visit(node ast.Node) ast.Visitor {
 	return v
 }
 
-func (v *RecursiveTypeVisitor) VisitStructType(file *ast.File, node *ast.TypeSpec) (*metadata.StructMeta, error) {
+func (v *RecursiveTypeVisitor) VisitStructType(
+	file *ast.File,
+	node *ast.TypeSpec,
+) (*metadata.StructMeta, graphs.SymbolKey, error) {
 	fVersion, err := v.context.MetadataCache.GetFileVersion(file, v.context.ArbitrationProvider.Pkg().FSet())
 	if err != nil {
-		return nil, v.frozenError(err)
+		return nil, "", v.frozenError(err)
 	}
 
 	// Check cache first
-	cached := v.context.MetadataCache.GetStruct(graphs.SymbolKeyFor(node, fVersion))
+	symKey := graphs.SymbolKeyFor(node, fVersion)
+	cached := v.context.MetadataCache.GetStruct(symKey)
 	if cached != nil {
-		return cached, nil
+		return cached, symKey, nil
 	}
 
 	pkg, err := v.context.ArbitrationProvider.Pkg().GetPackageForFile(file)
 	if err != nil {
-		return nil, v.frozenError(err)
+		return nil, "", v.frozenError(err)
 	}
 
 	if pkg == nil {
-		return nil, v.getFrozenError(
+		return nil, "", v.getFrozenError(
 			"could not determine package for file %s",
 			gast.GetAstFileName(
 				v.context.ArbitrationProvider.Pkg().FSet(),
@@ -102,17 +107,17 @@ func (v *RecursiveTypeVisitor) VisitStructType(file *ast.File, node *ast.TypeSpe
 
 	holder, err := v.getComments(node.Doc, v.currentGenDecl)
 	if err != nil {
-		return nil, v.frozenError(err)
+		return nil, "", v.frozenError(err)
 	}
 
 	structType, isStruct := node.Type.(*ast.StructType)
 	if !isStruct {
-		return nil, v.getFrozenError("non-struct node '%v' was provided to VisitStructType", node.Name.Name)
+		return nil, "", v.getFrozenError("non-struct node '%v' was provided to VisitStructType", node.Name.Name)
 	}
 
 	fields, err := v.buildFields(pkg, file, structType)
 	if err != nil {
-		return nil, v.frozenError(err)
+		return nil, "", v.frozenError(err)
 	}
 
 	structMeta := &metadata.StructMeta{
@@ -129,7 +134,14 @@ func (v *RecursiveTypeVisitor) VisitStructType(file *ast.File, node *ast.TypeSpe
 
 	v.context.MetadataCache.AddStruct(structMeta)
 
-	return structMeta, nil
+	symNode, err := v.context.GraphBuilder.AddStruct(
+		symboldg.CreateStructNode{
+			Data:        *structMeta,
+			Annotations: structMeta.Annotations,
+		},
+	)
+
+	return structMeta, symNode.Id, nil
 }
 
 func (v *RecursiveTypeVisitor) VisitEnumType(
@@ -137,20 +149,33 @@ func (v *RecursiveTypeVisitor) VisitEnumType(
 	file *ast.File,
 	fVersion *gast.FileVersion,
 	node *ast.TypeSpec,
-) (metadata.EnumMeta, error) {
+) (metadata.EnumMeta, graphs.SymbolKey, error) {
 	typeName, err := gast.GetTypeNameOrError(pkg, node.Name.Name)
 	if err != nil {
-		return metadata.EnumMeta{}, err
+		return metadata.EnumMeta{}, "", err
 	}
 
 	meta, err := v.extractEnumAliasType(pkg, fVersion, node, typeName)
 	if err != nil {
-		return meta, err
+		return meta, "", err
 	}
 
 	v.context.MetadataCache.AddEnum(&meta)
-	return meta, nil
+
+	symNode, err := v.context.GraphBuilder.AddEnum(
+		symboldg.CreateEnumNode{
+			Data:        meta,
+			Annotations: meta.Annotations,
+		},
+	)
+
+	if err != nil {
+		return meta, "", err
+	}
+
+	return meta, symNode.Id, nil
 }
+
 func (v *RecursiveTypeVisitor) extractEnumAliasType(
 	pkg *packages.Package,
 	fVersion *gast.FileVersion,
@@ -277,6 +302,37 @@ func (v *RecursiveTypeVisitor) VisitField(
 
 		if err != nil {
 			return nil, v.frozenError(err)
+		}
+
+		if resolvedField.DeclaringPackage != nil &&
+			resolvedField.DeclaringAstFile != nil &&
+			resolvedField.TypeSpec != nil {
+
+			fVersion, err := v.context.MetadataCache.GetFileVersion(
+				resolvedField.DeclaringAstFile,
+				resolvedField.DeclaringPackage.Fset,
+			)
+			if err != nil {
+				return nil, v.getFrozenError(
+					"failed to obtain FileVersion for type %s in package %s - %w",
+					resolvedField.TypeName,
+					resolvedField.DeclaringPackage.Name,
+					err,
+				)
+			}
+			// Recurse into any nested entities
+			symKey, err := v.visitTypeSpec(
+				resolvedField.DeclaringPackage,
+				resolvedField.DeclaringAstFile,
+				fVersion,
+				resolvedField.TypeSpec,
+			)
+
+			if err != nil {
+				return nil, v.frozenError(err)
+			}
+			
+			// HERE WE NEED TO BASICALLY LINK THE RESOLVED UNDERLYING TYPE- WAS THINKING OF JUST ADDING SYM KEY AS AN EDGE NODE
 		}
 
 		// If we're looking at a universe type, there's no package and PkgPath is left empty
@@ -415,7 +471,12 @@ func (v *RecursiveTypeVisitor) processTypeUsage(
 	}
 
 	// Ok, recurse
-	err = v.visitTypeSpec(resolvedField.DeclaringPackage, resolvedField.DeclaringAstFile, fVersion, resolvedField.TypeSpec)
+	_, err = v.visitTypeSpec(
+		resolvedField.DeclaringPackage,
+		resolvedField.DeclaringAstFile,
+		fVersion,
+		resolvedField.TypeSpec,
+	)
 	if err != nil {
 		return v.frozenError(err)
 	}
@@ -428,27 +489,29 @@ func (v *RecursiveTypeVisitor) visitTypeSpec(
 	file *ast.File,
 	fVersion *gast.FileVersion,
 	spec *ast.TypeSpec,
-) error {
+) (graphs.SymbolKey, error) {
 	var err error
 
 	switch t := spec.Type.(type) {
 	case *ast.StructType:
-		_, err := v.VisitStructType(file, spec)
+		_, symKey, err := v.VisitStructType(file, spec)
 		if err != nil {
-			return v.frozenError(err)
+			return "", v.frozenError(err)
 		}
+
+		return symKey, v.frozenIfError(err)
+
 	case *ast.Ident:
 		// Enum-like: alias of primitive (string, int, etc)
 		// Optional: Check constants with the same name prefix to confirm it's "really" enum-like
-		_, err := v.VisitEnumType(pkg, file, fVersion, spec)
-		if err != nil {
-			return v.frozenError(err)
-		}
+		_, symKey, err := v.VisitEnumType(pkg, file, fVersion, spec)
+		return symKey, v.frozenIfError(err)
+
 	default:
 		err = fmt.Errorf("unhandled TypeSpec type: %T", t)
 	}
 
-	return err
+	return "", err
 }
 
 func (v *RecursiveTypeVisitor) getComments(onNodeDoc *ast.CommentGroup, nodeGenDecl *ast.GenDecl) (*annotations.AnnotationHolder, error) {

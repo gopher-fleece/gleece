@@ -12,6 +12,7 @@ const (
 )
 
 type SymbolEdge struct {
+	From     graphs.SymbolKey
 	To       graphs.SymbolKey
 	Kind     SymbolEdgeKind
 	Metadata map[string]string
