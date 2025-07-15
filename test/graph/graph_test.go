@@ -15,7 +15,9 @@ var _ = Describe("Graph Controller", func() {
 		Expect(graph).ToNot(BeNil())
 		dump := graph.Dump()
 		utils.WriteFileByRelativePathOrFail("./dump.txt", []byte(dump))
-		Expect(dump).To(BeEquivalentTo(""))
+
+		dotFormat := graph.ToDot()
+		utils.WriteFileByRelativePathOrFail("./dot.txt", []byte(dotFormat))
 	})
 })
 

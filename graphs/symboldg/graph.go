@@ -18,6 +18,10 @@ type SymbolGraphBuilder interface {
 	AddRouteRetVal(request CreateReturnValueNode) (*SymbolNode, error)
 	AddStruct(request CreateStructNode) (*SymbolNode, error)
 	AddEnum(request CreateEnumNode) (*SymbolNode, error)
+	AddField(request CreateFieldNode) (*SymbolNode, error)
+	AddConst(request CreateConstNode) (*SymbolNode, error)
+	AddPrimitive(kind PrimitiveType) *SymbolNode
+	AddEdge(from, to graphs.SymbolKey, kind SymbolEdgeKind, meta map[string]string)
 }
 
 type SymbolGraph struct {
@@ -42,7 +46,40 @@ func (g *SymbolGraph) addNode(n *SymbolNode) {
 	g.nodes[n.Id] = n
 }
 
-func (g *SymbolGraph) AddDep(from, to graphs.SymbolKey) {
+func (g *SymbolGraph) AddPrimitive(p PrimitiveType) *SymbolNode {
+	key := graphs.SymbolKeyForUniverseType(string(p))
+	if node, exists := g.nodes[key]; exists {
+		return node
+	}
+
+	node := &SymbolNode{
+		Id:   key,
+		Kind: common.SymKindBuiltin,
+	}
+	g.nodes[key] = node
+
+	return node
+}
+
+// AddEdge adds a semantic relationship FROM → TO.
+// For example: AddEdge(structKey, receiverKey, EdgeKindReceiver, nil)
+// means "struct has receiver".
+func (g *SymbolGraph) AddEdge(from, to graphs.SymbolKey, kind SymbolEdgeKind, meta map[string]string) {
+	existingEdges, exist := g.edges[from]
+	if exist {
+		for _, edge := range existingEdges {
+			if edge.To == to {
+				panic(fmt.Sprintf("duplicate edge insertion detected:\nFrom: %s\nTo: %s", from, to))
+			}
+		}
+	}
+	// Maintain semantically-typed edge
+	g.edges[from] = append(g.edges[from], SymbolEdge{
+		To:       to,
+		Kind:     kind,
+		Metadata: meta,
+	})
+
 	if g.deps[from] == nil {
 		g.deps[from] = make(map[graphs.SymbolKey]struct{})
 	}
@@ -90,7 +127,7 @@ func (g *SymbolGraph) AddRoute(request CreateRouteNode) (*SymbolNode, error) {
 	g.addNode(symNode)
 
 	// Add a dependency FROM the parent controller TO the route
-	g.AddDep(request.ParentController.SymbolKey(), symNode.Id)
+	g.AddEdge(request.ParentController.SymbolKey(), symNode.Id, EdgeKindReceiver, nil)
 
 	return symNode, nil
 }
@@ -109,10 +146,10 @@ func (g *SymbolGraph) AddRouteParam(request CreateParameterNode) (*SymbolNode, e
 	}
 
 	// Add a dependency FROM the route TO the parameter node itself
-	g.AddDep(request.ParentRoute.SymbolKey(), symNode.Id)
+	g.AddEdge(request.ParentRoute.SymbolKey(), symNode.Id, EdgeKindParam, nil)
 
-	// Add a dependency FROM the route TO the parameter's type node
-	g.AddDep(symNode.Id, request.Data.Type.TypeRefKey)
+	// Add a dependency FROM the PARAM TO the PARAM TYPE node
+	g.AddEdge(symNode.Id, request.Data.Type.TypeRefKey, EdgeKindReference, nil)
 
 	return symNode, nil
 }
@@ -130,7 +167,11 @@ func (g *SymbolGraph) AddRouteRetVal(request CreateReturnValueNode) (*SymbolNode
 		return nil, err
 	}
 
-	g.AddDep(request.ParentRoute.SymbolKey(), symNode.Id)
+	g.AddEdge(request.ParentRoute.SymbolKey(), symNode.Id, EdgeKindRetVal, nil)
+
+	// Add a dependency FROM the RETVAL TO the RETVAL TYPE node
+	g.AddEdge(symNode.Id, request.Data.Type.TypeRefKey, EdgeKindReference, nil)
+
 	return symNode, nil
 }
 
@@ -148,6 +189,16 @@ func (g *SymbolGraph) AddEnum(request CreateEnumNode) (*SymbolNode, error) {
 	return g.createAndAddSymNode(
 		request.Data.Node,
 		common.SymKindEnum,
+		request.Data.FVersion,
+		request.Annotations,
+		request.Data,
+	)
+}
+
+func (g *SymbolGraph) AddField(request CreateFieldNode) (*SymbolNode, error) {
+	return g.createAndAddSymNode(
+		request.Data.Node,
+		common.SymKindField,
 		request.Data.FVersion,
 		request.Annotations,
 		request.Data,
@@ -247,17 +298,17 @@ func (g *SymbolGraph) Dump() string {
 		// Outgoing dependencies
 		if deps, ok := g.deps[key]; ok && len(deps) > 0 {
 			sb.WriteString("  Dependencies:\n")
-			for toKey := range deps {
-				toNode := g.nodes[toKey]
-				linkedPrettyKey := PrettyPrintSymbolKey(toKey)
+			for _, edge := range g.edges[key] {
+				toNode := g.nodes[edge.To]
+				linkedPrettyKey := PrettyPrintSymbolKey(edge.To)
 
-				// The 'to' node can be null if it's a Universe type - those are 'leaves'
 				if toNode == nil {
-					sb.WriteString(fmt.Sprintf("    • [%s]\n", linkedPrettyKey))
+					sb.WriteString(fmt.Sprintf("    • [%s] (%s)\n", linkedPrettyKey, edge.Kind))
 				} else {
-					sb.WriteString(fmt.Sprintf("    • [%s] %s\n", toNode.Kind, linkedPrettyKey))
+					sb.WriteString(fmt.Sprintf("    • [%s] %s (%s)\n", toNode.Kind, linkedPrettyKey, edge.Kind))
 				}
 			}
+
 		} else {
 			sb.WriteString("  Dependencies: (none)\n")
 		}
@@ -278,6 +329,45 @@ func (g *SymbolGraph) Dump() string {
 	}
 
 	sb.WriteString("=== End SymbolGraph ===\n")
+	return sb.String()
+}
+
+func (g *SymbolGraph) ToDot() string {
+	ERROR_NODE_ID := "N_ERROR"
+
+	var sb strings.Builder
+	sb.WriteString("digraph SymbolGraph {\n")
+
+	// Map full SymbolKey to short ID, e.g. N0, N1...
+	idMap := make(map[graphs.SymbolKey]string)
+	counter := 0
+
+	// Assign short IDs
+	for key := range g.nodes {
+		idMap[key] = fmt.Sprintf("N%d", counter)
+		counter++
+	}
+
+	// Write nodes
+	for key, node := range g.nodes {
+		id := idMap[key]
+		label := key.ShortLabel() // short label: e.g. "Field@graph.controller.go"
+		sb.WriteString(fmt.Sprintf("  %s [label=\"%s (%s)\"];\n", id, label, node.Kind))
+	}
+
+	// Write edges
+	for fromKey, edges := range g.edges {
+		fromID := idMap[fromKey]
+		for _, edge := range edges {
+			toID, ok := idMap[edge.To]
+			if !ok || toID == "" {
+				toID = ERROR_NODE_ID
+			}
+			sb.WriteString(fmt.Sprintf("  %s -> %s [label=\"%s\"];\n", fromID, toID, edge.Kind))
+		}
+	}
+
+	sb.WriteString("}\n")
 	return sb.String()
 }
 

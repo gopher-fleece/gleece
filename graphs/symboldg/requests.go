@@ -52,6 +52,11 @@ type CreateEnumNode struct {
 	Annotations *annotations.AnnotationHolder
 }
 
+type CreateFieldNode struct {
+	Data        metadata.FieldMeta
+	Annotations *annotations.AnnotationHolder
+}
+
 type CreateConstNode struct {
 	Data        metadata.ConstMeta
 	Annotations *annotations.AnnotationHolder

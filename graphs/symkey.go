@@ -3,6 +3,7 @@ package graphs
 import (
 	"fmt"
 	"go/ast"
+	"path/filepath"
 	"strings"
 
 	"github.com/gopher-fleece/gleece/gast"
@@ -45,7 +46,7 @@ func SymbolKeyFor(node ast.Node, version *gast.FileVersion) SymbolKey {
 		// parameters or struct fields
 		// if the field has a name, use it; otherwise fallback to position
 		if len(n.Names) > 0 {
-			return SymbolKey(fmt.Sprintf("Field:%s@%s", n.Names[0].Name, base))
+			return SymbolKey(fmt.Sprintf("Field:%s@%d@%s", n.Names[0].Name, n.Pos(), base))
 		}
 		return SymbolKey(fmt.Sprintf("Field@%d@%s", n.Pos(), base))
 
@@ -61,4 +62,44 @@ func SymbolKeyFor(node ast.Node, version *gast.FileVersion) SymbolKey {
 		// any other AST node: use its type and position
 		return SymbolKey(fmt.Sprintf("%T@%d@%s", n, n.Pos(), base))
 	}
+}
+
+func (k SymbolKey) ShortLabel() string {
+	key := string(k)
+
+	// Universe type — strip prefix and return
+	if strings.HasPrefix(key, UniverseTypeSymKeyPrefix) {
+		return strings.TrimPrefix(key, UniverseTypeSymKeyPrefix)
+	}
+
+	// Expected: Kind[:Name]@fileInfo
+	parts := strings.SplitN(key, "@", 2)
+	if len(parts) != 2 {
+		return key // fallback for malformed keys
+	}
+
+	var nodeName string
+	// Split to Kind/Name - name is not always available. Example: "Field" or "Field:headerParam"
+	kindAndNameParts := strings.SplitN(parts[0], ":", 2)
+	if len(kindAndNameParts) == 2 {
+		nodeName = kindAndNameParts[1]
+	} else {
+		nodeName = kindAndNameParts[0]
+	}
+
+	fileInfo := parts[1] // e.g. /path/file.go|ver|hash
+
+	// Shorten the file path and hash
+	fvParts := strings.Split(fileInfo, "|")
+	if len(fvParts) != 3 {
+		return key // fallback
+	}
+
+	file := filepath.Base(fvParts[0])
+	shortHash := fvParts[2]
+	if len(shortHash) > 7 {
+		shortHash = shortHash[:7]
+	}
+
+	return fmt.Sprintf("%s@%s|%s", nodeName, file, shortHash)
 }

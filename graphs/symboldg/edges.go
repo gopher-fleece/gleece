@@ -5,10 +5,28 @@ import "github.com/gopher-fleece/gleece/graphs"
 type SymbolEdgeKind string
 
 const (
-	EdgeKindContains   SymbolEdgeKind = "cnt"
-	EdgeKindReferences SymbolEdgeKind = "ref"
-	EdgeKindCalls      SymbolEdgeKind = "call"
-	EdgeKindEmbeds     SymbolEdgeKind = "embed"
+	// Structural/ownership relationships
+	EdgeKindContains SymbolEdgeKind = "cnt"   // Parent contains child (e.g., controller → route)
+	EdgeKindField    SymbolEdgeKind = "fld"   // Struct → field (if fields are nodes)
+	EdgeKindReceiver SymbolEdgeKind = "recv"  // Struct → receiver function (method)
+	EdgeKindEmbed    SymbolEdgeKind = "embed" // Struct → embedded type (anonymous field)
+
+	// Type and usage relationships
+	EdgeKindReference SymbolEdgeKind = "ref"   // General type reference (param → type)
+	EdgeKindType      SymbolEdgeKind = "ty"    // Specific "has type" relationship
+	EdgeKindAlias     SymbolEdgeKind = "alias" // Symbol → aliased symbol
+
+	// Code behavior
+	EdgeKindCall SymbolEdgeKind = "call" // Func → called func
+
+	// Semantic constructs
+	EdgeKindParam    SymbolEdgeKind = "param" // Func/Route → parameter node
+	EdgeKindRetVal   SymbolEdgeKind = "ret"   // Func/Route → return value
+	EdgeKindValue    SymbolEdgeKind = "val"   // Enum → individual enum value
+	EdgeKindDocument SymbolEdgeKind = "doc"   // Symbol → doc/annotation node
+
+	// Misc
+	EdgeKindInit SymbolEdgeKind = "init" // Struct → init function (e.g., for defaults)
 )
 
 type SymbolEdge struct {

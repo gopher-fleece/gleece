@@ -304,6 +304,8 @@ func (v *RecursiveTypeVisitor) VisitField(
 			return nil, v.frozenError(err)
 		}
 
+		var referencedTypeSymKey graphs.SymbolKey
+
 		if resolvedField.DeclaringPackage != nil &&
 			resolvedField.DeclaringAstFile != nil &&
 			resolvedField.TypeSpec != nil {
@@ -321,7 +323,7 @@ func (v *RecursiveTypeVisitor) VisitField(
 				)
 			}
 			// Recurse into any nested entities
-			symKey, err := v.visitTypeSpec(
+			referencedTypeSymKey, err = v.visitTypeSpec(
 				resolvedField.DeclaringPackage,
 				resolvedField.DeclaringAstFile,
 				fVersion,
@@ -331,8 +333,6 @@ func (v *RecursiveTypeVisitor) VisitField(
 			if err != nil {
 				return nil, v.frozenError(err)
 			}
-			
-			// HERE WE NEED TO BASICALLY LINK THE RESOLVED UNDERLYING TYPE- WAS THINKING OF JUST ADDING SYM KEY AS AN EDGE NODE
 		}
 
 		// If we're looking at a universe type, there's no package and PkgPath is left empty
@@ -358,6 +358,9 @@ func (v *RecursiveTypeVisitor) VisitField(
 			}
 		} else {
 			typeRefKey = graphs.SymbolKeyForUniverseType(resolvedField.TypeName)
+
+			// A bit of silly typing. Have good typing on the method and then use cast to ignore it. Blegh.
+			v.context.GraphBuilder.AddPrimitive(symboldg.PrimitiveType(resolvedField.TypeName))
 		}
 
 		// Create TypeUsageMeta (AST part only)
@@ -373,6 +376,11 @@ func (v *RecursiveTypeVisitor) VisitField(
 			Import:     importType,
 		}
 
+		fieldFVersion, err := v.context.MetadataCache.GetFileVersion(file, pkg.Fset)
+		if err != nil {
+			return results, v.frozenError(err)
+		}
+
 		fieldMeta := metadata.FieldMeta{
 			SymNodeMeta: metadata.SymNodeMeta{
 				Name:        name,
@@ -380,6 +388,7 @@ func (v *RecursiveTypeVisitor) VisitField(
 				PkgPath:     pkg.PkgPath,
 				SymbolKind:  common.SymKindField,
 				Annotations: holder,
+				FVersion:    fieldFVersion,
 			},
 			Type:       typeUsage,
 			IsEmbedded: isEmbedded,
@@ -390,6 +399,21 @@ func (v *RecursiveTypeVisitor) VisitField(
 		err = v.processTypeUsage(pkg, file, field, typeUsage)
 		if err != nil {
 			return results, v.frozenError(err)
+		}
+
+		fieldNode, err := v.context.GraphBuilder.AddField(symboldg.CreateFieldNode{
+			Data:        fieldMeta,
+			Annotations: holder,
+		})
+
+		if err != nil {
+			return nil, v.frozenError(err)
+		}
+
+		// Check and add a node linkage if necessary
+		if referencedTypeSymKey != "" {
+			// Field -> FieldType
+			v.context.GraphBuilder.AddEdge(fieldNode.Id, referencedTypeSymKey, symboldg.EdgeKindReference, nil)
 		}
 	}
 
