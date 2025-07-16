@@ -201,6 +201,7 @@ func (g *SymbolGraph) AddStruct(request CreateStructNode) (*SymbolNode, error) {
 }
 
 func (g *SymbolGraph) AddEnum(request CreateEnumNode) (*SymbolNode, error) {
+	// Add the enum node itself
 	symNode, err := g.createAndAddSymNode(
 		request.Data.Node,
 		common.SymKindEnum,
@@ -213,7 +214,8 @@ func (g *SymbolGraph) AddEnum(request CreateEnumNode) (*SymbolNode, error) {
 		return nil, err
 	}
 
-	// Register the individual enum values to the struct
+	// Link each enum value
+	typeRef := graphs.NewUniverseSymbolKey(string(request.Data.ValueKind))
 	for _, valueDef := range request.Data.Values {
 		valueNode, err := g.createAndAddSymNode(
 			valueDef.Node,
@@ -227,7 +229,11 @@ func (g *SymbolGraph) AddEnum(request CreateEnumNode) (*SymbolNode, error) {
 			return nil, err
 		}
 
+		// Link the ENUM TYPE to its VALUE
 		g.AddEdge(symNode.Id, valueNode.Id, EdgeKindValue, nil)
+
+		// Link the enum VALUE to its underlying type
+		g.AddEdge(valueNode.Id, typeRef, EdgeKindReference, nil)
 	}
 
 	return symNode, nil
@@ -375,18 +381,45 @@ func (g *SymbolGraph) String() string {
 	sb.WriteString("=== End SymbolGraph ===\n")
 	return sb.String()
 }
-
 func (g *SymbolGraph) ToDot() string {
-	ERROR_NODE_ID := "N_ERROR"
+	const ERROR_NODE_ID = "N_ERROR"
 
 	var sb strings.Builder
 	sb.WriteString("digraph SymbolGraph {\n")
 
-	// Map full SymbolKey to short ID, e.g. N0, N1...
+	// Node color mapping
+	kindColor := map[common.SymKind]string{
+		common.SymKindStruct:     "lightblue",
+		common.SymKindField:      "gold",
+		common.SymKindEnum:       "violet",
+		common.SymKindEnumValue:  "plum",
+		common.SymKindReceiver:   "orange",
+		common.SymKindFunction:   "green",
+		common.SymKindParameter:  "khaki",
+		common.SymKindReturnType: "lightgrey",
+		common.SymKindBuiltin:    "white",
+		common.SymKindInterface:  "lightskyblue",
+		common.SymKindAlias:      "palegreen",
+		common.SymKindConstant:   "plum",
+		common.SymKindUnknown:    "lightcoral",
+	}
+
+	// Edge kind descriptive labels
+	edgeLabels := map[string]string{
+		"ty":    "Type",
+		"ret":   "Return Value",
+		"param": "Parameter",
+		"fld":   "Field",
+		"recv":  "Receiver",
+		"val":   "Value",
+		"init":  "Initialize",
+		"ref":   "Reference",
+		// Add more as needed
+	}
+
+	// Map full SymbolKey to short ID
 	idMap := make(map[graphs.SymbolKey]string)
 	counter := 0
-
-	// Assign short IDs
 	for key := range g.nodes {
 		idMap[key] = fmt.Sprintf("N%d", counter)
 		counter++
@@ -395,8 +428,12 @@ func (g *SymbolGraph) ToDot() string {
 	// Write nodes
 	for key, node := range g.nodes {
 		id := idMap[key]
-		label := key.ShortLabel() // short label: e.g. "Field@graph.controller.go"
-		sb.WriteString(fmt.Sprintf("  %s [label=\"%s (%s)\"];\n", id, label, node.Kind))
+		label := key.ShortLabel()
+		color := kindColor[node.Kind]
+		if color == "" {
+			color = "gray90"
+		}
+		sb.WriteString(fmt.Sprintf("  %s [label=\"%s (%s)\", style=filled, fillcolor=\"%s\"];\n", id, label, node.Kind, color))
 	}
 
 	// Write edges
@@ -407,9 +444,30 @@ func (g *SymbolGraph) ToDot() string {
 			if !ok || toID == "" {
 				toID = ERROR_NODE_ID
 			}
-			sb.WriteString(fmt.Sprintf("  %s -> %s [label=\"%s\"];\n", fromID, toID, edge.Kind))
+			label := edgeLabels[string(edge.Kind)]
+			if label == "" {
+				label = string(edge.Kind) // fallback
+			}
+			sb.WriteString(fmt.Sprintf("  %s -> %s [label=\"%s\"];\n", fromID, toID, label))
 		}
 	}
+
+	// Add legend as subgraph cluster
+	sb.WriteString(`
+  subgraph cluster_legend {
+    label = "Legend";
+    style = dashed;
+    color = gray;
+
+`)
+	// Write one legend node per kind
+	legendCounter := 0
+	for kind, color := range kindColor {
+		legendID := fmt.Sprintf("L%d", legendCounter)
+		sb.WriteString(fmt.Sprintf("    %s [label=\"%s\", style=filled, fillcolor=\"%s\", shape=box];\n", legendID, kind, color))
+		legendCounter++
+	}
+	sb.WriteString("  }\n") // end legend
 
 	sb.WriteString("}\n")
 	return sb.String()
