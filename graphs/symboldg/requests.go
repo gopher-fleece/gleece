@@ -18,7 +18,7 @@ type KeyableNodeMeta struct {
 }
 
 func (k KeyableNodeMeta) SymbolKey() graphs.SymbolKey {
-	return graphs.SymbolKeyFor(k.Decl, &k.FVersion)
+	return graphs.NewSymbolKey(k.Decl, &k.FVersion)
 }
 
 type CreateControllerNode struct {

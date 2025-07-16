@@ -80,11 +80,11 @@ func (v *RecursiveTypeVisitor) VisitStructType(
 ) (*metadata.StructMeta, graphs.SymbolKey, error) {
 	fVersion, err := v.context.MetadataCache.GetFileVersion(file, v.context.ArbitrationProvider.Pkg().FSet())
 	if err != nil {
-		return nil, "", v.frozenError(err)
+		return nil, graphs.SymbolKey{}, v.frozenError(err)
 	}
 
 	// Check cache first
-	symKey := graphs.SymbolKeyFor(node, fVersion)
+	symKey := graphs.NewSymbolKey(node, fVersion)
 	cached := v.context.MetadataCache.GetStruct(symKey)
 	if cached != nil {
 		return cached, symKey, nil
@@ -92,11 +92,11 @@ func (v *RecursiveTypeVisitor) VisitStructType(
 
 	pkg, err := v.context.ArbitrationProvider.Pkg().GetPackageForFile(file)
 	if err != nil {
-		return nil, "", v.frozenError(err)
+		return nil, graphs.SymbolKey{}, v.frozenError(err)
 	}
 
 	if pkg == nil {
-		return nil, "", v.getFrozenError(
+		return nil, graphs.SymbolKey{}, v.getFrozenError(
 			"could not determine package for file %s",
 			gast.GetAstFileName(
 				v.context.ArbitrationProvider.Pkg().FSet(),
@@ -107,17 +107,17 @@ func (v *RecursiveTypeVisitor) VisitStructType(
 
 	holder, err := v.getComments(node.Doc, v.currentGenDecl)
 	if err != nil {
-		return nil, "", v.frozenError(err)
+		return nil, graphs.SymbolKey{}, v.frozenError(err)
 	}
 
 	structType, isStruct := node.Type.(*ast.StructType)
 	if !isStruct {
-		return nil, "", v.getFrozenError("non-struct node '%v' was provided to VisitStructType", node.Name.Name)
+		return nil, graphs.SymbolKey{}, v.getFrozenError("non-struct node '%v' was provided to VisitStructType", node.Name.Name)
 	}
 
 	fields, err := v.buildFields(pkg, file, structType)
 	if err != nil {
-		return nil, "", v.frozenError(err)
+		return nil, graphs.SymbolKey{}, v.frozenError(err)
 	}
 
 	structMeta := &metadata.StructMeta{
@@ -152,12 +152,12 @@ func (v *RecursiveTypeVisitor) VisitEnumType(
 ) (metadata.EnumMeta, graphs.SymbolKey, error) {
 	typeName, err := gast.GetTypeNameOrError(pkg, node.Name.Name)
 	if err != nil {
-		return metadata.EnumMeta{}, "", err
+		return metadata.EnumMeta{}, graphs.SymbolKey{}, err
 	}
 
 	meta, err := v.extractEnumAliasType(pkg, fVersion, node, typeName)
 	if err != nil {
-		return meta, "", err
+		return meta, graphs.SymbolKey{}, err
 	}
 
 	v.context.MetadataCache.AddEnum(&meta)
@@ -170,7 +170,7 @@ func (v *RecursiveTypeVisitor) VisitEnumType(
 	)
 
 	if err != nil {
-		return meta, "", err
+		return meta, graphs.SymbolKey{}, err
 	}
 
 	return meta, symNode.Id, nil
@@ -304,7 +304,7 @@ func (v *RecursiveTypeVisitor) VisitField(
 			return nil, v.frozenError(err)
 		}
 
-		var referencedTypeSymKey graphs.SymbolKey
+		var referencedTypeSymKey *graphs.SymbolKey
 
 		if resolvedField.DeclaringPackage != nil &&
 			resolvedField.DeclaringAstFile != nil &&
@@ -323,7 +323,7 @@ func (v *RecursiveTypeVisitor) VisitField(
 				)
 			}
 			// Recurse into any nested entities
-			referencedTypeSymKey, err = v.visitTypeSpec(
+			underlyingSymKey, err := v.visitTypeSpec(
 				resolvedField.DeclaringPackage,
 				resolvedField.DeclaringAstFile,
 				fVersion,
@@ -333,6 +333,7 @@ func (v *RecursiveTypeVisitor) VisitField(
 			if err != nil {
 				return nil, v.frozenError(err)
 			}
+			referencedTypeSymKey = &underlyingSymKey
 		}
 
 		// If we're looking at a universe type, there's no package and PkgPath is left empty
@@ -352,12 +353,12 @@ func (v *RecursiveTypeVisitor) VisitField(
 				resolvedField.DeclaringAstFile,
 				resolvedField.DeclaringPackage.Fset,
 			)
-			typeRefKey = graphs.SymbolKeyFor(resolvedField.TypeSpec, typeFileFVersion)
+			typeRefKey = graphs.NewSymbolKey(resolvedField.TypeSpec, typeFileFVersion)
 			if err != nil {
 				return nil, v.frozenError(err)
 			}
 		} else {
-			typeRefKey = graphs.SymbolKeyForUniverseType(resolvedField.TypeName)
+			typeRefKey = graphs.NewUniverseSymbolKey(resolvedField.TypeName)
 
 			// A bit of silly typing. Have good typing on the method and then use cast to ignore it. Blegh.
 			v.context.GraphBuilder.AddPrimitive(symboldg.PrimitiveType(resolvedField.TypeName))
@@ -401,7 +402,7 @@ func (v *RecursiveTypeVisitor) VisitField(
 			return results, v.frozenError(err)
 		}
 
-		fieldNode, err := v.context.GraphBuilder.AddField(symboldg.CreateFieldNode{
+		_, err = v.context.GraphBuilder.AddField(symboldg.CreateFieldNode{
 			Data:        fieldMeta,
 			Annotations: holder,
 		})
@@ -411,9 +412,11 @@ func (v *RecursiveTypeVisitor) VisitField(
 		}
 
 		// Check and add a node linkage if necessary
-		if referencedTypeSymKey != "" {
+		if referencedTypeSymKey != nil {
 			// Field -> FieldType
-			v.context.GraphBuilder.AddEdge(fieldNode.Id, referencedTypeSymKey, symboldg.EdgeKindReference, nil)
+			// v.context.GraphBuilder.AddEdge(fieldNode.Id, *referencedTypeSymKey, symboldg.EdgeKindReference, nil)
+
+			// NOTE TO SELF - Wo
 		}
 	}
 
@@ -489,7 +492,7 @@ func (v *RecursiveTypeVisitor) processTypeUsage(
 		return v.frozenError(err)
 	}
 
-	key := graphs.SymbolKeyFor(resolvedField.TypeSpec, fVersion)
+	key := graphs.NewSymbolKey(resolvedField.TypeSpec, fVersion)
 	if v.context.MetadataCache.HasVisited(key) {
 		return nil
 	}
@@ -520,7 +523,7 @@ func (v *RecursiveTypeVisitor) visitTypeSpec(
 	case *ast.StructType:
 		_, symKey, err := v.VisitStructType(file, spec)
 		if err != nil {
-			return "", v.frozenError(err)
+			return graphs.SymbolKey{}, v.frozenError(err)
 		}
 
 		return symKey, v.frozenIfError(err)
@@ -535,7 +538,7 @@ func (v *RecursiveTypeVisitor) visitTypeSpec(
 		err = fmt.Errorf("unhandled TypeSpec type: %T", t)
 	}
 
-	return "", err
+	return graphs.SymbolKey{}, err
 }
 
 func (v *RecursiveTypeVisitor) getComments(onNodeDoc *ast.CommentGroup, nodeGenDecl *ast.GenDecl) (*annotations.AnnotationHolder, error) {

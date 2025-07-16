@@ -3,6 +3,7 @@ package graphs
 import (
 	"fmt"
 	"go/ast"
+	"go/token"
 	"path/filepath"
 	"strings"
 
@@ -12,94 +13,118 @@ import (
 const UniverseTypeSymKeyPrefix = "UniverseType:"
 
 // SymbolKey uniquely identifies a symbol by its AST node and file version.
-type SymbolKey string
-
-func SymbolKeyForUniverseType(name string) SymbolKey {
-	return SymbolKey(fmt.Sprintf("%s%s", UniverseTypeSymKeyPrefix, name))
+type SymbolKey struct {
+	Name       string
+	Position   token.Pos
+	FileId     string
+	IsUniverse bool
 }
 
-// SymbolKeyFor builds a stable key for any AST node of interest
-// using its kind, position, and the file version.
-func SymbolKeyFor(node ast.Node, version *gast.FileVersion) SymbolKey {
-	if node == nil || version == nil {
-		return SymbolKey("nil")
+func (sk SymbolKey) Id() string {
+	if sk.IsUniverse {
+		return fmt.Sprintf("UniverseType:%s", sk.Name)
 	}
-	base := version.String() // your "path|mod|hash" string
+
+	if sk.Name != "" {
+		return fmt.Sprintf("%s@%d@%s", sk.Name, sk.Position, sk.FileId)
+	}
+	return fmt.Sprintf("@%d@%s", sk.Position, sk.FileId)
+}
+
+func (sk SymbolKey) ShortLabel() string {
+	file := filepath.Base(strings.Split(sk.FileId, "|")[0])
+	hash := strings.Split(sk.FileId, "|")
+	shortHash := ""
+	if len(hash) == 3 {
+		shortHash = hash[2]
+		if len(shortHash) > 7 {
+			shortHash = shortHash[:7]
+		}
+	}
+	if sk.Name != "" {
+		return fmt.Sprintf("%s@%s|%s", sk.Name, file, shortHash)
+	}
+	return fmt.Sprintf("%s|%s", file, shortHash)
+}
+
+func (sk SymbolKey) PrettyPrint() string {
+	if sk.IsUniverse {
+		// Strip prefix if present
+		return strings.TrimPrefix(sk.Name, UniverseTypeSymKeyPrefix)
+	}
+
+	var sb strings.Builder
+
+	// Name or fallback to position
+	if sk.Name != "" {
+		sb.WriteString(fmt.Sprintf("%s\n", sk.Name))
+	} else {
+		sb.WriteString(fmt.Sprintf("@%d\n", sk.Position))
+	}
+
+	// The FileId is expected to be something like "path|mod|hash"
+	fVerParts := strings.Split(sk.FileId, "|")
+	for _, part := range fVerParts {
+		sb.WriteString(fmt.Sprintf("    • %s\n", part))
+	}
+
+	return sb.String()
+}
+
+func (sk SymbolKey) Equals(other SymbolKey) bool {
+	if sk.IsUniverse {
+		return other.IsUniverse && sk.Name == other.Name
+	}
+
+	return sk.Name == other.Name && sk.Position == other.Position && sk.FileId == other.FileId
+}
+
+func NewSymbolKey(node ast.Node, version *gast.FileVersion) SymbolKey {
+	if node == nil || version == nil {
+		return SymbolKey{}
+	}
+
+	base := version.String()
+
+	name := ""
+	pos := token.NoPos
 
 	switch n := node.(type) {
 	case *ast.FuncDecl:
-		return SymbolKey(fmt.Sprintf("Func:%s@%s", n.Name.Name, base))
-
+		name = n.Name.Name
+		pos = n.Pos()
 	case *ast.TypeSpec:
-		return SymbolKey(fmt.Sprintf("Type:%s@%s", n.Name.Name, base))
-
+		name = n.Name.Name
+		pos = n.Pos()
 	case *ast.ValueSpec:
-		// const/var declarations
-		// join all names if multiple, e.g. "X,Y"
 		names := make([]string, len(n.Names))
 		for i, id := range n.Names {
 			names[i] = id.Name
 		}
-		return SymbolKey(fmt.Sprintf("Value:%s@%s", strings.Join(names, ","), base))
-
+		name = strings.Join(names, ",")
+		pos = n.Pos()
 	case *ast.Field:
-		// parameters or struct fields
-		// if the field has a name, use it; otherwise fallback to position
 		if len(n.Names) > 0 {
-			return SymbolKey(fmt.Sprintf("Field:%s@%d@%s", n.Names[0].Name, n.Pos(), base))
+			name = n.Names[0].Name // Problematic for multi-field declaration. Ignoring that for now.
 		}
-		return SymbolKey(fmt.Sprintf("Field@%d@%s", n.Pos(), base))
-
+		pos = n.Pos()
 	case *ast.Ident:
-		// bare identifiers
-		return SymbolKey(fmt.Sprintf("Ident:%s@%s", n.Name, base))
-
-	case ast.Expr:
-		// composite expressions: selector, pointer, array, etc.
-		return SymbolKey(fmt.Sprintf("Expr:%T@%d@%s", n, n.Pos(), base))
-
+		name = n.Name
+		pos = n.Pos()
 	default:
-		// any other AST node: use its type and position
-		return SymbolKey(fmt.Sprintf("%T@%d@%s", n, n.Pos(), base))
+		pos = n.Pos()
+	}
+
+	return SymbolKey{
+		Name:     name,
+		Position: pos,
+		FileId:   base,
 	}
 }
 
-func (k SymbolKey) ShortLabel() string {
-	key := string(k)
-
-	// Universe type — strip prefix and return
-	if strings.HasPrefix(key, UniverseTypeSymKeyPrefix) {
-		return strings.TrimPrefix(key, UniverseTypeSymKeyPrefix)
+func NewUniverseSymbolKey(typeName string) SymbolKey {
+	return SymbolKey{
+		Name:       typeName,
+		IsUniverse: true,
 	}
-
-	// Expected: Kind[:Name]@fileInfo
-	parts := strings.SplitN(key, "@", 2)
-	if len(parts) != 2 {
-		return key // fallback for malformed keys
-	}
-
-	var nodeName string
-	// Split to Kind/Name - name is not always available. Example: "Field" or "Field:headerParam"
-	kindAndNameParts := strings.SplitN(parts[0], ":", 2)
-	if len(kindAndNameParts) == 2 {
-		nodeName = kindAndNameParts[1]
-	} else {
-		nodeName = kindAndNameParts[0]
-	}
-
-	fileInfo := parts[1] // e.g. /path/file.go|ver|hash
-
-	// Shorten the file path and hash
-	fvParts := strings.Split(fileInfo, "|")
-	if len(fvParts) != 3 {
-		return key // fallback
-	}
-
-	file := filepath.Base(fvParts[0])
-	shortHash := fvParts[2]
-	if len(shortHash) > 7 {
-		shortHash = shortHash[:7]
-	}
-
-	return fmt.Sprintf("%s@%s|%s", nodeName, file, shortHash)
 }

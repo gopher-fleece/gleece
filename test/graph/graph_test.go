@@ -13,7 +13,7 @@ var _ = Describe("Graph Controller", func() {
 	It("Creates a valid Symbol Graph", func() {
 		graph := utils.GetGraphByGleeceConfigOrFail()
 		Expect(graph).ToNot(BeNil())
-		dump := graph.Dump()
+		dump := graph.String()
 		utils.WriteFileByRelativePathOrFail("./dump.txt", []byte(dump))
 
 		dotFormat := graph.ToDot()

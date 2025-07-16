@@ -68,7 +68,7 @@ func (v *RouteVisitor) VisitMethod(funcDecl *ast.FuncDecl, sourceFile *ast.File)
 		return nil, err
 	}
 
-	cached := v.context.MetadataCache.GetReceiver(graphs.SymbolKeyFor(v.currentFuncDecl, v.currentFVersion))
+	cached := v.context.MetadataCache.GetReceiver(graphs.NewSymbolKey(v.currentFuncDecl, v.currentFVersion))
 	if cached != nil {
 		return cached, nil
 	}

@@ -51,5 +51,5 @@ type SimpleStruct struct {
 }
 
 type StructWithStructSlice struct {
-	SimpleStructSlice []SimpleStruct
+	AStructArrayField []SimpleStruct
 }

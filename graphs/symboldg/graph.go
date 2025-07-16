@@ -22,6 +22,8 @@ type SymbolGraphBuilder interface {
 	AddConst(request CreateConstNode) (*SymbolNode, error)
 	AddPrimitive(kind PrimitiveType) *SymbolNode
 	AddEdge(from, to graphs.SymbolKey, kind SymbolEdgeKind, meta map[string]string)
+	String() string
+	ToDot() string
 }
 
 type SymbolGraph struct {
@@ -47,7 +49,7 @@ func (g *SymbolGraph) addNode(n *SymbolNode) {
 }
 
 func (g *SymbolGraph) AddPrimitive(p PrimitiveType) *SymbolNode {
-	key := graphs.SymbolKeyForUniverseType(string(p))
+	key := graphs.NewUniverseSymbolKey(string(p))
 	if node, exists := g.nodes[key]; exists {
 		return node
 	}
@@ -65,21 +67,7 @@ func (g *SymbolGraph) AddPrimitive(p PrimitiveType) *SymbolNode {
 // For example: AddEdge(structKey, receiverKey, EdgeKindReceiver, nil)
 // means "struct has receiver".
 func (g *SymbolGraph) AddEdge(from, to graphs.SymbolKey, kind SymbolEdgeKind, meta map[string]string) {
-	existingEdges, exist := g.edges[from]
-	if exist {
-		for _, edge := range existingEdges {
-			if edge.To == to {
-				panic(fmt.Sprintf("duplicate edge insertion detected:\nFrom: %s\nTo: %s", from, to))
-			}
-		}
-	}
-	// Maintain semantically-typed edge
-	g.edges[from] = append(g.edges[from], SymbolEdge{
-		To:       to,
-		Kind:     kind,
-		Metadata: meta,
-	})
-
+	// Always update dependency graphs
 	if g.deps[from] == nil {
 		g.deps[from] = make(map[graphs.SymbolKey]struct{})
 	}
@@ -89,6 +77,21 @@ func (g *SymbolGraph) AddEdge(from, to graphs.SymbolKey, kind SymbolEdgeKind, me
 		g.revDeps[to] = make(map[graphs.SymbolKey]struct{})
 	}
 	g.revDeps[to][from] = struct{}{}
+
+	// Check for duplicate edges before appending
+	existingEdges := g.edges[from]
+	for _, edge := range existingEdges {
+		if edge.To.Equals(to) && edge.Kind == kind {
+			return // Duplicate edge — skip
+		}
+	}
+
+	// Append the new edge
+	g.edges[from] = append(existingEdges, SymbolEdge{
+		To:       to,
+		Kind:     kind,
+		Metadata: meta,
+	})
 }
 
 func (g *SymbolGraph) AddController(request CreateControllerNode) (*SymbolNode, error) {
@@ -148,8 +151,8 @@ func (g *SymbolGraph) AddRouteParam(request CreateParameterNode) (*SymbolNode, e
 	// Add a dependency FROM the route TO the parameter node itself
 	g.AddEdge(request.ParentRoute.SymbolKey(), symNode.Id, EdgeKindParam, nil)
 
-	// Add a dependency FROM the PARAM TO the PARAM TYPE node
-	g.AddEdge(symNode.Id, request.Data.Type.TypeRefKey, EdgeKindReference, nil)
+	// Add a dependency FROM the PARAM TO the PARAM TYPE node - DEPRECATED?
+	// g.AddEdge(symNode.Id, request.Data.Type.TypeRefKey, EdgeKindReference, nil)
 
 	return symNode, nil
 }
@@ -169,20 +172,32 @@ func (g *SymbolGraph) AddRouteRetVal(request CreateReturnValueNode) (*SymbolNode
 
 	g.AddEdge(request.ParentRoute.SymbolKey(), symNode.Id, EdgeKindRetVal, nil)
 
-	// Add a dependency FROM the RETVAL TO the RETVAL TYPE node
-	g.AddEdge(symNode.Id, request.Data.Type.TypeRefKey, EdgeKindReference, nil)
+	// Add a dependency FROM the RETVAL TO the RETVAL TYPE node - DEPRECATED?
+	// g.AddEdge(symNode.Id, request.Data.Type.TypeRefKey, EdgeKindReference, nil)
 
 	return symNode, nil
 }
 
 func (g *SymbolGraph) AddStruct(request CreateStructNode) (*SymbolNode, error) {
-	return g.createAndAddSymNode(
+	symNode, err := g.createAndAddSymNode(
 		request.Data.Node,
 		common.SymKindStruct,
 		request.Data.FVersion,
 		request.Annotations,
 		request.Data,
 	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Register the fields to the struct
+	for _, field := range request.Data.Fields {
+		fieldKey := graphs.NewSymbolKey(field.Node, field.FVersion)
+		g.AddEdge(symNode.Id, fieldKey, EdgeKindField, nil)
+	}
+
+	return symNode, nil
 }
 
 func (g *SymbolGraph) AddEnum(request CreateEnumNode) (*SymbolNode, error) {
@@ -196,13 +211,19 @@ func (g *SymbolGraph) AddEnum(request CreateEnumNode) (*SymbolNode, error) {
 }
 
 func (g *SymbolGraph) AddField(request CreateFieldNode) (*SymbolNode, error) {
-	return g.createAndAddSymNode(
+	symNode, err := g.createAndAddSymNode(
 		request.Data.Node,
 		common.SymKindField,
 		request.Data.FVersion,
 		request.Annotations,
 		request.Data,
 	)
+	if err != nil {
+		return nil, err
+	}
+
+	g.AddEdge(symNode.Id, request.Data.Type.TypeRefKey, EdgeKindType, nil)
+	return symNode, err
 }
 
 func (g *SymbolGraph) AddConst(request CreateConstNode) (*SymbolNode, error) {
@@ -243,14 +264,14 @@ func (g *SymbolGraph) createAndAddSymNode(
 // If the node exists but has a different FVersion, the old node will be evicted, alongside its dependents.
 func (g *SymbolGraph) idempotencyGuard(decl ast.Node, version *gast.FileVersion) (*SymbolNode, graphs.SymbolKey, error) {
 	if decl == nil {
-		return nil, "", fmt.Errorf("idempotencyGuard received a nil decl parameter")
+		return nil, graphs.SymbolKey{}, fmt.Errorf("idempotencyGuard received a nil decl parameter")
 	}
 
 	if version == nil {
-		return nil, "", fmt.Errorf("idempotencyGuard received a nil version parameter")
+		return nil, graphs.SymbolKey{}, fmt.Errorf("idempotencyGuard received a nil version parameter")
 	}
 
-	key := graphs.SymbolKeyFor(decl, version)
+	key := graphs.NewSymbolKey(decl, version)
 	if existing := g.nodes[key]; existing != nil {
 		if existing.Version.Equals(version) {
 			return existing, key, nil
@@ -284,7 +305,7 @@ func (g *SymbolGraph) evict(key graphs.SymbolKey) {
 	delete(g.nodes, key)
 }
 
-func (g *SymbolGraph) Dump() string {
+func (g *SymbolGraph) String() string {
 	var sb strings.Builder
 
 	// Summary
@@ -293,14 +314,14 @@ func (g *SymbolGraph) Dump() string {
 
 	// Per-node details
 	for key, node := range g.nodes {
-		prettyKey := PrettyPrintSymbolKey(key)
+		prettyKey := key.PrettyPrint()
 		sb.WriteString(fmt.Sprintf("[%s] %s\n", node.Kind, prettyKey))
 		// Outgoing dependencies
 		if deps, ok := g.deps[key]; ok && len(deps) > 0 {
 			sb.WriteString("  Dependencies:\n")
 			for _, edge := range g.edges[key] {
 				toNode := g.nodes[edge.To]
-				linkedPrettyKey := PrettyPrintSymbolKey(edge.To)
+				linkedPrettyKey := edge.To.PrettyPrint()
 
 				if toNode == nil {
 					sb.WriteString(fmt.Sprintf("    • [%s] (%s)\n", linkedPrettyKey, edge.Kind))
@@ -318,7 +339,7 @@ func (g *SymbolGraph) Dump() string {
 			sb.WriteString("  Dependents:\n")
 			for fromKey := range revs {
 				fromNode := g.nodes[fromKey]
-				linkedPrettyKey := PrettyPrintSymbolKey(fromKey)
+				linkedPrettyKey := fromKey.PrettyPrint()
 				sb.WriteString(fmt.Sprintf("    • [%s] %s\n", fromNode.Kind, linkedPrettyKey))
 			}
 		} else {
@@ -368,25 +389,5 @@ func (g *SymbolGraph) ToDot() string {
 	}
 
 	sb.WriteString("}\n")
-	return sb.String()
-}
-
-func PrettyPrintSymbolKey(key graphs.SymbolKey) string {
-	withoutPrefix, hasPrefix := strings.CutPrefix(string(key), graphs.UniverseTypeSymKeyPrefix)
-	if hasPrefix {
-		return withoutPrefix
-	}
-
-	keyParts := strings.Split(string(key), "@")
-	// Expected 3-length
-	fVerParts := strings.Split(keyParts[1], "|")
-
-	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("%s\n", keyParts[0])) // Node Name
-
-	for _, part := range fVerParts {
-		sb.WriteString(fmt.Sprintf("    • %s\n", part))
-	}
-
 	return sb.String()
 }

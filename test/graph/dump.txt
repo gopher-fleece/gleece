@@ -1,0 +1,340 @@
+=== SymbolGraph Dump ===
+Total nodes: 20
+
+[Struct] StructWithStructSlice
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/units/units.test.types.go
+    • 1752624059
+    • 8b652110a4b445f684d1b7f544f319e6f34e5536c8b29165946cbd2b8591374c
+
+  Dependencies:
+    • [Field] AStructArrayField
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/units/units.test.types.go
+    • 1752624059
+    • 8b652110a4b445f684d1b7f544f319e6f34e5536c8b29165946cbd2b8591374c
+ (fld)
+  Dependents:
+    • [Field] body
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1752192935
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+
+[Field] @4731041
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1752192935
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+  Dependencies:
+    • [Builtin] error (ty)
+  Dependents:
+    • [Receiver] MethodWithComplexExternalTypes
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1752192935
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+
+[Builtin] string
+  Dependencies: (none)
+  Dependents:
+    • [Field] FieldA
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/units/units.test.types.go
+    • 1752624059
+    • 8b652110a4b445f684d1b7f544f319e6f34e5536c8b29165946cbd2b8591374c
+
+    • [Field] routeParam
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1752192935
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+
+[Receiver] ValidMethodWithSimpleRouteQueryAndHeaderParameters
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1752192935
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+  Dependencies:
+    • [Field] routeParam
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1752192935
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+ (param)
+    • [Field] queryParam
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1752192935
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+ (param)
+    • [Field] headerParam
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1752192935
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+ (param)
+    • [Field] @4730861
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1752192935
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+ (ret)
+  Dependents:
+    • [Struct] GraphController
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1752192935
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+
+[Field] FieldA
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/units/units.test.types.go
+    • 1752624059
+    • 8b652110a4b445f684d1b7f544f319e6f34e5536c8b29165946cbd2b8591374c
+
+  Dependencies:
+    • [Builtin] string (ty)
+  Dependents:
+    • [Struct] SimpleStruct
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/units/units.test.types.go
+    • 1752624059
+    • 8b652110a4b445f684d1b7f544f319e6f34e5536c8b29165946cbd2b8591374c
+
+
+[Struct] SimpleStruct
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/units/units.test.types.go
+    • 1752624059
+    • 8b652110a4b445f684d1b7f544f319e6f34e5536c8b29165946cbd2b8591374c
+
+  Dependencies:
+    • [Field] FieldA
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/units/units.test.types.go
+    • 1752624059
+    • 8b652110a4b445f684d1b7f544f319e6f34e5536c8b29165946cbd2b8591374c
+ (fld)
+    • [Field] FieldB
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/units/units.test.types.go
+    • 1752624059
+    • 8b652110a4b445f684d1b7f544f319e6f34e5536c8b29165946cbd2b8591374c
+ (fld)
+  Dependents:
+    • [Field] AStructArrayField
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/units/units.test.types.go
+    • 1752624059
+    • 8b652110a4b445f684d1b7f544f319e6f34e5536c8b29165946cbd2b8591374c
+
+
+[Enum] EnumTypeA
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/units/units.test.types.go
+    • 1752624059
+    • 8b652110a4b445f684d1b7f544f319e6f34e5536c8b29165946cbd2b8591374c
+
+  Dependencies: (none)
+  Dependents:
+    • [Field] @4731024
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1752192935
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+
+[Receiver] MethodWithComplexExternalTypes
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1752192935
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+  Dependencies:
+    • [Field] body
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1752192935
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+ (param)
+    • [Field] @4731024
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1752192935
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+ (ret)
+    • [Field] @4731041
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1752192935
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+ (ret)
+  Dependents:
+    • [Struct] GraphController
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1752192935
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+
+[Field] routeParam
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1752192935
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+  Dependencies:
+    • [Builtin] string (ty)
+  Dependents:
+    • [Receiver] ValidMethodWithSimpleRouteQueryAndHeaderParameters
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1752192935
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+
+[Field] headerParam
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1752192935
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+  Dependencies:
+    • [Builtin] float32 (ty)
+  Dependents:
+    • [Receiver] ValidMethodWithSimpleRouteQueryAndHeaderParameters
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1752192935
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+
+[Field] @4730861
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1752192935
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+  Dependencies:
+    • [Builtin] error (ty)
+  Dependents:
+    • [Receiver] ValidMethodWithSimpleRouteQueryAndHeaderParameters
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1752192935
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+
+[Field] AStructArrayField
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/units/units.test.types.go
+    • 1752624059
+    • 8b652110a4b445f684d1b7f544f319e6f34e5536c8b29165946cbd2b8591374c
+
+  Dependencies:
+    • [Struct] SimpleStruct
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/units/units.test.types.go
+    • 1752624059
+    • 8b652110a4b445f684d1b7f544f319e6f34e5536c8b29165946cbd2b8591374c
+ (ty)
+  Dependents:
+    • [Struct] StructWithStructSlice
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/units/units.test.types.go
+    • 1752624059
+    • 8b652110a4b445f684d1b7f544f319e6f34e5536c8b29165946cbd2b8591374c
+
+
+[Field] @4731024
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1752192935
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+  Dependencies:
+    • [Enum] EnumTypeA
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/units/units.test.types.go
+    • 1752624059
+    • 8b652110a4b445f684d1b7f544f319e6f34e5536c8b29165946cbd2b8591374c
+ (ty)
+  Dependents:
+    • [Receiver] MethodWithComplexExternalTypes
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1752192935
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+
+[Struct] GraphController
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1752192935
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+  Dependencies:
+    • [Receiver] ValidMethodWithSimpleRouteQueryAndHeaderParameters
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1752192935
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+ (recv)
+    • [Receiver] MethodWithComplexExternalTypes
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1752192935
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+ (recv)
+  Dependents: (none)
+
+[Builtin] int
+  Dependencies: (none)
+  Dependents:
+    • [Field] queryParam
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1752192935
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+    • [Field] FieldB
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/units/units.test.types.go
+    • 1752624059
+    • 8b652110a4b445f684d1b7f544f319e6f34e5536c8b29165946cbd2b8591374c
+
+
+[Builtin] float32
+  Dependencies: (none)
+  Dependents:
+    • [Field] headerParam
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1752192935
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+
+[Field] body
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1752192935
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+  Dependencies:
+    • [Struct] StructWithStructSlice
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/units/units.test.types.go
+    • 1752624059
+    • 8b652110a4b445f684d1b7f544f319e6f34e5536c8b29165946cbd2b8591374c
+ (ty)
+  Dependents:
+    • [Receiver] MethodWithComplexExternalTypes
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1752192935
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+
+[Field] queryParam
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1752192935
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+  Dependencies:
+    • [Builtin] int (ty)
+  Dependents:
+    • [Receiver] ValidMethodWithSimpleRouteQueryAndHeaderParameters
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1752192935
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+
+[Builtin] error
+  Dependencies: (none)
+  Dependents:
+    • [Field] @4731041
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1752192935
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+    • [Field] @4730861
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/graph/graph.controller.go
+    • 1752192935
+    • d9e6f563a6f4a221a3929a820fab5c822ae2013e8734a8e5a9c1948e6e107eaa
+
+
+[Field] FieldB
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/units/units.test.types.go
+    • 1752624059
+    • 8b652110a4b445f684d1b7f544f319e6f34e5536c8b29165946cbd2b8591374c
+
+  Dependencies:
+    • [Builtin] int (ty)
+  Dependents:
+    • [Struct] SimpleStruct
+    • /mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/units/units.test.types.go
+    • 1752624059
+    • 8b652110a4b445f684d1b7f544f319e6f34e5536c8b29165946cbd2b8591374c
+
+
+=== End SymbolGraph ===

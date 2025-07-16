@@ -44,7 +44,7 @@ func (c *MetadataCache) GetEnum(key graphs.SymbolKey) *metadata.EnumMeta {
 }
 
 func (c *MetadataCache) HasController(meta *metadata.ControllerMeta) bool {
-	key := graphs.SymbolKeyFor(meta.Struct.Node, meta.Struct.FVersion)
+	key := graphs.NewSymbolKey(meta.Struct.Node, meta.Struct.FVersion)
 	return c.controllers[key] != nil
 }
 
@@ -57,7 +57,7 @@ func (c *MetadataCache) HasStruct(key graphs.SymbolKey) bool {
 }
 
 func (c *MetadataCache) HasEnum(meta *metadata.EnumMeta) bool {
-	key := graphs.SymbolKeyFor(meta.Node, meta.FVersion)
+	key := graphs.NewSymbolKey(meta.Node, meta.FVersion)
 	return c.enums[key] != nil
 }
 
@@ -83,22 +83,22 @@ func (c *MetadataCache) GetFileVersion(file *ast.File, fileSet *token.FileSet) (
 }
 
 func (c *MetadataCache) AddController(meta *metadata.ControllerMeta) error {
-	key := graphs.SymbolKeyFor(meta.Struct.Node, meta.Struct.FVersion)
+	key := graphs.NewSymbolKey(meta.Struct.Node, meta.Struct.FVersion)
 	return addEntity(key, c.controllers, c.visited, meta)
 }
 
 func (c *MetadataCache) AddReceiver(meta *metadata.ReceiverMeta) error {
-	key := graphs.SymbolKeyFor(meta.Node, meta.FVersion)
+	key := graphs.NewSymbolKey(meta.Node, meta.FVersion)
 	return addEntity(key, c.receivers, c.visited, meta)
 }
 
 func (c *MetadataCache) AddStruct(meta *metadata.StructMeta) error {
-	key := graphs.SymbolKeyFor(meta.Node, meta.FVersion)
+	key := graphs.NewSymbolKey(meta.Node, meta.FVersion)
 	return addEntity(key, c.structs, c.visited, meta)
 }
 
 func (c *MetadataCache) AddEnum(meta *metadata.EnumMeta) error {
-	key := graphs.SymbolKeyFor(meta.Node, meta.FVersion)
+	key := graphs.NewSymbolKey(meta.Node, meta.FVersion)
 	return addEntity(key, c.enums, c.visited, meta)
 }
 
