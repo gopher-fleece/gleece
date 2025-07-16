@@ -141,7 +141,7 @@ func (v *RecursiveTypeVisitor) VisitStructType(
 		},
 	)
 
-	return structMeta, symNode.Id, nil
+	return structMeta, symNode.Id, err
 }
 
 func (v *RecursiveTypeVisitor) VisitEnumType(
@@ -304,8 +304,6 @@ func (v *RecursiveTypeVisitor) VisitField(
 			return nil, v.frozenError(err)
 		}
 
-		var referencedTypeSymKey *graphs.SymbolKey
-
 		if resolvedField.DeclaringPackage != nil &&
 			resolvedField.DeclaringAstFile != nil &&
 			resolvedField.TypeSpec != nil {
@@ -323,7 +321,7 @@ func (v *RecursiveTypeVisitor) VisitField(
 				)
 			}
 			// Recurse into any nested entities
-			underlyingSymKey, err := v.visitTypeSpec(
+			_, err = v.visitTypeSpec(
 				resolvedField.DeclaringPackage,
 				resolvedField.DeclaringAstFile,
 				fVersion,
@@ -333,7 +331,6 @@ func (v *RecursiveTypeVisitor) VisitField(
 			if err != nil {
 				return nil, v.frozenError(err)
 			}
-			referencedTypeSymKey = &underlyingSymKey
 		}
 
 		// If we're looking at a universe type, there's no package and PkgPath is left empty
@@ -409,14 +406,6 @@ func (v *RecursiveTypeVisitor) VisitField(
 
 		if err != nil {
 			return nil, v.frozenError(err)
-		}
-
-		// Check and add a node linkage if necessary
-		if referencedTypeSymKey != nil {
-			// Field -> FieldType
-			// v.context.GraphBuilder.AddEdge(fieldNode.Id, *referencedTypeSymKey, symboldg.EdgeKindReference, nil)
-
-			// NOTE TO SELF - Wo
 		}
 	}
 

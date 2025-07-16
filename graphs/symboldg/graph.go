@@ -201,13 +201,36 @@ func (g *SymbolGraph) AddStruct(request CreateStructNode) (*SymbolNode, error) {
 }
 
 func (g *SymbolGraph) AddEnum(request CreateEnumNode) (*SymbolNode, error) {
-	return g.createAndAddSymNode(
+	symNode, err := g.createAndAddSymNode(
 		request.Data.Node,
 		common.SymKindEnum,
 		request.Data.FVersion,
 		request.Annotations,
 		request.Data,
 	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Register the individual enum values to the struct
+	for _, valueDef := range request.Data.Values {
+		valueNode, err := g.createAndAddSymNode(
+			valueDef.Node,
+			common.SymKindConstant,
+			valueDef.FVersion,
+			valueDef.Annotations,
+			valueDef,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		g.AddEdge(symNode.Id, valueNode.Id, EdgeKindValue, nil)
+	}
+
+	return symNode, nil
 }
 
 func (g *SymbolGraph) AddField(request CreateFieldNode) (*SymbolNode, error) {
