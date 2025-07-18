@@ -35,8 +35,12 @@ func GetMethodHideOpts(attributes *annotations.AnnotationHolder) definitions.Met
 	return definitions.MethodHideOptions{Type: definitions.HideMethodCondition, Condition: attr.Value}
 }
 
-func GetDeprecationOpts(attributes *annotations.AnnotationHolder) definitions.DeprecationOptions {
-	deprecationAttr := attributes.GetFirst(annotations.GleeceAnnotationDeprecated)
+func GetDeprecationOpts(holder *annotations.AnnotationHolder) definitions.DeprecationOptions {
+	if holder == nil {
+		return definitions.DeprecationOptions{}
+	}
+
+	deprecationAttr := holder.GetFirst(annotations.GleeceAnnotationDeprecated)
 	if deprecationAttr == nil {
 		return definitions.DeprecationOptions{}
 	}

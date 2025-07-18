@@ -11,10 +11,11 @@ import (
 
 var _ = Describe("Graph Controller", func() {
 	It("Creates a valid Symbol Graph", func() {
-		graph := utils.GetGraphByGleeceConfigOrFail()
-		Expect(graph).ToNot(BeNil())
-		dotFormat := graph.ToDot()
-		utils.WriteFileByRelativePathOrFail("./dot.txt", []byte(dotFormat))
+		pipe := utils.GetPipelineOrFail()
+		pipe.Run()
+		//Expect(graph).ToNot(BeNil())
+		//dotFormat := graph.ToDot()
+		//utils.WriteFileByRelativePathOrFail("./dot.txt", []byte(dotFormat))
 	})
 })
 

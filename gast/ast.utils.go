@@ -760,6 +760,26 @@ func ResolveTypeSpecFromField(
 			return FieldTypeSpecResolution{}, err
 		}
 
+	case *ast.StarExpr:
+		// Only supported if it's a pointer to a selector expr like *pkg.Type
+		if inner, ok := t.X.(*ast.SelectorExpr); ok {
+			ident = inner.Sel
+			pkgPath, err = ResolveImportPathForSelector(declaringFile, inner)
+			if err != nil {
+				return FieldTypeSpecResolution{}, err
+			}
+		} else {
+			return FieldTypeSpecResolution{}, fmt.Errorf("unsupported star expression: %T", t.X)
+		}
+	case *ast.InterfaceType:
+		// Only "Context" interface is allowed
+		// (This assumes the field's type is just `Context`, not `pkg.Context`)
+		if ident, ok := field.Type.(*ast.Ident); ok && ident.Name == "Context" {
+			return FieldTypeSpecResolution{IsUniverse: true, TypeName: ident.Name}, nil
+		}
+
+		return FieldTypeSpecResolution{}, fmt.Errorf("interface types other than Context are not supported")
+
 	default:
 		return FieldTypeSpecResolution{}, fmt.Errorf("unsupported resolved expression: %T", expr)
 	}

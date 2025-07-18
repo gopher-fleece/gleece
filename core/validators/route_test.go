@@ -1,26 +1,19 @@
-package visitors
+package validators
 
 import (
 	"github.com/gopher-fleece/gleece/definitions"
-	"github.com/gopher-fleece/gleece/core/arbitrators"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Route Tests", func() {
-	var routeVisitor RouteVisitor
-
-	BeforeEach(func() {
-		routeVisitor = RouteVisitor{}
-	})
-
 	Context("when validating parameter combinations", func() {
 		It("should allow first body parameter", func() {
 			// Arrange
-			params := []arbitrators.FuncParamWithAst{}
+			params := []definitions.FuncParam{}
 
 			// Act
-			err := routeVisitor.validateParamsCombinations(params, definitions.PassedInBody)
+			err := validateParamsCombinations(params, definitions.PassedInBody)
 
 			// Assert
 			Expect(err).To(BeNil())
@@ -28,14 +21,14 @@ var _ = Describe("Route Tests", func() {
 
 		It("should reject second body parameter", func() {
 			// Arrange
-			params := []arbitrators.FuncParamWithAst{
+			params := []definitions.FuncParam{
 				{
 					PassedIn: definitions.PassedInBody,
 				},
 			}
 
 			// Act
-			err := routeVisitor.validateParamsCombinations(params, definitions.PassedInBody)
+			err := validateParamsCombinations(params, definitions.PassedInBody)
 
 			// Assert
 			Expect(err).To(HaveOccurred())
@@ -44,10 +37,10 @@ var _ = Describe("Route Tests", func() {
 
 		It("should allow first form parameter", func() {
 			// Arrange
-			params := []arbitrators.FuncParamWithAst{}
+			params := []definitions.FuncParam{}
 
 			// Act
-			err := routeVisitor.validateParamsCombinations(params, definitions.PassedInForm)
+			err := validateParamsCombinations(params, definitions.PassedInForm)
 
 			// Assert
 			Expect(err).To(BeNil())
@@ -55,14 +48,14 @@ var _ = Describe("Route Tests", func() {
 
 		It("should reject body parameter when form parameter exists", func() {
 			// Arrange
-			params := []arbitrators.FuncParamWithAst{
+			params := []definitions.FuncParam{
 				{
 					PassedIn: definitions.PassedInForm,
 				},
 			}
 
 			// Act
-			err := routeVisitor.validateParamsCombinations(params, definitions.PassedInBody)
+			err := validateParamsCombinations(params, definitions.PassedInBody)
 
 			// Assert
 			Expect(err).To(HaveOccurred())
@@ -71,14 +64,14 @@ var _ = Describe("Route Tests", func() {
 
 		It("should reject form parameter when body parameter exists", func() {
 			// Arrange
-			params := []arbitrators.FuncParamWithAst{
+			params := []definitions.FuncParam{
 				{
 					PassedIn: definitions.PassedInBody,
 				},
 			}
 
 			// Act
-			err := routeVisitor.validateParamsCombinations(params, definitions.PassedInForm)
+			err := validateParamsCombinations(params, definitions.PassedInForm)
 
 			// Assert
 			Expect(err).To(HaveOccurred())
@@ -87,14 +80,14 @@ var _ = Describe("Route Tests", func() {
 
 		It("should allow multiple form parameters", func() {
 			// Arrange
-			params := []arbitrators.FuncParamWithAst{
+			params := []definitions.FuncParam{
 				{
 					PassedIn: definitions.PassedInForm,
 				},
 			}
 
 			// Act
-			err := routeVisitor.validateParamsCombinations(params, definitions.PassedInForm)
+			err := validateParamsCombinations(params, definitions.PassedInForm)
 
 			// Assert
 			Expect(err).To(BeNil())
@@ -102,14 +95,14 @@ var _ = Describe("Route Tests", func() {
 
 		It("should allow other parameter types with body", func() {
 			// Arrange
-			params := []arbitrators.FuncParamWithAst{
+			params := []definitions.FuncParam{
 				{
 					PassedIn: definitions.PassedInBody,
 				},
 			}
 
 			// Act
-			err := routeVisitor.validateParamsCombinations(params, definitions.PassedInQuery)
+			err := validateParamsCombinations(params, definitions.PassedInQuery)
 
 			// Assert
 			Expect(err).To(BeNil())
@@ -117,14 +110,14 @@ var _ = Describe("Route Tests", func() {
 
 		It("should allow other parameter types with form", func() {
 			// Arrange
-			params := []arbitrators.FuncParamWithAst{
+			params := []definitions.FuncParam{
 				{
 					PassedIn: definitions.PassedInForm,
 				},
 			}
 
 			// Act
-			err := routeVisitor.validateParamsCombinations(params, definitions.PassedInHeader)
+			err := validateParamsCombinations(params, definitions.PassedInHeader)
 
 			// Assert
 			Expect(err).To(BeNil())
@@ -132,7 +125,7 @@ var _ = Describe("Route Tests", func() {
 
 		It("should allow multiple non-body and non-form parameters", func() {
 			// Arrange
-			params := []arbitrators.FuncParamWithAst{
+			params := []definitions.FuncParam{
 				{
 					PassedIn: definitions.PassedInQuery,
 				},
@@ -145,7 +138,7 @@ var _ = Describe("Route Tests", func() {
 			}
 
 			// Act
-			err := routeVisitor.validateParamsCombinations(params, definitions.PassedInQuery)
+			err := validateParamsCombinations(params, definitions.PassedInQuery)
 
 			// Assert
 			Expect(err).To(BeNil())

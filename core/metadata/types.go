@@ -100,7 +100,7 @@ func (s StructMeta) Reduce() definitions.StructMetadata {
 	return definitions.StructMetadata{
 		Name:        s.Name,
 		PkgPath:     s.PkgPath,
-		Description: s.Annotations.GetDescription(),
+		Description: annotations.GetDescription(s.Annotations),
 		Fields:      reducedFields,
 		Deprecation: GetDeprecationOpts(s.Annotations),
 	}
@@ -253,19 +253,27 @@ func (v FuncParam) Reduce(metaCache MetaCache, syncedProvider IdProvider) (defin
 		return definitions.FuncParam{}, err
 	}
 
-	nameInSchema, err := GetParameterSchemaName(v.Name, v.Annotations)
-	if err != nil {
-		return definitions.FuncParam{}, err
-	}
+	var nameInSchema string
+	var passedIn definitions.ParamPassedIn
+	var validator string
 
-	passedIn, err := GetParamPassedIn(v.Name, v.Annotations)
-	if err != nil {
-		return definitions.FuncParam{}, err
-	}
+	isContext := v.Type.Name == "Context" && v.Type.PkgPath == "context"
 
-	validator, err := GetParamValidator(v.Name, v.Annotations, passedIn, v.Type.IsByAddress())
-	if err != nil {
-		return definitions.FuncParam{}, err
+	if !isContext {
+		nameInSchema, err = GetParameterSchemaName(v.Name, v.Annotations)
+		if err != nil {
+			return definitions.FuncParam{}, err
+		}
+
+		passedIn, err = GetParamPassedIn(v.Name, v.Annotations)
+		if err != nil {
+			return definitions.FuncParam{}, err
+		}
+
+		validator, err = GetParamValidator(v.Name, v.Annotations, passedIn, v.Type.IsByAddress())
+		if err != nil {
+			return definitions.FuncParam{}, err
+		}
 	}
 
 	return definitions.FuncParam{
@@ -273,7 +281,7 @@ func (v FuncParam) Reduce(metaCache MetaCache, syncedProvider IdProvider) (defin
 			Name:      v.Name,
 			Ordinal:   v.Ordinal,
 			TypeMeta:  typeMeta,
-			IsContext: v.Name == "Context" && v.PkgPath == "context",
+			IsContext: isContext,
 		},
 		PassedIn:           passedIn,
 		NameInSchema:       nameInSchema,
@@ -326,7 +334,7 @@ func (e EnumMeta) Reduce() definitions.EnumMetadata {
 	return definitions.EnumMetadata{
 		Name:        e.Name,
 		PkgPath:     e.PkgPath,
-		Description: e.Annotations.GetDescription(),
+		Description: annotations.GetDescription(e.Annotations),
 		Values:      stringifiedValues,
 		Type:        string(e.ValueKind),
 		Deprecation: GetDeprecationOpts(e.Annotations),
@@ -382,8 +390,8 @@ func (f FieldMeta) Reduce() definitions.FieldMetadata {
 	return definitions.FieldMetadata{
 		Name:        f.Name,
 		Type:        f.Type.Name,
-		Description: f.Annotations.GetDescription(),
-		Tag:         f.Annotations.GetFirstValueOrEmpty(annotations.GleeceAnnotationTag),
+		Description: annotations.GetDescription(f.Annotations),
+		Tag:         annotations.GetFirstValueOrEmpty(f.Annotations, annotations.GleeceAnnotationTag),
 		IsEmbedded:  f.IsEmbedded,
 		Deprecation: common.Ptr(GetDeprecationOpts(f.Annotations)),
 	}

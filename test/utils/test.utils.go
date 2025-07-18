@@ -11,7 +11,6 @@ import (
 	"github.com/gopher-fleece/gleece/cmd/arguments"
 	"github.com/gopher-fleece/gleece/core/pipeline"
 	"github.com/gopher-fleece/gleece/definitions"
-	"github.com/gopher-fleece/gleece/graphs/symboldg"
 	. "github.com/onsi/ginkgo/v2"
 	"golang.org/x/tools/go/packages"
 )
@@ -205,7 +204,7 @@ func GetAstFieldByNameOrFail(pkg *packages.Package, structName string, fieldName
 	return nil
 }
 
-func GetGraphByGleeceConfigOrFail() symboldg.SymbolGraphBuilder {
+func GetPipelineOrFail() pipeline.GleecePipeline {
 	configPath := constructFullPathOrFail("gleece.test.config.json", true)
 	config, err := cmd.LoadGleeceConfig(configPath)
 	if err != nil {
@@ -217,6 +216,5 @@ func GetGraphByGleeceConfigOrFail() symboldg.SymbolGraphBuilder {
 		Fail(fmt.Sprintf("could not create a pipeline - %v", err))
 	}
 
-	pipe.GenerateGraph()
-	return pipe.Graph()
+	return pipe
 }

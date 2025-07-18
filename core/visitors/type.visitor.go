@@ -533,6 +533,17 @@ func (v *RecursiveTypeVisitor) visitTypeSpec(
 		_, symKey, err := v.VisitEnumType(pkg, file, fVersion, spec)
 		return symKey, v.frozenIfError(err)
 
+	case *ast.InterfaceType:
+		// Check for special interface: Context
+		if spec.Name.Name == "Context" && pkg.PkgPath == "context" {
+			// Mark it as a special symbol
+			key := v.context.GraphBuilder.AddSpecial(symboldg.SpecialTypeContext).Id
+			return key, nil
+		}
+
+		// Otherwise, reject
+		err = fmt.Errorf("interface type %q not supported (only Context is allowed)", spec.Name.Name)
+
 	default:
 		err = fmt.Errorf("unhandled TypeSpec type: %T", t)
 	}
