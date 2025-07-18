@@ -357,8 +357,18 @@ func (v *RecursiveTypeVisitor) VisitField(
 		} else {
 			typeRefKey = graphs.NewUniverseSymbolKey(resolvedField.TypeName)
 
-			// A bit of silly typing. Have good typing on the method and then use cast to ignore it. Blegh.
-			v.context.GraphBuilder.AddPrimitive(symboldg.PrimitiveType(resolvedField.TypeName))
+			if primitive, isPrimitive := symboldg.ToPrimitiveType(resolvedField.TypeName); isPrimitive {
+				v.context.GraphBuilder.AddPrimitive(primitive)
+			} else {
+				if special, isSpecial := symboldg.ToSpecialType(resolvedField.TypeName); isSpecial {
+					v.context.GraphBuilder.AddSpecial(special)
+				} else {
+					return nil, v.getFrozenError(
+						"encountered an unexpected, non-primitive, non-error typename '%s'",
+						resolvedField.TypeName,
+					)
+				}
+			}
 		}
 
 		// Create TypeUsageMeta (AST part only)

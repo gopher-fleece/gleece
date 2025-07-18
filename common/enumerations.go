@@ -3,21 +3,22 @@ package common
 type SymKind string
 
 const (
-	SymKindUnknown    SymKind = "Unknown"
-	SymKindPackage    SymKind = "Package"
-	SymKindStruct     SymKind = "Struct"
-	SymKindInterface  SymKind = "Interface"
-	SymKindAlias      SymKind = "Alias"
-	SymKindEnum       SymKind = "Enum"
-	SymKindEnumValue  SymKind = "EnumValue"
-	SymKindFunction   SymKind = "Function"
-	SymKindReceiver   SymKind = "Receiver"
-	SymKindField      SymKind = "Field"
-	SymKindParameter  SymKind = "Parameter"
-	SymKindVariable   SymKind = "Variable"
-	SymKindConstant   SymKind = "Constant"
-	SymKindReturnType SymKind = "RetType"
-	SymKindBuiltin    SymKind = "Builtin"
+	SymKindUnknown        SymKind = "Unknown"
+	SymKindPackage        SymKind = "Package"
+	SymKindStruct         SymKind = "Struct"
+	SymKindInterface      SymKind = "Interface"
+	SymKindAlias          SymKind = "Alias"
+	SymKindEnum           SymKind = "Enum"
+	SymKindEnumValue      SymKind = "EnumValue"
+	SymKindFunction       SymKind = "Function"
+	SymKindReceiver       SymKind = "Receiver"
+	SymKindField          SymKind = "Field"
+	SymKindParameter      SymKind = "Parameter"
+	SymKindVariable       SymKind = "Variable"
+	SymKindConstant       SymKind = "Constant"
+	SymKindReturnType     SymKind = "RetType"
+	SymKindBuiltin        SymKind = "Builtin"
+	SymKindSpecialBuiltin SymKind = "Special"
 )
 
 type AstNodeKind string

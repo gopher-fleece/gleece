@@ -36,3 +36,67 @@ const (
 	// Special case
 	PrimitiveTypeUnsafePointer PrimitiveType = "unsafe.Pointer"
 )
+
+// ToPrimitiveType checks if the given string represents a valid PrimitiveType.
+// If it does, it returns (corresponding PrimitiveType, true).
+func ToPrimitiveType(typeName string) (PrimitiveType, bool) {
+	switch typeName {
+	case
+		string(PrimitiveTypeBool),
+		string(PrimitiveTypeString),
+
+		string(PrimitiveTypeInt),
+		string(PrimitiveTypeInt8),
+		string(PrimitiveTypeInt16),
+		string(PrimitiveTypeInt32),
+		string(PrimitiveTypeInt64),
+
+		string(PrimitiveTypeUint),
+		string(PrimitiveTypeUint8),
+		string(PrimitiveTypeUint16),
+		string(PrimitiveTypeUint32),
+		string(PrimitiveTypeUint64),
+		string(PrimitiveTypeUintptr),
+
+		string(PrimitiveTypeByte),
+		string(PrimitiveTypeRune),
+
+		string(PrimitiveTypeFloat32),
+		string(PrimitiveTypeFloat64),
+
+		string(PrimitiveTypeComplex64),
+		string(PrimitiveTypeComplex128),
+
+		string(PrimitiveTypeUnsafePointer):
+		return PrimitiveType(typeName), true
+	default:
+		return "", false
+	}
+}
+
+type SpecialType string
+
+const (
+	SpecialTypeError          SpecialType = "error"
+	SpecialTypeEmptyInterface SpecialType = "interface{}"
+	SpecialTypeContext        SpecialType = "context.Context"
+	SpecialTypeTime           SpecialType = "time.Time"
+	SpecialTypeAny            SpecialType = "any" // alias of interface{}
+)
+
+func ToSpecialType(s string) (SpecialType, bool) {
+	switch s {
+	case "error":
+		return SpecialTypeError, true
+	case "interface{}":
+		return SpecialTypeEmptyInterface, true
+	case "any":
+		return SpecialTypeAny, true
+	case "context.Context":
+		return SpecialTypeContext, true
+	case "time.Time":
+		return SpecialTypeTime, true
+	default:
+		return "", false
+	}
+}

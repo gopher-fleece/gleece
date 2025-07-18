@@ -91,6 +91,21 @@ type StructMeta struct {
 	Fields []FieldMeta
 }
 
+func (s StructMeta) Reduce() definitions.StructMetadata {
+	reducedFields := make([]definitions.FieldMetadata, len(s.Fields))
+	for _, field := range s.Fields {
+		reducedFields = append(reducedFields, field.Reduce())
+	}
+
+	return definitions.StructMetadata{
+		Name:        s.Name,
+		PkgPath:     s.PkgPath,
+		Description: s.Annotations.GetDescription(),
+		Fields:      reducedFields,
+		Deprecation: GetDeprecationOpts(s.Annotations),
+	}
+}
+
 type ConstMeta struct {
 	SymNodeMeta
 	Value any
@@ -303,6 +318,21 @@ type EnumMeta struct {
 	Values    []EnumValueDefinition
 }
 
+func (e EnumMeta) Reduce() definitions.EnumMetadata {
+	stringifiedValues := common.Map(e.Values, func(value EnumValueDefinition) string {
+		return fmt.Sprintf("%v", value.Value)
+	})
+
+	return definitions.EnumMetadata{
+		Name:        e.Name,
+		PkgPath:     e.PkgPath,
+		Description: e.Annotations.GetDescription(),
+		Values:      stringifiedValues,
+		Type:        string(e.ValueKind),
+		Deprecation: GetDeprecationOpts(e.Annotations),
+	}
+}
+
 type TypeUsageMeta struct {
 	SymNodeMeta
 	TypeRefKey graphs.SymbolKey
@@ -346,6 +376,17 @@ type FieldMeta struct {
 	SymNodeMeta
 	Type       TypeUsageMeta
 	IsEmbedded bool
+}
+
+func (f FieldMeta) Reduce() definitions.FieldMetadata {
+	return definitions.FieldMetadata{
+		Name:        f.Name,
+		Type:        f.Type.Name,
+		Description: f.Annotations.GetDescription(),
+		Tag:         f.Annotations.GetFirstValueOrEmpty(annotations.GleeceAnnotationTag),
+		IsEmbedded:  f.IsEmbedded,
+		Deprecation: common.Ptr(GetDeprecationOpts(f.Annotations)),
+	}
 }
 
 func (m TypeUsageMeta) IsUniverseType() bool {

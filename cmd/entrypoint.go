@@ -1,13 +1,11 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
-	"go/ast"
 	"os"
 
 	"github.com/gopher-fleece/gleece/cmd/arguments"
-	"github.com/gopher-fleece/gleece/core/visitors"
+	"github.com/gopher-fleece/gleece/core/pipeline"
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/generator/routes"
 	"github.com/gopher-fleece/gleece/generator/swagen"
@@ -42,33 +40,17 @@ func LoadGleeceConfig(configPath string) (*definitions.GleeceConfig, error) {
 }
 
 func getMetadata(config *definitions.GleeceConfig) ([]definitions.ControllerMetadata, *definitions.Models, bool, error) {
-	visitor, err := visitors.NewControllerVisitor(&visitors.VisitContext{GleeceConfig: config})
+	pipe, err := pipeline.NewGleecePipeline(config)
 	if err != nil {
 		return []definitions.ControllerMetadata{}, nil, false, err
 	}
 
-	for _, file := range visitor.GetAllSourceFiles() {
-		ast.Walk(visitor, file)
-	}
-
-	lastErr := visitor.GetLastError()
-	if lastErr != nil {
-		logger.Error("Visitor encountered at-least one error. Last error:\n%v\n\t%s", lastErr, visitor.GetFormattedDiagnosticStack())
-		return nil, nil, false, lastErr
-	}
-
-	flatModels, hasAnyErrorTypes, err := visitor.GetModelsFlat()
+	meta, err := pipe.Run()
 	if err != nil {
-		logger.Error("Failed to get models metadata: %v", err)
-		return nil, nil, false, err
+		return []definitions.ControllerMetadata{}, nil, false, err
 	}
 
-	data, _ := json.MarshalIndent(flatModels, "", "\t")
-	logger.Debug("Flat models list:\n%s", string(data))
-
-	controllers := visitor.GetControllers()
-
-	return controllers, flatModels, hasAnyErrorTypes, nil
+	return meta.Flat, &meta.Models, meta.PlainErrorPresent, nil
 }
 
 func GetConfigAndMetadata(args arguments.CliArguments) (

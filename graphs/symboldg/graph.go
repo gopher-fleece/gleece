@@ -7,6 +7,7 @@ import (
 
 	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/core/annotations"
+	"github.com/gopher-fleece/gleece/core/metadata"
 	"github.com/gopher-fleece/gleece/gast"
 	"github.com/gopher-fleece/gleece/graphs"
 )
@@ -21,7 +22,16 @@ type SymbolGraphBuilder interface {
 	AddField(request CreateFieldNode) (*SymbolNode, error)
 	AddConst(request CreateConstNode) (*SymbolNode, error)
 	AddPrimitive(kind PrimitiveType) *SymbolNode
+	AddSpecial(special SpecialType) *SymbolNode
 	AddEdge(from, to graphs.SymbolKey, kind SymbolEdgeKind, meta map[string]string)
+
+	Structs() []metadata.StructMeta
+	Enums() []metadata.EnumMeta
+	FindByKind(kind common.SymKind) []*SymbolNode
+
+	IsPrimitivePresent(primitive PrimitiveType) bool
+	IsSpecialPresent(special SpecialType) bool
+
 	String() string
 	ToDot() string
 }
@@ -46,21 +56,6 @@ func NewSymbolGraph() SymbolGraph {
 
 func (g *SymbolGraph) addNode(n *SymbolNode) {
 	g.nodes[n.Id] = n
-}
-
-func (g *SymbolGraph) AddPrimitive(p PrimitiveType) *SymbolNode {
-	key := graphs.NewUniverseSymbolKey(string(p))
-	if node, exists := g.nodes[key]; exists {
-		return node
-	}
-
-	node := &SymbolNode{
-		Id:   key,
-		Kind: common.SymKindBuiltin,
-	}
-	g.nodes[key] = node
-
-	return node
 }
 
 // AddEdge adds a semantic relationship FROM → TO.
@@ -265,6 +260,66 @@ func (g *SymbolGraph) AddConst(request CreateConstNode) (*SymbolNode, error) {
 	)
 }
 
+func (g *SymbolGraph) FindByKind(kind common.SymKind) []*SymbolNode {
+	var results []*SymbolNode
+
+	for _, node := range g.nodes {
+		if node.Kind == kind {
+			results = append(results, node)
+		}
+	}
+
+	return results
+}
+
+func (g *SymbolGraph) Enums() []metadata.EnumMeta {
+	nodes := g.FindByKind(common.SymKindEnum)
+
+	var results []metadata.EnumMeta
+	for _, node := range nodes {
+		if enum, ok := node.Data.(metadata.EnumMeta); ok {
+			results = append(results, enum)
+		}
+	}
+	return results
+}
+
+func (g *SymbolGraph) Structs() []metadata.StructMeta {
+	nodes := g.FindByKind(common.SymKindStruct)
+
+	var results []metadata.StructMeta
+	for _, node := range nodes {
+		if structMeta, ok := node.Data.(metadata.StructMeta); ok {
+			results = append(results, structMeta)
+		}
+	}
+	return results
+}
+
+func (g *SymbolGraph) IsPrimitivePresent(primitive PrimitiveType) bool {
+	return g.builtinSymbolExists(string(primitive))
+}
+
+func (g *SymbolGraph) AddPrimitive(p PrimitiveType) *SymbolNode {
+	return g.addBuiltinSymbol(string(p), common.SymKindBuiltin)
+}
+
+func (g *SymbolGraph) IsSpecialPresent(special SpecialType) bool {
+	return g.builtinSymbolExists(string(special))
+}
+
+func (g *SymbolGraph) AddSpecial(special SpecialType) *SymbolNode {
+	return g.addBuiltinSymbol(string(special), common.SymKindSpecialBuiltin)
+}
+
+func (g *SymbolGraph) builtinSymbolExists(name string) bool {
+	key := graphs.NewUniverseSymbolKey(name)
+	if _, exists := g.nodes[key]; exists {
+		return true
+	}
+	return false
+}
+
 func (g *SymbolGraph) createAndAddSymNode(
 	node ast.Node,
 	kind common.SymKind,
@@ -287,6 +342,21 @@ func (g *SymbolGraph) createAndAddSymNode(
 
 	g.addNode(symNode)
 	return symNode, nil
+}
+
+func (g *SymbolGraph) addBuiltinSymbol(typeName string, kind common.SymKind) *SymbolNode {
+	key := graphs.NewUniverseSymbolKey(typeName)
+	if node, exists := g.nodes[key]; exists {
+		return node
+	}
+
+	node := &SymbolNode{
+		Id:   key,
+		Kind: kind,
+	}
+	g.nodes[key] = node
+
+	return node
 }
 
 // idempotencyGuard checks if the given node with the given version exists in the graph.

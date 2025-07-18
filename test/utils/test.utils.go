@@ -9,7 +9,7 @@ import (
 
 	"github.com/gopher-fleece/gleece/cmd"
 	"github.com/gopher-fleece/gleece/cmd/arguments"
-	"github.com/gopher-fleece/gleece/core/visitors"
+	"github.com/gopher-fleece/gleece/core/pipeline"
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/graphs/symboldg"
 	. "github.com/onsi/ginkgo/v2"
@@ -205,36 +205,18 @@ func GetAstFieldByNameOrFail(pkg *packages.Package, structName string, fieldName
 	return nil
 }
 
-func GetGraphByGleeceConfigOrFail() *symboldg.SymbolGraph {
+func GetGraphByGleeceConfigOrFail() symboldg.SymbolGraphBuilder {
 	configPath := constructFullPathOrFail("gleece.test.config.json", true)
 	config, err := cmd.LoadGleeceConfig(configPath)
 	if err != nil {
 		Fail(fmt.Sprintf("could not load Gleece Config - %v", err))
 	}
 
-	symGraph := symboldg.NewSymbolGraph()
-	controllerVisitor, err := visitors.NewControllerVisitor(&visitors.VisitContext{
-		GleeceConfig: config,
-		GraphBuilder: &symGraph,
-	})
-
+	pipe, err := pipeline.NewGleecePipeline(config)
 	if err != nil {
-		Fail(fmt.Sprintf("could create a controller visitor - %v", err))
+		Fail(fmt.Sprintf("could not create a pipeline - %v", err))
 	}
 
-	for _, file := range controllerVisitor.GetAllSourceFiles() {
-		ast.Walk(controllerVisitor, file)
-		lastErr := controllerVisitor.GetLastError()
-		if lastErr != nil {
-			Fail(
-				fmt.Sprintf(
-					"Visitor encountered at-least one error. Last error:\n%v\n\t%s",
-					lastErr,
-					controllerVisitor.GetFormattedDiagnosticStack(),
-				),
-			)
-		}
-	}
-
-	return &symGraph
+	pipe.GenerateGraph()
+	return pipe.Graph()
 }
