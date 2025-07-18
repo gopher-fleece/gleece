@@ -1,8 +1,9 @@
 package visitors
 
 import (
+	"github.com/gopher-fleece/gleece/core/annotations"
+	"github.com/gopher-fleece/gleece/core/metadata"
 	"github.com/gopher-fleece/gleece/definitions"
-	"github.com/gopher-fleece/gleece/extractor/annotations"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -15,7 +16,7 @@ var _ = Describe("Auxiliary Tests", func() {
 			}, annotations.CommentSourceRoute)
 
 			// Act
-			result, err := getTemplateContextMetadata(&attributes)
+			result, err := metadata.GetTemplateContextMetadata(&attributes)
 
 			// Assert
 			Expect(err).To(BeNil())
@@ -35,7 +36,7 @@ var _ = Describe("Auxiliary Tests", func() {
 			}, annotations.CommentSourceRoute)
 
 			// Act
-			result, err := getTemplateContextMetadata(&attributes)
+			result, err := metadata.GetTemplateContextMetadata(&attributes)
 
 			// Assert
 			Expect(err).To(HaveOccurred())
@@ -48,7 +49,7 @@ var _ = Describe("Auxiliary Tests", func() {
 			attributes, _ := annotations.NewAnnotationHolder([]string{}, annotations.CommentSourceRoute)
 
 			// Act
-			result, err := getTemplateContextMetadata(&attributes)
+			result, err := metadata.GetTemplateContextMetadata(&attributes)
 
 			// Assert
 			Expect(err).To(BeNil())

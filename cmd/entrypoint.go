@@ -7,8 +7,8 @@ import (
 	"os"
 
 	"github.com/gopher-fleece/gleece/cmd/arguments"
+	"github.com/gopher-fleece/gleece/core/visitors"
 	"github.com/gopher-fleece/gleece/definitions"
-	"github.com/gopher-fleece/gleece/extractor/visitors"
 	"github.com/gopher-fleece/gleece/generator/routes"
 	"github.com/gopher-fleece/gleece/generator/swagen"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"

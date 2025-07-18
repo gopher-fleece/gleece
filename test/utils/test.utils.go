@@ -9,8 +9,8 @@ import (
 
 	"github.com/gopher-fleece/gleece/cmd"
 	"github.com/gopher-fleece/gleece/cmd/arguments"
+	"github.com/gopher-fleece/gleece/core/visitors"
 	"github.com/gopher-fleece/gleece/definitions"
-	"github.com/gopher-fleece/gleece/extractor/visitors"
 	"github.com/gopher-fleece/gleece/graphs/symboldg"
 	. "github.com/onsi/ginkgo/v2"
 	"golang.org/x/tools/go/packages"

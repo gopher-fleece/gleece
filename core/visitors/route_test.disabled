@@ -2,7 +2,7 @@ package visitors
 
 import (
 	"github.com/gopher-fleece/gleece/definitions"
-	"github.com/gopher-fleece/gleece/extractor/arbitrators"
+	"github.com/gopher-fleece/gleece/core/arbitrators"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )

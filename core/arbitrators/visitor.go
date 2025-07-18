@@ -3,7 +3,7 @@ package arbitrators
 import (
 	"go/ast"
 
-	"github.com/gopher-fleece/gleece/extractor/metadata"
+	"github.com/gopher-fleece/gleece/core/metadata"
 	"github.com/gopher-fleece/gleece/graphs"
 	"golang.org/x/tools/go/packages"
 )

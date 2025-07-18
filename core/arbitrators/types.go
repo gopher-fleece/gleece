@@ -3,8 +3,8 @@ package arbitrators
 import (
 	"go/ast"
 
+	"github.com/gopher-fleece/gleece/core/annotations"
 	"github.com/gopher-fleece/gleece/definitions"
-	"github.com/gopher-fleece/gleece/extractor/annotations"
 	"github.com/gopher-fleece/gleece/gast"
 )
 

@@ -5,8 +5,8 @@ import (
 	"go/ast"
 
 	"github.com/gopher-fleece/gleece/common"
-	"github.com/gopher-fleece/gleece/extractor/annotations"
-	"github.com/gopher-fleece/gleece/extractor/metadata"
+	"github.com/gopher-fleece/gleece/core/annotations"
+	"github.com/gopher-fleece/gleece/core/metadata"
 	"github.com/gopher-fleece/gleece/gast"
 	"github.com/gopher-fleece/gleece/graphs"
 	"github.com/gopher-fleece/gleece/graphs/symboldg"
@@ -15,7 +15,7 @@ import (
 )
 
 type RouteParentContext struct {
-	Controller *ControllerWithStructMeta
+	Controller *metadata.ControllerMeta
 }
 
 type RouteVisitor struct {
@@ -174,8 +174,8 @@ func (v *RouteVisitor) constructRouteMetadata() (*metadata.ReceiverMeta, error) 
 		symboldg.CreateRouteNode{
 			Data: meta,
 			ParentController: symboldg.KeyableNodeMeta{
-				Decl:     v.parent.Controller.StructMeta.Node,
-				FVersion: *v.parent.Controller.StructMeta.FVersion,
+				Decl:     v.parent.Controller.Struct.Node,
+				FVersion: *v.parent.Controller.Struct.FVersion,
 			},
 		},
 	)

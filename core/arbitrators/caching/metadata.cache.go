@@ -5,7 +5,7 @@ import (
 	"go/ast"
 	"go/token"
 
-	"github.com/gopher-fleece/gleece/extractor/metadata"
+	"github.com/gopher-fleece/gleece/core/metadata"
 	"github.com/gopher-fleece/gleece/gast"
 	"github.com/gopher-fleece/gleece/graphs"
 )

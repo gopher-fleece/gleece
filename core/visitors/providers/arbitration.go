@@ -3,7 +3,7 @@ package providers
 import (
 	"go/ast"
 
-	"github.com/gopher-fleece/gleece/extractor/arbitrators"
+	"github.com/gopher-fleece/gleece/core/arbitrators"
 )
 
 type ArbitrationProvider struct {

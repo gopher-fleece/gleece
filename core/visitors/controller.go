@@ -6,9 +6,9 @@ import (
 	"go/ast"
 
 	"github.com/gopher-fleece/gleece/common"
+	"github.com/gopher-fleece/gleece/core/annotations"
+	"github.com/gopher-fleece/gleece/core/metadata"
 	"github.com/gopher-fleece/gleece/definitions"
-	"github.com/gopher-fleece/gleece/extractor/annotations"
-	"github.com/gopher-fleece/gleece/extractor/metadata"
 	"github.com/gopher-fleece/gleece/gast"
 	"github.com/gopher-fleece/gleece/graphs/symboldg"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
@@ -29,12 +29,12 @@ type ControllerVisitor struct {
 	currentGenDecl *ast.GenDecl
 
 	// The current Gleece Controller being processed
-	currentController *ControllerWithStructMeta
+	currentController *metadata.ControllerMeta
 
 	currentFVersion gast.FileVersion
 
 	// A list of fully processed controller metadata, ready to be passed to the routes/spec generators
-	controllers []ControllerWithStructMeta
+	controllers []metadata.ControllerMeta
 }
 
 // NewControllerVisitor Instantiates a new Gleece Controller visitor.
@@ -44,21 +44,11 @@ func NewControllerVisitor(context *VisitContext) (*ControllerVisitor, error) {
 	return &visitor, err
 }
 
-func (v ControllerVisitor) GetControllers() []definitions.ControllerMetadata {
-	return []definitions.ControllerMetadata{}
-	/*
-
-		// Need to revamp this to return the visited content before reduction and validation.
-		// Then, we'll need to pass it through both to return actually useful metadata to the consumer.
-
-		var metadata []definitions.ControllerMetadata
-
-		for _, controller := range v.controllers {
-			metadata = append(metadata, controller.Controller)
-		}
-
-		return metadata
-	*/
+// GetControllers returns all controllers known by this visitor.
+// Note that the returned values are mutable.
+// When used, care must be taken to not corrupt the internal state
+func (v ControllerVisitor) GetControllers() []metadata.ControllerMeta {
+	return v.controllers
 }
 
 func (v ControllerVisitor) DumpContext() (string, error) {
@@ -91,7 +81,7 @@ func (v *ControllerVisitor) Visit(node ast.Node) ast.Visitor {
 					return v
 				}
 
-				err = v.insertControllerToGraph(controller)
+				err = v.addSelfToGraph(controller)
 				if err != nil {
 					v.setLastError(err)
 					return v
@@ -104,14 +94,14 @@ func (v *ControllerVisitor) Visit(node ast.Node) ast.Visitor {
 	return v
 }
 
-func (v *ControllerVisitor) insertControllerToGraph(meta ControllerWithStructMeta) error {
-	v.enter(fmt.Sprintf("Graph insertion - Controller %s", meta.Controller.Name))
+func (v *ControllerVisitor) addSelfToGraph(meta metadata.ControllerMeta) error {
+	v.enter(fmt.Sprintf("Graph insertion - Controller %s", meta.Struct.Name))
 	defer v.exit()
 
 	_, err := v.context.GraphBuilder.AddController(
 		symboldg.CreateControllerNode{
-			Data:        meta.StructMeta,
-			Annotations: meta.StructMeta.Annotations,
+			Data:        meta.Struct,
+			Annotations: meta.Struct.Annotations,
 		},
 	)
 
@@ -230,7 +220,7 @@ func (v *ControllerVisitor) GetModelsFlat() (*definitions.Models, bool, error) {
 // visitController traverses a controller node to extract metadata for API routes.
 // A controller is a struct that embeds GleeceController.
 // The function enumerates receivers to gather route construction details.
-func (v *ControllerVisitor) visitController(controllerNode *ast.TypeSpec) (ControllerWithStructMeta, error) {
+func (v *ControllerVisitor) visitController(controllerNode *ast.TypeSpec) (metadata.ControllerMeta, error) {
 	v.enter(fmt.Sprintf("Controller '%s'", controllerNode.Name.Name))
 	defer v.exit()
 
@@ -239,7 +229,7 @@ func (v *ControllerVisitor) visitController(controllerNode *ast.TypeSpec) (Contr
 		v.context.ArbitrationProvider.Pkg().FSet(),
 	)
 	if err != nil {
-		return ControllerWithStructMeta{}, v.frozenError(err)
+		return metadata.ControllerMeta{}, v.frozenError(err)
 	}
 
 	v.currentFVersion = fVersion
@@ -265,13 +255,13 @@ func (v *ControllerVisitor) visitController(controllerNode *ast.TypeSpec) (Contr
 		for _, declaration := range file.Decls {
 			switch funcDeclaration := declaration.(type) {
 			case *ast.FuncDecl:
-				if gast.IsFuncDeclReceiverForStruct(controllerMeta.Controller.Name, funcDeclaration) {
+				if gast.IsFuncDeclReceiverForStruct(controllerMeta.Struct.Name, funcDeclaration) {
 					// If the function is a relevant receiver, visit it and extract metadata
 					receiverMeta, err := routeVisitor.VisitMethod(funcDeclaration, file)
 					if err != nil {
 						return controllerMeta, v.getFrozenError(
 							"encountered an error visiting controller %s method %v - %v",
-							controllerMeta.Controller.Name,
+							controllerMeta.Struct.Name,
 							funcDeclaration.Name.Name,
 							err,
 						)
@@ -282,22 +272,7 @@ func (v *ControllerVisitor) visitController(controllerNode *ast.TypeSpec) (Contr
 						continue
 					}
 
-					reduced, err := receiverMeta.Reduce(
-						v.currentController.StructMeta.Annotations,
-						v.context.MetadataCache,
-						v.context.SyncedProvider,
-					)
-
-					if err != nil {
-						return controllerMeta, v.getFrozenError(
-							"could not reduce receiver '%s' on controller '%s' to its flat representation - %v",
-							funcDeclaration.Name.Name,
-							controllerMeta.Controller.Name,
-							err,
-						)
-					}
-
-					controllerMeta.Controller.Routes = append(controllerMeta.Controller.Routes, reduced)
+					controllerMeta.Receivers = append(controllerMeta.Receivers, *receiverMeta)
 				}
 			}
 		}
@@ -307,70 +282,39 @@ func (v *ControllerVisitor) visitController(controllerNode *ast.TypeSpec) (Contr
 }
 
 // createControllerMetadata Creates a standard ControllerMetadata struct for the given node
-func (v *ControllerVisitor) createControllerMetadata(controllerNode *ast.TypeSpec) (ControllerWithStructMeta, error) {
-	fullPackageName, fullNameErr := gast.GetFullPackageName(v.currentSourceFile, v.context.ArbitrationProvider.Pkg().FSet())
-	packageAlias, aliasErr := gast.GetDefaultPackageAlias(v.currentSourceFile)
+func (v *ControllerVisitor) createControllerMetadata(controllerNode *ast.TypeSpec) (metadata.ControllerMeta, error) {
+	fullPackageName, err := gast.GetFullPackageName(v.currentSourceFile, v.context.ArbitrationProvider.Pkg().FSet())
 
-	if fullNameErr != nil || aliasErr != nil {
-		return ControllerWithStructMeta{}, v.getFrozenError(
+	if err != nil {
+		return metadata.ControllerMeta{}, v.getFrozenError(
 			"could not obtain full/partial package name for source file '%s'", v.currentSourceFile.Name,
 		)
 	}
 
 	// Start off by filling the name and package
-	meta := definitions.ControllerMetadata{
-		Name:    controllerNode.Name.Name,
-		PkgPath: fullPackageName,
-		Package: packageAlias,
-	}
-
-	// Comments are usually located on the nearest GenDecl but may also be inlined on the struct itself
-	var commentSource *ast.CommentGroup
-	if controllerNode.Doc != nil {
-		commentSource = controllerNode.Doc
-	} else {
-		commentSource = v.currentGenDecl.Doc
-	}
-
-	var annotationHolder annotations.AnnotationHolder
-	var err error
-
-	// Do we want to fail if there are no attributes on the controller?
-	if commentSource != nil {
-		comments := gast.MapDocListToStrings(commentSource.List)
-		annotationHolder, err = annotations.NewAnnotationHolder(comments, annotations.CommentSourceController)
-		if err != nil {
-			return ControllerWithStructMeta{}, v.frozenError(err)
-		}
-
-		// Parse any explicit Security annotations
-		security, err := getSecurityFromContext(annotationHolder)
-		if err != nil {
-			return ControllerWithStructMeta{}, v.frozenError(err)
-		}
-
-		// If there are no explicitly defined securities, check for inherited ones
-		if len(security) <= 0 {
-			logger.Debug("Controller %s does not have explicit security; Using user-defined defaults", meta.Name)
-			security = getDefaultSecurity(v.context.GleeceConfig)
-		}
-
-		meta.Tag = annotationHolder.GetFirstValueOrEmpty(annotations.GleeceAnnotationTag)
-		meta.Description = annotationHolder.GetFirstDescriptionOrEmpty(annotations.GleeceAnnotationDescription)
-		meta.RestMetadata = definitions.RestMetadata{
-			Path: annotationHolder.GetFirstValueOrEmpty(annotations.GleeceAnnotationRoute),
-		}
-		meta.Security = security
-	}
-
-	result := ControllerWithStructMeta{
-		Controller: meta,
-		StructMeta: metadata.StructMeta{
+	meta := metadata.ControllerMeta{
+		Struct: metadata.StructMeta{
 			SymNodeMeta: metadata.SymNodeMeta{
-				Name:        meta.Name,
+				Name:    controllerNode.Name.Name,
+				PkgPath: fullPackageName,
+			},
+		},
+	}
+
+	comments := gast.GetCommentsFromTypeSpec(controllerNode, v.currentGenDecl)
+	annotationHolder, err := annotations.NewAnnotationHolder(comments, annotations.CommentSourceController)
+	if err != nil {
+		return metadata.ControllerMeta{}, v.frozenError(err)
+	}
+
+	result := metadata.ControllerMeta{
+		//Controller: meta,
+		Struct: metadata.StructMeta{
+			SymNodeMeta: metadata.SymNodeMeta{
+				Name:        meta.Struct.Name,
 				Node:        controllerNode,
 				SymbolKind:  common.SymKindStruct,
-				PkgPath:     meta.PkgPath,
+				PkgPath:     meta.Struct.PkgPath,
 				Annotations: &annotationHolder,
 				FVersion:    &v.currentFVersion,
 			},

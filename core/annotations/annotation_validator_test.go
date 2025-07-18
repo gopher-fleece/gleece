@@ -1,7 +1,7 @@
 package annotations_test
 
 import (
-	"github.com/gopher-fleece/gleece/extractor/annotations"
+	"github.com/gopher-fleece/gleece/core/annotations"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )

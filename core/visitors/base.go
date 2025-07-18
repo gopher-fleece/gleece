@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/gopher-fleece/gleece/common"
-	"github.com/gopher-fleece/gleece/extractor/arbitrators/caching"
-	"github.com/gopher-fleece/gleece/extractor/visitors/providers"
+	"github.com/gopher-fleece/gleece/core/arbitrators/caching"
+	"github.com/gopher-fleece/gleece/core/visitors/providers"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
 )
 

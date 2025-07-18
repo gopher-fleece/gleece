@@ -5,10 +5,12 @@ import (
 	"strings"
 
 	MapSet "github.com/deckarep/golang-set/v2"
+	"github.com/gopher-fleece/gleece/core/annotations"
 	"github.com/gopher-fleece/gleece/definitions"
-	"github.com/gopher-fleece/gleece/extractor/annotations"
+	"github.com/gopher-fleece/gleece/gast"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
 	"github.com/gopher-fleece/runtime"
+	"golang.org/x/tools/go/packages"
 )
 
 func GetMethodHideOpts(attributes *annotations.AnnotationHolder) definitions.MethodHideOptions {
@@ -46,7 +48,7 @@ func GetDeprecationOpts(attributes *annotations.AnnotationHolder) definitions.De
 }
 
 // GetSecurityFromContext Creates an array of RouteSecurity out of the given holder's attributes
-func GetSecurityFromContext(holder annotations.AnnotationHolder) ([]definitions.RouteSecurity, error) {
+func GetSecurityFromContext(holder *annotations.AnnotationHolder) ([]definitions.RouteSecurity, error) {
 	securities := []definitions.RouteSecurity{}
 
 	// Process @Security annotations. In the future, we'll support @AdvancedSecurity
@@ -86,7 +88,7 @@ func GetRouteSecurityWithInheritance(
 	controllerAnnotations *annotations.AnnotationHolder,
 	receiverAnnotations *annotations.AnnotationHolder,
 ) ([]definitions.RouteSecurity, error) {
-	explicitSec, err := GetSecurityFromContext(*receiverAnnotations)
+	explicitSec, err := GetSecurityFromContext(receiverAnnotations)
 	if err != nil {
 		return []definitions.RouteSecurity{}, err
 	}
@@ -95,7 +97,7 @@ func GetRouteSecurityWithInheritance(
 		return explicitSec, nil
 	}
 
-	return GetSecurityFromContext(*controllerAnnotations)
+	return GetSecurityFromContext(controllerAnnotations)
 }
 
 func GetTemplateContextMetadata(attributes *annotations.AnnotationHolder) (map[string]definitions.TemplateContext, error) {
@@ -272,4 +274,43 @@ func GetErrorResponses(routeAnnotations *annotations.AnnotationHolder) ([]defini
 	}
 
 	return responses, nil
+}
+
+// GetDefaultSecurity Returns the default securities defined at the Gleece configuration file level
+func GetDefaultSecurity(config *definitions.GleeceConfig) []definitions.RouteSecurity {
+	defaultSecurity := []definitions.RouteSecurity{}
+
+	if config == nil {
+		return nil
+	}
+
+	if config.OpenAPIGeneratorConfig.DefaultRouteSecurity == nil {
+		return defaultSecurity
+	}
+
+	defaultSecurity = append(defaultSecurity, definitions.RouteSecurity{
+		SecurityAnnotation: []definitions.SecurityAnnotationComponent{*config.OpenAPIGeneratorConfig.DefaultRouteSecurity},
+	})
+	return defaultSecurity
+}
+
+func IsAnErrorEmbeddingType(
+	meta definitions.TypeMetadata,
+	metaPackage *packages.Package,
+) (bool, error) {
+	if meta.Name == "error" {
+		return true, nil
+	}
+
+	// Universe types are leaf nodes and can never embed anything- no reason to check them
+	if meta.IsUniverseType {
+		return false, nil
+	}
+
+	embeds, err := gast.DoesStructEmbedType(metaPackage, meta.Name, "", "error")
+	if err != nil {
+		return false, err
+	}
+
+	return embeds, nil
 }
