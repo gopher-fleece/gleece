@@ -1020,3 +1020,38 @@ func DoesStructEmbedType(pkg *packages.Package, structName string, embeddedStruc
 
 	return false, nil
 }
+
+func IsEnumLike(pkg *packages.Package, spec *ast.TypeSpec) bool {
+	// Must be an alias like: `type MyEnum string`
+	_, ok := spec.Type.(*ast.Ident)
+	if !ok {
+		return false
+	}
+
+	// Look up the declared type
+	obj := pkg.Types.Scope().Lookup(spec.Name.Name)
+	typeName, ok := obj.(*types.TypeName)
+	if !ok {
+		return false
+	}
+
+	// Underlying type must be basic (string/int/etc)
+	_, isBasic := typeName.Type().Underlying().(*types.Basic)
+	if !isBasic {
+		return false
+	}
+
+	// Look for constants in same package with that alias type
+	for _, name := range pkg.Types.Scope().Names() {
+		obj := pkg.Types.Scope().Lookup(name)
+		constVal, ok := obj.(*types.Const)
+		if !ok {
+			continue
+		}
+		if types.Identical(constVal.Type(), typeName.Type()) {
+			return true
+		}
+	}
+
+	return false
+}

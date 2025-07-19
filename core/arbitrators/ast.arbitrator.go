@@ -78,7 +78,7 @@ func (arb *AstArbitrator) GetFuncRetValMeta(
 ) ([]metadata.FuncReturnValue, error) {
 	params := []metadata.FuncReturnValue{}
 
-	if funcDecl.Type.Params == nil || funcDecl.Type.Params.List == nil {
+	if funcDecl.Type.Results == nil || funcDecl.Type.Results.List == nil {
 		return params, nil
 	}
 

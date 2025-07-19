@@ -15,18 +15,25 @@ func ValidateRoute(
 	gleeceConfig *definitions.GleeceConfig,
 	packagesFacade *arbitrators.PackagesFacade,
 	route definitions.RouteMetadata,
-) []error {
+) error {
 
 	var errorCollector common.Collector[error]
 
-	validateParams(errorCollector, route.FuncParams)
+	validateParams(&errorCollector, route.FuncParams)
 	errorCollector.AddIfNotZero(validateReturnTypes(packagesFacade, route.Responses))
 	errorCollector.AddIfNotZero(validateSecurity(gleeceConfig, route))
 
-	return errorCollector.Items()
+	errs := errorCollector.Items()
+	if len(errs) > 0 {
+		return &common.ContextualError{
+			Context: fmt.Sprintf("Route %s", route.OperationId),
+			Errors:  errs,
+		}
+	}
+	return nil
 }
 
-func validateParams(errorCollector common.Collector[error], params []definitions.FuncParam) {
+func validateParams(errorCollector *common.Collector[error], params []definitions.FuncParam) {
 	var processedParams []definitions.FuncParam
 
 	for _, param := range params {
@@ -64,8 +71,9 @@ func validateBodyParam(param definitions.FuncParam) error {
 func validatePrimitiveParam(param definitions.FuncParam) error {
 	isErrType := param.TypeMeta.PkgPath == "" && param.TypeMeta.Name == "error"
 	isMapType := param.TypeMeta.PkgPath == "" && strings.HasPrefix(param.TypeMeta.Name, "map[")
-	isAliasType := param.TypeMeta.SymbolKind == common.SymKindAlias
-	if (!param.TypeMeta.IsUniverseType && !isAliasType) || isErrType || isMapType {
+	isAnEnum := param.TypeMeta.SymbolKind == common.SymKindEnum
+
+	if (!param.TypeMeta.IsUniverseType && !isAnEnum) || isErrType || isMapType {
 		return fmt.Errorf(
 			"header, path and query parameters are currently limited to primitives only but "+
 				"%s parameter '%s' (schema name '%s', type '%s') is of kind '%s'",

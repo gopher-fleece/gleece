@@ -93,8 +93,8 @@ type StructMeta struct {
 
 func (s StructMeta) Reduce() definitions.StructMetadata {
 	reducedFields := make([]definitions.FieldMetadata, len(s.Fields))
-	for _, field := range s.Fields {
-		reducedFields = append(reducedFields, field.Reduce())
+	for idx, field := range s.Fields {
+		reducedFields[idx] = field.Reduce()
 	}
 
 	return definitions.StructMetadata{

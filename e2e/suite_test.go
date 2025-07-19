@@ -140,7 +140,7 @@ func RegenerateRoutes() {
 	// Always build routes for gin  ...
 	err = GenerateE2ERoutes(arguments.CliArguments{ConfigPath: "./e2e.gin.gleece.config.json"}, "gin")
 	if err != nil {
-		Fail("Failed to generate gin routes - " + err.Error())
+		Fail("Failed to generate gin routes - \n" + err.Error())
 	}
 
 	// Get from env var whenever to regenerate all routes again.

@@ -371,13 +371,15 @@ func (v *RecursiveTypeVisitor) VisitField(
 			}
 		}
 
+		typeUsageKind := getTypeSymKind(resolvedField.DeclaringPackage, resolvedField)
+
 		// Create TypeUsageMeta (AST part only)
 		typeUsage := metadata.TypeUsageMeta{
 			SymNodeMeta: metadata.SymNodeMeta{
 				Name:        typeIdentName,
 				Node:        field.Type,
 				PkgPath:     typeRefPkgPath,
-				SymbolKind:  common.SymKindField,
+				SymbolKind:  typeUsageKind,
 				Annotations: holder,
 			},
 			TypeRefKey: typeRefKey,
@@ -420,6 +422,44 @@ func (v *RecursiveTypeVisitor) VisitField(
 	}
 
 	return results, nil
+}
+
+func getTypeSymKind(
+	pkg *packages.Package,
+	resolvedField gast.FieldTypeSpecResolution,
+) common.SymKind {
+	if _, isSpecial := symboldg.ToSpecialType(resolvedField.TypeName); isSpecial {
+		return common.SymKindSpecialBuiltin
+	}
+
+	if resolvedField.IsUniverse {
+		return common.SymKindBuiltin
+	}
+
+	if resolvedField.TypeSpec == nil {
+		return common.SymKindUnknown
+	}
+
+	switch resolvedField.TypeSpec.Type.(type) {
+	case *ast.StructType:
+		return common.SymKindStruct
+
+	case *ast.InterfaceType:
+		if resolvedField.TypeSpec.Name.Name == "Context" && pkg.PkgPath == "context" {
+			return common.SymKindSpecialBuiltin
+		}
+		return common.SymKindInterface
+
+	case *ast.Ident:
+		// Use your enum detection here — e.g., check constants or alias metadata
+		if gast.IsEnumLike(pkg, resolvedField.TypeSpec) {
+			return common.SymKindEnum
+		}
+		return common.SymKindAlias
+
+	default:
+		return common.SymKindUnknown
+	}
 }
 
 func (v *RecursiveTypeVisitor) buildFields(

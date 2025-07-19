@@ -118,12 +118,11 @@ func (p *GleecePipeline) GenerateIntermediate() (GleeceFlattenedMetadata, error)
 }
 
 func (p *GleecePipeline) ValidateIntermediate(meta *GleeceFlattenedMetadata) error {
-	controllerValidationErrors := common.Map(meta.Flat, func(controller definitions.ControllerMetadata) []error {
+	controllerValidationErrors := common.Map(meta.Flat, func(controller definitions.ControllerMetadata) error {
 		return validators.ValidateController(p.gleeceConfig, p.arbitrationProvider.Pkg(), controller)
 	})
 
-	errs := common.Flatten(controllerValidationErrors)
-	return errors.Join(errs...)
+	return errors.Join(controllerValidationErrors...)
 }
 
 func (p *GleecePipeline) reduceControllers(controllers []metadata.ControllerMeta) ([]definitions.ControllerMetadata, error) {
