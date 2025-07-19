@@ -7,6 +7,7 @@ import (
 
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/generator/swagen/swagtool"
+	"github.com/nsf/jsondiff"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -28,7 +29,17 @@ var _ = Describe("E2E Specification", func() {
 	It("Should generate a valid 3.0.0 specification", func() {
 		for _, engine := range definitions.SupportedRoutingEngineStrings {
 			spec := GetEngineSpecification(engine, "openapi/openapi3.0.0.json")
-			areEqual, _ := swagtool.AreJSONsIdentical([]byte(spec), []byte(expectedOpenapi300))
+			actual := []byte(spec)
+			expected := []byte(expectedOpenapi300)
+
+			areEqual, _ := swagtool.AreJSONsIdentical(actual, expected)
+
+			if !areEqual {
+				opts := jsondiff.DefaultConsoleOptions()
+				diffType, diffStr := jsondiff.Compare(expected, actual, &opts)
+
+				fmt.Printf("\n❌ Diff for engine '%s' (type: %s):\n%s\n", engine, diffType, diffStr)
+			}
 			Expect(areEqual).To(BeTrueBecause(
 				"Test for engine '%s' in version 3.0.0 yielded a difference between expected and generated spec",
 				engine,
@@ -39,7 +50,17 @@ var _ = Describe("E2E Specification", func() {
 	It("Should generate a valid 3.1.0 specification", func() {
 		for _, engine := range definitions.SupportedRoutingEngineStrings {
 			spec := GetEngineSpecification(engine, "openapi/openapi3.1.0.json")
-			areEqual, _ := swagtool.AreJSONsIdentical([]byte(spec), []byte(expectedOpenapi310))
+			actual := []byte(spec)
+			expected := []byte(expectedOpenapi310)
+
+			areEqual, _ := swagtool.AreJSONsIdentical(actual, expected)
+
+			if !areEqual {
+				opts := jsondiff.DefaultConsoleOptions()
+				diffType, diffStr := jsondiff.Compare(expected, actual, &opts)
+
+				fmt.Printf("\n❌ Diff for engine '%s' (type: %s):\n%s\n", engine, diffType, diffStr)
+			}
 			Expect(areEqual).To(BeTrueBecause(
 				"Test for engine '%s' in version 3.1.0 yielded a difference between expected and generated spec",
 				engine,

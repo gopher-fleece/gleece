@@ -45,6 +45,7 @@ require (
 	github.com/mattn/go-runewidth v0.0.16 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
+	github.com/nsf/jsondiff v0.0.0-20230430225905-43f6cf3098c1 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.1 // indirect
