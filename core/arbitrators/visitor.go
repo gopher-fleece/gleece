@@ -10,6 +10,10 @@ import (
 
 type TypeVisitor interface {
 	Visit(node ast.Node) ast.Visitor
-	VisitStructType(file *ast.File, node *ast.TypeSpec) (*metadata.StructMeta, graphs.SymbolKey, error)
+	VisitStructType(
+		file *ast.File,
+		nodeGenDecl *ast.GenDecl,
+		node *ast.TypeSpec,
+	) (*metadata.StructMeta, graphs.SymbolKey, error)
 	VisitField(pkg *packages.Package, file *ast.File, field *ast.Field) ([]metadata.FieldMeta, error)
 }

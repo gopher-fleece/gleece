@@ -64,7 +64,7 @@ func (v *RecursiveTypeVisitor) Visit(node ast.Node) ast.Visitor {
 	case *ast.TypeSpec:
 		// Check if it's a struct and if it embeds GleeceController
 		if _, isStruct := currentNode.Type.(*ast.StructType); isStruct {
-			_, _, err := v.VisitStructType(v.currentSourceFile, currentNode)
+			_, _, err := v.VisitStructType(v.currentSourceFile, v.currentGenDecl, currentNode)
 			if err != nil {
 				v.setLastError(err)
 				return v
@@ -76,6 +76,7 @@ func (v *RecursiveTypeVisitor) Visit(node ast.Node) ast.Visitor {
 
 func (v *RecursiveTypeVisitor) VisitStructType(
 	file *ast.File,
+	nodeGenDecl *ast.GenDecl,
 	node *ast.TypeSpec,
 ) (*metadata.StructMeta, graphs.SymbolKey, error) {
 	fVersion, err := v.context.MetadataCache.GetFileVersion(file, v.context.ArbitrationProvider.Pkg().FSet())
@@ -105,7 +106,7 @@ func (v *RecursiveTypeVisitor) VisitStructType(
 		)
 	}
 
-	holder, err := v.getComments(node.Doc, v.currentGenDecl)
+	holder, err := v.getComments(node.Doc, nodeGenDecl)
 	if err != nil {
 		return nil, graphs.SymbolKey{}, v.frozenError(err)
 	}
@@ -148,14 +149,22 @@ func (v *RecursiveTypeVisitor) VisitEnumType(
 	pkg *packages.Package,
 	file *ast.File,
 	fVersion *gast.FileVersion,
+	nodeGenDecl *ast.GenDecl,
 	node *ast.TypeSpec,
 ) (metadata.EnumMeta, graphs.SymbolKey, error) {
+	// Check cache first
+	symKey := graphs.NewSymbolKey(node, fVersion)
+	cached := v.context.MetadataCache.GetEnum(symKey)
+	if cached != nil {
+		return *cached, symKey, nil
+	}
+
 	typeName, err := gast.GetTypeNameOrError(pkg, node.Name.Name)
 	if err != nil {
 		return metadata.EnumMeta{}, graphs.SymbolKey{}, err
 	}
 
-	meta, err := v.extractEnumAliasType(pkg, fVersion, node, typeName)
+	meta, err := v.extractEnumAliasType(pkg, fVersion, nodeGenDecl, node, typeName)
 	if err != nil {
 		return meta, graphs.SymbolKey{}, err
 	}
@@ -179,7 +188,8 @@ func (v *RecursiveTypeVisitor) VisitEnumType(
 func (v *RecursiveTypeVisitor) extractEnumAliasType(
 	pkg *packages.Package,
 	fVersion *gast.FileVersion,
-	node ast.Node,
+	specGenDecl *ast.GenDecl,
+	spec *ast.TypeSpec,
 	typeName *types.TypeName,
 ) (metadata.EnumMeta, error) {
 
@@ -193,13 +203,19 @@ func (v *RecursiveTypeVisitor) extractEnumAliasType(
 		return metadata.EnumMeta{}, err
 	}
 
+	enumAnnotations, err := v.getComments(spec.Doc, specGenDecl)
+	if err != nil {
+		return metadata.EnumMeta{}, err
+	}
+
 	enum := metadata.EnumMeta{
 		SymNodeMeta: metadata.SymNodeMeta{
-			Name:       typeName.Name(),
-			Node:       node,
-			SymbolKind: common.SymKindEnum,
-			PkgPath:    pkg.PkgPath,
-			FVersion:   fVersion,
+			Name:        typeName.Name(),
+			Node:        spec,
+			SymbolKind:  common.SymKindEnum,
+			PkgPath:     pkg.PkgPath,
+			FVersion:    fVersion,
+			Annotations: enumAnnotations,
 		},
 		ValueKind: kind,
 		Values:    []metadata.EnumValueDefinition{},
@@ -325,6 +341,7 @@ func (v *RecursiveTypeVisitor) VisitField(
 				resolvedField.DeclaringPackage,
 				resolvedField.DeclaringAstFile,
 				fVersion,
+				resolvedField.GenDecl,
 				resolvedField.TypeSpec,
 			)
 
@@ -541,6 +558,7 @@ func (v *RecursiveTypeVisitor) processTypeUsage(
 		resolvedField.DeclaringPackage,
 		resolvedField.DeclaringAstFile,
 		fVersion,
+		resolvedField.GenDecl,
 		resolvedField.TypeSpec,
 	)
 	if err != nil {
@@ -554,13 +572,14 @@ func (v *RecursiveTypeVisitor) visitTypeSpec(
 	pkg *packages.Package,
 	file *ast.File,
 	fVersion *gast.FileVersion,
+	specGenDecl *ast.GenDecl,
 	spec *ast.TypeSpec,
 ) (graphs.SymbolKey, error) {
 	var err error
 
 	switch t := spec.Type.(type) {
 	case *ast.StructType:
-		_, symKey, err := v.VisitStructType(file, spec)
+		_, symKey, err := v.VisitStructType(file, specGenDecl, spec)
 		if err != nil {
 			return graphs.SymbolKey{}, v.frozenError(err)
 		}
@@ -570,7 +589,7 @@ func (v *RecursiveTypeVisitor) visitTypeSpec(
 	case *ast.Ident:
 		// Enum-like: alias of primitive (string, int, etc)
 		// Optional: Check constants with the same name prefix to confirm it's "really" enum-like
-		_, symKey, err := v.VisitEnumType(pkg, file, fVersion, spec)
+		_, symKey, err := v.VisitEnumType(pkg, file, fVersion, specGenDecl, spec)
 		return symKey, v.frozenIfError(err)
 
 	case *ast.InterfaceType:

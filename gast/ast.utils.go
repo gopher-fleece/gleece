@@ -689,30 +689,30 @@ func GetIdentFromExpr(expr ast.Expr) *ast.Ident {
 }
 
 // FindTypeSpecInPackage finds the AST TypeSpec for the given type name
-// in the provided packages.Package. It returns the *ast.TypeSpec and
-// the *ast.File it was found in, or (nil, nil) if not found.
-func FindTypeSpecInPackage(pkg *packages.Package, typeName string) (*ast.TypeSpec, *ast.File) {
-	for _, f := range pkg.Syntax {
+// in the provided packages.Package.
+// Returns the TypeSpec alongside its GenDecl and containing ast.File or (nil, nil, nil) if not found.
+func FindTypeSpecInPackage(pkg *packages.Package, typeName string) (*ast.TypeSpec, *ast.GenDecl, *ast.File) {
+	for _, file := range pkg.Syntax {
 		// fast-path: if the file’s token.File doesn’t contain any
 		// decls that start near “typeName”, we could skip—but
 		// for simplicity we just scan all TYPE decls here.
-		for _, decl := range f.Decls {
-			gen, ok := decl.(*ast.GenDecl)
-			if !ok || gen.Tok != token.TYPE {
+		for _, decl := range file.Decls {
+			genDecl, ok := decl.(*ast.GenDecl)
+			if !ok || genDecl.Tok != token.TYPE {
 				continue
 			}
-			for _, spec := range gen.Specs {
+			for _, spec := range genDecl.Specs {
 				ts, ok := spec.(*ast.TypeSpec)
 				if !ok {
 					continue
 				}
 				if ts.Name.Name == typeName {
-					return ts, f
+					return ts, genDecl, file
 				}
 			}
 		}
 	}
-	return nil, nil
+	return nil, nil, nil
 }
 
 type FieldTypeSpecResolution struct {
@@ -721,6 +721,7 @@ type FieldTypeSpecResolution struct {
 	DeclaringPackage *packages.Package
 	DeclaringAstFile *ast.File
 	TypeSpec         *ast.TypeSpec
+	GenDecl          *ast.GenDecl
 }
 
 // ResolveTypeSpecFromField Resolves type information from the given field.
@@ -803,7 +804,7 @@ func ResolveTypeSpecFromField(
 		return FieldTypeSpecResolution{}, fmt.Errorf("failed to resolve package %q: %w", pkgPath, err)
 	}
 
-	spec, file := FindTypeSpecInPackage(pkg, ident.Name)
+	spec, genDecl, file := FindTypeSpecInPackage(pkg, ident.Name)
 	if spec == nil || file == nil {
 		return FieldTypeSpecResolution{}, fmt.Errorf("type %q not found in package %q", ident.Name, pkgPath)
 	}
@@ -814,6 +815,7 @@ func ResolveTypeSpecFromField(
 		DeclaringPackage: pkg,
 		DeclaringAstFile: file,
 		TypeSpec:         spec,
+		GenDecl:          genDecl,
 	}, nil
 }
 

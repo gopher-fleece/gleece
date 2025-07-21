@@ -89,8 +89,8 @@ func GetSecurityFromContext(holder *annotations.AnnotationHolder) ([]definitions
 }
 
 func GetRouteSecurityWithInheritance(
-	controllerAnnotations *annotations.AnnotationHolder,
 	receiverAnnotations *annotations.AnnotationHolder,
+	parentSecurity []definitions.RouteSecurity,
 ) ([]definitions.RouteSecurity, error) {
 	explicitSec, err := GetSecurityFromContext(receiverAnnotations)
 	if err != nil {
@@ -101,7 +101,7 @@ func GetRouteSecurityWithInheritance(
 		return explicitSec, nil
 	}
 
-	return GetSecurityFromContext(controllerAnnotations)
+	return parentSecurity, nil
 }
 
 func GetTemplateContextMetadata(attributes *annotations.AnnotationHolder) (map[string]definitions.TemplateContext, error) {

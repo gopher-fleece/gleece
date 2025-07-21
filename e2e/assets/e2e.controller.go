@@ -37,7 +37,6 @@ type ObjectWithEnum struct {
 }
 
 // @Route(/e2e)
-// @Security(securitySchemaName, { scopes: []})
 // @Tag(E2E)
 type E2EController struct {
 	runtime.GleeceController // Embedding the GleeceController to inherit its methods
@@ -233,6 +232,7 @@ func (ec *E2EController) GetHeaderStartWithLetter(headerParam string) (string, e
 
 // @Route(/e2e)
 // @Security(securitySchemaName, { scopes: ["class"] })
+// @Tag(E2E)
 type E2EClassSecController struct {
 	runtime.GleeceController // Embedding the GleeceController to inherit its methods
 }

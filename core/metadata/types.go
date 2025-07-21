@@ -136,7 +136,7 @@ func (m ControllerMeta) Reduce(
 
 	var reducedReceivers []definitions.RouteMetadata
 	for _, rec := range m.Receivers {
-		reduced, err := rec.Reduce(m.Struct.Annotations, metaCache, syncedProvider)
+		reduced, err := rec.Reduce(metaCache, syncedProvider, security)
 		if err != nil {
 			logger.Error("Failed to reduce receiver '%s' of controller '%s' - %w", rec.Name, m.Struct.Name, err)
 			return definitions.ControllerMetadata{}, err
@@ -166,33 +166,33 @@ type ReceiverMeta struct {
 	RetVals []FuncReturnValue
 }
 
-func (v ReceiverMeta) Reduce(
-	parentAnnotations *annotations.AnnotationHolder,
+func (m ReceiverMeta) Reduce(
 	metaCache MetaCache,
 	syncedProvider IdProvider,
+	parentSecurity []definitions.RouteSecurity,
 ) (definitions.RouteMetadata, error) {
 
-	verbAnnotation := v.Annotations.GetFirst(annotations.GleeceAnnotationMethod)
+	verbAnnotation := m.Annotations.GetFirst(annotations.GleeceAnnotationMethod)
 	if verbAnnotation == nil || verbAnnotation.Value == "" {
 		// Not ideal- we'd like to separate visitation, reduction and validation but typing currently doesn't
 		// cleanly allow it so we have to embed a bit of validation in a few other places as well
-		return definitions.RouteMetadata{}, fmt.Errorf("receiver %s has not @Method annotation", v.Name)
+		return definitions.RouteMetadata{}, fmt.Errorf("receiver %s has not @Method annotation", m.Name)
 	}
 
-	security, err := GetRouteSecurityWithInheritance(parentAnnotations, v.Annotations)
+	security, err := GetRouteSecurityWithInheritance(m.Annotations, parentSecurity)
 	if err != nil {
 		return definitions.RouteMetadata{}, err
 	}
 
-	templateCtx, err := GetTemplateContextMetadata(v.Annotations)
+	templateCtx, err := GetTemplateContextMetadata(m.Annotations)
 	if err != nil {
 		return definitions.RouteMetadata{}, err
 	}
 
-	hasReturnValue := len(v.RetVals) > 1
+	hasReturnValue := len(m.RetVals) > 1
 
 	responses := []definitions.FuncReturnValue{}
-	for _, fRetVal := range v.RetVals {
+	for _, fRetVal := range m.RetVals {
 		response, err := fRetVal.Reduce(metaCache, syncedProvider)
 		if err != nil {
 			return definitions.RouteMetadata{}, err
@@ -201,7 +201,7 @@ func (v ReceiverMeta) Reduce(
 	}
 
 	reducedParams := []definitions.FuncParam{}
-	for _, param := range v.Params {
+	for _, param := range m.Params {
 		reducedParam, err := param.Reduce(metaCache, syncedProvider)
 		if err != nil {
 			return definitions.RouteMetadata{}, err
@@ -209,24 +209,24 @@ func (v ReceiverMeta) Reduce(
 		reducedParams = append(reducedParams, reducedParam)
 	}
 
-	successResponseCode, successResponseDescription, err := GetResponseStatusCodeAndDescription(v.Annotations, hasReturnValue)
+	successResponseCode, successResponseDescription, err := GetResponseStatusCodeAndDescription(m.Annotations, hasReturnValue)
 	if err != nil {
 		return definitions.RouteMetadata{}, err
 	}
 
-	errorResponses, err := GetErrorResponses(v.Annotations)
+	errorResponses, err := GetErrorResponses(m.Annotations)
 	if err != nil {
 		return definitions.RouteMetadata{}, err
 	}
 
 	return definitions.RouteMetadata{
-		OperationId: v.Name,
+		OperationId: m.Name,
 		HttpVerb:    definitions.HttpVerb(verbAnnotation.Value),
-		Hiding:      GetMethodHideOpts(v.Annotations),
-		Deprecation: GetDeprecationOpts(v.Annotations),
-		Description: v.Annotations.GetDescription(),
+		Hiding:      GetMethodHideOpts(m.Annotations),
+		Deprecation: GetDeprecationOpts(m.Annotations),
+		Description: m.Annotations.GetDescription(),
 		RestMetadata: definitions.RestMetadata{
-			Path: v.Annotations.GetFirstValueOrEmpty(annotations.GleeceAnnotationRoute),
+			Path: m.Annotations.GetFirstValueOrEmpty(annotations.GleeceAnnotationRoute),
 		},
 		HasReturnValue:      hasReturnValue,
 		RequestContentType:  definitions.ContentTypeJSON, // Hardcoded for now, should be supported via annotations later on
@@ -387,11 +387,22 @@ type FieldMeta struct {
 }
 
 func (f FieldMeta) Reduce() definitions.FieldMetadata {
+	fieldNode, ok := f.Node.(*ast.Field)
+	if !ok {
+		// Reduce has a pretty nice signature so pretty reluctant to hole it with an added error
+		panic("field %s has a non-field node type")
+	}
+
+	var tag string
+	if fieldNode != nil && fieldNode.Tag != nil {
+		tag = fieldNode.Tag.Value
+	}
+
 	return definitions.FieldMetadata{
 		Name:        f.Name,
 		Type:        f.Type.Name,
 		Description: annotations.GetDescription(f.Annotations),
-		Tag:         annotations.GetFirstValueOrEmpty(f.Annotations, annotations.GleeceAnnotationTag),
+		Tag:         tag,
 		IsEmbedded:  f.IsEmbedded,
 		Deprecation: common.Ptr(GetDeprecationOpts(f.Annotations)),
 	}
