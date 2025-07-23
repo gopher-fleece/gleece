@@ -43,9 +43,10 @@ var _ = Describe("Visitor Tests", func() {
 		Context("Return Type Checks", func() {
 			It("Returns a correct error when a receiver returns void", func() {
 				_, _, _, err := utils.GetMetadataByRelativeConfig("./configs/receiver.with.void.return.json")
-				Expect(err).To(MatchError(ContainSubstring(
-					"VoidReturn - expected method to return an error or a value and error tuple but found void",
-				)))
+				errStr := err.Error()
+				Expect(errStr).To(ContainSubstring("Controller ReceiverWithVoidReturn"))
+				Expect(errStr).To(ContainSubstring("Route VoidReturn"))
+				Expect(errStr).To(ContainSubstring("expected method to return an error or a value and error tuple but found void"))
 			})
 
 			It("Returns a correct error when a receiver has one return type that is not a error", func() {
