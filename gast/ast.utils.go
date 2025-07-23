@@ -737,65 +737,53 @@ func ResolveTypeSpecFromField(
 	field *ast.Field,
 	pkgResolver func(pkgPath string) (*packages.Package, error),
 ) (FieldTypeSpecResolution, error) {
-	expr := UnwrapFirstNamed(field.Type)
-	if expr == nil {
-		return FieldTypeSpecResolution{}, fmt.Errorf("could not resolve named type from field")
+	return ResolveTypeSpecFromExpr(declaringPkg, declaringFile, field.Type, pkgResolver)
+}
+
+func ResolveTypeSpecFromExpr(
+	declaringPkg *packages.Package, // <<<< Used only for locally defined type references
+	declaringFile *ast.File,
+	expr ast.Expr,
+	pkgResolver func(string) (*packages.Package, error),
+) (FieldTypeSpecResolution, error) {
+
+	unwrapped := UnwrapFirstNamed(expr)
+	if unwrapped == nil {
+		return FieldTypeSpecResolution{}, fmt.Errorf("could not unwrap type expression")
 	}
 
 	var ident *ast.Ident
 	var pkgPath string
 	var err error
 
-	switch t := expr.(type) {
+	switch t := unwrapped.(type) {
 	case *ast.Ident:
 		ident = t
 		pkgPath, err = ResolveUnqualifiedIdentPackage(declaringFile, ident)
 		if err != nil {
 			return FieldTypeSpecResolution{}, err
 		}
-
 	case *ast.SelectorExpr:
 		ident = t.Sel
-		pkgPath, err = ResolveImportPathForSelector(declaringFile, t)
+		pkgPath, err = ResolveImportPathForSelector(declaringPkg, declaringFile, t)
 		if err != nil {
 			return FieldTypeSpecResolution{}, err
 		}
-
 	case *ast.StarExpr:
-		// Only supported if it's a pointer to a selector expr like *pkg.Type
-		if inner, ok := t.X.(*ast.SelectorExpr); ok {
-			ident = inner.Sel
-			pkgPath, err = ResolveImportPathForSelector(declaringFile, inner)
-			if err != nil {
-				return FieldTypeSpecResolution{}, err
-			}
-		} else {
-			return FieldTypeSpecResolution{}, fmt.Errorf("unsupported star expression: %T", t.X)
-		}
-	case *ast.InterfaceType:
-		// Only "Context" interface is allowed
-		// (This assumes the field's type is just `Context`, not `pkg.Context`)
-		if ident, ok := field.Type.(*ast.Ident); ok && ident.Name == "Context" {
-			return FieldTypeSpecResolution{IsUniverse: true, TypeName: ident.Name}, nil
-		}
-
-		return FieldTypeSpecResolution{}, fmt.Errorf("interface types other than Context are not supported")
-
+		// Optional: support pointers here if needed, or unwrap pointer
+		return ResolveTypeSpecFromExpr(declaringPkg, declaringFile, t.X, pkgResolver)
 	default:
-		return FieldTypeSpecResolution{}, fmt.Errorf("unsupported resolved expression: %T", expr)
+		return FieldTypeSpecResolution{}, fmt.Errorf("unsupported expression type %T", expr)
 	}
 
 	if ident == nil {
-		return FieldTypeSpecResolution{}, fmt.Errorf("could not extract identifier")
+		return FieldTypeSpecResolution{}, fmt.Errorf("identifier not found")
 	}
 
-	// If still blank, check whether the type is a universe one.
 	if pkgPath == "" {
 		if IsUniverseType(ident.Name) {
-			// Universe types are a special case
 			return FieldTypeSpecResolution{IsUniverse: true, TypeName: ident.Name}, nil
 		}
-		// Fallback to the field's declaring package
 		pkgPath = declaringPkg.PkgPath
 	}
 
@@ -814,8 +802,8 @@ func ResolveTypeSpecFromField(
 		TypeName:         ident.Name,
 		DeclaringPackage: pkg,
 		DeclaringAstFile: file,
-		TypeSpec:         spec,
 		GenDecl:          genDecl,
+		TypeSpec:         spec,
 	}, nil
 }
 
@@ -843,13 +831,21 @@ func UnwrapFirstNamed(expr ast.Expr) ast.Expr {
 	}
 }
 
-func ResolveImportPathForSelector(source *ast.File, sel *ast.SelectorExpr) (string, error) {
+func ResolveImportPathForSelector(
+	possiblyDeclaringPackage *packages.Package,
+	source *ast.File,
+	sel *ast.SelectorExpr,
+) (string, error) {
 	ident, ok := sel.X.(*ast.Ident)
 	if !ok {
 		return "", fmt.Errorf("selector base is not an ident: %T", sel.X)
 	}
 
 	alias := ident.Name
+
+	if alias == possiblyDeclaringPackage.Name {
+		return possiblyDeclaringPackage.PkgPath, nil
+	}
 
 	for _, imp := range source.Imports {
 		rawPath, err := strconv.Unquote(imp.Path.Value)

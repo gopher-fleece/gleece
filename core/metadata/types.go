@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go/ast"
 	"go/types"
+	"strings"
 
 	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/core/annotations"
@@ -276,6 +277,11 @@ func (v FuncParam) Reduce(metaCache MetaCache, syncedProvider IdProvider) (defin
 		}
 	}
 
+	typeRef, err := v.Type.GetBaseTypeRefKey()
+	if err != nil {
+		return definitions.FuncParam{}, err
+	}
+
 	return definitions.FuncParam{
 		ParamMeta: definitions.ParamMeta{
 			Name:      v.Name,
@@ -286,7 +292,7 @@ func (v FuncParam) Reduce(metaCache MetaCache, syncedProvider IdProvider) (defin
 		PassedIn:           passedIn,
 		NameInSchema:       nameInSchema,
 		Description:        v.Annotations.GetDescription(),
-		UniqueImportSerial: syncedProvider.GetIdForKey(v.Type.TypeRefKey),
+		UniqueImportSerial: syncedProvider.GetIdForKey(typeRef),
 		Validator:          validator,
 		Deprecation:        common.Ptr(GetDeprecationOpts(v.Annotations)),
 	}, nil
@@ -304,9 +310,14 @@ func (v FuncReturnValue) Reduce(metaCache MetaCache, syncedProvider IdProvider) 
 		return definitions.FuncReturnValue{}, err
 	}
 
+	typeRef, err := v.Type.GetBaseTypeRefKey()
+	if err != nil {
+		return definitions.FuncReturnValue{}, err
+	}
+
 	return definitions.FuncReturnValue{
 		Ordinal:            v.Ordinal,
-		UniqueImportSerial: syncedProvider.GetIdForKey(v.Type.TypeRefKey),
+		UniqueImportSerial: syncedProvider.GetIdForKey(typeRef),
 		TypeMetadata:       typeMeta,
 	}, nil
 }
@@ -343,12 +354,44 @@ func (e EnumMeta) Reduce() definitions.EnumMetadata {
 
 type TypeUsageMeta struct {
 	SymNodeMeta
-	TypeRefKey graphs.SymbolKey
-	Import     common.ImportType
+	Import common.ImportType
+	Layers []TypeLayer
+}
+
+func (t TypeUsageMeta) GetBaseTypeRefKey() (graphs.SymbolKey, error) {
+	if len(t.Layers) == 0 {
+		return graphs.SymbolKey{}, fmt.Errorf("TypeUsageMeta has no layers")
+	}
+	baseRef := t.Layers[len(t.Layers)-1].BaseTypeRef
+	if baseRef == nil {
+		return graphs.SymbolKey{}, fmt.Errorf("BaseTypeRef is nil on last TypeLayer")
+	}
+	return *baseRef, nil
+}
+
+func (t TypeUsageMeta) GetLayersTypeString() string {
+	return LayersToTypeString(t.Layers)
+}
+
+func (t TypeUsageMeta) GetArrayLayersString() string {
+	// Currently we only use arrays for spec generation
+	arrayCount := 0
+	for _, layer := range t.Layers {
+		if layer.Kind == TypeLayerKindArray {
+			arrayCount++
+		}
+	}
+
+	return strings.Repeat("[]", arrayCount)
 }
 
 func (t TypeUsageMeta) Resolve(metaCache MetaCache) (definitions.TypeMetadata, error) {
-	underlyingEnum := metaCache.GetEnum(t.TypeRefKey)
+	typeRef, err := t.GetBaseTypeRefKey()
+	if err != nil {
+		return definitions.TypeMetadata{}, err
+	}
+
+	underlyingEnum := metaCache.GetEnum(typeRef)
 
 	alias := definitions.AliasMetadata{}
 	if underlyingEnum != nil {
@@ -367,8 +410,12 @@ func (t TypeUsageMeta) Resolve(metaCache MetaCache) (definitions.TypeMetadata, e
 		description = t.Annotations.GetDescription()
 	}
 
+	// Join the actual type name with its "[]" prefixes, as necessary.
+	// Ugly, but the spec generator uses that - for now.
+	name := t.GetArrayLayersString() + t.Name
+
 	return definitions.TypeMetadata{
-		Name:                t.Name,
+		Name:                name,
 		PkgPath:             t.PkgPath,
 		DefaultPackageAlias: gast.GetDefaultPkgAliasByName(t.PkgPath),
 		Description:         description,
@@ -398,9 +445,10 @@ func (f FieldMeta) Reduce() definitions.FieldMetadata {
 		tag = fieldNode.Tag.Value
 	}
 
+	decoratedType := f.Type.GetArrayLayersString() + f.Type.Name
 	return definitions.FieldMetadata{
 		Name:        f.Name,
-		Type:        f.Type.Name,
+		Type:        decoratedType,
 		Description: annotations.GetDescription(f.Annotations),
 		Tag:         tag,
 		IsEmbedded:  f.IsEmbedded,

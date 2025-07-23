@@ -6,6 +6,7 @@ const (
 	SymKindUnknown        SymKind = "Unknown"
 	SymKindPackage        SymKind = "Package"
 	SymKindStruct         SymKind = "Struct"
+	SymKindController     SymKind = "Controller"
 	SymKindInterface      SymKind = "Interface"
 	SymKindAlias          SymKind = "Alias"
 	SymKindEnum           SymKind = "Enum"

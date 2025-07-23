@@ -92,7 +92,7 @@ func (g *SymbolGraph) AddEdge(from, to graphs.SymbolKey, kind SymbolEdgeKind, me
 func (g *SymbolGraph) AddController(request CreateControllerNode) (*SymbolNode, error) {
 	symNode, err := g.createAndAddSymNode(
 		request.Data.Node,
-		common.SymKindStruct,
+		common.SymKindController,
 		request.Data.FVersion,
 		request.Annotations,
 		request.Data,
@@ -246,7 +246,12 @@ func (g *SymbolGraph) AddField(request CreateFieldNode) (*SymbolNode, error) {
 		return nil, err
 	}
 
-	g.AddEdge(symNode.Id, request.Data.Type.TypeRefKey, EdgeKindType, nil)
+	typeRef, err := request.Data.Type.GetBaseTypeRefKey()
+	if err != nil {
+		return symNode, err
+	}
+
+	g.AddEdge(symNode.Id, typeRef, EdgeKindType, nil)
 	return symNode, err
 }
 

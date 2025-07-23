@@ -357,23 +357,7 @@ func (v *RecursiveTypeVisitor) VisitField(
 		}
 
 		// If we're looking at a universe type, there's no AST file nor FVersion. Special case.
-		var typeRefKey graphs.SymbolKey
-		if resolvedField.DeclaringAstFile != nil {
-			if resolvedField.TypeSpec == nil {
-				return nil, v.getFrozenError("nil TypeSpec unexpectedly returned from ResolveTypeSpecFromField")
-			}
-
-			typeFileFVersion, err := v.context.MetadataCache.GetFileVersion(
-				resolvedField.DeclaringAstFile,
-				resolvedField.DeclaringPackage.Fset,
-			)
-			typeRefKey = graphs.NewSymbolKey(resolvedField.TypeSpec, typeFileFVersion)
-			if err != nil {
-				return nil, v.frozenError(err)
-			}
-		} else {
-			typeRefKey = graphs.NewUniverseSymbolKey(resolvedField.TypeName)
-
+		if resolvedField.DeclaringAstFile == nil {
 			if primitive, isPrimitive := symboldg.ToPrimitiveType(resolvedField.TypeName); isPrimitive {
 				v.context.GraphBuilder.AddPrimitive(primitive)
 			} else {
@@ -389,6 +373,10 @@ func (v *RecursiveTypeVisitor) VisitField(
 		}
 
 		typeUsageKind := getTypeSymKind(resolvedField.DeclaringPackage, resolvedField)
+		typeLayers, err := v.getTypeLayers(field, resolvedField)
+		if err != nil {
+			return nil, v.frozenError(err)
+		}
 
 		// Create TypeUsageMeta (AST part only)
 		typeUsage := metadata.TypeUsageMeta{
@@ -399,8 +387,8 @@ func (v *RecursiveTypeVisitor) VisitField(
 				SymbolKind:  typeUsageKind,
 				Annotations: holder,
 			},
-			TypeRefKey: typeRefKey,
-			Import:     importType,
+			Layers: typeLayers,
+			Import: importType,
 		}
 
 		fieldFVersion, err := v.context.MetadataCache.GetFileVersion(file, pkg.Fset)
@@ -627,4 +615,92 @@ func (v *RecursiveTypeVisitor) getComments(onNodeDoc *ast.CommentGroup, nodeGenD
 	}
 
 	return nil, nil
+}
+
+func (v *RecursiveTypeVisitor) getTypeLayers(
+	field *ast.Field,
+	resolution gast.FieldTypeSpecResolution,
+) ([]metadata.TypeLayer, error) {
+	return v.buildTypeLayers(resolution.DeclaringPackage, resolution.DeclaringAstFile, field.Type, resolution.TypeName)
+}
+
+func (v *RecursiveTypeVisitor) buildTypeLayers(
+	pkg *packages.Package,
+	file *ast.File,
+	expr ast.Expr,
+	exprTypeName string,
+) ([]metadata.TypeLayer, error) {
+
+	switch t := expr.(type) {
+	case *ast.StarExpr:
+		inner, err := v.buildTypeLayers(pkg, file, t.X, exprTypeName)
+		if err != nil {
+			return nil, err
+		}
+		return append([]metadata.TypeLayer{metadata.NewPointerLayer()}, inner...), nil
+
+	case *ast.ArrayType:
+		inner, err := v.buildTypeLayers(pkg, file, t.Elt, exprTypeName)
+		if err != nil {
+			return nil, err
+		}
+		return append([]metadata.TypeLayer{metadata.NewArrayLayer()}, inner...), nil
+
+	case *ast.MapType:
+		keyLayers, err := v.buildTypeLayers(pkg, file, t.Key, exprTypeName)
+		if err != nil {
+			return nil, err
+		}
+		valueLayers, err := v.buildTypeLayers(pkg, file, t.Value, exprTypeName)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(keyLayers) != 1 || keyLayers[0].Kind != metadata.TypeLayerKindBase {
+			return nil, fmt.Errorf("map key must be a base type")
+		}
+		if len(valueLayers) != 1 || valueLayers[0].Kind != metadata.TypeLayerKindBase {
+			return nil, fmt.Errorf("map value must be a base type")
+		}
+
+		return []metadata.TypeLayer{metadata.NewMapLayer(keyLayers[0].BaseTypeRef, valueLayers[0].BaseTypeRef)}, nil
+
+	case *ast.Ident, *ast.SelectorExpr:
+		if pkg == nil || file == nil {
+			// E.g., this is a 'universe' type like 'string'
+			typeKey := graphs.NewUniverseSymbolKey(exprTypeName)
+			return []metadata.TypeLayer{metadata.NewBaseLayer(&typeKey)}, nil
+		}
+		baseKey, err := v.resolveBaseTypeKey(pkg, file, expr)
+		if err != nil {
+			return nil, err
+		}
+		return []metadata.TypeLayer{metadata.NewBaseLayer(baseKey)}, nil
+
+	default:
+		return nil, fmt.Errorf("unsupported type expression: %T", t)
+	}
+}
+
+func (v *RecursiveTypeVisitor) resolveBaseTypeKey(
+	pkg *packages.Package,
+	file *ast.File,
+	expr ast.Expr,
+) (*graphs.SymbolKey, error) {
+	resolved, err := gast.ResolveTypeSpecFromExpr(pkg, file, expr, v.context.ArbitrationProvider.Pkg().GetPackage)
+	if err != nil {
+		return nil, err
+	}
+
+	if resolved.DeclaringAstFile != nil && resolved.TypeSpec != nil {
+		fVersion, err := v.context.MetadataCache.GetFileVersion(resolved.DeclaringAstFile, resolved.DeclaringPackage.Fset)
+		if err != nil {
+			return nil, err
+		}
+		key := graphs.NewSymbolKey(resolved.TypeSpec, fVersion)
+		return &key, nil
+	}
+
+	key := graphs.NewUniverseSymbolKey(resolved.TypeName)
+	return &key, nil
 }

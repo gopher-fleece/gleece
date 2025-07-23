@@ -106,6 +106,7 @@
         "type": "object"
       },
       "LengthUnits": {
+        "description": "LengthUnits defines various units of Length.",
         "enum": [
           "Angstrom",
           "AstronomicalUnit",
