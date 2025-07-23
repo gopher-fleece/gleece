@@ -50,9 +50,11 @@ var _ = Describe("Visitor Tests", func() {
 
 			It("Returns a correct error when a receiver has one return type that is not a error", func() {
 				_, _, _, err := utils.GetMetadataByRelativeConfig("./configs/receiver.with.non.error.return.json")
-				Expect(err).To(MatchError(ContainSubstring(
-					"NonErrorReturn - return type 'bool' expected to be an error or directly embed it",
-				)))
+				errStr := err.Error()
+				Expect(errStr).To(ContainSubstring("Controller ReceiverWithNonErrorReturn"))
+				Expect(errStr).To(ContainSubstring("Route NonErrorReturn"))
+				Expect(errStr).To(ContainSubstring("return type 'bool' expected to be an error or directly embed it"))
+
 			})
 		})
 	})
