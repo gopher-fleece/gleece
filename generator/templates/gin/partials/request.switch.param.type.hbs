@@ -118,7 +118,7 @@ if is{{Name}}Exists {
   {{/if}}
 
   {{!-- Case of alias --}}
-  {{#ifEqual TypeMeta.SymbolKind "Alias"}}
+  {{#ifEqual TypeMeta.SymbolKind "Enum"}}
     {{!-- An experimental feature to validate top-level (only) enums --}}
     {{#if ExperimentalConfig.ValidateTopLevelOnlyEnum}}
       switch {{ToLowerCamel Name}}Raw {
