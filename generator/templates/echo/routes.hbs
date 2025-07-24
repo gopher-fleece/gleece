@@ -56,7 +56,7 @@ func RegisterRoutes(engine *echo.Echo) {
 			if authErr != nil {
 				return handleAuthorizationError(echoCtx, authErr, "{{{OperationId}}}")
 							}
-			controller := {{{Name}}}Import.{{../Name}}{}
+			controller := {{{Name}}}.{{../Name}}{}
 			controller.InitController(echoCtx)
 			{{#ifAnyParamRequiresConversion FuncParams}}
 			var conversionErr error

@@ -7,6 +7,7 @@ import (
 	"slices"
 	"strings"
 
+	MapSet "github.com/deckarep/golang-set/v2"
 	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/core/arbitrators/caching"
 	"github.com/gopher-fleece/gleece/core/metadata"
@@ -121,44 +122,64 @@ func (p *GleecePipeline) GenerateIntermediate() (GleeceFlattenedMetadata, error)
 }
 
 func (p *GleecePipeline) getImports(controllers []definitions.ControllerMetadata) map[string][]string {
-
-	imports := make(map[string][]string)
+	// Standard Set is actually thread-safe. Just saying.
+	imports := make(map[string]MapSet.Set[string])
 
 	for _, controller := range controllers {
-		imports[controller.PkgPath] = append(imports[controller.PkgPath], controller.Name)
+		if imports[controller.PkgPath] == nil {
+			imports[controller.PkgPath] = MapSet.NewSet[string]()
+		}
+
+		imports[controller.PkgPath].Add(controller.Name)
 		for _, route := range controller.Routes {
 			p.appendRouteImports(imports, route)
 		}
 	}
 
-	return imports
+	plainImportsMap := make(map[string][]string, len(imports))
+
+	for pkgPath, importSet := range imports {
+		plainImportsMap[pkgPath] = importSet.ToSlice()
+	}
+
+	return plainImportsMap
 }
 
-func (p *GleecePipeline) appendRouteImports(imports map[string][]string, route definitions.RouteMetadata) {
+func (p *GleecePipeline) appendRouteImports(imports map[string]MapSet.Set[string], route definitions.RouteMetadata) {
 	for _, param := range route.FuncParams {
 		paramPkgPath := param.TypeMeta.PkgPath
-
-		if paramPkgPath != "" {
-			paramImportName := fmt.Sprintf(
-				"Param%d%s",
-				param.UniqueImportSerial,
-				common.UnwrapArrayTypeString(param.Name),
-			)
-			imports[paramPkgPath] = append(imports[paramPkgPath], paramImportName)
+		if paramPkgPath == "" {
+			continue
 		}
+
+		if imports[paramPkgPath] == nil {
+			imports[paramPkgPath] = MapSet.NewSet[string]()
+		}
+
+		paramImportName := fmt.Sprintf(
+			"Param%d%s",
+			param.UniqueImportSerial,
+			common.UnwrapArrayTypeString(param.Name),
+		)
+		imports[paramPkgPath].Add(paramImportName)
 	}
 
 	for _, retVal := range route.Responses {
 		retValPkgPath := retVal.PkgPath
-
-		if retValPkgPath != "" {
-			retValImportName := fmt.Sprintf(
-				"Response%d%s",
-				retVal.UniqueImportSerial,
-				common.UnwrapArrayTypeString(retVal.Name),
-			)
-			imports[retValPkgPath] = append(imports[retValPkgPath], retValImportName)
+		if retValPkgPath == "" {
+			continue
 		}
+
+		if imports[retValPkgPath] == nil {
+			imports[retValPkgPath] = MapSet.NewSet[string]()
+		}
+
+		retValImportName := fmt.Sprintf(
+			"Response%d%s",
+			retVal.UniqueImportSerial,
+			common.UnwrapArrayTypeString(retVal.Name),
+		)
+		imports[retValPkgPath].Add(retValImportName)
 	}
 }
 

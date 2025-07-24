@@ -399,8 +399,8 @@ func (t TypeUsageMeta) Resolve(metaCache MetaCache) (definitions.TypeMetadata, e
 		alias.AliasType = string(underlyingEnum.ValueKind)
 
 		values := []string{}
-		for v := range underlyingEnum.Values {
-			values = append(values, fmt.Sprintf("%v", v))
+		for _, v := range underlyingEnum.Values {
+			values = append(values, fmt.Sprintf("%v", v.Value))
 		}
 		alias.Values = values
 	}

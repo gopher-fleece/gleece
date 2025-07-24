@@ -58,7 +58,7 @@ func RegisterRoutes(engine *gin.Engine) {
 				handleAuthorizationError(ginCtx, authErr, "{{{OperationId}}}")
 				return
 			}
-			controller := {{{Name}}}Import.{{../Name}}{}
+			controller := {{{Name}}}.{{../Name}}{}
 			controller.InitController(ginCtx)
 			{{#ifAnyParamRequiresConversion FuncParams}}
 			var conversionErr error

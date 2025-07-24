@@ -268,9 +268,15 @@ type FieldMetadata struct {
 	Deprecation *DeprecationOptions
 }
 
+type EnumValidator struct {
+	Name   string
+	Values []string
+}
+
 type Models struct {
-	Structs []StructMetadata
-	Enums   []EnumMetadata
+	Structs        []StructMetadata
+	Enums          []EnumMetadata
+	EnumValidators []EnumValidator
 }
 
 type SpecGeneratorConfig struct {

@@ -15,7 +15,7 @@ func OptimizeImportsAndFormat(sourceCode string) (string, error) {
 		return "", fmt.Errorf("failed to optimize imports: %w", err)
 	}
 
-	// Ensure the code is properly formatted
+	// Ensure the code is properly formatted. This may or may not be called by imports.Process itself
 	formattedSource, err := format.Source(optSource)
 	if err != nil {
 		return "", fmt.Errorf("failed to format source code: %w", err)

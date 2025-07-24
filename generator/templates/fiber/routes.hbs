@@ -56,7 +56,7 @@ func RegisterRoutes(engine *fiber.App) {
 			if authErr != nil {
 				return handleAuthorizationError(fiberCtx, authErr, "{{{OperationId}}}")
 							}
-			controller := {{{Name}}}Import.{{../Name}}{}
+			controller := {{{Name}}}.{{../Name}}{}
 			controller.InitController(fiberCtx)
 			{{#ifAnyParamRequiresConversion FuncParams}}
 			var conversionErr error
