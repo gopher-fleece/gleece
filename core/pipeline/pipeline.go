@@ -2,6 +2,7 @@ package pipeline
 
 import (
 	"errors"
+	"fmt"
 	"go/ast"
 	"slices"
 	"strings"
@@ -18,6 +19,7 @@ import (
 )
 
 type GleeceFlattenedMetadata struct {
+	Imports           map[string][]string
 	Flat              []definitions.ControllerMetadata
 	Models            definitions.Models
 	PlainErrorPresent bool
@@ -111,10 +113,53 @@ func (p *GleecePipeline) GenerateIntermediate() (GleeceFlattenedMetadata, error)
 	}
 
 	return GleeceFlattenedMetadata{
+		Imports:           p.getImports(controllers),
 		Flat:              controllers,
 		Models:            p.getModels(),
 		PlainErrorPresent: p.symGraph.IsSpecialPresent(symboldg.SpecialTypeError),
 	}, nil
+}
+
+func (p *GleecePipeline) getImports(controllers []definitions.ControllerMetadata) map[string][]string {
+
+	imports := make(map[string][]string)
+
+	for _, controller := range controllers {
+		imports[controller.PkgPath] = append(imports[controller.PkgPath], controller.Name)
+		for _, route := range controller.Routes {
+			p.appendRouteImports(imports, route)
+		}
+	}
+
+	return imports
+}
+
+func (p *GleecePipeline) appendRouteImports(imports map[string][]string, route definitions.RouteMetadata) {
+	for _, param := range route.FuncParams {
+		paramPkgPath := param.TypeMeta.PkgPath
+
+		if paramPkgPath != "" {
+			paramImportName := fmt.Sprintf(
+				"Param%d%s",
+				param.UniqueImportSerial,
+				common.UnwrapArrayTypeString(param.Name),
+			)
+			imports[paramPkgPath] = append(imports[paramPkgPath], paramImportName)
+		}
+	}
+
+	for _, retVal := range route.Responses {
+		retValPkgPath := retVal.PkgPath
+
+		if retValPkgPath != "" {
+			retValImportName := fmt.Sprintf(
+				"Response%d%s",
+				retVal.UniqueImportSerial,
+				common.UnwrapArrayTypeString(retVal.Name),
+			)
+			imports[retValPkgPath] = append(imports[retValPkgPath], retValImportName)
+		}
+	}
 }
 
 func (p *GleecePipeline) ValidateIntermediate(meta *GleeceFlattenedMetadata) error {

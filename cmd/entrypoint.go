@@ -39,52 +39,45 @@ func LoadGleeceConfig(configPath string) (*definitions.GleeceConfig, error) {
 	return &config, nil
 }
 
-func getMetadata(config *definitions.GleeceConfig) ([]definitions.ControllerMetadata, *definitions.Models, bool, error) {
+func getFullMetadata(config *definitions.GleeceConfig) (pipeline.GleeceFlattenedMetadata, error) {
 	pipe, err := pipeline.NewGleecePipeline(config)
 	if err != nil {
-		return []definitions.ControllerMetadata{}, nil, false, err
+		return pipeline.GleeceFlattenedMetadata{}, err
 	}
 
-	meta, err := pipe.Run()
-	if err != nil {
-		return []definitions.ControllerMetadata{}, nil, false, err
-	}
-
-	return meta.Flat, &meta.Models, meta.PlainErrorPresent, nil
+	return pipe.Run()
 }
 
 func GetConfigAndMetadata(args arguments.CliArguments) (
 	*definitions.GleeceConfig,
-	[]definitions.ControllerMetadata,
-	*definitions.Models,
-	bool,
+	pipeline.GleeceFlattenedMetadata,
 	error,
 ) {
 	config, err := LoadGleeceConfig(args.ConfigPath)
 	if err != nil {
-		return nil, nil, nil, false, err
+		return config, pipeline.GleeceFlattenedMetadata{}, err
 	}
 
 	logger.Info("Generating spec. Configuration file: %s", args.ConfigPath)
 
-	defs, models, hasAnyErrorTypes, err := getMetadata(config)
-	if err != nil {
-		logger.Fatal("Could not collect metadata - %v", err)
-		return nil, nil, nil, false, err
-	}
-
-	return config, defs, models, hasAnyErrorTypes, nil
+	meta, err := getFullMetadata(config)
+	return config, meta, err
 }
 
 func GenerateSpec(args arguments.CliArguments) error {
 	logger.Info("Generating spec")
-	config, meta, models, hasAnyErrorTypes, err := GetConfigAndMetadata(args)
+	config, meta, err := GetConfigAndMetadata(args)
 	if err != nil {
 		return err
 	}
 
 	// Generate the spec
-	if err := swagen.GenerateAndOutputSpec(&config.OpenAPIGeneratorConfig, meta, models, hasAnyErrorTypes); err != nil {
+	if err := swagen.GenerateAndOutputSpec(
+		&config.OpenAPIGeneratorConfig,
+		meta.Flat,
+		&meta.Models,
+		meta.PlainErrorPresent,
+	); err != nil {
 		logger.Fatal("Failed to generate OpenAPI spec - %v", err)
 		return err
 	}
@@ -95,12 +88,12 @@ func GenerateSpec(args arguments.CliArguments) error {
 
 func GenerateRoutes(args arguments.CliArguments) error {
 	logger.Info("Generating routes")
-	config, meta, models, _, err := GetConfigAndMetadata(args)
+	config, meta, err := GetConfigAndMetadata(args)
 	if err != nil {
 		return err
 	}
 
-	if err := routes.GenerateRoutes(config, meta, models); err != nil {
+	if err := routes.GenerateRoutes(config, meta); err != nil {
 		logger.Fatal("Failed to generate routing file - %v", err)
 		return err
 	}
@@ -111,19 +104,24 @@ func GenerateRoutes(args arguments.CliArguments) error {
 
 func GenerateSpecAndRoutes(args arguments.CliArguments) error {
 	logger.Info("Generating spec and routes")
-	config, meta, models, hasAnyErrorTypes, err := GetConfigAndMetadata(args)
+	config, meta, err := GetConfigAndMetadata(args)
 	if err != nil {
 		return err
 	}
 
 	// Generate the routes first
-	if err := routes.GenerateRoutes(config, meta, models); err != nil {
+	if err := routes.GenerateRoutes(config, meta); err != nil {
 		logger.Fatal("Failed to generate routes - %v", err)
 		return err
 	}
 
 	// Generate the spec
-	if err := swagen.GenerateAndOutputSpec(&config.OpenAPIGeneratorConfig, meta, models, hasAnyErrorTypes); err != nil {
+	if err := swagen.GenerateAndOutputSpec(
+		&config.OpenAPIGeneratorConfig,
+		meta.Flat,
+		&meta.Models,
+		meta.PlainErrorPresent,
+	); err != nil {
 		logger.Fatal("Failed to generate OpenAPI spec - %v", err)
 		return err
 	}

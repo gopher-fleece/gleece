@@ -15,53 +15,44 @@ import (
 	"golang.org/x/tools/go/packages"
 )
 
-func GetMetadataByRelativeConfig(relativeConfigPath string) ([]definitions.ControllerMetadata, []definitions.StructMetadata, bool, error) {
-	_, controllers, modelsList, hasStdError, err := GetConfigAndMetadataOrFail(relativeConfigPath)
-	return controllers, modelsList, hasStdError, err
+func GetMetadataByRelativeConfig(relativeConfigPath string) (pipeline.GleeceFlattenedMetadata, error) {
+	_, meta, err := GetConfigAndMetadataOrFail(relativeConfigPath)
+	return meta, err
 }
 
 func GetConfigAndMetadataOrFail(relativeConfigPath string) (
 	*definitions.GleeceConfig,
-	[]definitions.ControllerMetadata,
-	[]definitions.StructMetadata,
-	bool,
+	pipeline.GleeceFlattenedMetadata,
 	error,
 ) {
-	config, controllers, flatModels, hasStdError, err := cmd.GetConfigAndMetadata(
+	config, meta, err := cmd.GetConfigAndMetadata(
 		arguments.CliArguments{
 			ConfigPath: constructFullPathOrFail(relativeConfigPath, true),
 		},
 	)
 
-	modelsList := []definitions.StructMetadata{}
-	if flatModels != nil && len(flatModels.Structs) > 0 {
-		modelsList = flatModels.Structs
-	}
-
-	return config, controllers, modelsList, hasStdError, err
+	return config, meta, err
 }
 
 func GetDefaultConfigAndMetadataOrFail() (
 	*definitions.GleeceConfig,
-	[]definitions.ControllerMetadata,
-	[]definitions.StructMetadata,
-	bool,
+	pipeline.GleeceFlattenedMetadata,
 	error,
 ) {
 	return GetConfigAndMetadataOrFail("gleece.test.config.json")
 }
 
-func GetMetadataByRelativeConfigOrFail(relativeConfigPath string) ([]definitions.ControllerMetadata, []definitions.StructMetadata, bool) {
+func GetMetadataByRelativeConfigOrFail(relativeConfigPath string) pipeline.GleeceFlattenedMetadata {
 
-	controllers, modelsList, hasStdError, generationErr := GetMetadataByRelativeConfig(relativeConfigPath)
+	meta, err := GetMetadataByRelativeConfig(relativeConfigPath)
 
-	if generationErr != nil {
-		Fail(fmt.Sprintf("Could not generate routes - %v", generationErr))
+	if err != nil {
+		Fail(fmt.Sprintf("Could not generate routes - %v", err))
 	}
-	return controllers, modelsList, hasStdError
+	return meta
 }
 
-func GetControllersAndModelsOrFail() ([]definitions.ControllerMetadata, []definitions.StructMetadata, bool) {
+func GetControllersAndModelsOrFail() pipeline.GleeceFlattenedMetadata {
 	return GetMetadataByRelativeConfigOrFail("gleece.test.config.json")
 }
 

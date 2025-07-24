@@ -3,6 +3,7 @@ package routes
 import (
 	"time"
 
+	"github.com/gopher-fleece/gleece/core/pipeline"
 	"github.com/gopher-fleece/gleece/definitions"
 )
 
@@ -27,6 +28,7 @@ type PackageImport struct {
 
 type RoutesContext struct {
 	PackageName             string
+	Imports                 map[string][]string
 	Controllers             []definitions.ControllerMetadata
 	GenerationDate          string
 	AuthConfig              definitions.AuthorizationConfig
@@ -36,24 +38,16 @@ type RoutesContext struct {
 }
 
 func GetTemplateContext(
-	models *definitions.Models,
 	config *definitions.GleeceConfig,
-	controllers []definitions.ControllerMetadata,
+	fullMeta pipeline.GleeceFlattenedMetadata,
 ) (RoutesContext, error) {
-
-	if models == nil {
-		models = &definitions.Models{
-			Structs: make([]definitions.StructMetadata, 0),
-			Enums:   make([]definitions.EnumMetadata, 0),
-		}
-	}
-
 	ctx := RoutesContext{
-		Controllers:             controllers,
+		Imports:                 fullMeta.Imports,
+		Controllers:             fullMeta.Flat,
 		AuthConfig:              config.RoutesConfig.AuthorizationConfig,
 		ValidateResponsePayload: config.RoutesConfig.ValidateResponsePayload,
 		ExperimentalConfig:      config.ExperimentalConfig,
-		Models:                  *models,
+		Models:                  fullMeta.Models,
 	}
 	if len(config.RoutesConfig.PackageName) > 0 {
 		ctx.PackageName = config.RoutesConfig.PackageName

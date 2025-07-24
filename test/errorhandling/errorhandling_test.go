@@ -13,21 +13,21 @@ import (
 
 var _ = Describe("Error-handling", func() {
 	It("Returns a clear error when configuration is not found", func() {
-		_, _, _, _, err := cmd.GetConfigAndMetadata(arguments.CliArguments{ConfigPath: "/this/path/does/not/exist.json"})
+		_, _, err := cmd.GetConfigAndMetadata(arguments.CliArguments{ConfigPath: "/this/path/does/not/exist.json"})
 		Expect(err).To(MatchError(ContainSubstring("could not read config file from")))
 		// Expect(err).To(MatchError(ContainSubstring("no such file or directory")))
 	})
 
 	It("Returns a clear error when configuration is syntactically broken", func() {
 		configPath := utils.GetAbsPathByRelativeOrFail("gleece.broken.json.config")
-		_, _, _, _, err := cmd.GetConfigAndMetadata(arguments.CliArguments{ConfigPath: configPath})
+		_, _, err := cmd.GetConfigAndMetadata(arguments.CliArguments{ConfigPath: configPath})
 		Expect(err).To(MatchError(ContainSubstring("could not unmarshal config file")))
 		Expect(err).To(MatchError(ContainSubstring("invalid character")))
 	})
 
 	It("Returns a clear error when configuration fails validation", func() {
 		configPath := utils.GetAbsPathByRelativeOrFail("gleece.invalid.config.json")
-		_, _, _, _, err := cmd.GetConfigAndMetadata(arguments.CliArguments{ConfigPath: configPath})
+		_, _, err := cmd.GetConfigAndMetadata(arguments.CliArguments{ConfigPath: configPath})
 		Expect(err).To(MatchError(ContainSubstring("Field 'ControllerGlobs' failed validation with tag 'min'")))
 	})
 

@@ -32,9 +32,6 @@ const (
 	// Complex numbers
 	PrimitiveTypeComplex64  PrimitiveType = "complex64"
 	PrimitiveTypeComplex128 PrimitiveType = "complex128"
-
-	// Special case
-	PrimitiveTypeUnsafePointer PrimitiveType = "unsafe.Pointer"
 )
 
 // ToPrimitiveType checks if the given string represents a valid PrimitiveType.
@@ -65,9 +62,7 @@ func ToPrimitiveType(typeName string) (PrimitiveType, bool) {
 		string(PrimitiveTypeFloat64),
 
 		string(PrimitiveTypeComplex64),
-		string(PrimitiveTypeComplex128),
-
-		string(PrimitiveTypeUnsafePointer):
+		string(PrimitiveTypeComplex128):
 		return PrimitiveType(typeName), true
 	default:
 		return "", false
@@ -82,6 +77,7 @@ const (
 	SpecialTypeContext        SpecialType = "context.Context"
 	SpecialTypeTime           SpecialType = "time.Time"
 	SpecialTypeAny            SpecialType = "any" // alias of interface{}
+	SpecialTypeUnsafePointer  SpecialType = "unsafe.Pointer"
 )
 
 func ToSpecialType(s string) (SpecialType, bool) {
@@ -96,6 +92,8 @@ func ToSpecialType(s string) (SpecialType, bool) {
 		return SpecialTypeContext, true
 	case "time.Time":
 		return SpecialTypeTime, true
+	case "unsafe.Pointer":
+		return SpecialTypeUnsafePointer, true
 	default:
 		return "", false
 	}

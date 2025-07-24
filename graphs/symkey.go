@@ -18,6 +18,7 @@ type SymbolKey struct {
 	Position   token.Pos
 	FileId     string
 	IsUniverse bool
+	IsBuiltIn  bool
 }
 
 func (sk SymbolKey) Id() string {
@@ -126,5 +127,14 @@ func NewUniverseSymbolKey(typeName string) SymbolKey {
 	return SymbolKey{
 		Name:       typeName,
 		IsUniverse: true,
+		IsBuiltIn:  true,
+	}
+}
+
+func NewNonUniverseBuiltInSymbolKey(typeName string) SymbolKey {
+	return SymbolKey{
+		Name:       typeName,
+		IsUniverse: false,
+		IsBuiltIn:  true,
 	}
 }

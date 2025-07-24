@@ -246,9 +246,9 @@ func (g *SymbolGraph) AddField(request CreateFieldNode) (*SymbolNode, error) {
 		return nil, err
 	}
 
-	typeRef, err := request.Data.Type.GetBaseTypeRefKey()
+	typeRef, err := getTypeRef(request.Data.Type)
 	if err != nil {
-		return symNode, err
+		return nil, err
 	}
 
 	g.AddEdge(symNode.Id, typeRef, EdgeKindType, nil)
@@ -306,7 +306,8 @@ func (g *SymbolGraph) IsPrimitivePresent(primitive PrimitiveType) bool {
 }
 
 func (g *SymbolGraph) AddPrimitive(p PrimitiveType) *SymbolNode {
-	return g.addBuiltinSymbol(string(p), common.SymKindBuiltin)
+	// Primitives are always 'universe' types
+	return g.addBuiltinSymbol(string(p), common.SymKindBuiltin, true)
 }
 
 func (g *SymbolGraph) IsSpecialPresent(special SpecialType) bool {
@@ -314,7 +315,13 @@ func (g *SymbolGraph) IsSpecialPresent(special SpecialType) bool {
 }
 
 func (g *SymbolGraph) AddSpecial(special SpecialType) *SymbolNode {
-	return g.addBuiltinSymbol(string(special), common.SymKindSpecialBuiltin)
+	var isUniverse bool
+	switch special {
+	case SpecialTypeError, SpecialTypeEmptyInterface, SpecialTypeAny:
+		isUniverse = true
+	}
+
+	return g.addBuiltinSymbol(string(special), common.SymKindSpecialBuiltin, isUniverse)
 }
 
 func (g *SymbolGraph) builtinSymbolExists(name string) bool {
@@ -349,8 +356,14 @@ func (g *SymbolGraph) createAndAddSymNode(
 	return symNode, nil
 }
 
-func (g *SymbolGraph) addBuiltinSymbol(typeName string, kind common.SymKind) *SymbolNode {
-	key := graphs.NewUniverseSymbolKey(typeName)
+func (g *SymbolGraph) addBuiltinSymbol(typeName string, kind common.SymKind, isUniverse bool) *SymbolNode {
+	var key graphs.SymbolKey
+	if isUniverse {
+		key = graphs.NewUniverseSymbolKey(typeName)
+	} else {
+		key = graphs.NewNonUniverseBuiltInSymbolKey(typeName)
+	}
+
 	if node, exists := g.nodes[key]; exists {
 		return node
 	}
@@ -546,4 +559,18 @@ func (g *SymbolGraph) ToDot() string {
 
 	sb.WriteString("}\n")
 	return sb.String()
+}
+
+func getTypeRef(typeUsage metadata.TypeUsageMeta) (graphs.SymbolKey, error) {
+	if typeUsage.SymbolKind != common.SymKindBuiltin &&
+		typeUsage.SymbolKind != common.SymKindSpecialBuiltin {
+
+		return typeUsage.GetBaseTypeRefKey()
+	}
+
+	if typeUsage.IsUniverseType() {
+		return graphs.NewUniverseSymbolKey(typeUsage.Name), nil
+	}
+
+	return graphs.NewNonUniverseBuiltInSymbolKey(fmt.Sprintf("%s.%s", typeUsage.PkgPath, typeUsage.Name)), nil
 }
