@@ -57,6 +57,15 @@ func (facade *PackagesFacade) initWithGlobs(globs []string) error {
 
 	pkgPathsToLoad := MapSet.NewSet[string]()
 
+	// Keep track of real, absolute paths returned by the globs.
+	// Globs return actual files and package loading of specific files sometimes
+	// yields weird ephemeral packages with names like "command-line-arguments" which
+	// mess with type recognition later on.
+	//
+	// To mitigate this, we load the entire package directory (probably not ideal),
+	// and keep track of which files were actually matched by the globs so when we cache Package<==>AST Files, we can ignore any un-requested file
+	matchedAbsPaths := map[string]struct{}{}
+
 	// For each glob expression (provided via gleece.config), parse all matching files
 	for _, globExpr := range globs {
 		globbedSources, err := doublestar.FilepathGlob(globExpr)
@@ -66,6 +75,8 @@ func (facade *PackagesFacade) initWithGlobs(globs []string) error {
 
 		for _, sourceFile := range globbedSources {
 			absSourcePath, err := filepath.Abs(sourceFile)
+			matchedAbsPaths[absSourcePath] = struct{}{}
+
 			if err != nil {
 				return err
 			}
@@ -88,7 +99,7 @@ func (facade *PackagesFacade) initWithGlobs(globs []string) error {
 		}
 	}
 
-	err := facade.LoadPackages(pkgPathsToLoad.ToSlice())
+	err := facade.loadPackagesFiltered(pkgPathsToLoad.ToSlice(), matchedAbsPaths)
 	if err != nil {
 		logger.Error("Could not load one or more packages (%v) - %v", pkgPathsToLoad.ToSlice(), err)
 		return err
@@ -141,7 +152,13 @@ func (facade *PackagesFacade) GetPackage(packageExpression string) (*packages.Pa
 }
 
 func (facade *PackagesFacade) LoadPackages(packageExpressions []string) error {
+	return facade.loadPackagesFiltered(packageExpressions, nil)
+}
 
+func (facade *PackagesFacade) loadPackagesFiltered(
+	packageExpressions []string,
+	relevantFiles map[string]struct{},
+) error {
 	if len(packageExpressions) <= 0 {
 		return nil
 	}
@@ -150,13 +167,16 @@ func (facade *PackagesFacade) LoadPackages(packageExpressions []string) error {
 
 	var err error
 	if len(missingExpressions) > 0 {
-		_, err = facade.loadAndCacheExpressions(missingExpressions)
+		_, err = facade.loadAndCacheExpressions(missingExpressions, relevantFiles)
 	}
 
 	return err
 }
 
-func (facade *PackagesFacade) loadAndCacheExpressions(packageExpressions []string) ([]*packages.Package, error) {
+func (facade *PackagesFacade) loadAndCacheExpressions(
+	packageExpressions []string,
+	relevantFiles map[string]struct{},
+) ([]*packages.Package, error) {
 	// We're using LoadAllSyntax here which probably tanks performance.
 	// Should improve, at a later point
 	cfg := &packages.Config{Mode: packages.LoadAllSyntax, Fset: facade.fileSet}
@@ -167,28 +187,40 @@ func (facade *PackagesFacade) loadAndCacheExpressions(packageExpressions []strin
 
 	// Note that packages.Load does *not* guarantee order
 	for _, pkg := range matchingPackages {
-		facade.cachePackage(pkg)
+		facade.cachePackage(pkg, relevantFiles)
 	}
 
 	return matchingPackages, nil
 }
 
-func (facade *PackagesFacade) cachePackage(pkg *packages.Package) {
+func (facade *PackagesFacade) cachePackage(pkg *packages.Package, relevantFiles map[string]struct{}) {
 	facade.packagesCache[pkg.PkgPath] = pkg
 	for _, file := range pkg.Syntax {
 		if file == nil {
 			continue
 		}
 
-		if pos := pkg.Fset.Position(file.Package); pos.IsValid() {
-			if absPath, err := filepath.Abs(pos.Filename); err == nil {
-				facade.registerParsedFile(absPath, file, pkg)
-			} else {
-				logger.Warn("could not determine absolute path of file %v in package %s", pos.Filename, pkg.Name)
-			}
-		} else {
-			logger.Warn("could not determine position or position is invalid for one of package %s AST files", pkg.Name)
+		pos := pkg.Fset.Position(file.Package)
+		if !pos.IsValid() {
+			logger.Warn("invalid file position in package %s", pkg.Name)
+			continue
 		}
+
+		absPath, err := filepath.Abs(pos.Filename)
+		if err != nil {
+			logger.Warn("could not get absolute path for %s", pos.Filename)
+			continue
+		}
+
+		// If we're given a relevantFiles filter, load only files that match said filter
+		if relevantFiles != nil {
+			if _, ok := relevantFiles[absPath]; !ok {
+				continue
+			}
+		}
+
+		// Load and register the file and package
+		facade.registerParsedFile(absPath, file, pkg)
 	}
 }
 
@@ -199,7 +231,7 @@ func (facade *PackagesFacade) GetPackages(packageExpressions []string) ([]*packa
 		return matches, nil
 	}
 
-	pkgs, err := facade.loadAndCacheExpressions(missingExpressions)
+	pkgs, err := facade.loadAndCacheExpressions(missingExpressions, nil)
 	if err != nil {
 		return matches, err
 	}
