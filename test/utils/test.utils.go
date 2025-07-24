@@ -16,14 +16,17 @@ import (
 )
 
 func GetMetadataByRelativeConfig(relativeConfigPath string) (pipeline.GleeceFlattenedMetadata, error) {
-	_, meta, err := GetConfigAndMetadataOrFail(relativeConfigPath)
+	_, meta, err := cmd.GetConfigAndMetadata(
+		arguments.CliArguments{
+			ConfigPath: constructFullPathOrFail(relativeConfigPath, true),
+		},
+	)
 	return meta, err
 }
 
 func GetConfigAndMetadataOrFail(relativeConfigPath string) (
 	*definitions.GleeceConfig,
 	pipeline.GleeceFlattenedMetadata,
-	error,
 ) {
 	config, meta, err := cmd.GetConfigAndMetadata(
 		arguments.CliArguments{
@@ -31,13 +34,16 @@ func GetConfigAndMetadataOrFail(relativeConfigPath string) (
 		},
 	)
 
-	return config, meta, err
+	if err != nil {
+		Fail(fmt.Sprintf("GetConfigAndMetadata returned an error %v", err))
+	}
+
+	return config, meta
 }
 
 func GetDefaultConfigAndMetadataOrFail() (
 	*definitions.GleeceConfig,
 	pipeline.GleeceFlattenedMetadata,
-	error,
 ) {
 	return GetConfigAndMetadataOrFail("gleece.test.config.json")
 }
@@ -52,8 +58,9 @@ func GetMetadataByRelativeConfigOrFail(relativeConfigPath string) pipeline.Gleec
 	return meta
 }
 
-func GetControllersAndModelsOrFail() pipeline.GleeceFlattenedMetadata {
-	return GetMetadataByRelativeConfigOrFail("gleece.test.config.json")
+func GetDefaultMetadataOrFail() pipeline.GleeceFlattenedMetadata {
+	_, meta := GetDefaultConfigAndMetadataOrFail()
+	return meta
 }
 
 func constructFullPathOrFail(relativePath string, failIfNotExists bool) string {

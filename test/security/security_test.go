@@ -13,8 +13,8 @@ import (
 var metadata []definitions.ControllerMetadata
 
 var _ = BeforeSuite(func() {
-	controllers, _, _ := utils.GetControllersAndModelsOrFail()
-	metadata = controllers
+	meta := utils.GetDefaultMetadataOrFail()
+	metadata = meta.Flat
 })
 
 var _ = Describe("Security Controller", func() {

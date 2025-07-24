@@ -12,12 +12,10 @@ import (
 )
 
 var metadata []definitions.ControllerMetadata
-var models []definitions.StructMetadata
 
 var _ = BeforeSuite(func() {
-	controllers, flatModels, _ := utils.GetControllersAndModelsOrFail()
-	metadata = controllers
-	models = flatModels
+	meta := utils.GetDefaultMetadataOrFail()
+	metadata = meta.Flat
 })
 
 var _ = Describe("Errors Controller", func() {

@@ -15,9 +15,9 @@ var metadata []definitions.ControllerMetadata
 var models []definitions.StructMetadata
 
 var _ = BeforeSuite(func() {
-	controllers, flatModels, _ := utils.GetControllersAndModelsOrFail()
-	metadata = controllers
-	models = flatModels
+	meta := utils.GetDefaultMetadataOrFail()
+	metadata = meta.Flat
+	models = meta.Models.Structs
 })
 
 var _ = Describe("Imports Controller", func() {
