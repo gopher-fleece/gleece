@@ -14,8 +14,8 @@ var _ = Describe("Graph Controller", func() {
 		pipe := utils.GetPipelineOrFail()
 		pipe.Run()
 		//Expect(graph).ToNot(BeNil())
-		//dotFormat := graph.ToDot()
-		//utils.WriteFileByRelativePathOrFail("./dot.txt", []byte(dotFormat))
+		dotFormat := pipe.Graph().ToDot(nil)
+		utils.WriteFileByRelativePathOrFail("./dot.txt", []byte(dotFormat))
 	})
 })
 

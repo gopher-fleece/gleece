@@ -132,21 +132,17 @@ func (v *RouteVisitor) getExecutionContext(sourceFile *ast.File, funcDecl *ast.F
 }
 
 func (v *RouteVisitor) getPkgForSourceFile(sourceFile *ast.File) (*packages.Package, error) {
-	pkgPath, err := gast.GetFullPackageName(
-		sourceFile,
-		v.context.ArbitrationProvider.Pkg().FSet(),
-	)
+	pkg, err := v.context.ArbitrationProvider.Pkg().GetPackageForFile(sourceFile)
 	if err != nil {
-		return nil, v.frozenError(err)
-	}
-
-	pkg, err := v.context.ArbitrationProvider.Pkg().GetPackage(pkgPath)
-	if err != nil {
-		return nil, v.frozenError(err)
+		return nil, v.getFrozenError(
+			"could not obtain package object for file '%s' due to error - %v",
+			sourceFile.Name.Name,
+			err,
+		)
 	}
 
 	if pkg == nil {
-		return nil, v.getFrozenError("could not obtain package object for path %s", pkgPath)
+		return nil, v.getFrozenError("could not find a package object for file '%s'", sourceFile.Name.Name)
 	}
 
 	return pkg, nil

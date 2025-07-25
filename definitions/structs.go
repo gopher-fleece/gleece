@@ -43,7 +43,7 @@ type FuncParam struct {
 	Description        string
 	UniqueImportSerial uint64
 	Validator          string
-	Deprecation        *DeprecationOptions
+	Deprecation        DeprecationOptions
 }
 
 type FuncReturnValue struct {
@@ -230,7 +230,6 @@ type SecurityAnnotationComponent struct {
 // ControllerMetadata holds metadata pertaining to a specific controller as a full entity, including its receivers (routes)
 type ControllerMetadata struct {
 	Name         string
-	Package      string
 	PkgPath      string
 	Tag          string
 	Description  string

@@ -715,7 +715,7 @@ func FindTypeSpecInPackage(pkg *packages.Package, typeName string) (*ast.TypeSpe
 	return nil, nil, nil
 }
 
-type FieldTypeSpecResolution struct {
+type TypeSpecResolution struct {
 	IsUniverse       bool
 	TypeName         string
 	DeclaringPackage *packages.Package
@@ -736,7 +736,7 @@ func ResolveTypeSpecFromField(
 	declaringFile *ast.File,
 	field *ast.Field,
 	pkgResolver func(pkgPath string) (*packages.Package, error),
-) (FieldTypeSpecResolution, error) {
+) (TypeSpecResolution, error) {
 	return ResolveTypeSpecFromExpr(declaringPkg, declaringFile, field.Type, pkgResolver)
 }
 
@@ -747,10 +747,10 @@ func ResolveTypeSpecFromExpr(
 	file *ast.File,
 	expr ast.Expr,
 	getPkg func(pkgPath string) (*packages.Package, error), // typically your package resolver
-) (FieldTypeSpecResolution, error) {
+) (TypeSpecResolution, error) {
 	ident := GetIdentFromExpr(expr)
 	if ident == nil {
-		return FieldTypeSpecResolution{}, fmt.Errorf("cannot resolve type: expression has no base identifier")
+		return TypeSpecResolution{}, fmt.Errorf("cannot resolve type: expression has no base identifier")
 	}
 
 	obj := pkg.TypesInfo.Uses[ident]
@@ -760,17 +760,17 @@ func ResolveTypeSpecFromExpr(
 	}
 
 	if obj == nil {
-		return FieldTypeSpecResolution{}, fmt.Errorf("cannot resolve identifier '%s' in file %s", ident.Name, file.Name.Name)
+		return TypeSpecResolution{}, fmt.Errorf("cannot resolve identifier '%s' in file %s", ident.Name, file.Name.Name)
 	}
 
 	typeName, ok := obj.(*types.TypeName)
 	if !ok {
-		return FieldTypeSpecResolution{}, fmt.Errorf("resolved object is not a type: %T", obj)
+		return TypeSpecResolution{}, fmt.Errorf("resolved object is not a type: %T", obj)
 	}
 
 	// Universe type fallback
 	if obj.Pkg() == nil && types.Universe.Lookup(obj.Name()) == obj {
-		return FieldTypeSpecResolution{
+		return TypeSpecResolution{
 			TypeName:   obj.Name(),
 			IsUniverse: true,
 		}, nil
@@ -778,7 +778,7 @@ func ResolveTypeSpecFromExpr(
 
 	declPkg, err := getPkg(obj.Pkg().Path())
 	if err != nil || declPkg == nil {
-		return FieldTypeSpecResolution{}, fmt.Errorf("could not locate declaring package: %s", obj.Pkg().Path())
+		return TypeSpecResolution{}, fmt.Errorf("could not locate declaring package: %s", obj.Pkg().Path())
 	}
 
 	// Search for the TypeSpec by matching name in declPkg.Syntax
@@ -794,7 +794,7 @@ func ResolveTypeSpecFromExpr(
 					continue
 				}
 				if typeSpec.Name.Name == typeName.Name() {
-					return FieldTypeSpecResolution{
+					return TypeSpecResolution{
 						DeclaringPackage: declPkg,
 						DeclaringAstFile: declFile,
 						TypeSpec:         typeSpec,
@@ -807,7 +807,7 @@ func ResolveTypeSpecFromExpr(
 		}
 	}
 
-	return FieldTypeSpecResolution{}, fmt.Errorf("could not find TypeSpec for type '%s' in package '%s'", typeName.Name(), obj.Pkg().Path())
+	return TypeSpecResolution{}, fmt.Errorf("could not find TypeSpec for type '%s' in package '%s'", typeName.Name(), obj.Pkg().Path())
 }
 
 // unwrapFirstNamed walks through container expressions (e.g. *T, []T, map[K]V)

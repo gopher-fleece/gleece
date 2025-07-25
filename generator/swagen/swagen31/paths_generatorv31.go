@@ -163,7 +163,7 @@ func setNewRouteOperation(doc *v3.Document, def definitions.ControllerMetadata, 
 }
 
 func handleRouteParamDeprecation(routeParam definitions.FuncParam, specParam *v3.Parameter) {
-	if routeParam.Deprecation != nil && *&routeParam.Deprecation.Deprecated {
+	if routeParam.Deprecation.Deprecated {
 		specParam.Deprecated = true
 	}
 }

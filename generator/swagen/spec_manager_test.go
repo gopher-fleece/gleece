@@ -86,7 +86,7 @@ var _ = Describe("Spec Preparing", func() {
 			},
 			Description: "Example controller",
 			Name:        "ExampleController",
-			Package:     "example",
+			PkgPath:     "github.com/gopher-fleece/gleece/definitions",
 			Routes: []definitions.RouteMetadata{
 				{
 					HttpVerb: "GET",

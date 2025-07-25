@@ -8,7 +8,6 @@ import (
 	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/core/annotations"
 	"github.com/gopher-fleece/gleece/core/metadata"
-	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/gast"
 	"github.com/gopher-fleece/gleece/graphs/symboldg"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
@@ -108,115 +107,6 @@ func (v *ControllerVisitor) addSelfToGraph(meta metadata.ControllerMeta) error {
 	return err
 }
 
-func (v *ControllerVisitor) GetModelsFlat() (*definitions.Models, bool, error) {
-	v.enter(fmt.Sprintf("%d controllers", len(v.controllers)))
-	defer v.exit()
-
-	return nil, false, nil
-	/*
-		if len(v.controllers) <= 0 {
-			return nil, false, nil
-		}
-
-		existingTypesMap := make(map[string]string)
-		models := []definitions.TypeMetadata{}
-
-		hasAnyErrorTypes := false
-		for _, controller := range v.controllers {
-			for _, route := range controller.Controller.Routes {
-				encounteredErrorType, err := v.insertRouteTypeList(&existingTypesMap, &models, &route)
-				if err != nil {
-					return nil, false, v.frozenError(err)
-				}
-				if encounteredErrorType {
-					hasAnyErrorTypes = true
-				}
-			}
-		}
-
-		typeVisitor, err := NewTypeVisitor(v.context)
-		if err != nil {
-			logger.Error("Could not create a new TypeVisitor by Arbitration Provider - %v", err)
-			return nil, false, v.frozenError(err)
-		}
-
-		for _, model := range models {
-
-			// Ignore Context parameters - they're injected at the template levels and
-			// do not reach the OpenAPI schema
-			if model.Name == "Context" && model.PkgPath == "context" {
-				continue
-			}
-
-			pkg, err := v.context.ArbitrationProvider.Pkg().GetPackage(model.PkgPath)
-			if err != nil {
-				return nil, hasAnyErrorTypes, v.frozenError(err)
-			}
-
-			if pkg == nil {
-				return nil, hasAnyErrorTypes, v.getFrozenError(
-					"could locate packages.Package '%s' whilst looking for type '%s'.\n"+
-						"Please note that Gleece currently cannot use any structs from externally imported packages",
-					model.PkgPath,
-					model.Name,
-				)
-			}
-
-			// Currently, Name includes a "[]" prefix if the type is an array.
-			// Need to remove it so lookup can actually succeed.
-			// Might move to an "IsArray" field in the near future.
-			cleanedName := common.UnwrapArrayTypeString(model.Name)
-
-			// Enums are handled separately
-			if model.SymbolKind == common.SymKindAlias {
-				err := typeVisitor.VisitEnum(cleanedName, model)
-				if err != nil {
-					return nil, hasAnyErrorTypes, v.frozenError(err)
-				}
-				continue
-			}
-
-			structNode, err := gast.FindTypesStructInPackage(pkg, cleanedName)
-			if err != nil {
-				return nil, hasAnyErrorTypes, v.frozenError(err)
-			}
-
-			if structNode == nil {
-				return nil,
-					hasAnyErrorTypes,
-					v.getFrozenError(
-						"could not find struct '%s' in package '%s'",
-						cleanedName,
-						model.PkgPath,
-					)
-			}
-
-			err = typeVisitor.VisitStruct(model.PkgPath, cleanedName, structNode)
-			if err != nil {
-				return nil, hasAnyErrorTypes, v.frozenError(err)
-			}
-		}
-
-		structs := typeVisitor.GetStructs()
-		enums := typeVisitor.GetEnums()
-
-		slices.SortFunc(structs, func(a, b definitions.StructMetadata) int {
-			return strings.Compare(a.Name, b.Name)
-		})
-
-		slices.SortFunc(enums, func(a, b definitions.EnumMetadata) int {
-			return strings.Compare(a.Name, b.Name)
-		})
-
-		flatModels := &definitions.Models{
-			Structs: structs,
-			Enums:   enums,
-		}
-
-		return flatModels, hasAnyErrorTypes, nil
-	*/
-}
-
 // visitController traverses a controller node to extract metadata for API routes.
 // A controller is a struct that embeds GleeceController.
 // The function enumerates receivers to gather route construction details.
@@ -283,9 +173,8 @@ func (v *ControllerVisitor) visitController(controllerNode *ast.TypeSpec) (metad
 
 // createControllerMetadata Creates a standard ControllerMetadata struct for the given node
 func (v *ControllerVisitor) createControllerMetadata(controllerNode *ast.TypeSpec) (metadata.ControllerMeta, error) {
-	fullPackageName, err := gast.GetFullPackageName(v.currentSourceFile, v.context.ArbitrationProvider.Pkg().FSet())
-
-	if err != nil {
+	pkg, err := v.context.ArbitrationProvider.Pkg().GetPackageForFile(v.currentSourceFile)
+	if err != nil || pkg == nil {
 		return metadata.ControllerMeta{}, v.getFrozenError(
 			"could not obtain full/partial package name for source file '%s'", v.currentSourceFile.Name,
 		)
@@ -296,7 +185,7 @@ func (v *ControllerVisitor) createControllerMetadata(controllerNode *ast.TypeSpe
 		Struct: metadata.StructMeta{
 			SymNodeMeta: metadata.SymNodeMeta{
 				Name:    controllerNode.Name.Name,
-				PkgPath: fullPackageName,
+				PkgPath: pkg.PkgPath,
 			},
 		},
 	}

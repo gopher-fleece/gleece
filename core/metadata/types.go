@@ -147,7 +147,6 @@ func (m ControllerMeta) Reduce(
 
 	meta := definitions.ControllerMetadata{
 		Name:        m.Struct.Name,
-		Package:     gast.GetDefaultPkgAliasByName(m.Struct.PkgPath),
 		PkgPath:     m.Struct.PkgPath,
 		Tag:         m.Struct.Annotations.GetFirstValueOrEmpty(annotations.GleeceAnnotationTag),
 		Description: m.Struct.Annotations.GetDescription(),
@@ -282,6 +281,14 @@ func (v FuncParam) Reduce(metaCache MetaCache, syncedProvider IdProvider) (defin
 		return definitions.FuncParam{}, err
 	}
 
+	// Find the parameter's attribute in the receiver's annotations
+	var paramDescription string
+	paramAttrib := v.Annotations.FindFirstByValue(v.Name)
+	if paramAttrib != nil {
+		// Note that nil here is not valid and should be rejected at the validation stage
+		paramDescription = paramAttrib.Description
+	}
+
 	return definitions.FuncParam{
 		ParamMeta: definitions.ParamMeta{
 			Name:      v.Name,
@@ -291,10 +298,10 @@ func (v FuncParam) Reduce(metaCache MetaCache, syncedProvider IdProvider) (defin
 		},
 		PassedIn:           passedIn,
 		NameInSchema:       nameInSchema,
-		Description:        v.Annotations.GetDescription(),
+		Description:        paramDescription,
 		UniqueImportSerial: syncedProvider.GetIdForKey(typeRef),
 		Validator:          validator,
-		Deprecation:        common.Ptr(GetDeprecationOpts(v.Annotations)),
+		Deprecation:        GetDeprecationOpts(v.Annotations),
 	}, nil
 }
 
@@ -442,7 +449,7 @@ func (f FieldMeta) Reduce() definitions.FieldMetadata {
 
 	var tag string
 	if fieldNode != nil && fieldNode.Tag != nil {
-		tag = fieldNode.Tag.Value
+		tag = strings.Trim(fieldNode.Tag.Value, "`")
 	}
 
 	decoratedType := f.Type.GetArrayLayersString() + f.Type.Name

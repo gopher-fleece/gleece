@@ -106,7 +106,7 @@ func (v *RecursiveTypeVisitor) VisitStructType(
 		)
 	}
 
-	holder, err := v.getComments(node.Doc, nodeGenDecl)
+	holder, err := v.getAnnotations(node.Doc, nodeGenDecl)
 	if err != nil {
 		return nil, graphs.SymbolKey{}, v.frozenError(err)
 	}
@@ -203,7 +203,7 @@ func (v *RecursiveTypeVisitor) extractEnumAliasType(
 		return metadata.EnumMeta{}, err
 	}
 
-	enumAnnotations, err := v.getComments(spec.Doc, specGenDecl)
+	enumAnnotations, err := v.getAnnotations(spec.Doc, specGenDecl)
 	if err != nil {
 		return metadata.EnumMeta{}, err
 	}
@@ -275,7 +275,7 @@ func (v *RecursiveTypeVisitor) VisitField(
 	var results []metadata.FieldMeta
 
 	// Get doc/comments on the field
-	holder, err := v.getComments(field.Doc, nil)
+	holder, err := v.getAnnotations(field.Doc, nil)
 	if err != nil {
 		return nil, v.frozenError(err)
 	}
@@ -320,6 +320,8 @@ func (v *RecursiveTypeVisitor) VisitField(
 			return nil, v.frozenError(err)
 		}
 
+		var underlyingTypeAnnotations *annotations.AnnotationHolder
+
 		if resolvedField.DeclaringPackage != nil &&
 			resolvedField.DeclaringAstFile != nil &&
 			resolvedField.TypeSpec != nil {
@@ -336,6 +338,15 @@ func (v *RecursiveTypeVisitor) VisitField(
 					err,
 				)
 			}
+			underlyingTypeAnnotations, err = v.getAnnotations(resolvedField.TypeSpec.Doc, resolvedField.GenDecl)
+			if err != nil {
+				return nil, v.getFrozenError(
+					"could not retrieve comments from underlying type '%s' - %v",
+					resolvedField.TypeName,
+					err,
+				)
+			}
+
 			// Recurse into any nested entities
 			_, err = v.visitTypeSpec(
 				resolvedField.DeclaringPackage,
@@ -385,7 +396,7 @@ func (v *RecursiveTypeVisitor) VisitField(
 				Node:        field.Type,
 				PkgPath:     typeRefPkgPath,
 				SymbolKind:  typeUsageKind,
-				Annotations: holder,
+				Annotations: underlyingTypeAnnotations,
 			},
 			Layers: typeLayers,
 			Import: importType,
@@ -431,7 +442,7 @@ func (v *RecursiveTypeVisitor) VisitField(
 
 func getTypeSymKind(
 	pkg *packages.Package,
-	resolvedField gast.FieldTypeSpecResolution,
+	resolvedField gast.TypeSpecResolution,
 ) common.SymKind {
 	if _, isSpecial := symboldg.ToSpecialType(resolvedField.TypeName); isSpecial {
 		return common.SymKindSpecialBuiltin
@@ -598,7 +609,10 @@ func (v *RecursiveTypeVisitor) visitTypeSpec(
 	return graphs.SymbolKey{}, err
 }
 
-func (v *RecursiveTypeVisitor) getComments(onNodeDoc *ast.CommentGroup, nodeGenDecl *ast.GenDecl) (*annotations.AnnotationHolder, error) {
+func (v *RecursiveTypeVisitor) getAnnotations(
+	onNodeDoc *ast.CommentGroup,
+	nodeGenDecl *ast.GenDecl,
+) (*annotations.AnnotationHolder, error) {
 	var commentSource *ast.CommentGroup
 	if onNodeDoc != nil {
 		commentSource = onNodeDoc
@@ -619,7 +633,7 @@ func (v *RecursiveTypeVisitor) getComments(onNodeDoc *ast.CommentGroup, nodeGenD
 
 func (v *RecursiveTypeVisitor) getTypeLayers(
 	field *ast.Field,
-	resolution gast.FieldTypeSpecResolution,
+	resolution gast.TypeSpecResolution,
 ) ([]metadata.TypeLayer, error) {
 	return v.buildTypeLayers(resolution.DeclaringPackage, resolution.DeclaringAstFile, field.Type, resolution.TypeName)
 }
