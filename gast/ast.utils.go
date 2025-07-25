@@ -740,71 +740,74 @@ func ResolveTypeSpecFromField(
 	return ResolveTypeSpecFromExpr(declaringPkg, declaringFile, field.Type, pkgResolver)
 }
 
+// ResolveTypeSpecFromExpr resolves a type expression to its defining TypeSpec,
+// if it originates from a user-defined type, otherwise returns information about the universe type.
 func ResolveTypeSpecFromExpr(
-	declaringPkg *packages.Package, // <<<< Used only for locally defined type references
-	declaringFile *ast.File,
+	pkg *packages.Package,
+	file *ast.File,
 	expr ast.Expr,
-	pkgResolver func(string) (*packages.Package, error),
+	getPkg func(pkgPath string) (*packages.Package, error), // typically your package resolver
 ) (FieldTypeSpecResolution, error) {
-
-	unwrapped := UnwrapFirstNamed(expr)
-	if unwrapped == nil {
-		return FieldTypeSpecResolution{}, fmt.Errorf("could not unwrap type expression")
-	}
-
-	var ident *ast.Ident
-	var pkgPath string
-	var err error
-
-	switch t := unwrapped.(type) {
-	case *ast.Ident:
-		ident = t
-		pkgPath, err = ResolveUnqualifiedIdentPackage(declaringFile, ident)
-		if err != nil {
-			return FieldTypeSpecResolution{}, err
-		}
-	case *ast.SelectorExpr:
-		ident = t.Sel
-		pkgPath, err = ResolveImportPathForSelector(declaringPkg, declaringFile, t)
-		if err != nil {
-			return FieldTypeSpecResolution{}, err
-		}
-	case *ast.StarExpr:
-		// Optional: support pointers here if needed, or unwrap pointer
-		return ResolveTypeSpecFromExpr(declaringPkg, declaringFile, t.X, pkgResolver)
-	default:
-		return FieldTypeSpecResolution{}, fmt.Errorf("unsupported expression type %T", expr)
-	}
-
+	ident := GetIdentFromExpr(expr)
 	if ident == nil {
-		return FieldTypeSpecResolution{}, fmt.Errorf("identifier not found")
+		return FieldTypeSpecResolution{}, fmt.Errorf("cannot resolve type: expression has no base identifier")
 	}
 
-	if pkgPath == "" {
-		if IsUniverseType(ident.Name) {
-			return FieldTypeSpecResolution{IsUniverse: true, TypeName: ident.Name}, nil
+	obj := pkg.TypesInfo.Uses[ident]
+	if obj == nil {
+		// Fall back to type scope if ident is dot-imported or not recorded in Uses
+		obj = pkg.Types.Scope().Lookup(ident.Name)
+	}
+
+	if obj == nil {
+		return FieldTypeSpecResolution{}, fmt.Errorf("cannot resolve identifier '%s' in file %s", ident.Name, file.Name.Name)
+	}
+
+	typeName, ok := obj.(*types.TypeName)
+	if !ok {
+		return FieldTypeSpecResolution{}, fmt.Errorf("resolved object is not a type: %T", obj)
+	}
+
+	// Universe type fallback
+	if obj.Pkg() == nil && types.Universe.Lookup(obj.Name()) == obj {
+		return FieldTypeSpecResolution{
+			TypeName:   obj.Name(),
+			IsUniverse: true,
+		}, nil
+	}
+
+	declPkg, err := getPkg(obj.Pkg().Path())
+	if err != nil || declPkg == nil {
+		return FieldTypeSpecResolution{}, fmt.Errorf("could not locate declaring package: %s", obj.Pkg().Path())
+	}
+
+	// Search for the TypeSpec by matching name in declPkg.Syntax
+	for _, declFile := range declPkg.Syntax {
+		for _, decl := range declFile.Decls {
+			genDecl, ok := decl.(*ast.GenDecl)
+			if !ok || genDecl.Tok != token.TYPE {
+				continue
+			}
+			for _, spec := range genDecl.Specs {
+				typeSpec, ok := spec.(*ast.TypeSpec)
+				if !ok {
+					continue
+				}
+				if typeSpec.Name.Name == typeName.Name() {
+					return FieldTypeSpecResolution{
+						DeclaringPackage: declPkg,
+						DeclaringAstFile: declFile,
+						TypeSpec:         typeSpec,
+						GenDecl:          genDecl,
+						TypeName:         typeName.Name(),
+						IsUniverse:       false,
+					}, nil
+				}
+			}
 		}
-		pkgPath = declaringPkg.PkgPath
 	}
 
-	pkg, err := pkgResolver(pkgPath)
-	if err != nil {
-		return FieldTypeSpecResolution{}, fmt.Errorf("failed to resolve package %q: %w", pkgPath, err)
-	}
-
-	spec, genDecl, file := FindTypeSpecInPackage(pkg, ident.Name)
-	if spec == nil || file == nil {
-		return FieldTypeSpecResolution{}, fmt.Errorf("type %q not found in package %q", ident.Name, pkgPath)
-	}
-
-	return FieldTypeSpecResolution{
-		IsUniverse:       false,
-		TypeName:         ident.Name,
-		DeclaringPackage: pkg,
-		DeclaringAstFile: file,
-		GenDecl:          genDecl,
-		TypeSpec:         spec,
-	}, nil
+	return FieldTypeSpecResolution{}, fmt.Errorf("could not find TypeSpec for type '%s' in package '%s'", typeName.Name(), obj.Pkg().Path())
 }
 
 // unwrapFirstNamed walks through container expressions (e.g. *T, []T, map[K]V)

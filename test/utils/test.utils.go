@@ -35,7 +35,7 @@ func GetConfigAndMetadataOrFail(relativeConfigPath string) (
 	)
 
 	if err != nil {
-		Fail(fmt.Sprintf("GetConfigAndMetadata returned an error %v", err))
+		Fail(fmt.Sprintf("GetConfigAndMetadata returned an error - %v", err))
 	}
 
 	return config, meta
