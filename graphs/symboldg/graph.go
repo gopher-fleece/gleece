@@ -10,6 +10,7 @@ import (
 	"github.com/gopher-fleece/gleece/core/metadata"
 	"github.com/gopher-fleece/gleece/gast"
 	"github.com/gopher-fleece/gleece/graphs"
+	"github.com/gopher-fleece/gleece/graphs/dot"
 )
 
 type SymbolGraphBuilder interface {
@@ -33,7 +34,7 @@ type SymbolGraphBuilder interface {
 	IsSpecialPresent(special SpecialType) bool
 
 	String() string
-	ToDot() string
+	ToDot(theme *dot.DotTheme) string
 }
 
 type SymbolGraph struct {
@@ -469,96 +470,27 @@ func (g *SymbolGraph) String() string {
 	sb.WriteString("=== End SymbolGraph ===\n")
 	return sb.String()
 }
-func (g *SymbolGraph) ToDot() string {
-	const ERROR_NODE_ID = "N_ERROR"
 
-	var sb strings.Builder
-	sb.WriteString("digraph SymbolGraph {\n")
+func (g *SymbolGraph) ToDot(theme *dot.DotTheme) string {
+	builder := dot.NewDotBuilder(theme)
 
-	// Node color mapping
-	kindColor := map[common.SymKind]string{
-		common.SymKindStruct:     "lightblue",
-		common.SymKindField:      "gold",
-		common.SymKindEnum:       "violet",
-		common.SymKindEnumValue:  "plum",
-		common.SymKindReceiver:   "orange",
-		common.SymKindFunction:   "green",
-		common.SymKindParameter:  "khaki",
-		common.SymKindReturnType: "lightgrey",
-		common.SymKindBuiltin:    "white",
-		common.SymKindInterface:  "lightskyblue",
-		common.SymKindAlias:      "palegreen",
-		common.SymKindConstant:   "plum",
-		common.SymKindUnknown:    "lightcoral",
-	}
-
-	// Edge kind descriptive labels
-	edgeLabels := map[string]string{
-		"ty":    "Type",
-		"ret":   "Return Value",
-		"param": "Parameter",
-		"fld":   "Field",
-		"recv":  "Receiver",
-		"val":   "Value",
-		"init":  "Initialize",
-		"ref":   "Reference",
-		// Add more as needed
-	}
-
-	// Map full SymbolKey to short ID
-	idMap := make(map[graphs.SymbolKey]string)
-	counter := 0
-	for key := range g.nodes {
-		idMap[key] = fmt.Sprintf("N%d", counter)
-		counter++
-	}
-
-	// Write nodes
+	// Add all nodes
 	for key, node := range g.nodes {
-		id := idMap[key]
 		label := key.ShortLabel()
-		color := kindColor[node.Kind]
-		if color == "" {
-			color = "gray90"
-		}
-		sb.WriteString(fmt.Sprintf("  %s [label=\"%s (%s)\", style=filled, fillcolor=\"%s\"];\n", id, label, node.Kind, color))
+		builder.AddNode(key, node.Kind, label)
 	}
 
-	// Write edges
+	// Add all edges
 	for fromKey, edges := range g.edges {
-		fromID := idMap[fromKey]
 		for _, edge := range edges {
-			toID, ok := idMap[edge.To]
-			if !ok || toID == "" {
-				toID = ERROR_NODE_ID
-			}
-			label := edgeLabels[string(edge.Kind)]
-			if label == "" {
-				label = string(edge.Kind) // fallback
-			}
-			sb.WriteString(fmt.Sprintf("  %s -> %s [label=\"%s\"];\n", fromID, toID, label))
+			builder.AddEdge(fromKey, edge.To, string(edge.Kind))
 		}
 	}
 
-	// Add legend as subgraph cluster
-	sb.WriteString(`
-  subgraph cluster_legend {
-    label = "Legend";
-    style = dashed;
-    color = gray;
+	// Add legend if theme requests it
+	builder.RenderLegend()
 
-`)
-	// Write one legend node per kind
-	legendCounter := 0
-	for kind, color := range kindColor {
-		legendID := fmt.Sprintf("L%d", legendCounter)
-		sb.WriteString(fmt.Sprintf("    %s [label=\"%s\", style=filled, fillcolor=\"%s\", shape=box];\n", legendID, kind, color))
-		legendCounter++
-	}
-	sb.WriteString("  }\n") // end legend
-
-	sb.WriteString("}\n")
-	return sb.String()
+	return builder.Finish()
 }
 
 func getTypeRef(typeUsage metadata.TypeUsageMeta) (graphs.SymbolKey, error) {
