@@ -203,6 +203,17 @@ func (v *RecursiveTypeVisitor) extractEnumAliasType(
 		return metadata.EnumMeta{}, err
 	}
 
+	enumValues, err := v.getEnumValueDefinitions(
+		fVersion,
+		pkg,
+		typeName,
+		basic,
+	)
+
+	if err != nil {
+		return metadata.EnumMeta{}, err
+	}
+
 	enum := metadata.EnumMeta{
 		SymNodeMeta: metadata.SymNodeMeta{
 			Name:        typeName.Name(),
@@ -213,18 +224,29 @@ func (v *RecursiveTypeVisitor) extractEnumAliasType(
 			Annotations: enumAnnotations,
 		},
 		ValueKind: kind,
-		Values:    []metadata.EnumValueDefinition{},
+		Values:    enumValues,
 	}
 
-	scope := pkg.Types.Scope()
+	return enum, nil
+}
+
+func (v *RecursiveTypeVisitor) getEnumValueDefinitions(
+	enumFVersion *gast.FileVersion,
+	enumPkg *packages.Package,
+	enumTypeName *types.TypeName,
+	enumBasic *types.Basic,
+) ([]metadata.EnumValueDefinition, error) {
+	enumValues := []metadata.EnumValueDefinition{}
+
+	scope := enumPkg.Types.Scope()
 	for _, name := range scope.Names() {
 		obj := scope.Lookup(name)
 		constVal, isConst := obj.(*types.Const)
-		if !isConst || !types.Identical(constVal.Type(), typeName.Type()) {
+		if !isConst || !types.Identical(constVal.Type(), enumTypeName.Type()) {
 			continue
 		}
 
-		val := gast.ExtractConstValue(basic.Kind(), constVal)
+		val := gast.ExtractConstValue(enumBasic.Kind(), constVal)
 		if val == nil {
 			continue
 		}
@@ -232,7 +254,7 @@ func (v *RecursiveTypeVisitor) extractEnumAliasType(
 		// Attempt to find the AST node
 		var constNode ast.Node
 		if v.context != nil && v.context.ArbitrationProvider != nil {
-			constNode = gast.FindConstSpecNode(pkg, constVal.Name())
+			constNode = gast.FindConstSpecNode(enumPkg, constVal.Name())
 		}
 
 		// Attempt to extract annotations
@@ -242,24 +264,24 @@ func (v *RecursiveTypeVisitor) extractEnumAliasType(
 			if h, err := annotations.NewAnnotationHolder(comments, annotations.CommentSourceProperty); err == nil {
 				holder = &h
 			} else {
-				return metadata.EnumMeta{}, err
+				return []metadata.EnumValueDefinition{}, err
 			}
 		}
 
-		enum.Values = append(enum.Values, metadata.EnumValueDefinition{
+		enumValues = append(enumValues, metadata.EnumValueDefinition{
 			SymNodeMeta: metadata.SymNodeMeta{
 				Name:        constVal.Name(),
 				Node:        constNode,
 				SymbolKind:  common.SymKindEnumValue,
-				PkgPath:     pkg.PkgPath,
+				PkgPath:     enumPkg.PkgPath,
 				Annotations: holder,
-				FVersion:    fVersion,
+				FVersion:    enumFVersion,
 			},
 			Value: val,
 		})
 	}
 
-	return enum, nil
+	return enumValues, nil
 }
 
 func (v *RecursiveTypeVisitor) VisitField(
