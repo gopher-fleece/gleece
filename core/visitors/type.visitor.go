@@ -20,10 +20,6 @@ type ControllerWithStructMeta struct {
 	StructMeta metadata.StructMeta
 }
 
-type NodeWithComments struct {
-	Doc *ast.CommentGroup
-}
-
 type RecursiveTypeVisitor struct {
 	BaseVisitor
 
@@ -35,11 +31,6 @@ type RecursiveTypeVisitor struct {
 	// Documentation may be placed on TypeDecl or their parent GenDecl so we track these,
 	// in case we need to fetch the docs from the TypeDecl's parent.
 	currentGenDecl *ast.GenDecl
-
-	// The current Gleece Controller being processed
-	// currentController *definitions.ControllerMetadata
-
-	// currentFVersion gast.FileVersion
 }
 
 // NewTypeVisitor Instantiates a new type visitor.
@@ -49,6 +40,7 @@ func NewTypeVisitor(context *VisitContext) (*RecursiveTypeVisitor, error) {
 	return &visitor, err
 }
 
+// Visit fulfils the ast.Visitor interface
 func (v *RecursiveTypeVisitor) Visit(node ast.Node) ast.Visitor {
 	switch currentNode := node.(type) {
 	case *ast.File:
@@ -69,30 +61,54 @@ func (v *RecursiveTypeVisitor) Visit(node ast.Node) ast.Visitor {
 	return v
 }
 
+// VisitStructType dives into a Struct, given as a TypeSpec and returns its metadata.
+//
+// Note that this method is internally recursive and will dive into the struct's dependencies such
+// as nested fields and their types and build/store their entities in the symbol graph.
 func (v *RecursiveTypeVisitor) VisitStructType(
 	file *ast.File,
 	nodeGenDecl *ast.GenDecl,
 	node *ast.TypeSpec,
-) (*metadata.StructMeta, graphs.SymbolKey, error) {
-	fVersion, err := v.context.MetadataCache.GetFileVersion(file, v.context.ArbitrationProvider.Pkg().FSet())
+) (metadata.StructMeta, graphs.SymbolKey, error) {
+	// Check the cache first
+	symKey, fVersion, cached, err := v.checkStructCache(file, node)
+	if err != nil || cached != nil {
+		return *cached, symKey, err
+	}
+
+	// If the type isn't cached, build it
+	structMeta, err := v.constructStructMeta(file, fVersion, nodeGenDecl, node)
 	if err != nil {
-		return nil, graphs.SymbolKey{}, v.frozenError(err)
+		return *cached, symKey, err
 	}
 
-	// Check cache first
-	symKey := graphs.NewSymbolKey(node, fVersion)
-	cached := v.context.MetadataCache.GetStruct(symKey)
-	if cached != nil {
-		return cached, symKey, nil
-	}
+	// Insert it to the cache for faster lookup next time we encounter it
+	v.context.MetadataCache.AddStruct(&structMeta)
 
+	// And finally, add it to the symbol graph
+	symNode, err := v.context.GraphBuilder.AddStruct(
+		symboldg.CreateStructNode{
+			Data:        structMeta,
+			Annotations: structMeta.Annotations,
+		},
+	)
+
+	return structMeta, symNode.Id, err
+}
+
+func (v *RecursiveTypeVisitor) constructStructMeta(
+	file *ast.File,
+	fVersion *gast.FileVersion,
+	nodeGenDecl *ast.GenDecl,
+	node *ast.TypeSpec,
+) (metadata.StructMeta, error) {
 	pkg, err := v.context.ArbitrationProvider.Pkg().GetPackageForFile(file)
 	if err != nil {
-		return nil, graphs.SymbolKey{}, v.frozenError(err)
+		return metadata.StructMeta{}, v.frozenError(err)
 	}
 
 	if pkg == nil {
-		return nil, graphs.SymbolKey{}, v.getFrozenError(
+		return metadata.StructMeta{}, v.getFrozenError(
 			"could not determine package for file %s",
 			gast.GetAstFileName(
 				v.context.ArbitrationProvider.Pkg().FSet(),
@@ -103,20 +119,20 @@ func (v *RecursiveTypeVisitor) VisitStructType(
 
 	holder, err := v.getAnnotations(node.Doc, nodeGenDecl)
 	if err != nil {
-		return nil, graphs.SymbolKey{}, v.frozenError(err)
+		return metadata.StructMeta{}, v.frozenError(err)
 	}
 
 	structType, isStruct := node.Type.(*ast.StructType)
 	if !isStruct {
-		return nil, graphs.SymbolKey{}, v.getFrozenError("non-struct node '%v' was provided to VisitStructType", node.Name.Name)
+		return metadata.StructMeta{}, v.getFrozenError("non-struct node '%v' was provided to VisitStructType", node.Name.Name)
 	}
 
 	fields, err := v.buildFields(pkg, file, structType)
 	if err != nil {
-		return nil, graphs.SymbolKey{}, v.frozenError(err)
+		return metadata.StructMeta{}, v.frozenError(err)
 	}
 
-	structMeta := &metadata.StructMeta{
+	return metadata.StructMeta{
 		SymNodeMeta: metadata.SymNodeMeta{
 			Name:        node.Name.Name,
 			Node:        node,
@@ -126,18 +142,24 @@ func (v *RecursiveTypeVisitor) VisitStructType(
 			FVersion:    fVersion,
 		},
 		Fields: fields,
+	}, nil
+}
+
+// checkStructCache retrieves cached metadata for the given file/node combination.
+// Returns the relevant SymbolKey, FileVersion and any cached information, if it exists
+func (v *RecursiveTypeVisitor) checkStructCache(
+	file *ast.File,
+	node *ast.TypeSpec,
+) (graphs.SymbolKey, *gast.FileVersion, *metadata.StructMeta, error) {
+
+	fVersion, err := v.context.MetadataCache.GetFileVersion(file, v.context.ArbitrationProvider.Pkg().FSet())
+	if err != nil {
+		return graphs.SymbolKey{}, nil, nil, v.frozenError(err)
 	}
 
-	v.context.MetadataCache.AddStruct(structMeta)
-
-	symNode, err := v.context.GraphBuilder.AddStruct(
-		symboldg.CreateStructNode{
-			Data:        *structMeta,
-			Annotations: structMeta.Annotations,
-		},
-	)
-
-	return structMeta, symNode.Id, err
+	symKey := graphs.NewSymbolKey(node, fVersion)
+	cached := v.context.MetadataCache.GetStruct(symKey)
+	return symKey, fVersion, cached, nil
 }
 
 func (v *RecursiveTypeVisitor) VisitEnumType(

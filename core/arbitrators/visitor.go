@@ -14,6 +14,6 @@ type TypeVisitor interface {
 		file *ast.File,
 		nodeGenDecl *ast.GenDecl,
 		node *ast.TypeSpec,
-	) (*metadata.StructMeta, graphs.SymbolKey, error)
+	) (metadata.StructMeta, graphs.SymbolKey, error)
 	VisitField(pkg *packages.Package, file *ast.File, field *ast.Field) ([]metadata.FieldMeta, error)
 }
