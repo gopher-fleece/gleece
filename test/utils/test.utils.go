@@ -9,8 +9,12 @@ import (
 
 	"github.com/gopher-fleece/gleece/cmd"
 	"github.com/gopher-fleece/gleece/cmd/arguments"
+	"github.com/gopher-fleece/gleece/core/arbitrators/caching"
 	"github.com/gopher-fleece/gleece/core/pipeline"
+	"github.com/gopher-fleece/gleece/core/visitors"
+	"github.com/gopher-fleece/gleece/core/visitors/providers"
 	"github.com/gopher-fleece/gleece/definitions"
+	"github.com/gopher-fleece/gleece/graphs/symboldg"
 	. "github.com/onsi/ginkgo/v2"
 	"golang.org/x/tools/go/packages"
 )
@@ -215,4 +219,34 @@ func GetPipelineOrFail() pipeline.GleecePipeline {
 	}
 
 	return pipe
+}
+
+func GetVisitContextByRelativeConfigOrFail(relativeConfigPath string) visitors.VisitContext {
+	configPath := constructFullPathOrFail(relativeConfigPath, true)
+	config, err := cmd.LoadGleeceConfig(configPath)
+	if err != nil {
+		Fail(fmt.Sprintf("could not load Gleece Config - %v", err))
+	}
+
+	var globs []string
+	if len(config.CommonConfig.ControllerGlobs) > 0 {
+		globs = config.CommonConfig.ControllerGlobs
+	} else {
+		globs = []string{"./*.go", "./**/*.go"}
+	}
+
+	arbProvider, err := providers.NewArbitrationProvider(globs)
+	if err != nil {
+		Fail(fmt.Sprintf("could not create an arbitration provider - %v", err))
+	}
+
+	metaCache := caching.NewMetadataCache()
+	symGraph := symboldg.NewSymbolGraph()
+
+	return visitors.VisitContext{
+		GleeceConfig:        config,
+		ArbitrationProvider: arbProvider,
+		MetadataCache:       metaCache,
+		GraphBuilder:        &symGraph,
+	}
 }

@@ -49,11 +49,6 @@ func NewTypeVisitor(context *VisitContext) (*RecursiveTypeVisitor, error) {
 	return &visitor, err
 }
 
-func (v *RecursiveTypeVisitor) SetCurrentFile(file *ast.File) {
-	// This breaks encapsulation and is a hack...
-	v.currentSourceFile = file
-}
-
 func (v *RecursiveTypeVisitor) Visit(node ast.Node) ast.Visitor {
 	switch currentNode := node.(type) {
 	case *ast.File:
