@@ -33,6 +33,18 @@ type SymbolGraphBuilder interface {
 	IsPrimitivePresent(primitive PrimitiveType) bool
 	IsSpecialPresent(special SpecialType) bool
 
+	// Children returns direct outward SymbolNode dependencies from the given node,
+	// applying the given traversal filter if non-nil.
+	Children(node *SymbolNode, filter *TraversalFilter) []*SymbolNode
+
+	// Parents returns nodes that have edges pointing to the given node,
+	// applying the given traversal filter if non-nil.
+	Parents(node *SymbolNode, filter *TraversalFilter) []*SymbolNode
+
+	// Descendants returns all transitive children reachable from root,
+	// applying the filter at each step to decide traversal and inclusion.
+	Descendants(root *SymbolNode, filter *TraversalFilter) []*SymbolNode
+
 	String() string
 	ToDot(theme *dot.DotTheme) string
 }
@@ -323,6 +335,62 @@ func (g *SymbolGraph) AddSpecial(special SpecialType) *SymbolNode {
 	}
 
 	return g.addBuiltinSymbol(string(special), common.SymKindSpecialBuiltin, isUniverse)
+}
+
+func (g *SymbolGraph) Children(node *SymbolNode, filter *TraversalFilter) []*SymbolNode {
+	var result []*SymbolNode
+	for _, edge := range g.edges[node.Id] {
+		// Edge kind match (if specified)
+		if !shouldIncludeEdge(edge, filter) {
+			continue
+		}
+		child, ok := g.nodes[edge.To]
+		if !ok || !shouldIncludeNode(child, filter) {
+			continue
+		}
+		result = append(result, child)
+	}
+	return result
+}
+
+func (g *SymbolGraph) Parents(node *SymbolNode, filter *TraversalFilter) []*SymbolNode {
+	var result []*SymbolNode
+	for parentKey := range g.revDeps[node.Id] {
+		edges := g.edges[parentKey]
+		for _, edge := range edges {
+			if edge.To != node.Id {
+				continue
+			}
+			if !shouldIncludeEdge(edge, filter) {
+				continue
+			}
+			parentNode := g.nodes[parentKey]
+			if parentNode != nil && shouldIncludeNode(parentNode, filter) {
+				result = append(result, parentNode)
+			}
+		}
+	}
+	return result
+}
+
+func (g *SymbolGraph) Descendants(root *SymbolNode, filter *TraversalFilter) []*SymbolNode {
+	visited := make(map[graphs.SymbolKey]struct{})
+	var result []*SymbolNode
+
+	var walk func(*SymbolNode)
+	walk = func(n *SymbolNode) {
+		for _, child := range g.Children(n, filter) {
+			if _, seen := visited[child.Id]; seen {
+				continue
+			}
+			visited[child.Id] = struct{}{}
+			result = append(result, child)
+			walk(child)
+		}
+	}
+
+	walk(root)
+	return result
 }
 
 func (g *SymbolGraph) builtinSymbolExists(name string) bool {
