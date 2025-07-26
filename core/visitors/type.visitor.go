@@ -8,17 +8,11 @@ import (
 	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/core/annotations"
 	"github.com/gopher-fleece/gleece/core/metadata"
-	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/gast"
 	"github.com/gopher-fleece/gleece/graphs"
 	"github.com/gopher-fleece/gleece/graphs/symboldg"
 	"golang.org/x/tools/go/packages"
 )
-
-type ControllerWithStructMeta struct {
-	Controller definitions.ControllerMetadata
-	StructMeta metadata.StructMeta
-}
 
 type RecursiveTypeVisitor struct {
 	BaseVisitor
@@ -61,6 +55,44 @@ func (v *RecursiveTypeVisitor) Visit(node ast.Node) ast.Visitor {
 	return v
 }
 
+func (v *RecursiveTypeVisitor) VisitField(
+	pkg *packages.Package,
+	file *ast.File,
+	field *ast.Field,
+) ([]metadata.FieldMeta, error) {
+	var results []metadata.FieldMeta
+
+	holder, err := v.getAnnotations(field.Doc, nil)
+	if err != nil {
+		return nil, v.frozenError(err)
+	}
+
+	isEmbedded := len(field.Names) == 0
+	names := v.resolveFieldNames(field, isEmbedded)
+
+	for _, nameIdent := range names {
+		fieldMeta, err := v.buildFieldMeta(pkg, file, field, nameIdent, isEmbedded, holder)
+		if err != nil {
+			return nil, err
+		}
+
+		results = append(results, fieldMeta)
+
+		if _, err := v.resolveTypeRecursive(pkg, file, field); err != nil {
+			return nil, v.frozenError(err)
+		}
+
+		if _, err := v.context.GraphBuilder.AddField(symboldg.CreateFieldNode{
+			Data:        fieldMeta,
+			Annotations: holder,
+		}); err != nil {
+			return nil, v.frozenError(err)
+		}
+	}
+
+	return results, nil
+}
+
 // VisitStructType dives into a Struct, given as a TypeSpec and returns its metadata.
 //
 // Note that this method is internally recursive and will dive into the struct's dependencies such
@@ -79,7 +111,7 @@ func (v *RecursiveTypeVisitor) VisitStructType(
 	// If the type isn't cached, build it
 	structMeta, err := v.constructStructMeta(file, fVersion, nodeGenDecl, node)
 	if err != nil {
-		return *cached, symKey, err
+		return structMeta, symKey, err
 	}
 
 	// Insert it to the cache for faster lookup next time we encounter it
@@ -94,72 +126,6 @@ func (v *RecursiveTypeVisitor) VisitStructType(
 	)
 
 	return structMeta, symNode.Id, err
-}
-
-func (v *RecursiveTypeVisitor) constructStructMeta(
-	file *ast.File,
-	fVersion *gast.FileVersion,
-	nodeGenDecl *ast.GenDecl,
-	node *ast.TypeSpec,
-) (metadata.StructMeta, error) {
-	pkg, err := v.context.ArbitrationProvider.Pkg().GetPackageForFile(file)
-	if err != nil {
-		return metadata.StructMeta{}, v.frozenError(err)
-	}
-
-	if pkg == nil {
-		return metadata.StructMeta{}, v.getFrozenError(
-			"could not determine package for file %s",
-			gast.GetAstFileName(
-				v.context.ArbitrationProvider.Pkg().FSet(),
-				file,
-			),
-		)
-	}
-
-	holder, err := v.getAnnotations(node.Doc, nodeGenDecl)
-	if err != nil {
-		return metadata.StructMeta{}, v.frozenError(err)
-	}
-
-	structType, isStruct := node.Type.(*ast.StructType)
-	if !isStruct {
-		return metadata.StructMeta{}, v.getFrozenError("non-struct node '%v' was provided to VisitStructType", node.Name.Name)
-	}
-
-	fields, err := v.buildFields(pkg, file, structType)
-	if err != nil {
-		return metadata.StructMeta{}, v.frozenError(err)
-	}
-
-	return metadata.StructMeta{
-		SymNodeMeta: metadata.SymNodeMeta{
-			Name:        node.Name.Name,
-			Node:        node,
-			SymbolKind:  common.SymKindStruct,
-			PkgPath:     pkg.PkgPath,
-			Annotations: holder,
-			FVersion:    fVersion,
-		},
-		Fields: fields,
-	}, nil
-}
-
-// checkStructCache retrieves cached metadata for the given file/node combination.
-// Returns the relevant SymbolKey, FileVersion and any cached information, if it exists
-func (v *RecursiveTypeVisitor) checkStructCache(
-	file *ast.File,
-	node *ast.TypeSpec,
-) (graphs.SymbolKey, *gast.FileVersion, *metadata.StructMeta, error) {
-
-	fVersion, err := v.context.MetadataCache.GetFileVersion(file, v.context.ArbitrationProvider.Pkg().FSet())
-	if err != nil {
-		return graphs.SymbolKey{}, nil, nil, v.frozenError(err)
-	}
-
-	symKey := graphs.NewSymbolKey(node, fVersion)
-	cached := v.context.MetadataCache.GetStruct(symKey)
-	return symKey, fVersion, cached, nil
 }
 
 func (v *RecursiveTypeVisitor) VisitEnumType(
@@ -202,6 +168,72 @@ func (v *RecursiveTypeVisitor) VisitEnumType(
 	return meta, symNode.Id, nil
 }
 
+func (v *RecursiveTypeVisitor) constructStructMeta(
+	file *ast.File,
+	fVersion *gast.FileVersion,
+	nodeGenDecl *ast.GenDecl,
+	node *ast.TypeSpec,
+) (metadata.StructMeta, error) {
+	pkg, err := v.context.ArbitrationProvider.Pkg().GetPackageForFile(file)
+	if err != nil {
+		return metadata.StructMeta{}, v.frozenError(err)
+	}
+
+	if pkg == nil {
+		return metadata.StructMeta{}, v.getFrozenError(
+			"could not determine package for file %s",
+			gast.GetAstFileName(
+				v.context.ArbitrationProvider.Pkg().FSet(),
+				file,
+			),
+		)
+	}
+
+	holder, err := v.getAnnotations(node.Doc, nodeGenDecl)
+	if err != nil {
+		return metadata.StructMeta{}, v.frozenError(err)
+	}
+
+	structType, isStruct := node.Type.(*ast.StructType)
+	if !isStruct {
+		return metadata.StructMeta{}, v.getFrozenError("non-struct node '%v' was provided to VisitStructType", node.Name.Name)
+	}
+
+	fields, err := v.buildStructFields(pkg, file, structType)
+	if err != nil {
+		return metadata.StructMeta{}, v.frozenError(err)
+	}
+
+	return metadata.StructMeta{
+		SymNodeMeta: metadata.SymNodeMeta{
+			Name:        node.Name.Name,
+			Node:        node,
+			SymbolKind:  common.SymKindStruct,
+			PkgPath:     pkg.PkgPath,
+			Annotations: holder,
+			FVersion:    fVersion,
+		},
+		Fields: fields,
+	}, nil
+}
+
+// checkStructCache retrieves cached metadata for the given file/node combination.
+// Returns the relevant SymbolKey, FileVersion and any cached information, if it exists
+func (v *RecursiveTypeVisitor) checkStructCache(
+	file *ast.File,
+	node *ast.TypeSpec,
+) (graphs.SymbolKey, *gast.FileVersion, *metadata.StructMeta, error) {
+
+	fVersion, err := v.context.MetadataCache.GetFileVersion(file, v.context.ArbitrationProvider.Pkg().FSet())
+	if err != nil {
+		return graphs.SymbolKey{}, nil, nil, v.frozenError(err)
+	}
+
+	symKey := graphs.NewSymbolKey(node, fVersion)
+	cached := v.context.MetadataCache.GetStruct(symKey)
+	return symKey, fVersion, cached, nil
+}
+
 func (v *RecursiveTypeVisitor) extractEnumAliasType(
 	pkg *packages.Package,
 	fVersion *gast.FileVersion,
@@ -212,7 +244,7 @@ func (v *RecursiveTypeVisitor) extractEnumAliasType(
 
 	basic, isBasicType := typeName.Type().Underlying().(*types.Basic)
 	if !isBasicType {
-		return metadata.EnumMeta{}, fmt.Errorf("type %s is not a basic type", typeName.Name())
+		return metadata.EnumMeta{}, v.getFrozenError("type %s is not a basic type", typeName.Name())
 	}
 
 	kind, err := metadata.NewEnumValueKind(basic.Kind())
@@ -306,208 +338,184 @@ func (v *RecursiveTypeVisitor) getEnumValueDefinitions(
 	return enumValues, nil
 }
 
-func (v *RecursiveTypeVisitor) VisitField(
+func (v *RecursiveTypeVisitor) resolveFieldNames(field *ast.Field, isEmbedded bool) []*ast.Ident {
+	if !isEmbedded {
+		return field.Names
+	}
+	if ident := gast.GetIdentFromExpr(field.Type); ident != nil {
+		return []*ast.Ident{{Name: ident.Name}}
+	}
+	return nil
+}
+
+func (v *RecursiveTypeVisitor) buildFieldMeta(
 	pkg *packages.Package,
 	file *ast.File,
 	field *ast.Field,
-) ([]metadata.FieldMeta, error) {
-	var results []metadata.FieldMeta
+	fieldNameIdent *ast.Ident,
+	isEmbedded bool,
+	holder *annotations.AnnotationHolder,
+) (metadata.FieldMeta, error) {
 
-	// Get doc/comments on the field
-	holder, err := v.getAnnotations(field.Doc, nil)
+	fieldFVersion, err := v.context.MetadataCache.GetFileVersion(file, pkg.Fset)
 	if err != nil {
-		return nil, v.frozenError(err)
-	}
-
-	// Determine embedded vs named
-	isEmbedded := len(field.Names) == 0
-
-	// This supports multiple names: `Name1, Name2 string`
-	// or embedded anonymous fields which have no name
-	names := field.Names
-	if isEmbedded {
-		// For embedded fields, Names is nil – we still need to resolve the type name
-		ident := gast.GetIdentFromExpr(field.Type)
-		if ident != nil {
-			names = []*ast.Ident{{Name: ident.Name}}
-		}
-	}
-
-	for _, nameIdent := range names {
-		name := nameIdent.Name
-
-		typeIdentName := ""
-		typeIdent := gast.GetIdentFromExpr(field.Type)
-		if typeIdent != nil {
-			typeIdentName = typeIdent.Name
-		}
-
-		importType, err := v.context.ArbitrationProvider.Ast().GetImportType(file, field.Type)
-		if err != nil {
-			return nil, v.frozenError(err)
-		}
-
-		// These results will either be full, for real types, nil for universe ones or an outright error
-		resolvedField, err := gast.ResolveTypeSpecFromField(
-			pkg,
-			file,
-			field,
-			v.context.ArbitrationProvider.Pkg().GetPackage,
+		return metadata.FieldMeta{}, v.getFrozenError(
+			"could not obtain a FileVersion for file %v whilst processing field %v - %v",
+			file.Name.Name,
+			fieldNameIdent.Name,
+			err,
 		)
+	}
 
-		if err != nil {
-			return nil, v.frozenError(err)
-		}
+	typeUsage, err := v.resolveTypeUsage(pkg, file, field.Type)
+	if err != nil {
+		return metadata.FieldMeta{}, v.getFrozenError("could not create type usage metadata for field %v - %v", fieldNameIdent.Name, err)
+	}
 
-		var underlyingTypeAnnotations *annotations.AnnotationHolder
-
-		if resolvedField.DeclaringPackage != nil &&
-			resolvedField.DeclaringAstFile != nil &&
-			resolvedField.TypeSpec != nil {
-
-			fVersion, err := v.context.MetadataCache.GetFileVersion(
-				resolvedField.DeclaringAstFile,
-				resolvedField.DeclaringPackage.Fset,
-			)
-			if err != nil {
-				return nil, v.getFrozenError(
-					"failed to obtain FileVersion for type %s in package %s - %w",
-					resolvedField.TypeName,
-					resolvedField.DeclaringPackage.Name,
-					err,
-				)
-			}
-			underlyingTypeAnnotations, err = v.getAnnotations(resolvedField.TypeSpec.Doc, resolvedField.GenDecl)
-			if err != nil {
-				return nil, v.getFrozenError(
-					"could not retrieve comments from underlying type '%s' - %v",
-					resolvedField.TypeName,
-					err,
-				)
-			}
-
-			// Recurse into any nested entities
-			_, err = v.visitTypeSpec(
-				resolvedField.DeclaringPackage,
-				resolvedField.DeclaringAstFile,
-				fVersion,
-				resolvedField.GenDecl,
-				resolvedField.TypeSpec,
-			)
-
-			if err != nil {
-				return nil, v.frozenError(err)
-			}
-		}
-
-		// If we're looking at a universe type, there's no package and PkgPath is left empty
-		typeRefPkgPath := ""
-		if !resolvedField.IsUniverse {
-			typeRefPkgPath = resolvedField.DeclaringPackage.PkgPath
-		}
-
-		// If we're looking at a universe type, there's no AST file nor FVersion. Special case.
-		if resolvedField.DeclaringAstFile == nil {
-			if primitive, isPrimitive := symboldg.ToPrimitiveType(resolvedField.TypeName); isPrimitive {
-				v.context.GraphBuilder.AddPrimitive(primitive)
-			} else {
-				if special, isSpecial := symboldg.ToSpecialType(resolvedField.TypeName); isSpecial {
-					v.context.GraphBuilder.AddSpecial(special)
-				} else {
-					return nil, v.getFrozenError(
-						"encountered an unexpected, non-primitive, non-error typename '%s'",
-						resolvedField.TypeName,
-					)
-				}
-			}
-		}
-
-		typeUsageKind := getTypeSymKind(resolvedField.DeclaringPackage, resolvedField)
-		typeLayers, err := v.getTypeLayers(field, resolvedField)
-		if err != nil {
-			return nil, v.frozenError(err)
-		}
-
-		// Create TypeUsageMeta (AST part only)
-		typeUsage := metadata.TypeUsageMeta{
-			SymNodeMeta: metadata.SymNodeMeta{
-				Name:        typeIdentName,
-				Node:        field.Type,
-				PkgPath:     typeRefPkgPath,
-				SymbolKind:  typeUsageKind,
-				Annotations: underlyingTypeAnnotations,
-			},
-			Layers: typeLayers,
-			Import: importType,
-		}
-
-		fieldFVersion, err := v.context.MetadataCache.GetFileVersion(file, pkg.Fset)
-		if err != nil {
-			return results, v.frozenError(err)
-		}
-
-		fieldMeta := metadata.FieldMeta{
-			SymNodeMeta: metadata.SymNodeMeta{
-				Name:        name,
-				Node:        field,
-				PkgPath:     pkg.PkgPath,
-				SymbolKind:  common.SymKindField,
-				Annotations: holder,
-				FVersion:    fieldFVersion,
-			},
-			Type:       typeUsage,
-			IsEmbedded: isEmbedded,
-		}
-
-		results = append(results, fieldMeta)
-
-		err = v.processTypeUsage(pkg, file, field, typeUsage)
-		if err != nil {
-			return results, v.frozenError(err)
-		}
-
-		_, err = v.context.GraphBuilder.AddField(symboldg.CreateFieldNode{
-			Data:        fieldMeta,
+	return metadata.FieldMeta{
+		SymNodeMeta: metadata.SymNodeMeta{
+			Name:        fieldNameIdent.Name,
+			Node:        field,
+			PkgPath:     pkg.PkgPath,
+			SymbolKind:  common.SymKindField,
 			Annotations: holder,
-		})
+			FVersion:    fieldFVersion,
+		},
+		Type:       typeUsage,
+		IsEmbedded: isEmbedded,
+	}, nil
+}
 
+func (v *RecursiveTypeVisitor) resolveTypeUsage(
+	pkg *packages.Package,
+	file *ast.File,
+	typeExpr ast.Expr,
+) (metadata.TypeUsageMeta, error) {
+	// 1. Resolve the type
+	resolvedType, err := gast.ResolveTypeSpecFromExpr(pkg, file, typeExpr, v.context.ArbitrationProvider.Pkg().GetPackage)
+	if err != nil {
+		return metadata.TypeUsageMeta{}, v.frozenError(err)
+	}
+
+	importType := common.ImportTypeNone
+	var underlyingAnnotations *annotations.AnnotationHolder
+	var pkgPath string
+
+	// 2. Gather any auxiliary metadata we need for non-universe types
+	if !resolvedType.IsUniverse {
+		importType, err = v.context.ArbitrationProvider.Ast().GetImportType(file, typeExpr)
 		if err != nil {
-			return nil, v.frozenError(err)
+			return metadata.TypeUsageMeta{}, v.frozenError(err)
+		}
+
+		underlyingAnnotations, err = v.tryGetUnderlyingAnnotations(resolvedType)
+		if err != nil {
+			return metadata.TypeUsageMeta{}, err
+		}
+
+		if !resolvedType.IsUniverse {
+			pkgPath = resolvedType.DeclaringPackage.PkgPath
 		}
 	}
 
-	return results, nil
+	typeUsageKind := getTypeSymKind(resolvedType.DeclaringPackage, resolvedType)
+	typeLayers, err := v.buildTypeLayers(
+		resolvedType.DeclaringPackage,
+		resolvedType.DeclaringAstFile,
+		typeExpr,
+		resolvedType.TypeName,
+	)
+
+	if err != nil {
+		return metadata.TypeUsageMeta{}, v.frozenError(err)
+	}
+
+	// 3. Make sure that if the type is a built in like "error" or "string" or "any",
+	// it's inserted into the symbol graph
+	if err := v.ensureBuiltinTypeIsGraph(resolvedType); err != nil {
+		return metadata.TypeUsageMeta{}, err
+	}
+
+	// Finally, cobble it all together
+	return metadata.TypeUsageMeta{
+		SymNodeMeta: metadata.SymNodeMeta{
+			Name:        resolvedType.TypeName,
+			Node:        typeExpr,
+			PkgPath:     pkgPath,
+			SymbolKind:  typeUsageKind,
+			Annotations: underlyingAnnotations,
+		},
+		Layers: typeLayers,
+		Import: importType,
+	}, nil
+
+}
+
+// ensureBuiltinTypeIsGraph ensures that, if the given resolved type is a 'builtin' or 'special builtin' type, it's
+// inserted to the symbol graph
+func (v *RecursiveTypeVisitor) ensureBuiltinTypeIsGraph(resolved gast.TypeSpecResolution) error {
+	if resolved.DeclaringAstFile != nil {
+		// This isn't a universe type — nothing to do here
+		return nil
+	}
+
+	// Handle known universe types like string, int, etc
+	if primitive, ok := symboldg.ToPrimitiveType(resolved.TypeName); ok {
+		v.context.GraphBuilder.AddPrimitive(primitive)
+		return nil
+	}
+
+	// Handle known special types like error
+	if special, ok := symboldg.ToSpecialType(resolved.TypeName); ok {
+		v.context.GraphBuilder.AddSpecial(special)
+		return nil
+	}
+
+	return v.getFrozenError("encountered unknown universe type '%s'", resolved.TypeName)
+}
+
+func (v *RecursiveTypeVisitor) tryGetUnderlyingAnnotations(
+	resolved gast.TypeSpecResolution,
+) (*annotations.AnnotationHolder, error) {
+	if resolved.IsUniverse ||
+		resolved.DeclaringPackage == nil ||
+		resolved.DeclaringAstFile == nil ||
+		resolved.TypeSpec == nil {
+		return nil, nil
+	}
+
+	return v.getAnnotations(resolved.TypeSpec.Doc, resolved.GenDecl)
 }
 
 func getTypeSymKind(
 	pkg *packages.Package,
-	resolvedField gast.TypeSpecResolution,
+	resolvedType gast.TypeSpecResolution,
 ) common.SymKind {
-	if _, isSpecial := symboldg.ToSpecialType(resolvedField.TypeName); isSpecial {
+	if _, isSpecial := symboldg.ToSpecialType(resolvedType.TypeName); isSpecial {
 		return common.SymKindSpecialBuiltin
 	}
 
-	if resolvedField.IsUniverse {
+	if resolvedType.IsUniverse {
 		return common.SymKindBuiltin
 	}
 
-	if resolvedField.TypeSpec == nil {
+	if resolvedType.TypeSpec == nil {
 		return common.SymKindUnknown
 	}
 
-	switch resolvedField.TypeSpec.Type.(type) {
+	switch resolvedType.TypeSpec.Type.(type) {
 	case *ast.StructType:
 		return common.SymKindStruct
 
 	case *ast.InterfaceType:
-		if resolvedField.TypeSpec.Name.Name == "Context" && pkg.PkgPath == "context" {
+		if resolvedType.TypeSpec.Name.Name == "Context" && pkg.PkgPath == "context" {
 			return common.SymKindSpecialBuiltin
 		}
 		return common.SymKindInterface
 
 	case *ast.Ident:
 		// Use your enum detection here — e.g., check constants or alias metadata
-		if gast.IsEnumLike(pkg, resolvedField.TypeSpec) {
+		if gast.IsEnumLike(pkg, resolvedType.TypeSpec) {
 			return common.SymKindEnum
 		}
 		return common.SymKindAlias
@@ -517,7 +525,7 @@ func getTypeSymKind(
 	}
 }
 
-func (v *RecursiveTypeVisitor) buildFields(
+func (v *RecursiveTypeVisitor) buildStructFields(
 	pkg *packages.Package,
 	file *ast.File,
 	node *ast.StructType,
@@ -537,73 +545,54 @@ func (v *RecursiveTypeVisitor) buildFields(
 	return results, nil
 }
 
-func (v *RecursiveTypeVisitor) processTypeUsage(
+func (v *RecursiveTypeVisitor) resolveTypeRecursive(
 	pkg *packages.Package,
 	file *ast.File,
 	field *ast.Field,
-	typeUsage metadata.TypeUsageMeta,
-) error {
-	// Don't dive into built-in types
-	if typeUsage.IsUniverseType() {
-		return nil
-	}
-
-	// This is the identifier you need to resolve
-	underlyingIdent := gast.GetIdentFromExpr(field.Type)
-	if underlyingIdent == nil {
-		return nil // No ident to resolve
-	}
-
-	if len(field.Names) > 1 {
-		return v.getFrozenError("field '%v' is a multi-variable declaration which is currently not supported", field.Names)
-	}
-
-	resolvedField, err := gast.ResolveTypeSpecFromField(
-		pkg,
-		file,
-		field,
-		v.context.ArbitrationProvider.Pkg().GetPackage,
-	)
-
+) (gast.TypeSpecResolution, error) {
+	resolved, err := gast.ResolveTypeSpecFromField(pkg, file, field, v.context.ArbitrationProvider.Pkg().GetPackage)
 	if err != nil {
-		return v.frozenError(err)
+		return gast.TypeSpecResolution{}, err
 	}
 
-	if resolvedField.IsUniverse {
+	if err := v.recursivelyResolve(resolved); err != nil {
+		return gast.TypeSpecResolution{}, err
+	}
+
+	return resolved, err
+}
+
+func (v *RecursiveTypeVisitor) recursivelyResolve(resolved gast.TypeSpecResolution) error {
+	if resolved.IsUniverse {
 		return nil
 	}
 
-	if resolvedField.DeclaringPackage == nil || resolvedField.DeclaringAstFile == nil || resolvedField.TypeSpec == nil {
-		return v.getFrozenError("result of ResolveTypeSpecFromField for field [%v] is missing values", field.Names)
+	if resolved.DeclaringPackage == nil || resolved.DeclaringAstFile == nil || resolved.TypeSpec == nil {
+		return v.getFrozenError("resolved type '%s' is missing necessary declaration context", resolved.TypeName)
 	}
 
 	fVersion, err := v.context.MetadataCache.GetFileVersion(
-		resolvedField.DeclaringAstFile,
-		resolvedField.DeclaringPackage.Fset,
+		resolved.DeclaringAstFile,
+		resolved.DeclaringPackage.Fset,
 	)
-
 	if err != nil {
 		return v.frozenError(err)
 	}
 
-	key := graphs.NewSymbolKey(resolvedField.TypeSpec, fVersion)
+	key := graphs.NewSymbolKey(resolved.TypeSpec, fVersion)
 	if v.context.MetadataCache.HasVisited(key) {
 		return nil
 	}
 
-	// Ok, recurse
 	_, err = v.visitTypeSpec(
-		resolvedField.DeclaringPackage,
-		resolvedField.DeclaringAstFile,
+		resolved.DeclaringPackage,
+		resolved.DeclaringAstFile,
 		fVersion,
-		resolvedField.GenDecl,
-		resolvedField.TypeSpec,
+		resolved.GenDecl,
+		resolved.TypeSpec,
 	)
-	if err != nil {
-		return v.frozenError(err)
-	}
 
-	return nil
+	return v.frozenError(err)
 }
 
 func (v *RecursiveTypeVisitor) visitTypeSpec(
@@ -668,13 +657,6 @@ func (v *RecursiveTypeVisitor) getAnnotations(
 	}
 
 	return nil, nil
-}
-
-func (v *RecursiveTypeVisitor) getTypeLayers(
-	field *ast.Field,
-	resolution gast.TypeSpecResolution,
-) ([]metadata.TypeLayer, error) {
-	return v.buildTypeLayers(resolution.DeclaringPackage, resolution.DeclaringAstFile, field.Type, resolution.TypeName)
 }
 
 func (v *RecursiveTypeVisitor) buildTypeLayers(

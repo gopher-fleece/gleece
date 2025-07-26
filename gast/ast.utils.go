@@ -721,6 +721,7 @@ type TypeSpecResolution struct {
 	DeclaringPackage *packages.Package
 	DeclaringAstFile *ast.File
 	TypeSpec         *ast.TypeSpec
+	TypeNameIdent    *ast.Ident
 	GenDecl          *ast.GenDecl
 }
 
@@ -750,7 +751,9 @@ func ResolveTypeSpecFromExpr(
 ) (TypeSpecResolution, error) {
 	ident := GetIdentFromExpr(expr)
 	if ident == nil {
-		return TypeSpecResolution{}, fmt.Errorf("cannot resolve type: expression has no base identifier")
+		return TypeSpecResolution{}, fmt.Errorf(
+			"cannot resolve type: expression has no base identifier or is an unsupported type such as an inline struct",
+		)
 	}
 
 	obj := pkg.TypesInfo.Uses[ident]
@@ -800,6 +803,7 @@ func ResolveTypeSpecFromExpr(
 						TypeSpec:         typeSpec,
 						GenDecl:          genDecl,
 						TypeName:         typeName.Name(),
+						TypeNameIdent:    ident,
 						IsUniverse:       false,
 					}, nil
 				}

@@ -22,22 +22,16 @@ const (
 	SymKindSpecialBuiltin SymKind = "Special"
 )
 
-type AstNodeKind string
-
-const (
-	AstNodeKindUnknown     AstNodeKind = "Unknown"
-	AstNodeKindInterface   AstNodeKind = "Interface"
-	AstNodeKindStruct      AstNodeKind = "Struct"
-	AstNodeKindIdent       AstNodeKind = "Identifier"
-	AstNodeKindSelector    AstNodeKind = "SelectorExpr"
-	AstNodeKindPointer     AstNodeKind = "Pointer"
-	AstNodeKindArray       AstNodeKind = "Array"
-	AstNodeKindMap         AstNodeKind = "Map"
-	AstNodeKindChannel     AstNodeKind = "Channel"
-	AstNodeKindFunction    AstNodeKind = "Function"
-	AstNodeKindVariadic    AstNodeKind = "Variadic"
-	AstNodeKindParenthesis AstNodeKind = "Parenthesis"
-)
+// IsBuiltin returns a boolean indicating whether the SymKind is a 'built-in' type, such as 'string' or 'error'.
+// Note that this includes both SymKindBuiltin and SymKindSpecialBuiltin kinds
+func (k SymKind) IsBuiltin() bool {
+	switch k {
+	case SymKindBuiltin, SymKindSpecialBuiltin:
+		return true
+	default:
+		return false
+	}
+}
 
 type ImportType string
 

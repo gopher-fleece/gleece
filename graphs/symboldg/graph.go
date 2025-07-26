@@ -562,8 +562,7 @@ func (g *SymbolGraph) ToDot(theme *dot.DotTheme) string {
 }
 
 func getTypeRef(typeUsage metadata.TypeUsageMeta) (graphs.SymbolKey, error) {
-	if typeUsage.SymbolKind != common.SymKindBuiltin &&
-		typeUsage.SymbolKind != common.SymKindSpecialBuiltin {
+	if !typeUsage.SymbolKind.IsBuiltin() {
 
 		return typeUsage.GetBaseTypeRefKey()
 	}
