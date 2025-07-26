@@ -725,6 +725,14 @@ type TypeSpecResolution struct {
 	GenDecl          *ast.GenDecl
 }
 
+func (t TypeSpecResolution) String() string {
+	if t.IsUniverse {
+		return fmt.Sprintf("Universe type %s", t.TypeName)
+	}
+
+	return fmt.Sprintf("Type %s.%s", t.DeclaringPackage.PkgPath, t.TypeName)
+}
+
 // ResolveTypeSpecFromField Resolves type information from the given field.
 // Returns the declaring *packages.Package, *ast.File and the associated *ast.TypeSpec
 // Has 3 possible outcomes:

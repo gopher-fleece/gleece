@@ -102,6 +102,14 @@ func (v *BaseVisitor) initializeWithGlobs(context *VisitContext) error {
 // debugging and/or printing failures in a clear way.
 //
 // Note that this method does nothing if the diagnostic stack is frozen
+func (v *BaseVisitor) enterFmt(format string, args ...any) {
+	v.enter(fmt.Sprintf(format, args...))
+}
+
+// enter records a stack frame and message in the diagnostic stack that can be used for
+// debugging and/or printing failures in a clear way.
+//
+// Note that this method does nothing if the diagnostic stack is frozen
 func (v *BaseVisitor) enter(message string) {
 	if v.stackFrozen {
 		return

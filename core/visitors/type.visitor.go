@@ -36,6 +36,9 @@ func NewTypeVisitor(context *VisitContext) (*RecursiveTypeVisitor, error) {
 
 // Visit fulfils the ast.Visitor interface
 func (v *RecursiveTypeVisitor) Visit(node ast.Node) ast.Visitor {
+	v.enterFmt("Visiting node interface at position %d", node.Pos())
+	defer v.exit()
+
 	switch currentNode := node.(type) {
 	case *ast.File:
 		// Update the current file when visiting an *ast.File node
@@ -60,6 +63,9 @@ func (v *RecursiveTypeVisitor) VisitField(
 	file *ast.File,
 	field *ast.Field,
 ) ([]metadata.FieldMeta, error) {
+	v.enterFmt("Visiting field '%v' in file %s", field.Names, file.Name.Name)
+	defer v.exit()
+
 	var results []metadata.FieldMeta
 
 	holder, err := v.getAnnotations(field.Doc, nil)
@@ -78,7 +84,7 @@ func (v *RecursiveTypeVisitor) VisitField(
 
 		results = append(results, fieldMeta)
 
-		if _, err := v.resolveTypeRecursive(pkg, file, field); err != nil {
+		if _, err := v.resolveFieldTypeRecursive(pkg, file, field); err != nil {
 			return nil, v.frozenError(err)
 		}
 
@@ -102,6 +108,9 @@ func (v *RecursiveTypeVisitor) VisitStructType(
 	nodeGenDecl *ast.GenDecl,
 	node *ast.TypeSpec,
 ) (metadata.StructMeta, graphs.SymbolKey, error) {
+	v.enterFmt("Visiting struct %s", node.Name.Name)
+	defer v.exit()
+
 	// Check the cache first
 	symKey, fVersion, cached, err := v.checkStructCache(file, node)
 	if err != nil || cached != nil {
@@ -135,6 +144,9 @@ func (v *RecursiveTypeVisitor) VisitEnumType(
 	nodeGenDecl *ast.GenDecl,
 	node *ast.TypeSpec,
 ) (metadata.EnumMeta, graphs.SymbolKey, error) {
+	v.enterFmt("Visiting enum %s.%s", pkg.PkgPath, node.Name.Name)
+	defer v.exit()
+
 	// Check cache first
 	symKey := graphs.NewSymbolKey(node, fVersion)
 	cached := v.context.MetadataCache.GetEnum(symKey)
@@ -174,6 +186,9 @@ func (v *RecursiveTypeVisitor) constructStructMeta(
 	nodeGenDecl *ast.GenDecl,
 	node *ast.TypeSpec,
 ) (metadata.StructMeta, error) {
+	v.enterFmt("Constructing struct metadata for %s", node.Name.Name)
+	defer v.exit()
+
 	pkg, err := v.context.ArbitrationProvider.Pkg().GetPackageForFile(file)
 	if err != nil {
 		return metadata.StructMeta{}, v.frozenError(err)
@@ -223,6 +238,8 @@ func (v *RecursiveTypeVisitor) checkStructCache(
 	file *ast.File,
 	node *ast.TypeSpec,
 ) (graphs.SymbolKey, *gast.FileVersion, *metadata.StructMeta, error) {
+	v.enterFmt("Checking struct cache for file %s node %s", file.Name.Name, node.Name.Name)
+	defer v.exit()
 
 	fVersion, err := v.context.MetadataCache.GetFileVersion(file, v.context.ArbitrationProvider.Pkg().FSet())
 	if err != nil {
@@ -241,6 +258,8 @@ func (v *RecursiveTypeVisitor) extractEnumAliasType(
 	spec *ast.TypeSpec,
 	typeName *types.TypeName,
 ) (metadata.EnumMeta, error) {
+	v.enterFmt("Extracting metadata for enum %s.%s", pkg.PkgPath, typeName.Name())
+	defer v.exit()
 
 	basic, isBasicType := typeName.Type().Underlying().(*types.Basic)
 	if !isBasicType {
@@ -290,6 +309,9 @@ func (v *RecursiveTypeVisitor) getEnumValueDefinitions(
 	enumTypeName *types.TypeName,
 	enumBasic *types.Basic,
 ) ([]metadata.EnumValueDefinition, error) {
+	v.enterFmt("Obtaining enum value definitions for %s.%s", enumPkg.PkgPath, enumTypeName.Name())
+	defer v.exit()
+
 	enumValues := []metadata.EnumValueDefinition{}
 
 	scope := enumPkg.Types.Scope()
@@ -356,6 +378,8 @@ func (v *RecursiveTypeVisitor) buildFieldMeta(
 	isEmbedded bool,
 	holder *annotations.AnnotationHolder,
 ) (metadata.FieldMeta, error) {
+	v.enterFmt("Building field metadata for file %s field %s", file.Name.Name, fieldNameIdent)
+	defer v.exit()
 
 	fieldFVersion, err := v.context.MetadataCache.GetFileVersion(file, pkg.Fset)
 	if err != nil {
@@ -391,6 +415,9 @@ func (v *RecursiveTypeVisitor) resolveTypeUsage(
 	file *ast.File,
 	typeExpr ast.Expr,
 ) (metadata.TypeUsageMeta, error) {
+	v.enterFmt("Type usage resolution for file %s expression %v", file.Name.Name, typeExpr)
+	defer v.exit()
+
 	// 1. Resolve the type
 	resolvedType, err := gast.ResolveTypeSpecFromExpr(pkg, file, typeExpr, v.context.ArbitrationProvider.Pkg().GetPackage)
 	if err != nil {
@@ -454,6 +481,9 @@ func (v *RecursiveTypeVisitor) resolveTypeUsage(
 // ensureBuiltinTypeIsGraph ensures that, if the given resolved type is a 'builtin' or 'special builtin' type, it's
 // inserted to the symbol graph
 func (v *RecursiveTypeVisitor) ensureBuiltinTypeIsGraph(resolved gast.TypeSpecResolution) error {
+	v.enterFmt("Ensuring built-in resolution for %s", resolved.TypeName)
+	defer v.exit()
+
 	if resolved.DeclaringAstFile != nil {
 		// This isn't a universe type — nothing to do here
 		return nil
@@ -474,9 +504,10 @@ func (v *RecursiveTypeVisitor) ensureBuiltinTypeIsGraph(resolved gast.TypeSpecRe
 	return v.getFrozenError("encountered unknown universe type '%s'", resolved.TypeName)
 }
 
-func (v *RecursiveTypeVisitor) tryGetUnderlyingAnnotations(
-	resolved gast.TypeSpecResolution,
-) (*annotations.AnnotationHolder, error) {
+func (v *RecursiveTypeVisitor) tryGetUnderlyingAnnotations(resolved gast.TypeSpecResolution) (*annotations.AnnotationHolder, error) {
+	v.enterFmt("Retrieving annotations for resolved %s", resolved.String())
+	defer v.exit()
+
 	if resolved.IsUniverse ||
 		resolved.DeclaringPackage == nil ||
 		resolved.DeclaringAstFile == nil ||
@@ -487,49 +518,14 @@ func (v *RecursiveTypeVisitor) tryGetUnderlyingAnnotations(
 	return v.getAnnotations(resolved.TypeSpec.Doc, resolved.GenDecl)
 }
 
-func getTypeSymKind(
-	pkg *packages.Package,
-	resolvedType gast.TypeSpecResolution,
-) common.SymKind {
-	if _, isSpecial := symboldg.ToSpecialType(resolvedType.TypeName); isSpecial {
-		return common.SymKindSpecialBuiltin
-	}
-
-	if resolvedType.IsUniverse {
-		return common.SymKindBuiltin
-	}
-
-	if resolvedType.TypeSpec == nil {
-		return common.SymKindUnknown
-	}
-
-	switch resolvedType.TypeSpec.Type.(type) {
-	case *ast.StructType:
-		return common.SymKindStruct
-
-	case *ast.InterfaceType:
-		if resolvedType.TypeSpec.Name.Name == "Context" && pkg.PkgPath == "context" {
-			return common.SymKindSpecialBuiltin
-		}
-		return common.SymKindInterface
-
-	case *ast.Ident:
-		// Use your enum detection here — e.g., check constants or alias metadata
-		if gast.IsEnumLike(pkg, resolvedType.TypeSpec) {
-			return common.SymKindEnum
-		}
-		return common.SymKindAlias
-
-	default:
-		return common.SymKindUnknown
-	}
-}
-
 func (v *RecursiveTypeVisitor) buildStructFields(
 	pkg *packages.Package,
 	file *ast.File,
 	node *ast.StructType,
 ) ([]metadata.FieldMeta, error) {
+	v.enterFmt("Building struct fields for struct at position %d in file %s", node.Struct, file.Name.Name)
+	defer v.exit()
+
 	var results []metadata.FieldMeta
 
 	for _, field := range node.Fields.List {
@@ -545,11 +541,14 @@ func (v *RecursiveTypeVisitor) buildStructFields(
 	return results, nil
 }
 
-func (v *RecursiveTypeVisitor) resolveTypeRecursive(
+func (v *RecursiveTypeVisitor) resolveFieldTypeRecursive(
 	pkg *packages.Package,
 	file *ast.File,
 	field *ast.Field,
 ) (gast.TypeSpecResolution, error) {
+	v.enterFmt("Recursively resolving type for field [%v] in file %s", field.Names, file.Name.Name)
+	defer v.exit()
+
 	resolved, err := gast.ResolveTypeSpecFromField(pkg, file, field, v.context.ArbitrationProvider.Pkg().GetPackage)
 	if err != nil {
 		return gast.TypeSpecResolution{}, err
@@ -563,6 +562,9 @@ func (v *RecursiveTypeVisitor) resolveTypeRecursive(
 }
 
 func (v *RecursiveTypeVisitor) recursivelyResolve(resolved gast.TypeSpecResolution) error {
+	v.enterFmt("Headless recursive resolution for type %s", resolved.String())
+	defer v.exit()
+
 	if resolved.IsUniverse {
 		return nil
 	}
@@ -602,8 +604,10 @@ func (v *RecursiveTypeVisitor) visitTypeSpec(
 	specGenDecl *ast.GenDecl,
 	spec *ast.TypeSpec,
 ) (graphs.SymbolKey, error) {
-	var err error
+	v.enterFmt("Visiting type spec %s.%s", pkg.PkgPath, spec.Name.Name)
+	defer v.exit()
 
+	var err error
 	switch t := spec.Type.(type) {
 	case *ast.StructType:
 		_, symKey, err := v.VisitStructType(file, specGenDecl, spec)
@@ -641,6 +645,9 @@ func (v *RecursiveTypeVisitor) getAnnotations(
 	onNodeDoc *ast.CommentGroup,
 	nodeGenDecl *ast.GenDecl,
 ) (*annotations.AnnotationHolder, error) {
+	v.enter("Obtaining annotations for comment group")
+	defer v.exit()
+
 	var commentSource *ast.CommentGroup
 	if onNodeDoc != nil {
 		commentSource = onNodeDoc
@@ -665,6 +672,8 @@ func (v *RecursiveTypeVisitor) buildTypeLayers(
 	expr ast.Expr,
 	exprTypeName string,
 ) ([]metadata.TypeLayer, error) {
+	v.enterFmt("Building type layers for an expression named '%s'", exprTypeName)
+	defer v.exit()
 
 	switch t := expr.(type) {
 	case *ast.StarExpr:
@@ -722,6 +731,9 @@ func (v *RecursiveTypeVisitor) resolveBaseTypeKey(
 	file *ast.File,
 	expr ast.Expr,
 ) (*graphs.SymbolKey, error) {
+	v.enterFmt("Resolving base type key for expression position %d in file %s", expr.Pos(), file.Name.Name)
+	defer v.exit()
+
 	resolved, err := gast.ResolveTypeSpecFromExpr(pkg, file, expr, v.context.ArbitrationProvider.Pkg().GetPackage)
 	if err != nil {
 		return nil, err
@@ -738,4 +750,42 @@ func (v *RecursiveTypeVisitor) resolveBaseTypeKey(
 
 	key := graphs.NewUniverseSymbolKey(resolved.TypeName)
 	return &key, nil
+}
+
+func getTypeSymKind(
+	pkg *packages.Package,
+	resolvedType gast.TypeSpecResolution,
+) common.SymKind {
+	if _, isSpecial := symboldg.ToSpecialType(resolvedType.TypeName); isSpecial {
+		return common.SymKindSpecialBuiltin
+	}
+
+	if resolvedType.IsUniverse {
+		return common.SymKindBuiltin
+	}
+
+	if resolvedType.TypeSpec == nil {
+		return common.SymKindUnknown
+	}
+
+	switch resolvedType.TypeSpec.Type.(type) {
+	case *ast.StructType:
+		return common.SymKindStruct
+
+	case *ast.InterfaceType:
+		if resolvedType.TypeSpec.Name.Name == "Context" && pkg.PkgPath == "context" {
+			return common.SymKindSpecialBuiltin
+		}
+		return common.SymKindInterface
+
+	case *ast.Ident:
+		// Use your enum detection here — e.g., check constants or alias metadata
+		if gast.IsEnumLike(pkg, resolvedType.TypeSpec) {
+			return common.SymKindEnum
+		}
+		return common.SymKindAlias
+
+	default:
+		return common.SymKindUnknown
+	}
 }

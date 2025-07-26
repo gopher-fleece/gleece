@@ -1,7 +1,6 @@
 package visitors
 
 import (
-	"encoding/json"
 	"fmt"
 	"go/ast"
 
@@ -48,14 +47,6 @@ func NewControllerVisitor(context *VisitContext) (*ControllerVisitor, error) {
 // When used, care must be taken to not corrupt the internal state
 func (v ControllerVisitor) GetControllers() []metadata.ControllerMeta {
 	return v.controllers
-}
-
-func (v ControllerVisitor) DumpContext() (string, error) {
-	dump, err := json.MarshalIndent(v.controllers, "", "\t")
-	if err != nil {
-		return "", err
-	}
-	return string(dump), err
 }
 
 func (v *ControllerVisitor) Visit(node ast.Node) ast.Visitor {
@@ -173,6 +164,9 @@ func (v *ControllerVisitor) visitController(controllerNode *ast.TypeSpec) (metad
 
 // createControllerMetadata Creates a standard ControllerMetadata struct for the given node
 func (v *ControllerVisitor) createControllerMetadata(controllerNode *ast.TypeSpec) (metadata.ControllerMeta, error) {
+	v.enterFmt("Creating metadata for controller %s", controllerNode.Name.Name)
+	defer v.exit()
+
 	pkg, err := v.context.ArbitrationProvider.Pkg().GetPackageForFile(v.currentSourceFile)
 	if err != nil || pkg == nil {
 		return metadata.ControllerMeta{}, v.getFrozenError(

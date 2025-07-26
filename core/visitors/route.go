@@ -132,6 +132,9 @@ func (v *RouteVisitor) getExecutionContext(sourceFile *ast.File, funcDecl *ast.F
 }
 
 func (v *RouteVisitor) getPkgForSourceFile(sourceFile *ast.File) (*packages.Package, error) {
+	v.enterFmt("Obtaining package for source file %s", sourceFile.Name.Name)
+	defer v.exit()
+
 	pkg, err := v.context.ArbitrationProvider.Pkg().GetPackageForFile(sourceFile)
 	if err != nil {
 		return nil, v.getFrozenError(
@@ -149,6 +152,9 @@ func (v *RouteVisitor) getPkgForSourceFile(sourceFile *ast.File) (*packages.Pack
 }
 
 func (v *RouteVisitor) constructRouteMetadata(ctx executionContext) (*metadata.ReceiverMeta, error) {
+	v.enterFmt("Creating route metadata for function %s", ctx.FuncDecl.Name)
+	defer v.exit()
+
 	params, err := v.getFuncParams(ctx)
 	if err != nil {
 		return nil, v.frozenError(err)
@@ -212,7 +218,7 @@ func (v *RouteVisitor) constructRouteMetadata(ctx executionContext) (*metadata.R
 }
 
 func (v *RouteVisitor) getFuncParams(ctx executionContext) ([]metadata.FuncParam, error) {
-	v.enter("")
+	v.enterFmt("Retrieving params for function %s", ctx.FuncDecl.Name)
 	defer v.exit()
 
 	paramTypes, err := v.context.ArbitrationProvider.Ast().GetFuncParametersMeta(
@@ -227,7 +233,7 @@ func (v *RouteVisitor) getFuncParams(ctx executionContext) ([]metadata.FuncParam
 }
 
 func (v *RouteVisitor) getFuncRetVals(ctx executionContext) ([]metadata.FuncReturnValue, error) {
-	v.enter("")
+	v.enterFmt("Retrieving return values for function %s", ctx.FuncDecl.Name)
 	defer v.exit()
 
 	retVals, err := v.context.ArbitrationProvider.Ast().GetFuncRetValMeta(
