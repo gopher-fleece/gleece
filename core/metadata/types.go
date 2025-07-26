@@ -376,10 +376,6 @@ func (t TypeUsageMeta) GetBaseTypeRefKey() (graphs.SymbolKey, error) {
 	return *baseRef, nil
 }
 
-func (t TypeUsageMeta) GetLayersTypeString() string {
-	return LayersToTypeString(t.Layers)
-}
-
 func (t TypeUsageMeta) GetArrayLayersString() string {
 	// Currently we only use arrays for spec generation
 	arrayCount := 0

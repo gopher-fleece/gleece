@@ -112,6 +112,18 @@ func NewAnnotationHolder(comments []string, commentSource CommentSource) (Annota
 	return holder, nil
 }
 
+// NewAnnotationHolderFromData creates an annotation holder from pre-parsed attributes and comments.
+// Note that no validations are done here - this is mostly to help with tests
+func NewAnnotationHolderFromData(
+	attributes []Attribute,
+	nonAttributeComments []NonAttributeComment,
+) AnnotationHolder {
+	return AnnotationHolder{
+		attributes:           attributes,
+		nonAttributeComments: nonAttributeComments,
+	}
+}
+
 func parseComment(parsingRegex *regexp.Regexp, comment string) (Attribute, bool, error) {
 	matches := parsingRegex.FindStringSubmatch(comment)
 

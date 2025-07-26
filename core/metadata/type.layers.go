@@ -1,9 +1,6 @@
 package metadata
 
 import (
-	"fmt"
-	"strings"
-
 	"github.com/gopher-fleece/gleece/graphs"
 )
 
@@ -55,37 +52,4 @@ func NewBaseLayer(base *graphs.SymbolKey) TypeLayer {
 		Kind:        TypeLayerKindBase,
 		BaseTypeRef: base,
 	}
-}
-
-func LayersToTypeString(layers []TypeLayer) string {
-	var prefixBuilder strings.Builder
-	var suffixBuilder strings.Builder
-
-	for _, layer := range layers {
-		switch layer.Kind {
-		case TypeLayerKindPointer:
-			prefixBuilder.WriteString("*")
-		case TypeLayerKindArray:
-			prefixBuilder.WriteString("[]")
-		case TypeLayerKindMap:
-			keyStr := formatSymKey(layer.KeyType)
-			valStr := formatSymKey(layer.ValueType)
-			prefixBuilder.WriteString(fmt.Sprintf("map[%s]%s", keyStr, valStr))
-			// map is terminal
-			return prefixBuilder.String()
-		case TypeLayerKindBase:
-			suffixBuilder.WriteString(formatSymKey(layer.BaseTypeRef))
-		default:
-			suffixBuilder.WriteString("<?>")
-		}
-	}
-
-	return prefixBuilder.String() + suffixBuilder.String()
-}
-
-func formatSymKey(key *graphs.SymbolKey) string {
-	if key == nil {
-		return "<?>"
-	}
-	return key.Name
 }

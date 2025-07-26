@@ -9,6 +9,8 @@ type Collector[T comparable] struct {
 	items []T
 }
 
+// AddIfNotZero adds an item to the collector but only if it's not zero.
+// Note that the definition of 'zero' changes with type
 func (c *Collector[T]) AddIfNotZero(item T) {
 	var zero T
 	if item != zero {
