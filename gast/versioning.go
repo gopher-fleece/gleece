@@ -51,7 +51,7 @@ func NewFileVersionFromAstFile(file *ast.File, fileSet *token.FileSet) (FileVers
 func (v *FileVersion) HasChanged(selfUpdate bool) (bool, error) {
 	stats, err := os.Stat(v.Path)
 	if err != nil {
-		return false, err
+		return true, err
 	}
 
 	if v.ModTime.Equal(stats.ModTime()) {

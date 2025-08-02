@@ -88,7 +88,11 @@ func GetFileFullPath(file *ast.File, fileSet *token.FileSet) (string, error) {
 	position := fileSet.Position(file.Package)
 	relativePath := position.Filename
 	if relativePath == "" {
-		return "", fmt.Errorf("could not determine full path for file %v", file.Name.Name)
+		fileName := "'N\\A'"
+		if file.Name != nil && file.Name.Name != "" {
+			fileName = file.Name.Name
+		}
+		return "", fmt.Errorf("could not determine full path for file %v", fileName)
 	}
 
 	return filepath.Abs(relativePath)

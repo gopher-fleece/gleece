@@ -1,4 +1,4 @@
-package ast_test
+package gast_test
 
 import (
 	"fmt"
