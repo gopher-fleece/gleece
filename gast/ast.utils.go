@@ -6,11 +6,10 @@ import (
 	"go/constant"
 	"go/token"
 	"go/types"
+	"math"
 	"path/filepath"
-	"strconv"
 	"strings"
 
-	"github.com/gopher-fleece/gleece/common"
 	"golang.org/x/tools/go/packages"
 )
 
@@ -191,81 +190,6 @@ func GetImportAliases(file *ast.File) map[string]string {
 	return aliases
 }
 
-func GetCommentsFromIdent(files *token.FileSet, file *ast.File, ident *ast.Ident) []string {
-	if ident.Obj == nil || ident.Obj.Decl == nil {
-		return []string{}
-	}
-
-	var docs *ast.CommentGroup
-	switch expr := ident.Obj.Decl.(type) {
-	case *ast.TypeSpec:
-		if expr.Doc != nil && expr.Doc.List != nil && len(expr.Doc.List) > 0 {
-			docs = expr.Doc
-		} else {
-			// Look for the parent GenDecl and grab the comments of it. Go works in mysterious ways.
-			decl := FindGenDeclByIdent(files, file, ident)
-			if decl != nil && decl.Doc != nil && decl.Doc.List != nil && len(decl.Doc.List) > 0 {
-				docs = decl.Doc
-			}
-		}
-	case *ast.FuncDecl:
-		docs = expr.Doc
-	case *ast.Field:
-		docs = expr.Doc
-	}
-
-	if docs != nil && docs.List != nil && len(docs.List) > 0 {
-		return MapDocListToStrings(docs.List)
-	}
-
-	// A bit hacky but we don't currently need parse everything
-	return nil
-}
-
-// FindDeclNodeByIdent looks up ident.Name in pkg.Types.Scope(), and if found,
-// finds the AST node (FuncDecl, TypeSpec, or ValueSpec) whose Pos() contains
-// the object’s position. Returns nil if nothing matches.
-func FindDeclNodeByIdent(pkg *packages.Package, ident *ast.Ident) ast.Node {
-	if pkg.Types == nil || pkg.Types.Scope() == nil {
-		return nil
-	}
-	obj := pkg.Types.Scope().Lookup(ident.Name)
-	if obj == nil {
-		return nil
-	}
-	pos := obj.Pos()
-	// Find which AST file contains this position
-	for _, f := range pkg.Syntax {
-		if pos < f.Pos() || pos >= f.End() {
-			continue
-		}
-		// Walk only that file
-		return FindDeclAtPos(f, pos)
-	}
-	return nil
-}
-
-// FindDeclForPos returns the *ast.FuncDecl, *ast.TypeSpec, or *ast.ValueSpec
-// whose source-range encloses pos, or nil if none.
-func FindDeclAtPos(file *ast.File, pos token.Pos) ast.Node {
-	var found ast.Node
-	ast.Inspect(file, func(n ast.Node) bool {
-		if found != nil || n == nil {
-			return false
-		}
-		if pos < n.Pos() || pos >= n.End() {
-			return false
-		}
-		switch n := n.(type) {
-		case *ast.FuncDecl, *ast.TypeSpec, *ast.ValueSpec:
-			found = n
-			return false
-		}
-		return true
-	})
-	return found
-}
-
 func IsIdentInPackage(pkg *packages.Package, ident *ast.Ident) bool {
 	return pkg.Types.Scope().Lookup(ident.Name) != nil
 }
@@ -278,91 +202,6 @@ func IsUniverseType(typeName string) bool {
 
 	_, isType := obj.(*types.TypeName)
 	return isType
-}
-
-func FilterPackageByFullName(packages []*packages.Package, fullName string) *packages.Package {
-	for _, pkg := range packages {
-		if pkg.PkgPath == fullName {
-			return pkg
-		}
-	}
-	return nil
-}
-
-func FindGenDeclByName(pkg *packages.Package, typeSpecName string) *ast.GenDecl {
-	// Traverse all the syntax trees (ASTs) in the loaded package
-	for _, file := range pkg.Syntax {
-		// Traverse all declarations in the AST file
-		for _, decl := range file.Decls {
-			// Look for type declarations (ast.GenDecl)
-			if genDecl, ok := decl.(*ast.GenDecl); ok {
-				// Iterate over all the specs in the general declaration
-				for _, spec := range genDecl.Specs {
-					// Look for type specs (ast.TypeSpec)
-					typeSpec, ok := spec.(*ast.TypeSpec)
-					if ok && typeSpec.Name.Name == typeSpecName {
-						return genDecl
-					}
-				}
-			}
-		}
-	}
-	return nil // Struct not found
-}
-
-func FindGenDeclByIdent(fileSet *token.FileSet, file *ast.File, ident *ast.Ident) *ast.GenDecl {
-	var decl *ast.GenDecl
-
-	// Walk the AST to locate the struct declaration
-	ast.Inspect(file, func(n ast.Node) bool {
-		// Look for a general declaration (const, var, type, etc.)
-		if gd, ok := n.(*ast.GenDecl); ok && gd.Tok == token.TYPE {
-			for _, spec := range gd.Specs {
-				if ts, ok := spec.(*ast.TypeSpec); ok {
-					if ts.Name.Name == ident.Name {
-						decl = gd
-						return false // Stop traversal once found
-					}
-				}
-			}
-		}
-		return true
-	})
-
-	return decl
-}
-
-// FindTypeSpecByIdent walks 'file' and returns the *ast.TypeSpec
-// whose Name matches ident.Name (or nil if not found).
-func FindTypeSpecByIdent(file *ast.File, ident *ast.Ident) *ast.TypeSpec {
-	var found *ast.TypeSpec
-	ast.Inspect(file, func(n ast.Node) bool {
-		ts, ok := n.(*ast.TypeSpec)
-		if !ok {
-			return true
-		}
-		if ts.Name.Name == ident.Name {
-			found = ts
-			return false // stop walking
-		}
-		return true
-	})
-	return found
-}
-
-func GetStructFromGenDecl(decl *ast.GenDecl) *ast.StructType {
-	// Iterate over all the specs in the general declaration
-	for _, spec := range decl.Specs {
-		// Look for type specs (ast.TypeSpec)
-		if typeSpec, ok := spec.(*ast.TypeSpec); ok {
-			// Check if the type is a struct type
-			if structType, ok := typeSpec.Type.(*ast.StructType); ok {
-				return structType
-			}
-		}
-	}
-
-	return nil
 }
 
 func FindTypesStructInPackage(pkg *packages.Package, structName string) (*types.Struct, error) {
@@ -400,24 +239,6 @@ func LookupTypeName(pkg *packages.Package, name string) (*types.TypeName, error)
 	return typeName, nil
 }
 
-func LookupIdentForObject(pkg *packages.Package, obj types.Object) *ast.Ident {
-	for ident, definedObj := range pkg.TypesInfo.Defs {
-		if definedObj == obj {
-			return ident
-		}
-	}
-	return nil
-}
-
-func FindContainingFile(pkg *packages.Package, ident *ast.Ident) *ast.File {
-	for _, file := range pkg.Syntax {
-		if ident.Pos() >= file.Pos() && ident.Pos() <= file.End() {
-			return file
-		}
-	}
-	return nil
-}
-
 func GetTypeNameOrError(pkg *packages.Package, name string) (*types.TypeName, error) {
 	typeName, err := LookupTypeName(pkg, name)
 	if err != nil {
@@ -435,20 +256,6 @@ func GetTypeNameOrError(pkg *packages.Package, name string) (*types.TypeName, er
 	}
 
 	return typeName, nil
-}
-
-func GetSymbolKind(pkg *packages.Package, name string) (common.SymKind, error) {
-	typeName, err := GetTypeNameOrError(pkg, name)
-	if err != nil {
-		return common.SymKindUnknown, err
-	}
-
-	return GetSymbolKindFromObject(typeName), nil
-}
-
-func IsBasic(t types.Type) bool {
-	_, ok := t.(*types.Basic)
-	return ok
 }
 
 func GetUnderlyingTypeName(t types.Type) string {
@@ -534,65 +341,6 @@ func GetFieldTypeString(fieldType ast.Expr) string {
 	}
 }
 
-func IsAliasType(named *types.Named) bool {
-	// First, check if it was declared using the alias syntax.
-	if named.Obj().IsAlias() {
-		return true
-	}
-	// For our purposes, if the underlying type is not a struct or interface,
-	// we might want to treat it as an alias-like type.
-	switch named.Underlying().(type) {
-	case *types.Struct, *types.Interface:
-		return false
-	default:
-		return true
-	}
-}
-
-func GetIterableElementType(iterable types.Type) string {
-	// Handle array or slice types
-	var elemType types.Type
-	if arr, ok := iterable.(*types.Array); ok {
-		elemType = arr.Elem()
-	} else if slice, ok := iterable.(*types.Slice); ok {
-		elemType = slice.Elem()
-	}
-
-	// Check if the element type is a named type (enum/alias)
-	if named, ok := elemType.(*types.Named); ok {
-		// For arrays of named types, format as []TypeName
-		return "[]" + named.Obj().Name()
-	}
-
-	// For arrays of primitive types
-	return iterable.String() // <<< CHECK THIS WORKS!
-
-}
-
-// FindNamedTypePackage returns the *types.Package where the first underlying *types.Named is defined.
-// Returns nil if no such package is found (e.g. built-in types, unnamed structs, etc).
-func GetPackageOwnerOfType(t types.Type) *types.Package {
-	for {
-		switch underlyingType := t.(type) {
-		case *types.Slice:
-			t = underlyingType.Elem()
-		case *types.Array:
-			t = underlyingType.Elem()
-		case *types.Pointer:
-			t = underlyingType.Elem()
-		case *types.Named:
-			obj := underlyingType.Obj()
-			if obj != nil {
-				return obj.Pkg()
-			}
-			return nil
-		default:
-			// No deeper types to drill into; give up
-			return nil
-		}
-	}
-}
-
 // MapDocListToStrings converts a list of comment nodes (ast.Comment) to a string array
 func MapDocListToStrings(docList []*ast.Comment) []string {
 	var result []string
@@ -600,66 +348,6 @@ func MapDocListToStrings(docList []*ast.Comment) []string {
 		result = append(result, comment.Text)
 	}
 	return result
-}
-
-func GetSymbolKindFromObject(obj types.Object) common.SymKind {
-	switch o := obj.(type) {
-
-	case *types.PkgName:
-		return common.SymKindPackage
-
-	case *types.Const:
-		return common.SymKindConstant
-
-	case *types.Var:
-		if o.IsField() {
-			return common.SymKindField
-		}
-		// Parameters are Vars too, but we must distinguish
-		// Parameters live in function signatures, not top-level scope
-		if isParameter(o) {
-			return common.SymKindParameter
-		}
-		return common.SymKindVariable
-
-	case *types.Func:
-		if sig, ok := o.Type().(*types.Signature); ok && sig.Recv() != nil {
-			return common.SymKindReceiver
-		}
-		return common.SymKindFunction
-
-	case *types.TypeName:
-		if o.IsAlias() {
-			return common.SymKindAlias
-		}
-		switch o.Type().Underlying().(type) {
-		case *types.Struct:
-			return common.SymKindStruct
-		case *types.Interface:
-			return common.SymKindInterface
-		default:
-			return common.SymKindAlias
-		}
-	}
-
-	return common.SymKindUnknown
-}
-
-func isParameter(v *types.Var) bool {
-	// Parameters do not have a parent scope associated with a file/package block
-	if v.Parent() != nil {
-		switch v.Parent().Parent() {
-		case nil:
-			// Probably not a parameter
-			return false
-		default:
-			// Heuristic: check if the parent is a function Signature
-			// Unfortunately, Go's type checker doesn't expose a perfect way to trace this
-			// So this may need to be called only in known contexts (like while walking a Signature)
-			return true
-		}
-	}
-	return false
 }
 
 func GetIdentFromExpr(expr ast.Expr) *ast.Ident {
@@ -690,33 +378,6 @@ func GetIdentFromExpr(expr ast.Expr) *ast.Ident {
 	}
 
 	return nil
-}
-
-// FindTypeSpecInPackage finds the AST TypeSpec for the given type name
-// in the provided packages.Package.
-// Returns the TypeSpec alongside its GenDecl and containing ast.File or (nil, nil, nil) if not found.
-func FindTypeSpecInPackage(pkg *packages.Package, typeName string) (*ast.TypeSpec, *ast.GenDecl, *ast.File) {
-	for _, file := range pkg.Syntax {
-		// fast-path: if the file’s token.File doesn’t contain any
-		// decls that start near “typeName”, we could skip—but
-		// for simplicity we just scan all TYPE decls here.
-		for _, decl := range file.Decls {
-			genDecl, ok := decl.(*ast.GenDecl)
-			if !ok || genDecl.Tok != token.TYPE {
-				continue
-			}
-			for _, spec := range genDecl.Specs {
-				ts, ok := spec.(*ast.TypeSpec)
-				if !ok {
-					continue
-				}
-				if ts.Name.Name == typeName {
-					return ts, genDecl, file
-				}
-			}
-		}
-	}
-	return nil, nil, nil
 }
 
 type TypeSpecResolution struct {
@@ -826,84 +487,6 @@ func ResolveTypeSpecFromExpr(
 	return TypeSpecResolution{}, fmt.Errorf("could not find TypeSpec for type '%s' in package '%s'", typeName.Name(), obj.Pkg().Path())
 }
 
-// unwrapFirstNamed walks through container expressions (e.g. *T, []T, map[K]V)
-// and returns the first inner expression that is either *ast.Ident or *ast.SelectorExpr.
-func UnwrapFirstNamed(expr ast.Expr) ast.Expr {
-	for {
-		switch t := expr.(type) {
-		case *ast.ArrayType:
-			expr = t.Elt
-		case *ast.MapType:
-			expr = t.Value
-		case *ast.ChanType:
-			expr = t.Value
-		case *ast.StarExpr:
-			// Only unwrap star if inner type is NOT a SelectorExpr
-			if _, isSelector := t.X.(*ast.SelectorExpr); isSelector {
-				// stop here — we need the selector to resolve the package alias
-				return expr
-			}
-			expr = t.X
-		default:
-			return expr
-		}
-	}
-}
-
-func ResolveImportPathForSelector(
-	possiblyDeclaringPackage *packages.Package,
-	source *ast.File,
-	sel *ast.SelectorExpr,
-) (string, error) {
-	ident, ok := sel.X.(*ast.Ident)
-	if !ok {
-		return "", fmt.Errorf("selector base is not an ident: %T", sel.X)
-	}
-
-	alias := ident.Name
-
-	if alias == possiblyDeclaringPackage.Name {
-		return possiblyDeclaringPackage.PkgPath, nil
-	}
-
-	for _, imp := range source.Imports {
-		rawPath, err := strconv.Unquote(imp.Path.Value)
-		if err != nil {
-			continue
-		}
-
-		// Handle explicit alias
-		if imp.Name != nil && imp.Name.Name == alias {
-			return rawPath, nil
-		}
-
-		// Handle default alias
-		if imp.Name == nil {
-			parts := strings.Split(rawPath, "/")
-			if len(parts) > 0 && parts[len(parts)-1] == alias {
-				return rawPath, nil
-			}
-		}
-	}
-
-	return "", fmt.Errorf("no matching import for alias %q", alias)
-}
-
-func ResolveUnqualifiedIdentPackage(source *ast.File, ident *ast.Ident) (string, error) {
-	for _, imp := range source.Imports {
-		if imp.Name != nil && imp.Name.Name == "." {
-			rawPath, err := strconv.Unquote(imp.Path.Value)
-			if err == nil {
-				return rawPath, nil // dot-import wins
-			}
-		}
-	}
-
-	// If not dot-imported, assume it's local
-	// We can't resolve the actual import path from here alone, so:
-	return "", nil // Signal: try local package (caller must patch it later)
-}
-
 func GetAstFileName(fSet *token.FileSet, file *ast.File) string {
 	return fSet.Position(file.Package).Filename
 }
@@ -913,17 +496,25 @@ func ExtractConstValue(kind types.BasicKind, constVal *types.Const) any {
 	case types.String:
 		return constant.StringVal(constVal.Val())
 	case types.Int, types.Int8, types.Int16, types.Int32, types.Int64:
-		if val, ok := constant.Int64Val(constVal.Val()); ok {
+		if val, exact := constant.Int64Val(constVal.Val()); exact {
 			return val
 		}
 	case types.Uint, types.Uint8, types.Uint16, types.Uint32, types.Uint64:
-		if val, ok := constant.Uint64Val(constVal.Val()); ok {
+		if val, exact := constant.Uint64Val(constVal.Val()); exact {
 			return val
 		}
 	case types.Float32, types.Float64:
-		if val, ok := constant.Float64Val(constVal.Val()); ok {
-			return val
+		// For floats, we don't *really* case about 'exact' values - things get rounded to sane
+		// precision and that's generally fine.
+		// We DO want to reject on INF/NaN cause those do indicate something unexpected.
+		// A bit of an ugly one.
+		//
+		// For INT types, we do want to throw non-exact values as they may indicate something major like an overflow
+		val, _ := constant.Float64Val(constVal.Val())
+		if math.IsInf(val, 0) || math.IsNaN(val) {
+			return nil
 		}
+		return val
 	case types.Bool:
 		return constant.BoolVal(constVal.Val())
 	}
@@ -977,7 +568,7 @@ func GetCommentsFromNode(node ast.Node) []string {
 }
 
 // GetCommentsFromTypeSpec gets comments for a given TypeSpec.
-// Similar to GetCommentsFromNode and GetCommentsFromIdent but also considers the given GenDecl whilst prioritizing comments
+// Similar to GetCommentsFromNode but also considers the given GenDecl whilst prioritizing comments
 // on the type itself
 func GetCommentsFromTypeSpec(typeSpec *ast.TypeSpec, owningGenDecl *ast.GenDecl) []string {
 	// Comments are usually located on the nearest GenDecl but may also be inlined on the struct itself

@@ -128,7 +128,7 @@ var _ = Describe("Unit Tests - Definitions", func() {
 				Expect(base.Equals(other)).To(BeTrue())
 			})
 
-			It("returns false if AliasMetadata content differs", func() {
+			It("Returns false if AliasMetadata content differs", func() {
 				other := base
 				// A simple assignment copies the underlying slice ptr so we must do a manual copy.
 				copyAlias := *base.AliasMetadata
@@ -138,13 +138,13 @@ var _ = Describe("Unit Tests - Definitions", func() {
 				Expect(base.Equals(other)).To(BeFalse())
 			})
 
-			It("returns false if IsByAddress differs", func() {
+			It("Returns false if IsByAddress differs", func() {
 				other := base
 				other.IsByAddress = true
 				Expect(base.Equals(other)).To(BeFalse())
 			})
 
-			It("returns false if DefaultPackageAlias differs", func() {
+			It("Returns false if DefaultPackageAlias differs", func() {
 				other := base
 				other.DefaultPackageAlias = "different"
 				Expect(base.Equals(other)).To(BeFalse())
