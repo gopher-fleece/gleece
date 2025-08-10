@@ -39,7 +39,7 @@ func (sk SymbolKey) Id() string {
 // or point to a specific file to allow node deduplication
 func (sk SymbolKey) formatId(fileIdPart string) string {
 	if sk.IsUniverse {
-		return fmt.Sprintf("%s:%s", UniverseTypeSymKeyPrefix, sk.Name)
+		return fmt.Sprintf("%s%s", UniverseTypeSymKeyPrefix, sk.Name)
 	}
 
 	if sk.Name != "" {

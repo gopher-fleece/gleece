@@ -6,6 +6,7 @@ import (
 	"go/token"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/gopher-fleece/gleece/cmd"
 	"github.com/gopher-fleece/gleece/cmd/arguments"
@@ -14,6 +15,7 @@ import (
 	"github.com/gopher-fleece/gleece/core/visitors"
 	"github.com/gopher-fleece/gleece/core/visitors/providers"
 	"github.com/gopher-fleece/gleece/definitions"
+	"github.com/gopher-fleece/gleece/gast"
 	"github.com/gopher-fleece/gleece/graphs/symboldg"
 	. "github.com/onsi/ginkgo/v2"
 	"golang.org/x/tools/go/packages"
@@ -249,4 +251,18 @@ func GetVisitContextByRelativeConfigOrFail(relativeConfigPath string) visitors.V
 		MetadataCache:       metaCache,
 		GraphBuilder:        &symGraph,
 	}
+}
+
+// helper to create a *gast.FileVersion quickly for tests
+func MakeFileVersion(id string, extraHashString string) *gast.FileVersion {
+	return &gast.FileVersion{
+		Path:    id,
+		ModTime: time.Now(),
+		Hash:    fmt.Sprintf("hash-%s-%s", id, extraHashString),
+	}
+}
+
+// helper to create a simple ast.Ident node
+func MakeIdent(name string) ast.Node {
+	return &ast.Ident{Name: name, NamePos: token.NoPos}
 }

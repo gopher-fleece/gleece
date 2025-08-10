@@ -50,44 +50,53 @@ type SymbolGraphBuilder interface {
 }
 
 type SymbolGraph struct {
-	nodes map[graphs.SymbolKey]*SymbolNode // keyed by ast node
+	// A map for retrieving full symbol keys from their comparable, non-versioned IDs
+	lookupKeys map[string]graphs.SymbolKey
 
-	edges map[graphs.SymbolKey][]SymbolEdge // Node relations
+	nodes map[string]*SymbolNode // keyed by ast node
 
-	deps    map[graphs.SymbolKey]map[graphs.SymbolKey]struct{} // from → set of to
-	revDeps map[graphs.SymbolKey]map[graphs.SymbolKey]struct{} // to   → set of from
+	edges map[string][]SymbolEdge // Node relations
+
+	deps    map[string]map[graphs.SymbolKey]struct{} // from → set of to
+	revDeps map[string]map[graphs.SymbolKey]struct{} // to   → set of from
 }
 
 func NewSymbolGraph() SymbolGraph {
 	return SymbolGraph{
-		edges:   make(map[graphs.SymbolKey][]SymbolEdge),
-		nodes:   make(map[graphs.SymbolKey]*SymbolNode),
-		deps:    make(map[graphs.SymbolKey]map[graphs.SymbolKey]struct{}),
-		revDeps: make(map[graphs.SymbolKey]map[graphs.SymbolKey]struct{}),
+		lookupKeys: map[string]graphs.SymbolKey{},
+		edges:      make(map[string][]SymbolEdge),
+		nodes:      make(map[string]*SymbolNode),
+		deps:       make(map[string]map[graphs.SymbolKey]struct{}),
+		revDeps:    make(map[string]map[graphs.SymbolKey]struct{}),
 	}
 }
 
 func (g *SymbolGraph) addNode(n *SymbolNode) {
-	g.nodes[n.Id] = n
+	baseId := n.Id.BaseId()
+	g.nodes[baseId] = n
+	g.lookupKeys[baseId] = n.Id
 }
 
 // AddEdge adds a semantic relationship FROM → TO.
 // For example: AddEdge(structKey, receiverKey, EdgeKindReceiver, nil)
 // means "struct has receiver".
 func (g *SymbolGraph) AddEdge(from, to graphs.SymbolKey, kind SymbolEdgeKind, meta map[string]string) {
-	// Always update dependency graphs
-	if g.deps[from] == nil {
-		g.deps[from] = make(map[graphs.SymbolKey]struct{})
-	}
-	g.deps[from][to] = struct{}{}
+	fromBaseId := from.BaseId()
+	toBaseId := to.BaseId()
 
-	if g.revDeps[to] == nil {
-		g.revDeps[to] = make(map[graphs.SymbolKey]struct{})
+	// Always update dependency graphs
+	if g.deps[fromBaseId] == nil {
+		g.deps[fromBaseId] = make(map[graphs.SymbolKey]struct{})
 	}
-	g.revDeps[to][from] = struct{}{}
+	g.deps[fromBaseId][to] = struct{}{}
+
+	if g.revDeps[toBaseId] == nil {
+		g.revDeps[toBaseId] = make(map[graphs.SymbolKey]struct{})
+	}
+	g.revDeps[toBaseId][from] = struct{}{}
 
 	// Check for duplicate edges before appending
-	existingEdges := g.edges[from]
+	existingEdges := g.edges[fromBaseId]
 	for _, edge := range existingEdges {
 		if edge.To.Equals(to) && edge.Kind == kind {
 			return // Duplicate edge — skip
@@ -95,11 +104,13 @@ func (g *SymbolGraph) AddEdge(from, to graphs.SymbolKey, kind SymbolEdgeKind, me
 	}
 
 	// Append the new edge
-	g.edges[from] = append(existingEdges, SymbolEdge{
+	g.edges[fromBaseId] = append(existingEdges, SymbolEdge{
 		To:       to,
 		Kind:     kind,
 		Metadata: meta,
 	})
+
+	g.lookupKeys[fromBaseId] = from
 }
 
 func (g *SymbolGraph) AddController(request CreateControllerNode) (*SymbolNode, error) {
@@ -333,12 +344,12 @@ func (g *SymbolGraph) AddSpecial(special SpecialType) *SymbolNode {
 
 func (g *SymbolGraph) Children(node *SymbolNode, filter *TraversalFilter) []*SymbolNode {
 	var result []*SymbolNode
-	for _, edge := range g.edges[node.Id] {
+	for _, edge := range g.edges[node.Id.BaseId()] {
 		// Edge kind match (if specified)
 		if !shouldIncludeEdge(edge, filter) {
 			continue
 		}
-		child, ok := g.nodes[edge.To]
+		child, ok := g.nodes[edge.To.BaseId()]
 		if !ok || !shouldIncludeNode(child, filter) {
 			continue
 		}
@@ -349,8 +360,8 @@ func (g *SymbolGraph) Children(node *SymbolNode, filter *TraversalFilter) []*Sym
 
 func (g *SymbolGraph) Parents(node *SymbolNode, filter *TraversalFilter) []*SymbolNode {
 	var result []*SymbolNode
-	for parentKey := range g.revDeps[node.Id] {
-		edges := g.edges[parentKey]
+	for parentKey := range g.revDeps[node.Id.BaseId()] {
+		edges := g.edges[parentKey.BaseId()]
 		for _, edge := range edges {
 			if edge.To != node.Id {
 				continue
@@ -358,7 +369,7 @@ func (g *SymbolGraph) Parents(node *SymbolNode, filter *TraversalFilter) []*Symb
 			if !shouldIncludeEdge(edge, filter) {
 				continue
 			}
-			parentNode := g.nodes[parentKey]
+			parentNode := g.nodes[parentKey.BaseId()]
 			if parentNode != nil && shouldIncludeNode(parentNode, filter) {
 				result = append(result, parentNode)
 			}
@@ -395,7 +406,7 @@ func (g *SymbolGraph) builtinSymbolExists(name string, isUniverse bool) bool {
 		key = graphs.NewNonUniverseBuiltInSymbolKey(name)
 	}
 
-	if _, exists := g.nodes[key]; exists {
+	if _, exists := g.nodes[key.BaseId()]; exists {
 		return true
 	}
 	return false
@@ -433,7 +444,7 @@ func (g *SymbolGraph) addBuiltinSymbol(typeName string, kind common.SymKind, isU
 		key = graphs.NewNonUniverseBuiltInSymbolKey(typeName)
 	}
 
-	if node, exists := g.nodes[key]; exists {
+	if node, exists := g.nodes[key.BaseId()]; exists {
 		return node
 	}
 
@@ -441,7 +452,7 @@ func (g *SymbolGraph) addBuiltinSymbol(typeName string, kind common.SymKind, isU
 		Id:   key,
 		Kind: kind,
 	}
-	g.nodes[key] = node
+	g.nodes[key.BaseId()] = node
 
 	return node
 }
@@ -458,7 +469,7 @@ func (g *SymbolGraph) idempotencyGuard(decl ast.Node, version *gast.FileVersion)
 	}
 
 	key := graphs.NewSymbolKey(decl, version)
-	if existing := g.nodes[key]; existing != nil {
+	if existing := g.nodes[key.BaseId()]; existing != nil {
 		if existing.Version.Equals(version) {
 			return existing, key, nil
 		}
@@ -470,25 +481,31 @@ func (g *SymbolGraph) idempotencyGuard(decl ast.Node, version *gast.FileVersion)
 
 // evict removes the given node *and* recursively evicts any nodes that depend on it.
 func (g *SymbolGraph) evict(key graphs.SymbolKey) {
+	baseId := key.BaseId()
+
 	// if already gone, stop
-	if _, exists := g.nodes[key]; !exists {
+	if _, exists := g.nodes[baseId]; !exists {
 		return
 	}
 
 	// first, recursively evict all nodes that rev-depend on me
-	if revs, ok := g.revDeps[key]; ok {
+	if revs, ok := g.revDeps[baseId]; ok {
 		for fromKey := range revs {
 			g.evict(fromKey)
 		}
 	}
 
 	// remove all outgoing edges
-	delete(g.deps, key)
+	delete(g.deps, baseId)
+
 	// remove all reverse edges pointing to me
-	delete(g.revDeps, key)
+	delete(g.revDeps, baseId)
+
+	// delete the lookup key
+	delete(g.lookupKeys, baseId)
 
 	// finally remove node itself
-	delete(g.nodes, key)
+	delete(g.nodes, baseId)
 }
 
 func (g *SymbolGraph) String() string {
@@ -500,13 +517,13 @@ func (g *SymbolGraph) String() string {
 
 	// Per-node details
 	for key, node := range g.nodes {
-		prettyKey := key.PrettyPrint()
+		prettyKey := g.lookupKeys[key].PrettyPrint()
 		sb.WriteString(fmt.Sprintf("[%s] %s\n", node.Kind, prettyKey))
 		// Outgoing dependencies
 		if deps, ok := g.deps[key]; ok && len(deps) > 0 {
 			sb.WriteString("  Dependencies:\n")
 			for _, edge := range g.edges[key] {
-				toNode := g.nodes[edge.To]
+				toNode := g.nodes[edge.To.BaseId()]
 				linkedPrettyKey := edge.To.PrettyPrint()
 
 				if toNode == nil {
@@ -524,7 +541,7 @@ func (g *SymbolGraph) String() string {
 		if revs, ok := g.revDeps[key]; ok && len(revs) > 0 {
 			sb.WriteString("  Dependents:\n")
 			for fromKey := range revs {
-				fromNode := g.nodes[fromKey]
+				fromNode := g.nodes[fromKey.BaseId()]
 				linkedPrettyKey := fromKey.PrettyPrint()
 				sb.WriteString(fmt.Sprintf("    • [%s] %s\n", fromNode.Kind, linkedPrettyKey))
 			}
@@ -544,14 +561,15 @@ func (g *SymbolGraph) ToDot(theme *dot.DotTheme) string {
 
 	// Add all nodes
 	for key, node := range g.nodes {
-		label := key.ShortLabel()
-		builder.AddNode(key, node.Kind, label)
+		symKey := g.lookupKeys[key]
+		label := symKey.ShortLabel()
+		builder.AddNode(symKey, node.Kind, label)
 	}
 
 	// Add all edges
 	for fromKey, edges := range g.edges {
 		for _, edge := range edges {
-			builder.AddEdge(fromKey, edge.To, string(edge.Kind))
+			builder.AddEdge(g.lookupKeys[fromKey], edge.To, string(edge.Kind))
 		}
 	}
 

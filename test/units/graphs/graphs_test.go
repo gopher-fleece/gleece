@@ -14,6 +14,7 @@ import (
 	"github.com/gopher-fleece/gleece/graphs"
 	"github.com/gopher-fleece/gleece/graphs/symboldg"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
+	"github.com/gopher-fleece/gleece/test/utils"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -298,9 +299,9 @@ var _ = Describe("Unit Tests - Graphs", func() {
 				g := symboldg.NewSymbolGraph()
 
 				// Create a struct node (has a version + node)
-				fv := makeFileVersion("struct1")
+				fv := utils.MakeFileVersion("struct1", "")
 				structMeta := metadata.StructMeta{
-					SymNodeMeta: metadata.SymNodeMeta{Node: makeIdent("MyStruct"), FVersion: fv},
+					SymNodeMeta: metadata.SymNodeMeta{Node: utils.MakeIdent("MyStruct"), FVersion: fv},
 					Fields:      nil,
 				}
 				structNode, err := g.AddStruct(symboldg.CreateStructNode{
@@ -332,13 +333,12 @@ var _ = Describe("Unit Tests - Graphs", func() {
 			It("Registers fields when creating a struct and links them", func() {
 				g := symboldg.NewSymbolGraph()
 
-				fvStruct := makeFileVersion("s1")
-				fvField := makeFileVersion("s1") // same file version so SymbolKey for field matches later Field node
+				fileVer := utils.MakeFileVersion("s1", "")
 
 				fieldMeta := metadata.FieldMeta{
-					SymNodeMeta: metadata.SymNodeMeta{Node: makeIdent("FieldA"), FVersion: fvField},
+					SymNodeMeta: metadata.SymNodeMeta{Node: utils.MakeIdent("FieldA"), FVersion: fileVer},
 					Type: metadata.TypeUsageMeta{
-						SymNodeMeta: metadata.SymNodeMeta{Name: "int", Node: nil, FVersion: fvField},
+						SymNodeMeta: metadata.SymNodeMeta{Name: "int", Node: nil, FVersion: fileVer},
 						Layers: []metadata.TypeLayer{
 							metadata.NewBaseLayer(common.Ptr(graphs.NewUniverseSymbolKey("int"))),
 						},
@@ -347,7 +347,7 @@ var _ = Describe("Unit Tests - Graphs", func() {
 				}
 
 				structMeta := metadata.StructMeta{
-					SymNodeMeta: metadata.SymNodeMeta{Node: makeIdent("MyStruct"), FVersion: fvStruct},
+					SymNodeMeta: metadata.SymNodeMeta{Node: utils.MakeIdent("MyStruct"), FVersion: fileVer},
 					Fields:      []metadata.FieldMeta{fieldMeta},
 				}
 
@@ -384,17 +384,17 @@ var _ = Describe("Unit Tests - Graphs", func() {
 				g := symboldg.NewSymbolGraph()
 
 				// Setup: parent -> child (EdgeKindField) and also add an extra reference edge parent->childRef
-				fv := makeFileVersion("f")
+				fv := utils.MakeFileVersion("f", "")
 				parentMeta := metadata.StructMeta{
 					SymNodeMeta: metadata.SymNodeMeta{
-						Node:     makeIdent("P"),
+						Node:     utils.MakeIdent("P"),
 						FVersion: fv,
 					},
 				}
 
 				childField := metadata.FieldMeta{
 					SymNodeMeta: metadata.SymNodeMeta{
-						Node:     makeIdent("C"),
+						Node:     utils.MakeIdent("C"),
 						FVersion: fv},
 					Type: metadata.TypeUsageMeta{
 						SymNodeMeta: metadata.SymNodeMeta{
@@ -440,13 +440,25 @@ var _ = Describe("Unit Tests - Graphs", func() {
 			It("Adds enum and creates value nodes and reference links", func() {
 				g := symboldg.NewSymbolGraph()
 
-				fv := makeFileVersion("enum1")
+				fv := utils.MakeFileVersion("enum1", "")
 				// Create two enum value definitions
-				v1 := metadata.EnumValueDefinition{SymNodeMeta: metadata.SymNodeMeta{Node: makeIdent("ValA"), FVersion: fv}, Value: "A"}
-				v2 := metadata.EnumValueDefinition{SymNodeMeta: metadata.SymNodeMeta{Node: makeIdent("ValB"), FVersion: fv}, Value: "B"}
+				v1 := metadata.EnumValueDefinition{
+					SymNodeMeta: metadata.SymNodeMeta{
+						Node:     utils.MakeIdent("ValA"),
+						FVersion: fv,
+					},
+					Value: "A",
+				}
+				v2 := metadata.EnumValueDefinition{
+					SymNodeMeta: metadata.SymNodeMeta{
+						Node:     utils.MakeIdent("ValB"),
+						FVersion: fv,
+					},
+					Value: "B",
+				}
 
 				enumMeta := metadata.EnumMeta{
-					SymNodeMeta: metadata.SymNodeMeta{Node: makeIdent("MyEnum"), FVersion: fv},
+					SymNodeMeta: metadata.SymNodeMeta{Node: utils.MakeIdent("MyEnum"), FVersion: fv},
 					ValueKind:   metadata.EnumValueKind("string"),
 					Values:      []metadata.EnumValueDefinition{v1, v2},
 				}
@@ -472,9 +484,9 @@ var _ = Describe("Unit Tests - Graphs", func() {
 			It("Adds constants and can FindByKind", func() {
 				g := symboldg.NewSymbolGraph()
 
-				fv := makeFileVersion("c1")
+				fv := utils.MakeFileVersion("c1", "")
 				constMeta := metadata.ConstMeta{
-					SymNodeMeta: metadata.SymNodeMeta{Node: makeIdent("MyConst"), FVersion: fv},
+					SymNodeMeta: metadata.SymNodeMeta{Node: utils.MakeIdent("MyConst"), FVersion: fv},
 					Value:       123,
 					Type: metadata.TypeUsageMeta{
 						SymNodeMeta: metadata.SymNodeMeta{Name: "int", FVersion: fv},
@@ -495,9 +507,9 @@ var _ = Describe("Unit Tests - Graphs", func() {
 				g := symboldg.NewSymbolGraph()
 
 				// Create a "same" AST node (same ident) but two different versions
-				node := makeIdent("S")
-				fv1 := makeFileVersion("v1")
-				fv2 := makeFileVersion("v2")
+				node := utils.MakeIdent("S")
+				fv1 := utils.MakeFileVersion("v1", "some-hash")
+				fv2 := utils.MakeFileVersion("v1", "some-different-hash")
 
 				structMetaV1 := metadata.StructMeta{
 					SymNodeMeta: metadata.SymNodeMeta{
@@ -512,7 +524,7 @@ var _ = Describe("Unit Tests - Graphs", func() {
 				// Add a dependent: add a field belonging to this struct (so revDeps get populated)
 				fieldMeta := metadata.FieldMeta{
 					SymNodeMeta: metadata.SymNodeMeta{
-						Node:     makeIdent("F1"),
+						Node:     utils.MakeIdent("F1"),
 						FVersion: fv1,
 					},
 					Type: metadata.TypeUsageMeta{
@@ -547,7 +559,16 @@ var _ = Describe("Unit Tests - Graphs", func() {
 			It("AddController returns an error when given a nil decl", func() {
 				g := symboldg.NewSymbolGraph()
 				// Data.Node nil will cause idempotencyGuard to error
-				_, err := g.AddController(symboldg.CreateControllerNode{Data: metadata.StructMeta{SymNodeMeta: metadata.SymNodeMeta{Node: nil, FVersion: makeFileVersion("x")}}})
+				_, err := g.AddController(
+					symboldg.CreateControllerNode{
+						Data: metadata.StructMeta{
+							SymNodeMeta: metadata.SymNodeMeta{
+								Node:     nil,
+								FVersion: utils.MakeFileVersion("x", ""),
+							},
+						},
+					},
+				)
 				Expect(err).To(HaveOccurred())
 			})
 
@@ -558,10 +579,10 @@ var _ = Describe("Unit Tests - Graphs", func() {
 				// does not implement expected behavior. However, since getTypeRef in our provided code only errors when
 				// typeUsage.SymbolKind.IsBuiltin() is false and GetBaseTypeRefKey errors, it's tricky without redefining helpers.
 				// We assert AddField happy-path here as a sanity test instead.
-				fv := makeFileVersion("ferr")
+				fv := utils.MakeFileVersion("ferr", "")
 				fieldMeta := metadata.FieldMeta{
 					SymNodeMeta: metadata.SymNodeMeta{
-						Node:     makeIdent("FieldErr"),
+						Node:     utils.MakeIdent("FieldErr"),
 						FVersion: fv,
 					},
 					Type: metadata.TypeUsageMeta{
@@ -585,8 +606,16 @@ var _ = Describe("Unit Tests - Graphs", func() {
 				g := symboldg.NewSymbolGraph()
 				// Populate with a couple nodes
 				g.AddPrimitive(symboldg.PrimitiveTypeBool)
-				fv := makeFileVersion("dump")
-				_, err := g.AddStruct(symboldg.CreateStructNode{Data: metadata.StructMeta{SymNodeMeta: metadata.SymNodeMeta{Node: makeIdent("D"), FVersion: fv}}})
+				fv := utils.MakeFileVersion("dump", "")
+				_, err := g.AddStruct(symboldg.CreateStructNode{
+					Data: metadata.StructMeta{
+						SymNodeMeta: metadata.SymNodeMeta{
+							Node:     utils.MakeIdent("D"),
+							FVersion: fv,
+						},
+					},
+				},
+				)
 				Expect(err).ToNot(HaveOccurred())
 
 				s := g.String()
@@ -600,20 +629,6 @@ var _ = Describe("Unit Tests - Graphs", func() {
 		})
 	})
 })
-
-// helper to create a *gast.FileVersion quickly for tests
-func makeFileVersion(id string) *gast.FileVersion {
-	return &gast.FileVersion{
-		Path:    id,
-		ModTime: time.Now(),
-		Hash:    fmt.Sprintf("hash-%s", id),
-	}
-}
-
-// helper to create a simple ast.Ident node
-func makeIdent(name string) ast.Node {
-	return &ast.Ident{Name: name, NamePos: token.NoPos}
-}
 
 func TestUnitGraphs(t *testing.T) {
 	logger.SetLogLevel(logger.LogLevelNone)
