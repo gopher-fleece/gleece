@@ -302,6 +302,201 @@ func RegisterRoutes(engine *fiber.App) {
 	registerEnumValidation(validatorInstance, "speed_units_enum", []string{"CentimeterPerHour", "CentimeterPerMinute", "CentimeterPerSecond", "DecimeterPerMinute", "DecimeterPerSecond", "FootPerHour", "FootPerMinute", "FootPerSecond", "InchPerHour", "InchPerMinute", "InchPerSecond", "KilometerPerHour", "KilometerPerMinute", "KilometerPerSecond", "Knot", "Mach", "MeterPerHour", "MeterPerMinute", "MeterPerSecond", "MicrometerPerMinute", "MicrometerPerSecond", "MilePerHour", "MillimeterPerHour", "MillimeterPerMinute", "MillimeterPerSecond", "NanometerPerMinute", "NanometerPerSecond", "UsSurveyFootPerHour", "UsSurveyFootPerMinute", "UsSurveyFootPerSecond", "YardPerHour", "YardPerMinute", "YardPerSecond"})
 	registerEnumValidation(validatorInstance, "status_enumeration_enum", []string{"active", "inactive"})
 	// RegisterRoutesExtension - test
+	// E2EClassSecController
+	engine.Get(toFiberUrl("/e2e/with-default-class-security"), func(fiberCtx *fiber.Ctx) error {
+		fiberCtx.Set("x-RouteStartRoutesExtension", "WithDefaultClassSecurity")
+		authErr := authorize(
+			fiberCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName",
+							Scopes: []string{
+								"class",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(fiberCtx, authErr, "WithDefaultClassSecurity")
+		}
+		controller := E2EClassSecController.E2EClassSecController{}
+		controller.InitController(fiberCtx)
+		var headerParamRawPtr *string = nil
+		headerParamRaw := fiberCtx.Get("x-test-scopes")
+		isheaderParamExists := len(fiberCtx.Request().Header.Peek("x-test-scopes")) > 0
+		if isheaderParamExists {
+			headerParam := headerParamRaw
+			headerParamRawPtr = &headerParam
+		}
+		if validatorErr := validatorInstance.Var(headerParamRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, validatorErr)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "headerParam"
+			validationError := wrapValidatorError(validatorErr, "WithDefaultClassSecurity", fieldName)
+			fiberCtx.Set("x-RunValidatorExtension", "WithDefaultClassSecurity")
+			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		fiberCtx.Set("x-BeforeOperationRoutesExtension", "WithDefaultClassSecurity")
+		value, opError := controller.WithDefaultClassSecurity(*headerParamRawPtr)
+		for key, value := range controller.GetHeaders() {
+			fiberCtx.Set(key, value)
+		}
+		fiberCtx.Set("x-inject", "true")
+		fiberCtx.Set("x-ResponseHeadersExtension", "WithDefaultClassSecurity")
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'WithDefaultClassSecurity'",
+				Status:     statusCode,
+				Instance:   "/controller/error/WithDefaultClassSecurity",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			fiberCtx.Set("x-JsonErrorResponseExtension", "WithDefaultClassSecurity")
+			return fiberCtx.Status(statusCode).JSON(stdError)
+		}
+		fiberCtx.Set("x-JsonResponseExtension", "WithDefaultClassSecurity")
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		fiberCtx.Set("x-AfterOperationRoutesExtension", "WithDefaultClassSecurity")
+		fiberCtx.Status(statusCode).JSON(value)
+		fiberCtx.Set("x-RouteEndRoutesExtension", "WithDefaultClassSecurity")
+		return nil
+	})
+	engine.Get(toFiberUrl("/e2e/with-default-override-class-security"), func(fiberCtx *fiber.Ctx) error {
+		fiberCtx.Set("x-RouteStartRoutesExtension", "WithOverrideClassSecurity")
+		authErr := authorize(
+			fiberCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName",
+							Scopes: []string{
+								"method",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(fiberCtx, authErr, "WithOverrideClassSecurity")
+		}
+		controller := E2EClassSecController.E2EClassSecController{}
+		controller.InitController(fiberCtx)
+		var headerParamRawPtr *string = nil
+		headerParamRaw := fiberCtx.Get("x-test-scopes")
+		isheaderParamExists := len(fiberCtx.Request().Header.Peek("x-test-scopes")) > 0
+		if isheaderParamExists {
+			headerParam := headerParamRaw
+			headerParamRawPtr = &headerParam
+		}
+		if validatorErr := validatorInstance.Var(headerParamRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, validatorErr)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "headerParam"
+			validationError := wrapValidatorError(validatorErr, "WithOverrideClassSecurity", fieldName)
+			fiberCtx.Set("x-RunValidatorExtension", "WithOverrideClassSecurity")
+			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		fiberCtx.Set("x-BeforeOperationRoutesExtension", "WithOverrideClassSecurity")
+		value, opError := controller.WithOverrideClassSecurity(*headerParamRawPtr)
+		for key, value := range controller.GetHeaders() {
+			fiberCtx.Set(key, value)
+		}
+		fiberCtx.Set("x-inject", "true")
+		fiberCtx.Set("x-ResponseHeadersExtension", "WithOverrideClassSecurity")
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'WithOverrideClassSecurity'",
+				Status:     statusCode,
+				Instance:   "/controller/error/WithOverrideClassSecurity",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			fiberCtx.Set("x-JsonErrorResponseExtension", "WithOverrideClassSecurity")
+			return fiberCtx.Status(statusCode).JSON(stdError)
+		}
+		fiberCtx.Set("x-JsonResponseExtension", "WithOverrideClassSecurity")
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		fiberCtx.Set("x-AfterOperationRoutesExtension", "WithOverrideClassSecurity")
+		fiberCtx.Status(statusCode).JSON(value)
+		fiberCtx.Set("x-RouteEndRoutesExtension", "WithOverrideClassSecurity")
+		return nil
+	})
 	// E2EController
 	engine.Get(toFiberUrl("/e2e/simple-get"), func(fiberCtx *fiber.Ctx) error {
 		fiberCtx.Set("x-RouteStartRoutesExtension", "SimpleGet")
@@ -6213,201 +6408,6 @@ func RegisterRoutes(engine *fiber.App) {
 		fiberCtx.Set("x-AfterOperationRoutesExtension", "ContextInjection")
 		fiberCtx.Status(statusCode)
 		fiberCtx.Set("x-RouteEndRoutesExtension", "ContextInjection")
-		return nil
-	})
-	// E2EClassSecController
-	engine.Get(toFiberUrl("/e2e/with-default-class-security"), func(fiberCtx *fiber.Ctx) error {
-		fiberCtx.Set("x-RouteStartRoutesExtension", "WithDefaultClassSecurity")
-		authErr := authorize(
-			fiberCtx,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName",
-							Scopes: []string{
-								"class",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "WithDefaultClassSecurity")
-		}
-		controller := E2EClassSecController.E2EClassSecController{}
-		controller.InitController(fiberCtx)
-		var headerParamRawPtr *string = nil
-		headerParamRaw := fiberCtx.Get("x-test-scopes")
-		isheaderParamExists := len(fiberCtx.Request().Header.Peek("x-test-scopes")) > 0
-		if isheaderParamExists {
-			headerParam := headerParamRaw
-			headerParamRawPtr = &headerParam
-		}
-		if validatorErr := validatorInstance.Var(headerParamRawPtr, "required"); validatorErr != nil {
-			// Middlewares onInputValidationMiddlewares section
-			for _, middleware := range onInputValidationMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, validatorErr)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onInputValidationMiddlewares section
-			fieldName := "headerParam"
-			validationError := wrapValidatorError(validatorErr, "WithDefaultClassSecurity", fieldName)
-			fiberCtx.Set("x-RunValidatorExtension", "WithDefaultClassSecurity")
-			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
-		}
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		fiberCtx.Set("x-BeforeOperationRoutesExtension", "WithDefaultClassSecurity")
-		value, opError := controller.WithDefaultClassSecurity(*headerParamRawPtr)
-		for key, value := range controller.GetHeaders() {
-			fiberCtx.Set(key, value)
-		}
-		fiberCtx.Set("x-inject", "true")
-		fiberCtx.Set("x-ResponseHeadersExtension", "WithDefaultClassSecurity")
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'WithDefaultClassSecurity'",
-				Status:     statusCode,
-				Instance:   "/controller/error/WithDefaultClassSecurity",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			fiberCtx.Set("x-JsonErrorResponseExtension", "WithDefaultClassSecurity")
-			return fiberCtx.Status(statusCode).JSON(stdError)
-		}
-		fiberCtx.Set("x-JsonResponseExtension", "WithDefaultClassSecurity")
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		fiberCtx.Set("x-AfterOperationRoutesExtension", "WithDefaultClassSecurity")
-		fiberCtx.Status(statusCode).JSON(value)
-		fiberCtx.Set("x-RouteEndRoutesExtension", "WithDefaultClassSecurity")
-		return nil
-	})
-	engine.Get(toFiberUrl("/e2e/with-default-override-class-security"), func(fiberCtx *fiber.Ctx) error {
-		fiberCtx.Set("x-RouteStartRoutesExtension", "WithOverrideClassSecurity")
-		authErr := authorize(
-			fiberCtx,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName",
-							Scopes: []string{
-								"method",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "WithOverrideClassSecurity")
-		}
-		controller := E2EClassSecController.E2EClassSecController{}
-		controller.InitController(fiberCtx)
-		var headerParamRawPtr *string = nil
-		headerParamRaw := fiberCtx.Get("x-test-scopes")
-		isheaderParamExists := len(fiberCtx.Request().Header.Peek("x-test-scopes")) > 0
-		if isheaderParamExists {
-			headerParam := headerParamRaw
-			headerParamRawPtr = &headerParam
-		}
-		if validatorErr := validatorInstance.Var(headerParamRawPtr, "required"); validatorErr != nil {
-			// Middlewares onInputValidationMiddlewares section
-			for _, middleware := range onInputValidationMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, validatorErr)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onInputValidationMiddlewares section
-			fieldName := "headerParam"
-			validationError := wrapValidatorError(validatorErr, "WithOverrideClassSecurity", fieldName)
-			fiberCtx.Set("x-RunValidatorExtension", "WithOverrideClassSecurity")
-			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
-		}
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		fiberCtx.Set("x-BeforeOperationRoutesExtension", "WithOverrideClassSecurity")
-		value, opError := controller.WithOverrideClassSecurity(*headerParamRawPtr)
-		for key, value := range controller.GetHeaders() {
-			fiberCtx.Set(key, value)
-		}
-		fiberCtx.Set("x-inject", "true")
-		fiberCtx.Set("x-ResponseHeadersExtension", "WithOverrideClassSecurity")
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'WithOverrideClassSecurity'",
-				Status:     statusCode,
-				Instance:   "/controller/error/WithOverrideClassSecurity",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			fiberCtx.Set("x-JsonErrorResponseExtension", "WithOverrideClassSecurity")
-			return fiberCtx.Status(statusCode).JSON(stdError)
-		}
-		fiberCtx.Set("x-JsonResponseExtension", "WithOverrideClassSecurity")
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		fiberCtx.Set("x-AfterOperationRoutesExtension", "WithOverrideClassSecurity")
-		fiberCtx.Status(statusCode).JSON(value)
-		fiberCtx.Set("x-RouteEndRoutesExtension", "WithOverrideClassSecurity")
 		return nil
 	})
 }

@@ -107,9 +107,9 @@ func (p *GleecePipeline) GenerateGraph() error {
 }
 
 func (p *GleecePipeline) GenerateIntermediate() (GleeceFlattenedMetadata, error) {
-	controllers, err := p.reduceControllers(p.rootVisitor.GetControllers())
+	controllers, err := p.getControllers()
 	if err != nil {
-		logger.Error("Failed to reduce controller tree to flat form: %w", err)
+		logger.Error("Pipeline failed to obtain the controller list - %w", err)
 		return GleeceFlattenedMetadata{}, err
 	}
 
@@ -119,6 +119,20 @@ func (p *GleecePipeline) GenerateIntermediate() (GleeceFlattenedMetadata, error)
 		Models:            p.getModels(),
 		PlainErrorPresent: p.symGraph.IsSpecialPresent(symboldg.SpecialTypeError),
 	}, nil
+}
+
+func (p *GleecePipeline) getControllers() ([]definitions.ControllerMetadata, error) {
+	controllers, err := p.reduceControllers(p.rootVisitor.GetControllers())
+	if err != nil {
+		logger.Error("Failed to reduce controller tree to flat form: %w", err)
+		return []definitions.ControllerMetadata{}, err
+	}
+
+	slices.SortFunc(controllers, func(a, b definitions.ControllerMetadata) int {
+		return strings.Compare(a.Name, b.Name)
+	})
+
+	return controllers, nil
 }
 
 func (p *GleecePipeline) getImports(controllers []definitions.ControllerMetadata) map[string][]string {

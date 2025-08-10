@@ -298,6 +298,223 @@ func RegisterRoutes(engine *chi.Mux) {
 	registerEnumValidation(validatorInstance, "speed_units_enum", []string{"CentimeterPerHour", "CentimeterPerMinute", "CentimeterPerSecond", "DecimeterPerMinute", "DecimeterPerSecond", "FootPerHour", "FootPerMinute", "FootPerSecond", "InchPerHour", "InchPerMinute", "InchPerSecond", "KilometerPerHour", "KilometerPerMinute", "KilometerPerSecond", "Knot", "Mach", "MeterPerHour", "MeterPerMinute", "MeterPerSecond", "MicrometerPerMinute", "MicrometerPerSecond", "MilePerHour", "MillimeterPerHour", "MillimeterPerMinute", "MillimeterPerSecond", "NanometerPerMinute", "NanometerPerSecond", "UsSurveyFootPerHour", "UsSurveyFootPerMinute", "UsSurveyFootPerSecond", "YardPerHour", "YardPerMinute", "YardPerSecond"})
 	registerEnumValidation(validatorInstance, "status_enumeration_enum", []string{"active", "inactive"})
 	// RegisterRoutesExtension - test
+	// E2EClassSecController
+	engine.Get(toChiUrl("/e2e/with-default-class-security"), func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("x-RouteStartRoutesExtension", "WithDefaultClassSecurity")
+		authErr := authorize(
+			req,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName",
+							Scopes: []string{
+								"class",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(w, authErr, "WithDefaultClassSecurity")
+			return
+		}
+		controller := E2EClassSecController.E2EClassSecController{}
+		controller.InitController(req)
+		var headerParamRawPtr *string = nil
+		headerParamRaw := req.Header.Get("x-test-scopes")
+		_, isheaderParamExists := req.Header["x-test-scopes"]
+		if !isheaderParamExists {
+			// In echo, the req..Header["key"] is not 100% reliable, so we need other check, but only if is was not found in the first method
+			headerValues := req.Header.Values("x-test-scopes")
+			isheaderParamExists = len(headerValues) > 0
+		}
+		if isheaderParamExists {
+			headerParam := headerParamRaw
+			headerParamRawPtr = &headerParam
+		}
+		if validatorErr := validatorInstance.Var(headerParamRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, validatorErr)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "headerParam"
+			validationError := wrapValidatorError(validatorErr, "WithDefaultClassSecurity", fieldName)
+			w.Header().Set("x-RunValidatorExtension", "WithDefaultClassSecurity")
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			json.NewEncoder(w).Encode(validationError)
+			return
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		w.Header().Set("x-BeforeOperationRoutesExtension", "WithDefaultClassSecurity")
+		value, opError := controller.WithDefaultClassSecurity(*headerParamRawPtr)
+		for key, value := range controller.GetHeaders() {
+			w.Header().Set(key, value)
+		}
+		w.Header().Set("x-inject", "true")
+		w.Header().Set("x-ResponseHeadersExtension", "WithDefaultClassSecurity")
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'WithDefaultClassSecurity'",
+				Status:     statusCode,
+				Instance:   "/controller/error/WithDefaultClassSecurity",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			w.Header().Set("x-JsonErrorResponseExtension", "WithDefaultClassSecurity")
+			w.WriteHeader(statusCode)
+			json.NewEncoder(w).Encode(stdError)
+			return
+		}
+		w.Header().Set("x-JsonResponseExtension", "WithDefaultClassSecurity")
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		w.Header().Set("x-AfterOperationRoutesExtension", "WithDefaultClassSecurity")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(statusCode)
+		json.NewEncoder(w).Encode(value)
+		w.Header().Set("x-RouteEndRoutesExtension", "WithDefaultClassSecurity")
+	})
+	engine.Get(toChiUrl("/e2e/with-default-override-class-security"), func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("x-RouteStartRoutesExtension", "WithOverrideClassSecurity")
+		authErr := authorize(
+			req,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName",
+							Scopes: []string{
+								"method",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(w, authErr, "WithOverrideClassSecurity")
+			return
+		}
+		controller := E2EClassSecController.E2EClassSecController{}
+		controller.InitController(req)
+		var headerParamRawPtr *string = nil
+		headerParamRaw := req.Header.Get("x-test-scopes")
+		_, isheaderParamExists := req.Header["x-test-scopes"]
+		if !isheaderParamExists {
+			// In echo, the req..Header["key"] is not 100% reliable, so we need other check, but only if is was not found in the first method
+			headerValues := req.Header.Values("x-test-scopes")
+			isheaderParamExists = len(headerValues) > 0
+		}
+		if isheaderParamExists {
+			headerParam := headerParamRaw
+			headerParamRawPtr = &headerParam
+		}
+		if validatorErr := validatorInstance.Var(headerParamRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, validatorErr)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "headerParam"
+			validationError := wrapValidatorError(validatorErr, "WithOverrideClassSecurity", fieldName)
+			w.Header().Set("x-RunValidatorExtension", "WithOverrideClassSecurity")
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			json.NewEncoder(w).Encode(validationError)
+			return
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		w.Header().Set("x-BeforeOperationRoutesExtension", "WithOverrideClassSecurity")
+		value, opError := controller.WithOverrideClassSecurity(*headerParamRawPtr)
+		for key, value := range controller.GetHeaders() {
+			w.Header().Set(key, value)
+		}
+		w.Header().Set("x-inject", "true")
+		w.Header().Set("x-ResponseHeadersExtension", "WithOverrideClassSecurity")
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'WithOverrideClassSecurity'",
+				Status:     statusCode,
+				Instance:   "/controller/error/WithOverrideClassSecurity",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			w.Header().Set("x-JsonErrorResponseExtension", "WithOverrideClassSecurity")
+			w.WriteHeader(statusCode)
+			json.NewEncoder(w).Encode(stdError)
+			return
+		}
+		w.Header().Set("x-JsonResponseExtension", "WithOverrideClassSecurity")
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		w.Header().Set("x-AfterOperationRoutesExtension", "WithOverrideClassSecurity")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(statusCode)
+		json.NewEncoder(w).Encode(value)
+		w.Header().Set("x-RouteEndRoutesExtension", "WithOverrideClassSecurity")
+	})
 	// E2EController
 	engine.Get(toChiUrl("/e2e/simple-get"), func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("x-RouteStartRoutesExtension", "SimpleGet")
@@ -6634,222 +6851,5 @@ func RegisterRoutes(engine *chi.Mux) {
 		w.Header().Set("x-AfterOperationRoutesExtension", "ContextInjection")
 		w.WriteHeader(statusCode)
 		w.Header().Set("x-RouteEndRoutesExtension", "ContextInjection")
-	})
-	// E2EClassSecController
-	engine.Get(toChiUrl("/e2e/with-default-class-security"), func(w http.ResponseWriter, req *http.Request) {
-		w.Header().Set("x-RouteStartRoutesExtension", "WithDefaultClassSecurity")
-		authErr := authorize(
-			req,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName",
-							Scopes: []string{
-								"class",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			handleAuthorizationError(w, authErr, "WithDefaultClassSecurity")
-			return
-		}
-		controller := E2EClassSecController.E2EClassSecController{}
-		controller.InitController(req)
-		var headerParamRawPtr *string = nil
-		headerParamRaw := req.Header.Get("x-test-scopes")
-		_, isheaderParamExists := req.Header["x-test-scopes"]
-		if !isheaderParamExists {
-			// In echo, the req..Header["key"] is not 100% reliable, so we need other check, but only if is was not found in the first method
-			headerValues := req.Header.Values("x-test-scopes")
-			isheaderParamExists = len(headerValues) > 0
-		}
-		if isheaderParamExists {
-			headerParam := headerParamRaw
-			headerParamRawPtr = &headerParam
-		}
-		if validatorErr := validatorInstance.Var(headerParamRawPtr, "required"); validatorErr != nil {
-			// Middlewares onInputValidationMiddlewares section
-			for _, middleware := range onInputValidationMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, validatorErr)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onInputValidationMiddlewares section
-			fieldName := "headerParam"
-			validationError := wrapValidatorError(validatorErr, "WithDefaultClassSecurity", fieldName)
-			w.Header().Set("x-RunValidatorExtension", "WithDefaultClassSecurity")
-			w.WriteHeader(http.StatusUnprocessableEntity)
-			json.NewEncoder(w).Encode(validationError)
-			return
-		}
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		w.Header().Set("x-BeforeOperationRoutesExtension", "WithDefaultClassSecurity")
-		value, opError := controller.WithDefaultClassSecurity(*headerParamRawPtr)
-		for key, value := range controller.GetHeaders() {
-			w.Header().Set(key, value)
-		}
-		w.Header().Set("x-inject", "true")
-		w.Header().Set("x-ResponseHeadersExtension", "WithDefaultClassSecurity")
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'WithDefaultClassSecurity'",
-				Status:     statusCode,
-				Instance:   "/controller/error/WithDefaultClassSecurity",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			w.Header().Set("x-JsonErrorResponseExtension", "WithDefaultClassSecurity")
-			w.WriteHeader(statusCode)
-			json.NewEncoder(w).Encode(stdError)
-			return
-		}
-		w.Header().Set("x-JsonResponseExtension", "WithDefaultClassSecurity")
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		w.Header().Set("x-AfterOperationRoutesExtension", "WithDefaultClassSecurity")
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(statusCode)
-		json.NewEncoder(w).Encode(value)
-		w.Header().Set("x-RouteEndRoutesExtension", "WithDefaultClassSecurity")
-	})
-	engine.Get(toChiUrl("/e2e/with-default-override-class-security"), func(w http.ResponseWriter, req *http.Request) {
-		w.Header().Set("x-RouteStartRoutesExtension", "WithOverrideClassSecurity")
-		authErr := authorize(
-			req,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName",
-							Scopes: []string{
-								"method",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			handleAuthorizationError(w, authErr, "WithOverrideClassSecurity")
-			return
-		}
-		controller := E2EClassSecController.E2EClassSecController{}
-		controller.InitController(req)
-		var headerParamRawPtr *string = nil
-		headerParamRaw := req.Header.Get("x-test-scopes")
-		_, isheaderParamExists := req.Header["x-test-scopes"]
-		if !isheaderParamExists {
-			// In echo, the req..Header["key"] is not 100% reliable, so we need other check, but only if is was not found in the first method
-			headerValues := req.Header.Values("x-test-scopes")
-			isheaderParamExists = len(headerValues) > 0
-		}
-		if isheaderParamExists {
-			headerParam := headerParamRaw
-			headerParamRawPtr = &headerParam
-		}
-		if validatorErr := validatorInstance.Var(headerParamRawPtr, "required"); validatorErr != nil {
-			// Middlewares onInputValidationMiddlewares section
-			for _, middleware := range onInputValidationMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, validatorErr)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onInputValidationMiddlewares section
-			fieldName := "headerParam"
-			validationError := wrapValidatorError(validatorErr, "WithOverrideClassSecurity", fieldName)
-			w.Header().Set("x-RunValidatorExtension", "WithOverrideClassSecurity")
-			w.WriteHeader(http.StatusUnprocessableEntity)
-			json.NewEncoder(w).Encode(validationError)
-			return
-		}
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		w.Header().Set("x-BeforeOperationRoutesExtension", "WithOverrideClassSecurity")
-		value, opError := controller.WithOverrideClassSecurity(*headerParamRawPtr)
-		for key, value := range controller.GetHeaders() {
-			w.Header().Set(key, value)
-		}
-		w.Header().Set("x-inject", "true")
-		w.Header().Set("x-ResponseHeadersExtension", "WithOverrideClassSecurity")
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'WithOverrideClassSecurity'",
-				Status:     statusCode,
-				Instance:   "/controller/error/WithOverrideClassSecurity",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			w.Header().Set("x-JsonErrorResponseExtension", "WithOverrideClassSecurity")
-			w.WriteHeader(statusCode)
-			json.NewEncoder(w).Encode(stdError)
-			return
-		}
-		w.Header().Set("x-JsonResponseExtension", "WithOverrideClassSecurity")
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		w.Header().Set("x-AfterOperationRoutesExtension", "WithOverrideClassSecurity")
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(statusCode)
-		json.NewEncoder(w).Encode(value)
-		w.Header().Set("x-RouteEndRoutesExtension", "WithOverrideClassSecurity")
 	})
 }

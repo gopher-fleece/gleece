@@ -301,6 +301,203 @@ func RegisterCustomValidator(validateTagName string, validateFunc runtime.Valida
 func RegisterRoutes(engine *gin.Engine) {
 	urlParamRegex = regexp.MustCompile(`\{([\w\d-_]+)\}`)
 	// register routes extension placeholder
+	// E2EClassSecController
+	engine.GET(toGinUrl("/e2e/with-default-class-security"), func(ginCtx *gin.Context) {
+		// route start routes extension placeholder
+		authErr := authorize(
+			ginCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName",
+							Scopes: []string{
+								"class",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(ginCtx, authErr, "WithDefaultClassSecurity")
+			return
+		}
+		controller := E2EClassSecController.E2EClassSecController{}
+		controller.InitController(ginCtx)
+		var headerParamRawPtr *string = nil
+		headerParamRaw := ginCtx.GetHeader("x-test-scopes")
+		_, isheaderParamExists := ginCtx.Request.Header[textproto.CanonicalMIMEHeaderKey("x-test-scopes")]
+		if isheaderParamExists {
+			headerParam := headerParamRaw
+			headerParamRawPtr = &headerParam
+		}
+		if validatorErr := validatorInstance.Var(headerParamRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, validatorErr)
+				setRequestContext(ginCtx, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "headerParam"
+			validationError := wrapValidatorError(validatorErr, "WithDefaultClassSecurity", fieldName)
+			// validation error response extension placeholder
+			ginCtx.JSON(http.StatusUnprocessableEntity, validationError)
+			return
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx)
+			setRequestContext(ginCtx, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.WithDefaultClassSecurity(*headerParamRawPtr)
+		for key, value := range controller.GetHeaders() {
+			ginCtx.Header(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, opError)
+				setRequestContext(ginCtx, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'WithDefaultClassSecurity'",
+				Status:     statusCode,
+				Instance:   "/controller/error/WithDefaultClassSecurity",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			ginCtx.JSON(statusCode, stdError)
+			return
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx)
+			setRequestContext(ginCtx, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		ginCtx.JSON(statusCode, value)
+		// route end routes extension placeholder
+	})
+	engine.GET(toGinUrl("/e2e/with-default-override-class-security"), func(ginCtx *gin.Context) {
+		// route start routes extension placeholder
+		authErr := authorize(
+			ginCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName",
+							Scopes: []string{
+								"method",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(ginCtx, authErr, "WithOverrideClassSecurity")
+			return
+		}
+		controller := E2EClassSecController.E2EClassSecController{}
+		controller.InitController(ginCtx)
+		var headerParamRawPtr *string = nil
+		headerParamRaw := ginCtx.GetHeader("x-test-scopes")
+		_, isheaderParamExists := ginCtx.Request.Header[textproto.CanonicalMIMEHeaderKey("x-test-scopes")]
+		if isheaderParamExists {
+			headerParam := headerParamRaw
+			headerParamRawPtr = &headerParam
+		}
+		if validatorErr := validatorInstance.Var(headerParamRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, validatorErr)
+				setRequestContext(ginCtx, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "headerParam"
+			validationError := wrapValidatorError(validatorErr, "WithOverrideClassSecurity", fieldName)
+			// validation error response extension placeholder
+			ginCtx.JSON(http.StatusUnprocessableEntity, validationError)
+			return
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx)
+			setRequestContext(ginCtx, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.WithOverrideClassSecurity(*headerParamRawPtr)
+		for key, value := range controller.GetHeaders() {
+			ginCtx.Header(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, opError)
+				setRequestContext(ginCtx, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'WithOverrideClassSecurity'",
+				Status:     statusCode,
+				Instance:   "/controller/error/WithOverrideClassSecurity",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			ginCtx.JSON(statusCode, stdError)
+			return
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx)
+			setRequestContext(ginCtx, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		ginCtx.JSON(statusCode, value)
+		// route end routes extension placeholder
+	})
 	// E2EController
 	engine.GET(toGinUrl("/e2e/simple-get"), func(ginCtx *gin.Context) {
 		// route start routes extension placeholder
@@ -5585,203 +5782,6 @@ func RegisterRoutes(engine *gin.Engine) {
 		// End middlewares afterOperationSuccessMiddlewares section
 		// after operation routes extension placeholder
 		ginCtx.Status(statusCode)
-		// route end routes extension placeholder
-	})
-	// E2EClassSecController
-	engine.GET(toGinUrl("/e2e/with-default-class-security"), func(ginCtx *gin.Context) {
-		// route start routes extension placeholder
-		authErr := authorize(
-			ginCtx,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName",
-							Scopes: []string{
-								"class",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			handleAuthorizationError(ginCtx, authErr, "WithDefaultClassSecurity")
-			return
-		}
-		controller := E2EClassSecController.E2EClassSecController{}
-		controller.InitController(ginCtx)
-		var headerParamRawPtr *string = nil
-		headerParamRaw := ginCtx.GetHeader("x-test-scopes")
-		_, isheaderParamExists := ginCtx.Request.Header[textproto.CanonicalMIMEHeaderKey("x-test-scopes")]
-		if isheaderParamExists {
-			headerParam := headerParamRaw
-			headerParamRawPtr = &headerParam
-		}
-		if validatorErr := validatorInstance.Var(headerParamRawPtr, "required"); validatorErr != nil {
-			// Middlewares onInputValidationMiddlewares section
-			for _, middleware := range onInputValidationMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, validatorErr)
-				setRequestContext(ginCtx, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onInputValidationMiddlewares section
-			fieldName := "headerParam"
-			validationError := wrapValidatorError(validatorErr, "WithDefaultClassSecurity", fieldName)
-			// validation error response extension placeholder
-			ginCtx.JSON(http.StatusUnprocessableEntity, validationError)
-			return
-		}
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx)
-			setRequestContext(ginCtx, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		value, opError := controller.WithDefaultClassSecurity(*headerParamRawPtr)
-		for key, value := range controller.GetHeaders() {
-			ginCtx.Header(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, opError)
-				setRequestContext(ginCtx, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'WithDefaultClassSecurity'",
-				Status:     statusCode,
-				Instance:   "/controller/error/WithDefaultClassSecurity",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			ginCtx.JSON(statusCode, stdError)
-			return
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx)
-			setRequestContext(ginCtx, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		ginCtx.JSON(statusCode, value)
-		// route end routes extension placeholder
-	})
-	engine.GET(toGinUrl("/e2e/with-default-override-class-security"), func(ginCtx *gin.Context) {
-		// route start routes extension placeholder
-		authErr := authorize(
-			ginCtx,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName",
-							Scopes: []string{
-								"method",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			handleAuthorizationError(ginCtx, authErr, "WithOverrideClassSecurity")
-			return
-		}
-		controller := E2EClassSecController.E2EClassSecController{}
-		controller.InitController(ginCtx)
-		var headerParamRawPtr *string = nil
-		headerParamRaw := ginCtx.GetHeader("x-test-scopes")
-		_, isheaderParamExists := ginCtx.Request.Header[textproto.CanonicalMIMEHeaderKey("x-test-scopes")]
-		if isheaderParamExists {
-			headerParam := headerParamRaw
-			headerParamRawPtr = &headerParam
-		}
-		if validatorErr := validatorInstance.Var(headerParamRawPtr, "required"); validatorErr != nil {
-			// Middlewares onInputValidationMiddlewares section
-			for _, middleware := range onInputValidationMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, validatorErr)
-				setRequestContext(ginCtx, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onInputValidationMiddlewares section
-			fieldName := "headerParam"
-			validationError := wrapValidatorError(validatorErr, "WithOverrideClassSecurity", fieldName)
-			// validation error response extension placeholder
-			ginCtx.JSON(http.StatusUnprocessableEntity, validationError)
-			return
-		}
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx)
-			setRequestContext(ginCtx, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		value, opError := controller.WithOverrideClassSecurity(*headerParamRawPtr)
-		for key, value := range controller.GetHeaders() {
-			ginCtx.Header(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, opError)
-				setRequestContext(ginCtx, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'WithOverrideClassSecurity'",
-				Status:     statusCode,
-				Instance:   "/controller/error/WithOverrideClassSecurity",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			ginCtx.JSON(statusCode, stdError)
-			return
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx)
-			setRequestContext(ginCtx, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		ginCtx.JSON(statusCode, value)
 		// route end routes extension placeholder
 	})
 }
