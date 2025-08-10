@@ -80,6 +80,15 @@ const (
 	SpecialTypeUnsafePointer  SpecialType = "unsafe.Pointer"
 )
 
+func (s SpecialType) IsUniverse() bool {
+	switch s {
+	case SpecialTypeError, SpecialTypeEmptyInterface, SpecialTypeAny:
+		return true
+	}
+
+	return false
+}
+
 func ToSpecialType(s string) (SpecialType, bool) {
 	switch s {
 	case "error":

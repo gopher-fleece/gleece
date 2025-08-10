@@ -9,7 +9,7 @@ type TraversalFilter struct {
 }
 
 func shouldIncludeEdge(edge SymbolEdge, filter *TraversalFilter) bool {
-	return filter == nil || filter.EdgeKind != nil || edge.Kind == *filter.EdgeKind
+	return filter == nil || filter.EdgeKind == nil || edge.Kind == *filter.EdgeKind
 }
 
 func shouldIncludeNode(node *SymbolNode, filter *TraversalFilter) bool {

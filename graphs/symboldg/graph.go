@@ -45,8 +45,8 @@ type SymbolGraphBuilder interface {
 	// applying the filter at each step to decide traversal and inclusion.
 	Descendants(root *SymbolNode, filter *TraversalFilter) []*SymbolNode
 
-	String() string
 	ToDot(theme *dot.DotTheme) string
+	String() string
 }
 
 type SymbolGraph struct {
@@ -315,7 +315,7 @@ func (g *SymbolGraph) Structs() []metadata.StructMeta {
 }
 
 func (g *SymbolGraph) IsPrimitivePresent(primitive PrimitiveType) bool {
-	return g.builtinSymbolExists(string(primitive))
+	return g.builtinSymbolExists(string(primitive), true)
 }
 
 func (g *SymbolGraph) AddPrimitive(p PrimitiveType) *SymbolNode {
@@ -324,17 +324,11 @@ func (g *SymbolGraph) AddPrimitive(p PrimitiveType) *SymbolNode {
 }
 
 func (g *SymbolGraph) IsSpecialPresent(special SpecialType) bool {
-	return g.builtinSymbolExists(string(special))
+	return g.builtinSymbolExists(string(special), special.IsUniverse())
 }
 
 func (g *SymbolGraph) AddSpecial(special SpecialType) *SymbolNode {
-	var isUniverse bool
-	switch special {
-	case SpecialTypeError, SpecialTypeEmptyInterface, SpecialTypeAny:
-		isUniverse = true
-	}
-
-	return g.addBuiltinSymbol(string(special), common.SymKindSpecialBuiltin, isUniverse)
+	return g.addBuiltinSymbol(string(special), common.SymKindSpecialBuiltin, special.IsUniverse())
 }
 
 func (g *SymbolGraph) Children(node *SymbolNode, filter *TraversalFilter) []*SymbolNode {
@@ -393,8 +387,14 @@ func (g *SymbolGraph) Descendants(root *SymbolNode, filter *TraversalFilter) []*
 	return result
 }
 
-func (g *SymbolGraph) builtinSymbolExists(name string) bool {
-	key := graphs.NewUniverseSymbolKey(name)
+func (g *SymbolGraph) builtinSymbolExists(name string, isUniverse bool) bool {
+	var key graphs.SymbolKey
+	if isUniverse {
+		key = graphs.NewUniverseSymbolKey(name)
+	} else {
+		key = graphs.NewNonUniverseBuiltInSymbolKey(name)
+	}
+
 	if _, exists := g.nodes[key]; exists {
 		return true
 	}

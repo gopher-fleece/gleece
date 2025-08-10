@@ -17,19 +17,36 @@ type SymbolKey struct {
 	Name       string
 	Position   token.Pos
 	FileId     string
+	FilePath   string
 	IsUniverse bool
 	IsBuiltIn  bool
 }
 
+// BaseId returns a semi-unique ID for the symbol key.
+// This ID encapsulates the origin file path but not its version and is used for symbol de-duplication.
+func (sk SymbolKey) BaseId() string {
+	return sk.formatId(sk.FilePath)
+}
+
+// Id returns a unique ID for the symbol key.
+// This ID also encapsulates the specific file version the symbol originated from.
 func (sk SymbolKey) Id() string {
+	return sk.formatId(sk.FileId)
+}
+
+// formatId creates a formatter ID for use in graphs
+// fileIdPart is a string that represents the origin file - it's intended to either be completely unique
+// or point to a specific file to allow node deduplication
+func (sk SymbolKey) formatId(fileIdPart string) string {
 	if sk.IsUniverse {
-		return fmt.Sprintf("UniverseType:%s", sk.Name)
+		return fmt.Sprintf("%s:%s", UniverseTypeSymKeyPrefix, sk.Name)
 	}
 
 	if sk.Name != "" {
-		return fmt.Sprintf("%s@%d@%s", sk.Name, sk.Position, sk.FileId)
+		return fmt.Sprintf("%s@%d@%s", sk.Name, sk.Position, fileIdPart)
 	}
-	return fmt.Sprintf("@%d@%s", sk.Position, sk.FileId)
+
+	return fmt.Sprintf("@%d@%s", sk.Position, fileIdPart)
 }
 
 func (sk SymbolKey) ShortLabel() string {
@@ -120,6 +137,7 @@ func NewSymbolKey(node ast.Node, version *gast.FileVersion) SymbolKey {
 		Name:     name,
 		Position: pos,
 		FileId:   base,
+		FilePath: version.Path,
 	}
 }
 
