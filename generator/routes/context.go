@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/gopher-fleece/gleece/core/pipeline"
@@ -56,6 +57,9 @@ func GetTemplateContext(
 	}
 
 	ctx.GenerationDate = time.Now().Format(time.DateOnly)
+	if !config.RoutesConfig.SkipGenerateDateComment {
+		ctx.GenerationDate = fmt.Sprintf("Generated Date: %s", time.Now().Format(time.DateOnly))
+	}
 
 	return ctx, nil
 }

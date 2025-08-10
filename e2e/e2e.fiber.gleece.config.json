@@ -31,7 +31,8 @@
 			"JsonErrorResponseExtension": "./fiber/assets/JsonErrorResponseExtension.hbs",
 			"ResponseHeadersExtension": "./fiber/assets/ResponseHeadersExtension.hbs"
 		},
-		"validateResponsePayload": true
+		"validateResponsePayload": true,
+		"skipGenerateDateComment": true
 	},
 	"openapiGeneratorConfig": {
 		"openapi": "3.0.0",
