@@ -40,6 +40,7 @@ import (
 	Param17data "github.com/gopher-fleece/gleece/e2e/assets"
 	Param18data "github.com/gopher-fleece/gleece/e2e/assets"
 	Param19data "github.com/gopher-fleece/gleece/e2e/assets"
+	Param20data "github.com/gopher-fleece/gleece/e2e/assets"
 	Param4value2 "github.com/gopher-fleece/gleece/e2e/assets"
 	Param5theBody "github.com/gopher-fleece/gleece/e2e/assets"
 	Response6CustomError "github.com/gopher-fleece/gleece/e2e/assets"
@@ -6037,6 +6038,110 @@ func RegisterRoutes(engine *gin.Engine) {
 		ginCtx.Header("x-AfterOperationRoutesExtension", "EmbeddedStructs")
 		ginCtx.JSON(statusCode, value)
 		ginCtx.Header("x-RouteEndRoutesExtension", "EmbeddedStructs")
+	})
+	engine.POST(toGinUrl("/e2e/structs-with-inner-pointer"), func(ginCtx *gin.Context) {
+		ginCtx.Header("x-RouteStartRoutesExtension", "StructsWithInnerPointer")
+		authErr := authorize(
+			ginCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(ginCtx, authErr, "StructsWithInnerPointer")
+			return
+		}
+		controller := E2EController.E2EController{}
+		controller.InitController(ginCtx)
+		var conversionErr error
+		var dataRawPtr *Param20data.TheModelWithInnerPointer = nil
+		conversionErr = bindAndValidateBody(ginCtx, "application/json", "required", &dataRawPtr)
+		if conversionErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, conversionErr)
+				setRequestContext(ginCtx, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			validationError := runtime.Rfc7807Error{
+				Type: http.StatusText(http.StatusUnprocessableEntity),
+				Detail: fmt.Sprintf(
+					"A request was made to operation 'StructsWithInnerPointer' but body parameter '%s' did not pass validation of '%s' - %s",
+					"data",
+					"TheModelWithInnerPointer",
+					extractValidationErrorMessage(conversionErr, nil),
+				),
+				Status:   http.StatusUnprocessableEntity,
+				Instance: "/validation/error/StructsWithInnerPointer",
+			}
+			ginCtx.Header("x-JsonBodyValidationErrorResponseExtension", "StructsWithInnerPointer")
+			ginCtx.JSON(http.StatusUnprocessableEntity, validationError)
+			return
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx)
+			setRequestContext(ginCtx, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		ginCtx.Header("x-BeforeOperationRoutesExtension", "StructsWithInnerPointer")
+		value, opError := controller.StructsWithInnerPointer(*dataRawPtr)
+		for key, value := range controller.GetHeaders() {
+			ginCtx.Header(key, value)
+		}
+		ginCtx.Header("x-inject", "true")
+		ginCtx.Header("x-ResponseHeadersExtension", "StructsWithInnerPointer")
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, opError)
+				setRequestContext(ginCtx, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'StructsWithInnerPointer'",
+				Status:     statusCode,
+				Instance:   "/controller/error/StructsWithInnerPointer",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			ginCtx.Header("x-JsonErrorResponseExtension", "StructsWithInnerPointer")
+			ginCtx.JSON(statusCode, stdError)
+			return
+		}
+		ginCtx.Header("x-JsonResponseExtension", "StructsWithInnerPointer")
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx)
+			setRequestContext(ginCtx, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		ginCtx.Header("x-AfterOperationRoutesExtension", "StructsWithInnerPointer")
+		ginCtx.JSON(statusCode, value)
+		ginCtx.Header("x-RouteEndRoutesExtension", "StructsWithInnerPointer")
 	})
 	engine.POST(toGinUrl("/e2e/context-injection-empty"), func(ginCtx *gin.Context) {
 		ginCtx.Header("x-RouteStartRoutesExtension", "ContextInjectionEmpty")

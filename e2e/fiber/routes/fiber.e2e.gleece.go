@@ -38,6 +38,7 @@ import (
 	Param17data "github.com/gopher-fleece/gleece/e2e/assets"
 	Param18data "github.com/gopher-fleece/gleece/e2e/assets"
 	Param19data "github.com/gopher-fleece/gleece/e2e/assets"
+	Param20data "github.com/gopher-fleece/gleece/e2e/assets"
 	Param4value2 "github.com/gopher-fleece/gleece/e2e/assets"
 	Param5theBody "github.com/gopher-fleece/gleece/e2e/assets"
 	Response6CustomError "github.com/gopher-fleece/gleece/e2e/assets"
@@ -5933,6 +5934,108 @@ func RegisterRoutes(engine *fiber.App) {
 		fiberCtx.Set("x-AfterOperationRoutesExtension", "EmbeddedStructs")
 		fiberCtx.Status(statusCode).JSON(value)
 		fiberCtx.Set("x-RouteEndRoutesExtension", "EmbeddedStructs")
+		return nil
+	})
+	engine.Post(toFiberUrl("/e2e/structs-with-inner-pointer"), func(fiberCtx *fiber.Ctx) error {
+		fiberCtx.Set("x-RouteStartRoutesExtension", "StructsWithInnerPointer")
+		authErr := authorize(
+			fiberCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(fiberCtx, authErr, "StructsWithInnerPointer")
+		}
+		controller := E2EController.E2EController{}
+		controller.InitController(fiberCtx)
+		var conversionErr error
+		var dataRawPtr *Param20data.TheModelWithInnerPointer = nil
+		conversionErr = bindAndValidateBody(fiberCtx, "application/json", "required", &dataRawPtr)
+		if conversionErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, conversionErr)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			validationError := runtime.Rfc7807Error{
+				Type: http.StatusText(http.StatusUnprocessableEntity),
+				Detail: fmt.Sprintf(
+					"A request was made to operation 'StructsWithInnerPointer' but body parameter '%s' did not pass validation of '%s' - %s",
+					"data",
+					"TheModelWithInnerPointer",
+					extractValidationErrorMessage(conversionErr, nil),
+				),
+				Status:   http.StatusUnprocessableEntity,
+				Instance: "/validation/error/StructsWithInnerPointer",
+			}
+			fiberCtx.Set("x-JsonBodyValidationErrorResponseExtension", "StructsWithInnerPointer")
+			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		fiberCtx.Set("x-BeforeOperationRoutesExtension", "StructsWithInnerPointer")
+		value, opError := controller.StructsWithInnerPointer(*dataRawPtr)
+		for key, value := range controller.GetHeaders() {
+			fiberCtx.Set(key, value)
+		}
+		fiberCtx.Set("x-inject", "true")
+		fiberCtx.Set("x-ResponseHeadersExtension", "StructsWithInnerPointer")
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'StructsWithInnerPointer'",
+				Status:     statusCode,
+				Instance:   "/controller/error/StructsWithInnerPointer",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			fiberCtx.Set("x-JsonErrorResponseExtension", "StructsWithInnerPointer")
+			return fiberCtx.Status(statusCode).JSON(stdError)
+		}
+		fiberCtx.Set("x-JsonResponseExtension", "StructsWithInnerPointer")
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		fiberCtx.Set("x-AfterOperationRoutesExtension", "StructsWithInnerPointer")
+		fiberCtx.Status(statusCode).JSON(value)
+		fiberCtx.Set("x-RouteEndRoutesExtension", "StructsWithInnerPointer")
 		return nil
 	})
 	engine.Post(toFiberUrl("/e2e/context-injection-empty"), func(fiberCtx *fiber.Ctx) error {

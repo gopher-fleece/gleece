@@ -39,6 +39,7 @@ import (
 	Param17data "github.com/gopher-fleece/gleece/e2e/assets"
 	Param18data "github.com/gopher-fleece/gleece/e2e/assets"
 	Param19data "github.com/gopher-fleece/gleece/e2e/assets"
+	Param20data "github.com/gopher-fleece/gleece/e2e/assets"
 	Param4value2 "github.com/gopher-fleece/gleece/e2e/assets"
 	Param5theBody "github.com/gopher-fleece/gleece/e2e/assets"
 	Response6CustomError "github.com/gopher-fleece/gleece/e2e/assets"
@@ -5282,6 +5283,107 @@ func RegisterRoutes(engine *echo.Echo) {
 				Detail:     "Encountered an error during operation 'EmbeddedStructs'",
 				Status:     statusCode,
 				Instance:   "/controller/error/EmbeddedStructs",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			return echoCtx.JSON(statusCode, stdError)
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(echoCtx), echoCtx)
+			setRequestContext(echoCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		echoCtx.JSON(statusCode, value)
+		// route end routes extension placeholder
+		return nil
+	})
+	engine.POST(toEchoUrl("/e2e/structs-with-inner-pointer"), func(echoCtx echo.Context) error {
+		// route start routes extension placeholder
+		authErr := authorize(
+			echoCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(echoCtx, authErr, "StructsWithInnerPointer")
+		}
+		controller := E2EController.E2EController{}
+		controller.InitController(echoCtx)
+		var conversionErr error
+		var dataRawPtr *Param20data.TheModelWithInnerPointer = nil
+		conversionErr = bindAndValidateBody(echoCtx, "application/json", "required", &dataRawPtr)
+		if conversionErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(echoCtx), echoCtx, conversionErr)
+				setRequestContext(echoCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			validationError := runtime.Rfc7807Error{
+				Type: http.StatusText(http.StatusUnprocessableEntity),
+				Detail: fmt.Sprintf(
+					"A request was made to operation 'StructsWithInnerPointer' but body parameter '%s' did not pass validation of '%s' - %s",
+					"data",
+					"TheModelWithInnerPointer",
+					extractValidationErrorMessage(conversionErr, nil),
+				),
+				Status:   http.StatusUnprocessableEntity,
+				Instance: "/validation/error/StructsWithInnerPointer",
+			}
+			// json body validation error response extension placeholder
+			return echoCtx.JSON(http.StatusUnprocessableEntity, validationError)
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(echoCtx), echoCtx)
+			setRequestContext(echoCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.StructsWithInnerPointer(*dataRawPtr)
+		for key, value := range controller.GetHeaders() {
+			echoCtx.Response().Header().Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(echoCtx), echoCtx, opError)
+				setRequestContext(echoCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'StructsWithInnerPointer'",
+				Status:     statusCode,
+				Instance:   "/controller/error/StructsWithInnerPointer",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			// json error response extension placeholder
