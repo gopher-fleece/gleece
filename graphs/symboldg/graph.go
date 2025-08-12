@@ -235,6 +235,22 @@ func (g *SymbolGraph) AddEnum(request CreateEnumNode) (*SymbolNode, error) {
 
 	// Link each enum value
 	typeRef := graphs.NewUniverseSymbolKey(string(request.Data.ValueKind))
+
+	// Add the underlying primitive, if it does not exist.
+	// This is not strictly necessary due to how the visitor code is built but it serves as a bit of
+	// an extra layer of 'protection' against malformed graphs.
+	if g.nodes[typeRef.BaseId()] == nil {
+		primitive, isPrimitive := ToPrimitiveType(string(request.Data.ValueKind))
+		if !isPrimitive {
+			return nil, fmt.Errorf(
+				"value kind for enum '%s' is '%s' which is unexpected",
+				request.Data.Name,
+				request.Data.ValueKind,
+			)
+		}
+		g.AddPrimitive(primitive)
+	}
+
 	for _, valueDef := range request.Data.Values {
 		valueNode, err := g.createAndAddSymNode(
 			valueDef.Node,

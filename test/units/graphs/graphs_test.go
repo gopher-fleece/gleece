@@ -69,12 +69,12 @@ var _ = Describe("Unit Tests - Graphs", func() {
 		})
 
 		Describe("PrettyPrint", func() {
-			It("prints cleanly for universe types", func() {
+			It("Prints cleanly for universe types", func() {
 				key := graphs.NewUniverseSymbolKey("UniverseType:string")
 				Expect(key.PrettyPrint()).To(Equal("string"))
 			})
 
-			It("prints details for named symbol", func() {
+			It("Prints details for named symbol", func() {
 				key := graphs.SymbolKey{
 					Name:     "MyFunc",
 					Position: 789,
@@ -87,7 +87,7 @@ var _ = Describe("Unit Tests - Graphs", func() {
 				Expect(result).To(ContainSubstring("• abcd1234"))
 			})
 
-			It("pretty prints a symbol with no name using position fallback", func() {
+			It("Pretty prints a symbol with no name using position fallback", func() {
 				fSet := token.NewFileSet()
 				src := `package main; var _ = 123`
 
@@ -152,12 +152,12 @@ var _ = Describe("Unit Tests - Graphs", func() {
 				}
 			})
 
-			It("returns empty key on nil inputs", func() {
+			It("Returns empty key on nil inputs", func() {
 				key := graphs.NewSymbolKey(nil, nil)
 				Expect(key).To(Equal(graphs.SymbolKey{}))
 			})
 
-			It("creates from a real FuncDecl AST with valid token.Pos", func() {
+			It("Creates from a real FuncDecl AST with valid token.Pos", func() {
 				fSet := token.NewFileSet()
 				src := `package main; func MyFunc() {}`
 
@@ -187,7 +187,7 @@ var _ = Describe("Unit Tests - Graphs", func() {
 				Expect(symKey.Id()).To(ContainSubstring("MyFunc@"))
 			})
 
-			It("creates from TypeSpec", func() {
+			It("Creates from TypeSpec", func() {
 				spec := &ast.TypeSpec{
 					Name: &ast.Ident{Name: "MyType"},
 				}
@@ -195,7 +195,7 @@ var _ = Describe("Unit Tests - Graphs", func() {
 				Expect(key.Name).To(Equal("MyType"))
 			})
 
-			It("creates from ValueSpec", func() {
+			It("Creates from ValueSpec", func() {
 				spec := &ast.ValueSpec{
 					Names: []*ast.Ident{{Name: "A"}, {Name: "B"}},
 				}
@@ -203,7 +203,7 @@ var _ = Describe("Unit Tests - Graphs", func() {
 				Expect(key.Name).To(Equal("A,B"))
 			})
 
-			It("creates from Field", func() {
+			It("Creates from Field", func() {
 				field := &ast.Field{
 					Names: []*ast.Ident{{Name: "FieldName"}},
 				}
@@ -211,13 +211,13 @@ var _ = Describe("Unit Tests - Graphs", func() {
 				Expect(key.Name).To(Equal("FieldName"))
 			})
 
-			It("creates from Ident", func() {
+			It("Creates from Ident", func() {
 				id := &ast.Ident{Name: "VarX"}
 				key := graphs.NewSymbolKey(id, version)
 				Expect(key.Name).To(Equal("VarX"))
 			})
 
-			It("falls back to default in NewSymbolKey for unknown node types", func() {
+			It("Falls back to default in NewSymbolKey for unknown node types", func() {
 				version := &gast.FileVersion{
 					Path:    "somefile.go",
 					ModTime: time.Unix(4567, 0),
@@ -252,10 +252,12 @@ var _ = Describe("Unit Tests - Graphs", func() {
 	})
 
 	var _ = Describe("SymbolGraph", func() {
-		It("Constructs a new graph without error", func() {
-			Expect(func() {
-				_ = symboldg.NewSymbolGraph()
-			}).ToNot(Panic())
+		var graph symboldg.SymbolGraph
+		var fVersion *gast.FileVersion
+
+		BeforeEach(func() {
+			graph = symboldg.NewSymbolGraph()
+			fVersion = utils.MakeFileVersion("file", "")
 		})
 
 		Context("NewSymbolGraph", func() {
@@ -269,243 +271,906 @@ var _ = Describe("Unit Tests - Graphs", func() {
 			})
 		})
 
-		Context("Primitives and Specials", func() {
-			It("Adds primitives and treats them as universe types", func() {
-				g := symboldg.NewSymbolGraph()
-				n1 := g.AddPrimitive(symboldg.PrimitiveTypeBool)
-				Expect(n1).ToNot(BeNil())
-				Expect(g.IsPrimitivePresent(symboldg.PrimitiveTypeBool)).To(BeTrue())
+		Context("AddEdge", func() {
+			var (
+				structNode *symboldg.SymbolNode
+				typeNode   *symboldg.SymbolNode
+				err        error
+			)
 
-				// Add same primitive again -> returns same node (universe dedup)
-				n2 := g.AddPrimitive(symboldg.PrimitiveTypeBool)
-				Expect(n2).To(Equal(n1))
-			})
-
-			It("Adds special types and recognizes them", func() {
-				g := symboldg.NewSymbolGraph()
-				n := g.AddSpecial(symboldg.SpecialTypeError) // universe by logic
-				Expect(n).ToNot(BeNil())
-				Expect(g.IsSpecialPresent(symboldg.SpecialTypeError)).To(BeTrue())
-
-				// Non-universe special (like time.Time) still adds and is present
-				n2 := g.AddSpecial(symboldg.SpecialTypeTime)
-				Expect(n2).ToNot(BeNil())
-				Expect(g.IsSpecialPresent(symboldg.SpecialTypeTime)).To(BeTrue())
-			})
-		})
-
-		Context("AddEdge and duplicate-edge behavior", func() {
-			It("Adds an edge and does not append duplicates", func() {
-				g := symboldg.NewSymbolGraph()
-
-				// Create a struct node (has a version + node)
+			BeforeEach(func() {
+				// Create a struct node
 				fv := utils.MakeFileVersion("struct1", "")
 				structMeta := metadata.StructMeta{
 					SymNodeMeta: metadata.SymNodeMeta{Node: utils.MakeIdent("MyStruct"), FVersion: fv},
-					Fields:      nil,
 				}
-				structNode, err := g.AddStruct(symboldg.CreateStructNode{
-					Data:        structMeta,
-					Annotations: nil,
+				structNode, err = graph.AddStruct(symboldg.CreateStructNode{
+					Data: structMeta,
 				})
 				Expect(err).ToNot(HaveOccurred())
 				Expect(structNode).ToNot(BeNil())
 
-				// Create a builtin/type node to link to
-				typeNode := g.AddPrimitive(symboldg.PrimitiveTypeInt)
+				// Create a builtin/type node
+				typeNode = graph.AddPrimitive(symboldg.PrimitiveTypeInt)
 				Expect(typeNode).ToNot(BeNil())
+			})
 
-				// Add an edge from struct -> typeNode (EdgeKindType is used elsewhere; use a generic edge kind exported by package)
-				g.AddEdge(structNode.Id, typeNode.Id, symboldg.EdgeKindType, nil)
+			It("Adds an edge from struct to typeNode", func() {
+				graph.AddEdge(structNode.Id, typeNode.Id, symboldg.EdgeKindType, nil)
 
-				// Children should include the typeNode (1 edge)
-				children := g.Children(structNode, nil)
-				Expect(len(children)).To(Equal(1))
+				children := graph.Children(structNode, nil)
+				Expect(children).To(HaveLen(1))
+				Expect(children[0].Id).To(Equal(typeNode.Id))
+			})
 
-				// Try to add the same edge again -> should not add a duplicate
-				g.AddEdge(structNode.Id, typeNode.Id, symboldg.EdgeKindType, nil)
-				children2 := g.Children(structNode, nil)
-				Expect(len(children2)).To(Equal(1))
+			It("Does not add duplicate edges", func() {
+				graph.AddEdge(structNode.Id, typeNode.Id, symboldg.EdgeKindType, nil)
+				graph.AddEdge(structNode.Id, typeNode.Id, symboldg.EdgeKindType, nil) // duplicate
+
+				children := graph.Children(structNode, nil)
+				Expect(children).To(HaveLen(1))
 			})
 		})
 
-		Context("Structs, Fields, Parents, Children, Descendants", func() {
-			It("Registers fields when creating a struct and links them", func() {
-				g := symboldg.NewSymbolGraph()
+		Context("AddController", func() {
+			It("Adds a controller node successfully", func() {
+				controllerMeta := metadata.StructMeta{
+					SymNodeMeta: metadata.SymNodeMeta{
+						Node:     utils.MakeIdent("MyController"),
+						FVersion: fVersion,
+					},
+				}
+				request := symboldg.CreateControllerNode{
+					Data:        controllerMeta,
+					Annotations: nil,
+				}
 
-				fileVer := utils.MakeFileVersion("s1", "")
+				node, err := graph.AddController(request)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(node).ToNot(BeNil())
+				Expect(node.Kind).To(Equal(common.SymKindController))
+				Expect(node.Data).To(Equal(controllerMeta))
+			})
 
-				fieldMeta := metadata.FieldMeta{
-					SymNodeMeta: metadata.SymNodeMeta{Node: utils.MakeIdent("FieldA"), FVersion: fileVer},
+			It("Returns an error when createAndAddSymNode returns an error", func() {
+				// Pass a request with nil node to cause idempotencyGuard error
+				controllerMeta := metadata.StructMeta{
+					SymNodeMeta: metadata.SymNodeMeta{
+						Node:     nil,
+						FVersion: fVersion,
+					},
+				}
+				request := symboldg.CreateControllerNode{
+					Data:        controllerMeta,
+					Annotations: nil,
+				}
+
+				node, err := graph.AddController(request)
+				Expect(err).To(HaveOccurred())
+				Expect(node).To(BeNil())
+			})
+		})
+
+		Context("AddRoute", func() {
+			It("Adds a route and links it to its parent controller", func() {
+				// Prepare parent controller node
+				ctrlMeta := symboldg.KeyableNodeMeta{
+					Decl:     utils.MakeIdent("MyController"),
+					FVersion: *fVersion,
+				}
+
+				// Prepare route metadata
+				routeMeta := &metadata.ReceiverMeta{
+					SymNodeMeta: metadata.SymNodeMeta{
+						Name:       "MyRoute",
+						Node:       utils.MakeIdent("MyRoute"),
+						SymbolKind: common.SymKindReceiver,
+						PkgPath:    "example/pkg",
+						FVersion:   fVersion,
+					},
+					Params:  []metadata.FuncParam{},
+					RetVals: []metadata.FuncReturnValue{},
+				}
+
+				// Add the route
+				routeNode, err := graph.AddRoute(symboldg.CreateRouteNode{
+					Data:             routeMeta,
+					ParentController: ctrlMeta,
+				})
+				Expect(err).ToNot(HaveOccurred())
+				Expect(routeNode).ToNot(BeNil())
+
+				// The parent controller should have the route as a child (EdgeKindReceiver)
+				children := graph.Children(&symboldg.SymbolNode{Id: ctrlMeta.SymbolKey()}, &symboldg.TraversalFilter{
+					EdgeKind: common.Ptr(symboldg.EdgeKindReceiver),
+				})
+				Expect(children).To(HaveLen(1))
+				Expect(children[0].Id).To(Equal(routeNode.Id))
+			})
+
+			It("Returns an error when Data.Node is nil", func() {
+				ctrlMeta := symboldg.KeyableNodeMeta{
+					Decl:     utils.MakeIdent("MyController"),
+					FVersion: *fVersion,
+				}
+
+				// Invalid ReceiverMeta: Node is nil -> triggers idempotencyGuard error
+				badRouteMeta := &metadata.ReceiverMeta{
+					SymNodeMeta: metadata.SymNodeMeta{
+						Name:       "BadRoute",
+						Node:       nil, // <- invalid to hit the error branch
+						SymbolKind: common.SymKindReceiver,
+						PkgPath:    "example/pkg",
+						FVersion:   fVersion,
+					},
+				}
+
+				routeNode, err := graph.AddRoute(symboldg.CreateRouteNode{
+					Data:             badRouteMeta,
+					ParentController: ctrlMeta,
+				})
+
+				Expect(err).To(HaveOccurred())
+				Expect(routeNode).To(BeNil())
+			})
+		})
+
+		Context("AddRouteParam", func() {
+			var controllerMeta *metadata.ControllerMeta
+			var receiverMeta *metadata.ReceiverMeta
+			var routeNode *symboldg.SymbolNode
+
+			BeforeEach(func() {
+				// create a controller (parent for route)
+				controllerMeta = &metadata.ControllerMeta{
+					Struct: metadata.StructMeta{
+						SymNodeMeta: metadata.SymNodeMeta{
+							Name:     "MyController",
+							Node:     utils.MakeIdent("MyController"),
+							FVersion: fVersion,
+						},
+					},
+				}
+				_, err := graph.AddController(symboldg.CreateControllerNode{Data: controllerMeta.Struct})
+				Expect(err).ToNot(HaveOccurred())
+
+				// create a route (parent for params)
+				receiverMeta = &metadata.ReceiverMeta{
+					SymNodeMeta: metadata.SymNodeMeta{
+						Name:     "MyRoute",
+						Node:     utils.MakeIdent("MyRoute"),
+						FVersion: fVersion,
+					},
+				}
+
+				var err2 error
+				routeNode, err2 = graph.AddRoute(symboldg.CreateRouteNode{
+					Data: receiverMeta,
+					ParentController: symboldg.KeyableNodeMeta{
+						Decl:     controllerMeta.Struct.Node,
+						FVersion: *fVersion,
+					},
+				})
+				Expect(err2).ToNot(HaveOccurred())
+			})
+
+			It("Adds a parameter node and links it to the route", func() {
+				paramMeta := metadata.FuncParam{
+					SymNodeMeta: metadata.SymNodeMeta{
+						Name:     "MyParam",
+						Node:     utils.MakeIdent("MyParam"),
+						FVersion: fVersion,
+					},
+					Ordinal: 1,
 					Type: metadata.TypeUsageMeta{
-						SymNodeMeta: metadata.SymNodeMeta{Name: "int", Node: nil, FVersion: fileVer},
+						SymNodeMeta: metadata.SymNodeMeta{
+							Name:     "int",
+							Node:     nil,
+							FVersion: fVersion,
+						},
 						Layers: []metadata.TypeLayer{
 							metadata.NewBaseLayer(common.Ptr(graphs.NewUniverseSymbolKey("int"))),
 						},
 					},
-					IsEmbedded: false,
+				}
+
+				// Build a KeyableNodeMeta that points to the route we created above.
+				// routeNode.Data is stored as the original *metadata.ReceiverMeta (not a SymNodeMeta),
+				// so assert that concrete type before pulling out the inner AST node.
+				receiverData, ok := routeNode.Data.(*metadata.ReceiverMeta)
+				Expect(ok).To(BeTrue(), "expected routeNode.Data to be *metadata.ReceiverMeta")
+
+				parentRoute := symboldg.KeyableNodeMeta{
+					Decl:     receiverData.SymNodeMeta.Node,
+					FVersion: *routeNode.Version,
+				}
+
+				paramNode, err := graph.AddRouteParam(symboldg.CreateParameterNode{
+					Data:        paramMeta,
+					ParentRoute: parentRoute,
+				})
+				Expect(err).ToNot(HaveOccurred())
+				Expect(paramNode).ToNot(BeNil())
+
+				// Route should have the param as a child via EdgeKindParam
+				children := graph.Children(routeNode, &symboldg.TraversalFilter{
+					EdgeKind: common.Ptr(symboldg.EdgeKindParam),
+				})
+				Expect(children).To(HaveLen(1))
+				Expect(children[0].Id).To(Equal(paramNode.Id))
+			})
+
+			It("Returns an error when parameter's Node is nil (idempotencyGuard error path)", func() {
+				badParamMeta := metadata.FuncParam{
+					SymNodeMeta: metadata.SymNodeMeta{
+						Name:     "BadParam",
+						Node:     nil, // <- triggers idempotencyGuard error
+						FVersion: fVersion,
+					},
+					Ordinal: 0,
+				}
+
+				receiverData, ok := routeNode.Data.(*metadata.ReceiverMeta)
+				Expect(ok).To(BeTrue())
+
+				parentRoute := symboldg.KeyableNodeMeta{
+					Decl:     receiverData.SymNodeMeta.Node,
+					FVersion: *routeNode.Version,
+				}
+
+				paramNode, err := graph.AddRouteParam(symboldg.CreateParameterNode{
+					Data:        badParamMeta,
+					ParentRoute: parentRoute,
+				})
+				Expect(err).To(HaveOccurred())
+				Expect(paramNode).To(BeNil())
+			})
+		})
+
+		Context("AddRouteRetVal", func() {
+			var controllerMeta *metadata.ControllerMeta
+			var receiverMeta *metadata.ReceiverMeta
+			var routeNode *symboldg.SymbolNode
+
+			BeforeEach(func() {
+				// Create a controller (parent for the route)
+				controllerMeta = &metadata.ControllerMeta{
+					Struct: metadata.StructMeta{
+						SymNodeMeta: metadata.SymNodeMeta{
+							Name:     "MyController",
+							Node:     utils.MakeIdent("MyController"),
+							FVersion: fVersion,
+						},
+					},
+					Receivers: nil,
+				}
+				_, err := graph.AddController(symboldg.CreateControllerNode{
+					Data: controllerMeta.Struct,
+				})
+				Expect(err).ToNot(HaveOccurred())
+
+				// Create a route under that controller
+				receiverMeta = &metadata.ReceiverMeta{
+					SymNodeMeta: metadata.SymNodeMeta{
+						Name:     "MyRoute",
+						Node:     utils.MakeIdent("MyRoute"),
+						FVersion: fVersion,
+					},
+				}
+
+				var err2 error
+				routeNode, err2 = graph.AddRoute(symboldg.CreateRouteNode{
+					Data: receiverMeta,
+					ParentController: symboldg.KeyableNodeMeta{
+						Decl:     controllerMeta.Struct.Node,
+						FVersion: *fVersion,
+					},
+				})
+				Expect(err2).ToNot(HaveOccurred())
+			})
+
+			It("Adds a return value node and links it to the route", func() {
+				retValMeta := metadata.FuncReturnValue{
+					SymNodeMeta: metadata.SymNodeMeta{
+						Name:     "MyRetVal",
+						Node:     utils.MakeIdent("MyRetVal"),
+						FVersion: fVersion,
+					},
+					Ordinal: 1,
+					Type: metadata.TypeUsageMeta{
+						SymNodeMeta: metadata.SymNodeMeta{
+							Name:     "string",
+							Node:     nil,
+							FVersion: fVersion,
+						},
+						Layers: []metadata.TypeLayer{
+							metadata.NewBaseLayer(common.Ptr(graphs.NewUniverseSymbolKey("string"))),
+						},
+					},
+				}
+
+				receiverData, ok := routeNode.Data.(*metadata.ReceiverMeta)
+				Expect(ok).To(BeTrue(), "expected routeNode.Data to be *metadata.ReceiverMeta")
+
+				parentRoute := symboldg.KeyableNodeMeta{
+					Decl:     receiverData.SymNodeMeta.Node,
+					FVersion: *routeNode.Version,
+				}
+
+				retValNode, err := graph.AddRouteRetVal(symboldg.CreateReturnValueNode{
+					Data:        retValMeta,
+					ParentRoute: parentRoute,
+				})
+				Expect(err).ToNot(HaveOccurred())
+				Expect(retValNode).ToNot(BeNil())
+
+				children := graph.Children(routeNode, &symboldg.TraversalFilter{
+					EdgeKind: common.Ptr(symboldg.EdgeKindRetVal),
+				})
+				Expect(children).To(HaveLen(1))
+				Expect(children[0].Id).To(Equal(retValNode.Id))
+			})
+
+			It("Returns an error when return value's Node is nil (idempotencyGuard error path)", func() {
+				badRetValMeta := metadata.FuncReturnValue{
+					SymNodeMeta: metadata.SymNodeMeta{
+						Name:     "BadRetVal",
+						Node:     nil, // triggers idempotencyGuard error
+						FVersion: fVersion,
+					},
+					Ordinal: 0,
+				}
+
+				receiverData, ok := routeNode.Data.(*metadata.ReceiverMeta)
+				Expect(ok).To(BeTrue())
+
+				parentRoute := symboldg.KeyableNodeMeta{
+					Decl:     receiverData.SymNodeMeta.Node,
+					FVersion: *routeNode.Version,
+				}
+
+				retValNode, err := graph.AddRouteRetVal(symboldg.CreateReturnValueNode{
+					Data:        badRetValMeta,
+					ParentRoute: parentRoute,
+				})
+				Expect(err).To(HaveOccurred())
+				Expect(retValNode).To(BeNil())
+			})
+		})
+
+		Context("AddStruct", func() {
+			It("Registers fields as edges when creating a struct", func() {
+				fieldMeta := metadata.FieldMeta{
+					SymNodeMeta: metadata.SymNodeMeta{Node: utils.MakeIdent("FieldA"), FVersion: fVersion},
+					Type: metadata.TypeUsageMeta{
+						SymNodeMeta: metadata.SymNodeMeta{Name: "int", FVersion: fVersion},
+						Layers: []metadata.TypeLayer{
+							metadata.NewBaseLayer(common.Ptr(graphs.NewUniverseSymbolKey("int"))),
+						},
+					},
 				}
 
 				structMeta := metadata.StructMeta{
-					SymNodeMeta: metadata.SymNodeMeta{Node: utils.MakeIdent("MyStruct"), FVersion: fileVer},
+					SymNodeMeta: metadata.SymNodeMeta{Node: utils.MakeIdent("MyStruct"), FVersion: fVersion},
 					Fields:      []metadata.FieldMeta{fieldMeta},
 				}
 
-				// Add struct - this will add an edge from struct -> fieldKey (field node not yet present)
-				structNode, err := g.AddStruct(symboldg.CreateStructNode{Data: structMeta})
+				structNode, err := graph.AddStruct(symboldg.CreateStructNode{Data: structMeta})
 				Expect(err).ToNot(HaveOccurred())
-				Expect(structNode).ToNot(BeNil())
 
-				// Now explicitly AddField with same FieldMeta to create the actual field node
-				fieldNode, err := g.AddField(symboldg.CreateFieldNode{
+				// Edge to field exists, but field node not added yet
+				children := graph.Children(structNode, nil)
+				Expect(children).To(BeEmpty())
+			})
+
+			It("Returns an error when struct Node is nil", func() {
+				badMeta := metadata.StructMeta{
+					SymNodeMeta: metadata.SymNodeMeta{
+						Name:     "BadStruct",
+						Node:     nil, // triggers idempotencyGuard error
+						FVersion: fVersion,
+					},
+					Fields: nil,
+				}
+
+				structNode, err := graph.AddStruct(symboldg.CreateStructNode{
+					Data:        badMeta,
+					Annotations: nil,
+				})
+				Expect(err).To(HaveOccurred())
+				Expect(structNode).To(BeNil())
+			})
+		})
+
+		Context("AddEnum", func() {
+			var enumMeta metadata.EnumMeta
+
+			BeforeEach(func() {
+				enumMeta = metadata.EnumMeta{
+					SymNodeMeta: metadata.SymNodeMeta{
+						Name:     "MyEnum",
+						Node:     utils.MakeIdent("MyEnum"),
+						FVersion: fVersion,
+					},
+					ValueKind: metadata.EnumValueKindString,
+					Values: []metadata.EnumValueDefinition{
+						{
+							SymNodeMeta: metadata.SymNodeMeta{
+								Name:     "ValueOne",
+								Node:     utils.MakeIdent("ValueOne"),
+								FVersion: fVersion,
+							},
+							Value: "First",
+						},
+						{
+							SymNodeMeta: metadata.SymNodeMeta{
+								Name:     "ValueTwo",
+								Node:     utils.MakeIdent("ValueTwo"),
+								FVersion: fVersion,
+							},
+							Value: "Second",
+						},
+					},
+				}
+			})
+
+			It("Adds an enum node and links its values and underlying type", func() {
+				enumNode, err := graph.AddEnum(symboldg.CreateEnumNode{
+					Data:        enumMeta,
+					Annotations: nil,
+				})
+				Expect(err).ToNot(HaveOccurred())
+				Expect(enumNode).ToNot(BeNil())
+
+				// Enum should have Value edges to its constants
+				valueChildren := graph.Children(enumNode, &symboldg.TraversalFilter{
+					EdgeKind: common.Ptr(symboldg.EdgeKindValue),
+				})
+				Expect(valueChildren).To(HaveLen(len(enumMeta.Values)))
+
+				// Each value should also have a Reference edge to the underlying type
+				valueSymKey := graphs.NewUniverseSymbolKey(string(enumMeta.ValueKind))
+				for _, valueChild := range valueChildren {
+					referenceEdges := graph.Children(valueChild, &symboldg.TraversalFilter{
+						EdgeKind: common.Ptr(symboldg.EdgeKindReference),
+					})
+					Expect(referenceEdges).To(HaveLen(1))
+					Expect(referenceEdges[0].Id).To(Equal(valueSymKey))
+				}
+			})
+
+			It("Returns an error when enum Node is nil", func() {
+				badMeta := metadata.EnumMeta{
+					SymNodeMeta: metadata.SymNodeMeta{
+						Name:     "BadEnum",
+						Node:     nil, // triggers createAndAddSymNode error
+						FVersion: fVersion,
+					},
+					ValueKind: metadata.EnumValueKindInt,
+					Values:    nil,
+				}
+
+				enumNode, err := graph.AddEnum(symboldg.CreateEnumNode{
+					Data:        badMeta,
+					Annotations: nil,
+				})
+				Expect(err).To(HaveOccurred())
+				Expect(enumNode).To(BeNil())
+			})
+
+			It("Returns an error when creating an enum value fails", func() {
+				badValuesMeta := enumMeta
+				badValuesMeta.Values = []metadata.EnumValueDefinition{
+					enumMeta.Values[0],
+					{
+						SymNodeMeta: metadata.SymNodeMeta{
+							Name:     "BadValue",
+							Node:     nil, // triggers createAndAddSymNode error for this value
+							FVersion: fVersion,
+						},
+						Value: "Broken",
+					},
+				}
+
+				enumNode, err := graph.AddEnum(symboldg.CreateEnumNode{
+					Data:        badValuesMeta,
+					Annotations: nil,
+				})
+				Expect(err).To(HaveOccurred())
+				Expect(enumNode).To(BeNil())
+			})
+
+			It("Returns an error when an enum references a non-primitive type that does not exist in the graph", func() {
+				badValueKind := enumMeta
+				badValueKind.ValueKind = "NonPrimitiveType"
+
+				enumNode, err := graph.AddEnum(symboldg.CreateEnumNode{
+					Data:        badValueKind,
+					Annotations: nil,
+				})
+
+				Expect(err).To(MatchError(
+					ContainSubstring("value kind for enum 'MyEnum' is 'NonPrimitiveType' which is unexpected")),
+				)
+				Expect(enumNode).To(BeNil())
+			})
+		})
+
+		Context("AddField", func() {
+			var fieldMeta metadata.FieldMeta
+			var baseTypeKey graphs.SymbolKey
+
+			BeforeEach(func() {
+				baseTypeKey = graphs.NewUniverseSymbolKey("float32")
+
+				fieldMeta = metadata.FieldMeta{
+					SymNodeMeta: metadata.SymNodeMeta{
+						Name:     "MyField",
+						Node:     utils.MakeIdent("MyField"),
+						FVersion: fVersion,
+					},
+					Type: metadata.TypeUsageMeta{
+						SymNodeMeta: metadata.SymNodeMeta{
+							Name:     "float32",
+							Node:     nil,
+							FVersion: fVersion,
+						},
+						Import: common.ImportTypeNone,
+						Layers: []metadata.TypeLayer{
+							metadata.NewBaseLayer(&baseTypeKey),
+						},
+					},
+					IsEmbedded: false,
+				}
+			})
+
+			It("Adds a field node and links it to its base type", func() {
+				fieldNode, err := graph.AddField(symboldg.CreateFieldNode{
 					Data:        fieldMeta,
 					Annotations: nil,
 				})
 				Expect(err).ToNot(HaveOccurred())
 				Expect(fieldNode).ToNot(BeNil())
 
-				// Children of struct should include the field node
-				children := g.Children(structNode, nil)
-				Expect(len(children)).To(Equal(1))
-				Expect(children[0].Kind).To(Equal(common.SymKindField))
+				// Add the type node so links actually exist
+				graph.AddPrimitive(symboldg.PrimitiveTypeFloat32)
 
-				// Parents of the field should include the struct
-				parents := g.Parents(fieldNode, nil)
-				Expect(len(parents)).To(Equal(1))
-				Expect(parents[0].Kind).To(Equal(common.SymKindStruct))
-
-				// Descendants of struct should traverse to the field
-				desc := g.Descendants(structNode, nil)
-				Expect(len(desc)).To(Equal(1))
-				Expect(desc[0].Id).To(Equal(fieldNode.Id))
+				children := graph.Children(fieldNode, &symboldg.TraversalFilter{
+					EdgeKind: common.Ptr(symboldg.EdgeKindType),
+				})
+				Expect(children).To(HaveLen(1))
+				Expect(children[0].Id).To(Equal(baseTypeKey))
 			})
 
-			It("Honors traversal filters (EdgeKind, NodeKind, FilterFunc)", func() {
-				g := symboldg.NewSymbolGraph()
+			It("Returns an error when the field Node is nil", func() {
+				badMeta := fieldMeta
+				badMeta.Node = nil // Should cause createAndAddSymNode to error
 
-				// Setup: parent -> child (EdgeKindField) and also add an extra reference edge parent->childRef
-				fv := utils.MakeFileVersion("f", "")
-				parentMeta := metadata.StructMeta{
-					SymNodeMeta: metadata.SymNodeMeta{
-						Node:     utils.MakeIdent("P"),
-						FVersion: fv,
-					},
-				}
+				fieldNode, err := graph.AddField(symboldg.CreateFieldNode{
+					Data:        badMeta,
+					Annotations: nil,
+				})
+				Expect(err).To(HaveOccurred())
+				Expect(fieldNode).To(BeNil())
+			})
 
-				childField := metadata.FieldMeta{
-					SymNodeMeta: metadata.SymNodeMeta{
-						Node:     utils.MakeIdent("C"),
-						FVersion: fv},
-					Type: metadata.TypeUsageMeta{
+			It("Returns an error when getTypeRef fails due to missing base type", func() {
+				badMeta := fieldMeta
+				badMeta.Type.Layers = nil // no base layer → getTypeRef error
+
+				fieldNode, err := graph.AddField(symboldg.CreateFieldNode{
+					Data:        badMeta,
+					Annotations: nil,
+				})
+				Expect(err).To(HaveOccurred())
+				Expect(fieldNode).To(BeNil())
+			})
+		})
+
+		Context("AddConst", func() {
+			It("Adds a const without error", func() {
+				node, err := graph.AddConst(symboldg.CreateConstNode{
+					Data: metadata.ConstMeta{
 						SymNodeMeta: metadata.SymNodeMeta{
-							Node:     nil,
-							FVersion: fv,
+							Name:     "SomeConst",
+							Node:     utils.MakeIdent("SomeConst"),
+							FVersion: fVersion,
 						},
+						Value: "some value",
+						Type: metadata.TypeUsageMeta{
+							SymNodeMeta: metadata.SymNodeMeta{Name: "string", FVersion: fVersion},
+							Layers: []metadata.TypeLayer{
+								metadata.NewBaseLayer(common.Ptr(graphs.NewUniverseSymbolKey("string"))),
+							},
+						},
+					},
+				})
+
+				Expect(err).To(BeNil())
+				Expect(node).ToNot(BeNil())
+				Expect(node.Id.Name).To(Equal("SomeConst"))
+				Expect(node.Kind).To(Equal(common.SymKindConstant))
+			})
+		})
+
+		Context("FindByKind", func() {
+			It("Correctly finds elements by the symbol kind", func() {
+				// Add a couple of relevant nodes
+				anyNode := graph.AddSpecial(symboldg.SpecialTypeAny)
+				errNode := graph.AddSpecial(symboldg.SpecialTypeError)
+
+				// Add a couple unrelated nodes that should be ignored
+
+				graph.AddPrimitive(symboldg.PrimitiveTypeBool)
+				graph.AddPrimitive(symboldg.PrimitiveTypeString)
+
+				results := graph.FindByKind(common.SymKindSpecialBuiltin)
+
+				Expect(results).To(HaveLen(2))
+				Expect(results).To(ContainElements(anyNode, errNode))
+			})
+		})
+
+		Context("AddPrimitive", func() {
+			It("Adds a primitive and returns a non-nil node", func() {
+				graph := symboldg.NewSymbolGraph()
+				node := graph.AddPrimitive(symboldg.PrimitiveTypeBool)
+				Expect(node).ToNot(BeNil())
+			})
+
+			It("Returns the same node when adding a duplicate primitive", func() {
+				graph := symboldg.NewSymbolGraph()
+				n1 := graph.AddPrimitive(symboldg.PrimitiveTypeBool)
+				n2 := graph.AddPrimitive(symboldg.PrimitiveTypeBool)
+				Expect(n2).To(Equal(n1))
+			})
+		})
+
+		Context("AddSpecial", func() {
+			It("Adds a special type and returns a non-nil node", func() {
+				graph := symboldg.NewSymbolGraph()
+				node := graph.AddSpecial(symboldg.SpecialTypeError)
+				Expect(node).ToNot(BeNil())
+			})
+		})
+
+		Context("IsPrimitivePresent", func() {
+			It("Recognizes that a previously added primitive is present", func() {
+				graph := symboldg.NewSymbolGraph()
+				graph.AddPrimitive(symboldg.PrimitiveTypeBool)
+				Expect(graph.IsPrimitivePresent(symboldg.PrimitiveTypeBool)).To(BeTrue())
+			})
+
+			It("Returns false for primitives that have not been added", func() {
+				graph := symboldg.NewSymbolGraph()
+				Expect(graph.IsPrimitivePresent(symboldg.PrimitiveTypeInt)).To(BeFalse())
+			})
+		})
+
+		Context("IsSpecialPresent", func() {
+			It("Recognizes a previously added special type", func() {
+				graph := symboldg.NewSymbolGraph()
+				graph.AddSpecial(symboldg.SpecialTypeError)
+				Expect(graph.IsSpecialPresent(symboldg.SpecialTypeError)).To(BeTrue())
+			})
+
+			It("Returns false for special types not added", func() {
+				graph := symboldg.NewSymbolGraph()
+				Expect(graph.IsSpecialPresent(symboldg.SpecialTypeTime)).To(BeFalse())
+			})
+		})
+
+		Context("Children", func() {
+			var structNode *symboldg.SymbolNode
+			var fieldNode *symboldg.SymbolNode
+
+			BeforeEach(func() {
+				// Build: Struct -> Field
+				structMeta := metadata.StructMeta{
+					SymNodeMeta: metadata.SymNodeMeta{Node: utils.MakeIdent("Parent"), FVersion: fVersion},
+				}
+				structNode, _ = graph.AddStruct(symboldg.CreateStructNode{Data: structMeta})
+
+				fieldMeta := metadata.FieldMeta{
+					SymNodeMeta: metadata.SymNodeMeta{Node: utils.MakeIdent("Child"), FVersion: fVersion},
+					Type: metadata.TypeUsageMeta{
+						SymNodeMeta: metadata.SymNodeMeta{Name: "int", FVersion: fVersion},
 						Layers: []metadata.TypeLayer{
 							metadata.NewBaseLayer(common.Ptr(graphs.NewUniverseSymbolKey("int"))),
 						},
 					},
 				}
+				fieldNode, _ = graph.AddField(symboldg.CreateFieldNode{Data: fieldMeta})
 
-				parentNode, err := g.AddStruct(symboldg.CreateStructNode{Data: parentMeta})
-				Expect(err).ToNot(HaveOccurred())
-				childNode, err := g.AddField(symboldg.CreateFieldNode{Data: childField})
-				Expect(err).ToNot(HaveOccurred())
+				graph.AddEdge(structNode.Id, fieldNode.Id, symboldg.EdgeKindField, nil)
+			})
 
-				// Add an extra (different kind) edge to the same child
-				g.AddEdge(parentNode.Id, childNode.Id, symboldg.EdgeKindField, nil)
+			It("Returns only children matching the filter", func() {
+				filter := &symboldg.TraversalFilter{EdgeKind: common.Ptr(symboldg.EdgeKindField)}
+				result := graph.Children(structNode, filter)
+				Expect(result).To(HaveLen(1))
+				Expect(result[0].Id).To(Equal(fieldNode.Id))
+			})
 
-				// Filter by EdgeKindField only -> should still get child (since struct->field edge exists)
-				filterEdge := &symboldg.TraversalFilter{
-					EdgeKind: common.Ptr(symboldg.EdgeKindField),
-				}
-				children := g.Children(parentNode, filterEdge)
-				Expect(len(children)).To(Equal(1))
-				Expect(children[0].Id).To(Equal(childNode.Id))
-
-				// Filter by NodeKind that does not match -> exclude
-				invalidNodeKind := common.SymKindConstant
-				filterNodeKind := &symboldg.TraversalFilter{NodeKind: &invalidNodeKind}
-				children2 := g.Children(parentNode, filterNodeKind)
-				Expect(len(children2)).To(Equal(0))
-
-				// Filter by custom FilterFunc that vetoes all nodes
-				filterFunc := &symboldg.TraversalFilter{FilterFunc: func(n *symboldg.SymbolNode) bool { return false }}
-				children3 := g.Children(parentNode, filterFunc)
-				Expect(len(children3)).To(Equal(0))
+			It("Skips edges that do not match a given filter", func() {
+				filter := &symboldg.TraversalFilter{EdgeKind: common.Ptr(symboldg.EdgeKindCall)} // This should drop the edge
+				result := graph.Children(structNode, filter)
+				Expect(result).To(HaveLen(0))
 			})
 		})
 
-		Context("Enums and Enum values", func() {
-			It("Adds enum and creates value nodes and reference links", func() {
-				g := symboldg.NewSymbolGraph()
+		Context("Parents", func() {
+			var structNode *symboldg.SymbolNode
+			var fieldNode *symboldg.SymbolNode
+			var otherNode *symboldg.SymbolNode
 
-				fv := utils.MakeFileVersion("enum1", "")
-				// Create two enum value definitions
-				v1 := metadata.EnumValueDefinition{
-					SymNodeMeta: metadata.SymNodeMeta{
-						Node:     utils.MakeIdent("ValA"),
-						FVersion: fv,
+			BeforeEach(func() {
+				structNode, _ = graph.AddStruct(symboldg.CreateStructNode{
+					Data: metadata.StructMeta{
+						SymNodeMeta: metadata.SymNodeMeta{Node: utils.MakeIdent("Parent"), FVersion: fVersion},
 					},
-					Value: "A",
-				}
-				v2 := metadata.EnumValueDefinition{
-					SymNodeMeta: metadata.SymNodeMeta{
-						Node:     utils.MakeIdent("ValB"),
-						FVersion: fv,
+				})
+				fieldNode, _ = graph.AddField(symboldg.CreateFieldNode{
+					Data: metadata.FieldMeta{
+						SymNodeMeta: metadata.SymNodeMeta{Node: utils.MakeIdent("Child"), FVersion: fVersion},
+						Type: metadata.TypeUsageMeta{
+							SymNodeMeta: metadata.SymNodeMeta{Name: "int", FVersion: fVersion},
+							Layers: []metadata.TypeLayer{
+								metadata.NewBaseLayer(common.Ptr(graphs.NewUniverseSymbolKey("int"))),
+							},
+						},
 					},
-					Value: "B",
+				})
+
+				otherNode, _ = graph.AddField(symboldg.CreateFieldNode{
+					Data: metadata.FieldMeta{
+						SymNodeMeta: metadata.SymNodeMeta{Node: utils.MakeIdent("OtherChild"), FVersion: fVersion},
+						Type: metadata.TypeUsageMeta{
+							SymNodeMeta: metadata.SymNodeMeta{Name: "string", FVersion: fVersion},
+							Layers: []metadata.TypeLayer{
+								metadata.NewBaseLayer(common.Ptr(graphs.NewUniverseSymbolKey("string"))),
+							},
+						},
+					},
+				})
+
+				// Add a valid edge from structNode to fieldNode
+				graph.AddEdge(structNode.Id, fieldNode.Id, symboldg.EdgeKindField, nil)
+
+				// Add an edge from structNode to otherNode (for later tests)
+				graph.AddEdge(structNode.Id, otherNode.Id, symboldg.EdgeKindField, nil)
+			})
+
+			It("Returns parent nodes correctly", func() {
+				result := graph.Parents(fieldNode, nil)
+				Expect(result).To(HaveLen(1))
+				Expect(result[0].Id).To(Equal(structNode.Id))
+			})
+
+			It("Skips edges pointing to different nodes", func() {
+				// Here we pass otherNode to Parents but edges from structNode point to fieldNode and otherNode
+				// The edge to fieldNode should be skipped because edge.To != otherNode.Id
+				result := graph.Parents(fieldNode, nil)
+				Expect(result).To(HaveLen(1))
+				Expect(result[0].Id).To(Equal(structNode.Id))
+
+				// Now call Parents on otherNode, should return parent structNode because edge exists
+				resultOther := graph.Parents(otherNode, nil)
+				Expect(resultOther).To(HaveLen(1))
+				Expect(resultOther[0].Id).To(Equal(structNode.Id))
+
+				// To trigger continue edge.To != node.Id, create a fake node with no incoming edges
+				fakeNode := &symboldg.SymbolNode{
+					Id: graphs.NewUniverseSymbolKey("fakeNode"),
+				}
+				resultFake := graph.Parents(fakeNode, nil)
+				Expect(resultFake).To(HaveLen(0)) // No parents, so effectively edges skipped
+			})
+
+			It("Skips edges excluded by EdgeKind filter", func() {
+				// The existing edge kind is EdgeKindField
+				// We set filter EdgeKind to a different kind, so shouldIncludeEdge returns false
+				filter := &symboldg.TraversalFilter{
+					EdgeKind: common.Ptr(symboldg.EdgeKindValue), // deliberately a different edge kind
 				}
 
-				enumMeta := metadata.EnumMeta{
-					SymNodeMeta: metadata.SymNodeMeta{Node: utils.MakeIdent("MyEnum"), FVersion: fv},
-					ValueKind:   metadata.EnumValueKind("string"),
-					Values:      []metadata.EnumValueDefinition{v1, v2},
+				result := graph.Parents(fieldNode, filter)
+				Expect(result).To(HaveLen(0))
+			})
+
+		})
+
+		Context("Descendants", func() {
+			var structNode, childNode, grandChildNode *symboldg.SymbolNode
+
+			BeforeEach(func() {
+				structNode, _ = graph.AddStruct(symboldg.CreateStructNode{
+					Data: metadata.StructMeta{
+						SymNodeMeta: metadata.SymNodeMeta{Node: utils.MakeIdent("GrandParent"), FVersion: fVersion},
+					},
+				})
+				childNode, _ = graph.AddField(symboldg.CreateFieldNode{
+					Data: metadata.FieldMeta{
+						SymNodeMeta: metadata.SymNodeMeta{Node: utils.MakeIdent("Child"), FVersion: fVersion},
+						Type: metadata.TypeUsageMeta{
+							SymNodeMeta: metadata.SymNodeMeta{Name: "int", FVersion: fVersion},
+							Layers: []metadata.TypeLayer{
+								metadata.NewBaseLayer(common.Ptr(graphs.NewUniverseSymbolKey("int"))),
+							},
+						},
+					},
+				})
+				grandChildNode, _ = graph.AddField(symboldg.CreateFieldNode{
+					Data: metadata.FieldMeta{
+						SymNodeMeta: metadata.SymNodeMeta{Node: utils.MakeIdent("GrandChild"), FVersion: fVersion},
+						Type: metadata.TypeUsageMeta{
+							SymNodeMeta: metadata.SymNodeMeta{Name: "int", FVersion: fVersion},
+							Layers: []metadata.TypeLayer{
+								metadata.NewBaseLayer(common.Ptr(graphs.NewUniverseSymbolKey("int"))),
+							},
+						},
+					},
+				})
+
+				graph.AddEdge(structNode.Id, childNode.Id, symboldg.EdgeKindField, nil)
+				graph.AddEdge(childNode.Id, grandChildNode.Id, symboldg.EdgeKindField, nil)
+			})
+
+			It("Recursively traverses all descendants", func() {
+				result := graph.Descendants(structNode, nil)
+				Expect(result).To(HaveLen(2))
+				Expect(result).To(ContainElements(childNode, grandChildNode))
+			})
+
+			It("Does not revisit already visited nodes", func() {
+				// Add a cyclic edge to test visited map
+				graph.AddEdge(grandChildNode.Id, childNode.Id, symboldg.EdgeKindField, nil)
+
+				result := graph.Descendants(structNode, nil)
+				// Should still only include each node once
+				Expect(result).To(HaveLen(2))
+				Expect(result).To(ContainElements(childNode, grandChildNode))
+			})
+
+			It("Respects the filter to exclude some children", func() {
+				// Add a node we can refer to
+				errNode := graph.AddSpecial("error")
+				graph.AddEdge(structNode.Id, errNode.Id, symboldg.EdgeKindReference, nil)
+
+				// Create a filter that excludes the grandChildNode by NodeKind mismatch
+				filter := &symboldg.TraversalFilter{
+					NodeKind: common.Ptr(common.SymKindSpecialBuiltin),
 				}
 
-				enumNode, err := g.AddEnum(symboldg.CreateEnumNode{Data: enumMeta})
-				Expect(err).ToNot(HaveOccurred())
-				Expect(enumNode).ToNot(BeNil())
-
-				// Enum meta should appear in Enums() output
-				enums := g.Enums()
-				Expect(len(enums)).To(BeNumerically(">=", 1))
-
-				// Children of enum should include its values (constants)
-				children := g.Children(enumNode, nil)
-				Expect(len(children)).To(Equal(2))
-				for _, c := range children {
-					Expect(c.Kind).To(Equal(common.SymKindConstant))
-				}
+				result := graph.Descendants(structNode, filter)
+				// We expect only the 'error' node here as the only filter match
+				Expect(result).To(HaveLen(1))
+				Expect(result[0].Id).To(Equal(errNode.Id))
 			})
 		})
 
-		Context("CreateConst and FindByKind helpers", func() {
-			It("Adds constants and can FindByKind", func() {
-				g := symboldg.NewSymbolGraph()
-
-				fv := utils.MakeFileVersion("c1", "")
-				constMeta := metadata.ConstMeta{
-					SymNodeMeta: metadata.SymNodeMeta{Node: utils.MakeIdent("MyConst"), FVersion: fv},
-					Value:       123,
-					Type: metadata.TypeUsageMeta{
-						SymNodeMeta: metadata.SymNodeMeta{Name: "int", FVersion: fv},
+		Context("Auxiliary", func() {
+			It("Returns an error from the idempotency guard when the given FileVersion is nil", func() {
+				_, err := graph.AddConst(symboldg.CreateConstNode{
+					Data: metadata.ConstMeta{
+						SymNodeMeta: metadata.SymNodeMeta{
+							Name:     "SomeConst",
+							Node:     utils.MakeIdent("SomeConst"),
+							FVersion: nil,
+						},
+						Value: "some value",
+						Type: metadata.TypeUsageMeta{
+							SymNodeMeta: metadata.SymNodeMeta{Name: "string", FVersion: nil},
+							Layers: []metadata.TypeLayer{
+								metadata.NewBaseLayer(common.Ptr(graphs.NewUniverseSymbolKey("string"))),
+							},
+						},
 					},
-				}
-
-				constNode, err := g.AddConst(symboldg.CreateConstNode{Data: constMeta})
-				Expect(err).ToNot(HaveOccurred())
-				Expect(constNode).ToNot(BeNil())
-
-				consts := g.FindByKind(common.SymKindConstant)
-				Expect(len(consts)).To(BeNumerically(">=", 1))
+				})
+				Expect(err).To(MatchError(ContainSubstring("idempotencyGuard received a nil version parameter")))
 			})
-		})
 
-		Context("Idempotency / evict behavior via repeated Add", func() {
 			It("Evicts old nodes when adding same decl with a different FileVersion", func() {
-				g := symboldg.NewSymbolGraph()
-
 				// Create a "same" AST node (same ident) but two different versions
 				node := utils.MakeIdent("S")
 				fv1 := utils.MakeFileVersion("v1", "some-hash")
@@ -517,7 +1182,7 @@ var _ = Describe("Unit Tests - Graphs", func() {
 						FVersion: fv1,
 					},
 				}
-				n1, err := g.AddStruct(symboldg.CreateStructNode{Data: structMetaV1})
+				n1, err := graph.AddStruct(symboldg.CreateStructNode{Data: structMetaV1})
 				Expect(err).ToNot(HaveOccurred())
 				Expect(n1).ToNot(BeNil())
 
@@ -536,68 +1201,22 @@ var _ = Describe("Unit Tests - Graphs", func() {
 						},
 					},
 				}
-				_, err = g.AddField(symboldg.CreateFieldNode{Data: fieldMeta})
+				_, err = graph.AddField(symboldg.CreateFieldNode{Data: fieldMeta})
 				Expect(err).ToNot(HaveOccurred())
 
 				// Now add the "same" struct but with a different file version -> should evict the previous
 				structMetaV2 := metadata.StructMeta{SymNodeMeta: metadata.SymNodeMeta{Node: node, FVersion: fv2}}
-				n2, err := g.AddStruct(symboldg.CreateStructNode{Data: structMetaV2})
+				n2, err := graph.AddStruct(symboldg.CreateStructNode{Data: structMetaV2})
 				Expect(err).ToNot(HaveOccurred())
 				Expect(n2).ToNot(BeNil())
 				// Ensure the new node is present and has the new version
 				found := false
-				for _, s := range g.FindByKind(common.SymKindStruct) {
+				for _, s := range graph.FindByKind(common.SymKindStruct) {
 					if s.Id.Equals(n2.Id) {
 						found = true
 					}
 				}
 				Expect(found).To(BeTrue())
-			})
-		})
-
-		Context("Error paths for createAndAddSymNode via AddController/AddRoute/AddField with nil inputs", func() {
-			It("AddController returns an error when given a nil decl", func() {
-				g := symboldg.NewSymbolGraph()
-				// Data.Node nil will cause idempotencyGuard to error
-				_, err := g.AddController(
-					symboldg.CreateControllerNode{
-						Data: metadata.StructMeta{
-							SymNodeMeta: metadata.SymNodeMeta{
-								Node:     nil,
-								FVersion: utils.MakeFileVersion("x", ""),
-							},
-						},
-					},
-				)
-				Expect(err).To(HaveOccurred())
-			})
-
-			It("AddField returns an error when Type resolution fails if Type usage invalid", func() {
-				g := symboldg.NewSymbolGraph()
-				// Build a FieldMeta with a Type that is built-in but has missing info causing getTypeRef to still succeed.
-				// The primary error path for AddField is from getTypeRef; to trigger that we can pass a TypeUsageMeta that
-				// does not implement expected behavior. However, since getTypeRef in our provided code only errors when
-				// typeUsage.SymbolKind.IsBuiltin() is false and GetBaseTypeRefKey errors, it's tricky without redefining helpers.
-				// We assert AddField happy-path here as a sanity test instead.
-				fv := utils.MakeFileVersion("ferr", "")
-				fieldMeta := metadata.FieldMeta{
-					SymNodeMeta: metadata.SymNodeMeta{
-						Node:     utils.MakeIdent("FieldErr"),
-						FVersion: fv,
-					},
-					Type: metadata.TypeUsageMeta{
-						SymNodeMeta: metadata.SymNodeMeta{
-							Name:     "int",
-							FVersion: fv,
-						},
-						Layers: []metadata.TypeLayer{
-							metadata.NewBaseLayer(common.Ptr(graphs.NewUniverseSymbolKey("int"))),
-						},
-					},
-				}
-				n, err := g.AddField(symboldg.CreateFieldNode{Data: fieldMeta})
-				Expect(err).ToNot(HaveOccurred())
-				Expect(n).ToNot(BeNil())
 			})
 		})
 
