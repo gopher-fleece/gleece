@@ -14,3 +14,8 @@ type SymbolNode struct {
 	Data        any // Actual metadata: RouteMetadata, TypeMetadata, etc.
 	Annotations *annotations.AnnotationHolder
 }
+
+type SymbolNodeWithOrdinal struct {
+	Node    *SymbolNode
+	Ordinal uint32
+}

@@ -92,18 +92,19 @@ func (db *DotBuilder) RenderLegend() {
 	db.sb.WriteString("  subgraph cluster_legend {\n")
 	db.sb.WriteString("    label = \"Legend\";\n    style = dashed;\n")
 	i := 0
-	for kind, style := range db.theme.NodeStyles {
-		color := style.Color
+
+	for _, nodeStyle := range db.theme.NodeStylesOrdered() {
+		color := nodeStyle.Style.Color
 		if color == "" {
 			color = "gray90"
 		}
-		shape := style.Shape
+		shape := nodeStyle.Style.Shape
 		if shape == "" {
 			shape = "ellipse"
 		}
 		db.sb.WriteString(fmt.Sprintf(
 			"    L%d [label=\"%s\", style=filled, shape=%s, fillcolor=\"%s\"];\n",
-			i, kind, shape, color))
+			i, nodeStyle.Kind, shape, color))
 		i++
 	}
 	db.sb.WriteString("  }\n")

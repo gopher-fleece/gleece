@@ -1,8 +1,10 @@
 package symboldg
 
 import (
+	"cmp"
 	"fmt"
 	"go/ast"
+	"slices"
 	"strings"
 
 	"github.com/gopher-fleece/gleece/common"
@@ -25,6 +27,8 @@ type SymbolGraphBuilder interface {
 	AddPrimitive(kind PrimitiveType) *SymbolNode
 	AddSpecial(special SpecialType) *SymbolNode
 	AddEdge(from, to graphs.SymbolKey, kind SymbolEdgeKind, meta map[string]string)
+	RemoveEdge(from, to graphs.SymbolKey, kind *SymbolEdgeKind)
+	RemoveNode(key graphs.SymbolKey)
 
 	Structs() []metadata.StructMeta
 	Enums() []metadata.EnumMeta
@@ -34,16 +38,16 @@ type SymbolGraphBuilder interface {
 	IsSpecialPresent(special SpecialType) bool
 
 	// Children returns direct outward SymbolNode dependencies from the given node,
-	// applying the given traversal filter if non-nil.
-	Children(node *SymbolNode, filter *TraversalFilter) []*SymbolNode
+	// applying the given traversal behavior if non-nil.
+	Children(node *SymbolNode, behavior *TraversalBehavior) []*SymbolNode
 
 	// Parents returns nodes that have edges pointing to the given node,
-	// applying the given traversal filter if non-nil.
-	Parents(node *SymbolNode, filter *TraversalFilter) []*SymbolNode
+	// applying the given traversal behavior if non-nil.
+	Parents(node *SymbolNode, behavior *TraversalBehavior) []*SymbolNode
 
 	// Descendants returns all transitive children reachable from root,
-	// applying the filter at each step to decide traversal and inclusion.
-	Descendants(root *SymbolNode, filter *TraversalFilter) []*SymbolNode
+	// applying the behavior at each step to decide traversal and inclusion.
+	Descendants(root *SymbolNode, behavior *TraversalBehavior) []*SymbolNode
 
 	ToDot(theme *dot.DotTheme) string
 	String() string
@@ -55,16 +59,18 @@ type SymbolGraph struct {
 
 	nodes map[string]*SymbolNode // keyed by ast node
 
-	edges map[string][]SymbolEdge // Node relations
+	// A counter used to assign ordinals to new outgoing edges
+	nextEdgeSeq uint32
+	edges       map[string]map[string]SymbolEdgeDescriptor // Node relations
 
-	deps    map[string]map[graphs.SymbolKey]struct{} // from → set of to
-	revDeps map[string]map[graphs.SymbolKey]struct{} // to   → set of from
+	deps    map[string]map[graphs.SymbolKey]struct{} // from -> set of to
+	revDeps map[string]map[graphs.SymbolKey]struct{} // to   -> set of from
 }
 
 func NewSymbolGraph() SymbolGraph {
 	return SymbolGraph{
 		lookupKeys: map[string]graphs.SymbolKey{},
-		edges:      make(map[string][]SymbolEdge),
+		edges:      make(map[string]map[string]SymbolEdgeDescriptor),
 		nodes:      make(map[string]*SymbolNode),
 		deps:       make(map[string]map[graphs.SymbolKey]struct{}),
 		revDeps:    make(map[string]map[graphs.SymbolKey]struct{}),
@@ -77,6 +83,12 @@ func (g *SymbolGraph) addNode(n *SymbolNode) {
 	g.lookupKeys[baseId] = n.Id
 }
 
+func (g *SymbolGraph) getAndIncrementNextEdgeOrdinal() uint32 {
+	current := g.nextEdgeSeq
+	g.nextEdgeSeq++
+	return current
+}
+
 // AddEdge adds a semantic relationship FROM → TO.
 // For example: AddEdge(structKey, receiverKey, EdgeKindReceiver, nil)
 // means "struct has receiver".
@@ -84,7 +96,7 @@ func (g *SymbolGraph) AddEdge(from, to graphs.SymbolKey, kind SymbolEdgeKind, me
 	fromBaseId := from.BaseId()
 	toBaseId := to.BaseId()
 
-	// Always update dependency graphs
+	// ensure deps / revDeps
 	if g.deps[fromBaseId] == nil {
 		g.deps[fromBaseId] = make(map[graphs.SymbolKey]struct{})
 	}
@@ -95,22 +107,59 @@ func (g *SymbolGraph) AddEdge(from, to graphs.SymbolKey, kind SymbolEdgeKind, me
 	}
 	g.revDeps[toBaseId][from] = struct{}{}
 
-	// Check for duplicate edges before appending
-	existingEdges := g.edges[fromBaseId]
-	for _, edge := range existingEdges {
-		if edge.To.Equals(to) && edge.Kind == kind {
-			return // Duplicate edge — skip
+	inner := g.edges[fromBaseId]
+	if inner == nil {
+		inner = make(map[string]SymbolEdgeDescriptor)
+		g.edges[fromBaseId] = inner
+	}
+
+	k := edgeMapKey(kind, toBaseId)
+	if _, exists := inner[k]; exists {
+		return // duplicate (same from, to base, kind)
+	}
+
+	inner[k] = SymbolEdgeDescriptor{
+		Edge:    SymbolEdge{From: from, To: to, Kind: kind, Metadata: meta},
+		Ordinal: g.getAndIncrementNextEdgeOrdinal(),
+	}
+	g.lookupKeys[fromBaseId] = from
+}
+
+func (g *SymbolGraph) RemoveEdge(from, to graphs.SymbolKey, kind *SymbolEdgeKind) {
+	fromBase := from.BaseId()
+	toBase := to.BaseId()
+
+	if inner, ok := g.edges[fromBase]; ok {
+		if kind != nil {
+			// Remove edges with the specified kind
+			delete(inner, edgeMapKey(*kind, toBase))
+		} else {
+			// Remove all edges -> toBase entries
+			suffix := "::" + toBase
+			for k := range inner {
+				if strings.HasSuffix(k, suffix) {
+					delete(inner, k)
+				}
+			}
+		}
+		if len(inner) == 0 {
+			delete(g.edges, fromBase)
 		}
 	}
 
-	// Append the new edge
-	g.edges[fromBaseId] = append(existingEdges, SymbolEdge{
-		To:       to,
-		Kind:     kind,
-		Metadata: meta,
-	})
+	if depsMap, ok := g.deps[fromBase]; ok {
+		delete(depsMap, to)
+		if len(depsMap) == 0 {
+			delete(g.deps, fromBase)
+		}
+	}
 
-	g.lookupKeys[fromBaseId] = from
+	if revMap, ok := g.revDeps[toBase]; ok {
+		delete(revMap, from)
+		if len(revMap) == 0 {
+			delete(g.revDeps, toBase)
+		}
+	}
 }
 
 func (g *SymbolGraph) AddController(request CreateControllerNode) (*SymbolNode, error) {
@@ -358,35 +407,76 @@ func (g *SymbolGraph) AddSpecial(special SpecialType) *SymbolNode {
 	return g.addBuiltinSymbol(string(special), common.SymKindSpecialBuiltin, special.IsUniverse())
 }
 
-func (g *SymbolGraph) Children(node *SymbolNode, filter *TraversalFilter) []*SymbolNode {
+func (g *SymbolGraph) Children(node *SymbolNode, behavior *TraversalBehavior) []*SymbolNode {
+	if behavior != nil && behavior.Sorting != TraversalSortingNone {
+		return g.childrenSorted(node, behavior)
+	}
+
+	return g.childrenUnsorted(node, behavior)
+}
+
+func (g *SymbolGraph) childrenUnsorted(node *SymbolNode, behavior *TraversalBehavior) []*SymbolNode {
 	var result []*SymbolNode
-	for _, edge := range g.edges[node.Id.BaseId()] {
-		// Edge kind match (if specified)
-		if !shouldIncludeEdge(edge, filter) {
+	for _, edgeDescriptor := range g.edges[node.Id.BaseId()] { // iterate map values now
+		if !shouldIncludeEdge(edgeDescriptor.Edge, behavior) {
 			continue
 		}
-		child, ok := g.nodes[edge.To.BaseId()]
-		if !ok || !shouldIncludeNode(child, filter) {
+		child, ok := g.nodes[edgeDescriptor.Edge.To.BaseId()]
+		if !ok || !shouldIncludeNode(child, behavior) {
 			continue
 		}
 		result = append(result, child)
 	}
+
 	return result
 }
 
-func (g *SymbolGraph) Parents(node *SymbolNode, filter *TraversalFilter) []*SymbolNode {
+func (g *SymbolGraph) childrenSorted(node *SymbolNode, behavior *TraversalBehavior) []*SymbolNode {
+	var results []SymbolNodeWithOrdinal
+	for _, edgeDescriptor := range g.edges[node.Id.BaseId()] { // iterate map values now
+		if !shouldIncludeEdge(edgeDescriptor.Edge, behavior) {
+			continue
+		}
+		child, ok := g.nodes[edgeDescriptor.Edge.To.BaseId()]
+		if !ok || !shouldIncludeNode(child, behavior) {
+			continue
+		}
+		results = append(results, SymbolNodeWithOrdinal{Node: child, Ordinal: edgeDescriptor.Ordinal})
+	}
+
+	slices.SortFunc(results, func(a, b SymbolNodeWithOrdinal) int {
+		if behavior.Sorting == TraversalSortingOrdinalDesc {
+			return cmp.Compare(b.Ordinal, a.Ordinal)
+		}
+		return cmp.Compare(a.Ordinal, b.Ordinal)
+	})
+
+	return common.Map(results, func(v SymbolNodeWithOrdinal) *SymbolNode {
+		return v.Node
+	})
+}
+
+func (g *SymbolGraph) Parents(node *SymbolNode, behavior *TraversalBehavior) []*SymbolNode {
+	if behavior != nil && behavior.Sorting != TraversalSortingNone {
+		return g.parentsSorted(node, behavior)
+	}
+
+	return g.parentsUnsorted(node, behavior)
+}
+
+func (g *SymbolGraph) parentsUnsorted(node *SymbolNode, behavior *TraversalBehavior) []*SymbolNode {
 	var result []*SymbolNode
 	for parentKey := range g.revDeps[node.Id.BaseId()] {
 		edges := g.edges[parentKey.BaseId()]
-		for _, edge := range edges {
-			if edge.To != node.Id {
+		for _, edgeDescriptor := range edges {
+			if edgeDescriptor.Edge.To != node.Id {
 				continue
 			}
-			if !shouldIncludeEdge(edge, filter) {
+			if !shouldIncludeEdge(edgeDescriptor.Edge, behavior) {
 				continue
 			}
 			parentNode := g.nodes[parentKey.BaseId()]
-			if parentNode != nil && shouldIncludeNode(parentNode, filter) {
+			if parentNode != nil && shouldIncludeNode(parentNode, behavior) {
 				result = append(result, parentNode)
 			}
 		}
@@ -394,13 +484,43 @@ func (g *SymbolGraph) Parents(node *SymbolNode, filter *TraversalFilter) []*Symb
 	return result
 }
 
-func (g *SymbolGraph) Descendants(root *SymbolNode, filter *TraversalFilter) []*SymbolNode {
+func (g *SymbolGraph) parentsSorted(node *SymbolNode, behavior *TraversalBehavior) []*SymbolNode {
+	var results []SymbolNodeWithOrdinal
+	for parentKey := range g.revDeps[node.Id.BaseId()] {
+		edges := g.edges[parentKey.BaseId()]
+		for _, edgeDescriptor := range edges {
+			if edgeDescriptor.Edge.To != node.Id {
+				continue
+			}
+			if !shouldIncludeEdge(edgeDescriptor.Edge, behavior) {
+				continue
+			}
+			parentNode := g.nodes[parentKey.BaseId()]
+			if parentNode != nil && shouldIncludeNode(parentNode, behavior) {
+				results = append(results, SymbolNodeWithOrdinal{Node: parentNode, Ordinal: edgeDescriptor.Ordinal})
+			}
+		}
+	}
+
+	slices.SortFunc(results, func(a, b SymbolNodeWithOrdinal) int {
+		if behavior.Sorting == TraversalSortingOrdinalDesc {
+			return cmp.Compare(b.Ordinal, a.Ordinal)
+		}
+		return cmp.Compare(a.Ordinal, b.Ordinal)
+	})
+
+	return common.Map(results, func(v SymbolNodeWithOrdinal) *SymbolNode {
+		return v.Node
+	})
+}
+
+func (g *SymbolGraph) Descendants(root *SymbolNode, behavior *TraversalBehavior) []*SymbolNode {
 	visited := make(map[graphs.SymbolKey]struct{})
 	var result []*SymbolNode
 
 	var walk func(*SymbolNode)
 	walk = func(n *SymbolNode) {
-		for _, child := range g.Children(n, filter) {
+		for _, child := range g.Children(n, behavior) {
 			if _, seen := visited[child.Id]; seen {
 				continue
 			}
@@ -411,6 +531,7 @@ func (g *SymbolGraph) Descendants(root *SymbolNode, filter *TraversalFilter) []*
 	}
 
 	walk(root)
+
 	return result
 }
 
@@ -468,7 +589,8 @@ func (g *SymbolGraph) addBuiltinSymbol(typeName string, kind common.SymKind, isU
 		Id:   key,
 		Kind: kind,
 	}
-	g.nodes[key.BaseId()] = node
+
+	g.addNode(node)
 
 	return node
 }
@@ -489,39 +611,79 @@ func (g *SymbolGraph) idempotencyGuard(decl ast.Node, version *gast.FileVersion)
 		if existing.Version.Equals(version) {
 			return existing, key, nil
 		}
-		g.evict(existing.Id)
+		g.RemoveNode(existing.Id)
 	}
 
 	return nil, key, nil
 }
 
-// evict removes the given node *and* recursively evicts any nodes that depend on it.
-func (g *SymbolGraph) evict(key graphs.SymbolKey) {
-	baseId := key.BaseId()
+// Evict removes the given node and conservatively evicts dependents that
+// become orphaned as a result. It uses RemoveEdge to keep the graph indices
+// (edges, deps, revDeps) consistent.
+func (g *SymbolGraph) RemoveNode(key graphs.SymbolKey) {
+	idToRemove := key.BaseId()
 
-	// if already gone, stop
-	if _, exists := g.nodes[baseId]; !exists {
+	// Short-circuit if node doesn't exist
+	if _, exists := g.nodes[idToRemove]; !exists {
 		return
 	}
 
-	// first, recursively evict all nodes that rev-depend on me
-	if revs, ok := g.revDeps[baseId]; ok {
+	// RemoveEdge mutates our internals state so we 'snapshot' dependents (nodes that had edges -> key)
+	var dependents []graphs.SymbolKey
+	if revs, ok := g.revDeps[idToRemove]; ok {
 		for fromKey := range revs {
-			g.evict(fromKey)
+			dependents = append(dependents, fromKey)
 		}
 	}
 
-	// remove all outgoing edges
-	delete(g.deps, baseId)
+	// For each dependent, remove the edge(s) from dependent -> key.
+	// If the dependent becomes orphaned (no outgoing deps to existing nodes), evict it.
+	for _, fromKey := range dependents {
+		dependentBaseId := fromKey.BaseId()
 
-	// remove all reverse edges pointing to me
-	delete(g.revDeps, baseId)
+		// Remove all edges from `fromKey` to `key` (all kinds).
+		g.RemoveEdge(fromKey, key, nil)
 
-	// delete the lookup key
-	delete(g.lookupKeys, baseId)
+		// Decide whether 'fromKey' is now orphaned:
+		// it's an isOrphaned if it has no outgoing dependency to an existing node.
+		isOrphaned := true
+		if depsMap, ok := g.deps[dependentBaseId]; ok {
+			for toKey := range depsMap {
+				if _, exists := g.nodes[toKey.BaseId()]; exists {
+					// There's an outbound dependency - not an orphan
+					isOrphaned = false
+					break
+				}
+			}
+		}
 
-	// finally remove node itself
-	delete(g.nodes, baseId)
+		if isOrphaned {
+			g.RemoveNode(fromKey)
+		}
+	}
+
+	// As RemoveEdge actually mutates our state, we basically
+	// 'snapshot' outgoingEdges edges from this node so we can remove them safely.
+	var outgoingEdges []SymbolEdge
+	if inner, ok := g.edges[idToRemove]; ok {
+		outgoingEdges = make([]SymbolEdge, 0, len(inner))
+		for _, edgeDescriptor := range inner {
+			outgoingEdges = append(outgoingEdges, edgeDescriptor.Edge)
+		}
+	}
+
+	// Now that we've a list of all outgoing edges, we can go ahead and remove them all
+	for _, e := range outgoingEdges {
+		// Remove the specific kind edge from key -> e.To - this is to accommodate
+		// for the rather unusual scenario of two nodes having multiple, different-kind edges to each other
+		g.RemoveEdge(key, e.To, &e.Kind)
+	}
+
+	// Finally clean up any remaining indices for this node and remove the node.
+	delete(g.deps, idToRemove)
+	delete(g.revDeps, idToRemove)
+	delete(g.lookupKeys, idToRemove)
+	delete(g.nodes, idToRemove)
 }
 
 func (g *SymbolGraph) String() string {
@@ -538,14 +700,14 @@ func (g *SymbolGraph) String() string {
 		// Outgoing dependencies
 		if deps, ok := g.deps[key]; ok && len(deps) > 0 {
 			sb.WriteString("  Dependencies:\n")
-			for _, edge := range g.edges[key] {
-				toNode := g.nodes[edge.To.BaseId()]
-				linkedPrettyKey := edge.To.PrettyPrint()
+			for _, edgeDescriptor := range g.edges[key] {
+				toNode := g.nodes[edgeDescriptor.Edge.To.BaseId()]
+				linkedPrettyKey := edgeDescriptor.Edge.To.PrettyPrint()
 
 				if toNode == nil {
-					sb.WriteString(fmt.Sprintf("    • [%s] (%s)\n", linkedPrettyKey, edge.Kind))
+					sb.WriteString(fmt.Sprintf("    • [%s] (%s)\n", linkedPrettyKey, edgeDescriptor.Edge.Kind))
 				} else {
-					sb.WriteString(fmt.Sprintf("    • [%s] %s (%s)\n", toNode.Kind, linkedPrettyKey, edge.Kind))
+					sb.WriteString(fmt.Sprintf("    • [%s] %s (%s)\n", toNode.Kind, linkedPrettyKey, edgeDescriptor.Edge.Kind))
 				}
 			}
 
@@ -584,8 +746,8 @@ func (g *SymbolGraph) ToDot(theme *dot.DotTheme) string {
 
 	// Add all edges
 	for fromKey, edges := range g.edges {
-		for _, edge := range edges {
-			builder.AddEdge(g.lookupKeys[fromKey], edge.To, string(edge.Kind))
+		for _, edgeDescriptor := range edges {
+			builder.AddEdge(g.lookupKeys[fromKey], edgeDescriptor.Edge.To, string(edgeDescriptor.Edge.Kind))
 		}
 	}
 
@@ -606,4 +768,8 @@ func getTypeRef(typeUsage metadata.TypeUsageMeta) (graphs.SymbolKey, error) {
 	}
 
 	return graphs.NewNonUniverseBuiltInSymbolKey(fmt.Sprintf("%s.%s", typeUsage.PkgPath, typeUsage.Name)), nil
+}
+
+func edgeMapKey(kind SymbolEdgeKind, toBaseId string) string {
+	return string(kind) + "::" + toBaseId
 }

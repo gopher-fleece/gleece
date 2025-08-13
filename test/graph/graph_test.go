@@ -4,11 +4,14 @@ import (
 	"testing"
 
 	"github.com/gopher-fleece/gleece/common"
+	"github.com/gopher-fleece/gleece/graphs/symboldg"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
 	"github.com/gopher-fleece/gleece/test/utils"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
+
+var orderTraversalBehavior = common.Ptr(symboldg.TraversalBehavior{Sorting: symboldg.TraversalSortingOrdinalAsc})
 
 var _ = Describe("Graph Controller", func() {
 	It("Creates a valid Symbol Graph", func() {
@@ -19,10 +22,11 @@ var _ = Describe("Graph Controller", func() {
 		controllers := pipe.Graph().FindByKind(common.SymKindController)
 		Expect(controllers).To(HaveLen(1))
 
-		receivers := pipe.Graph().Children(controllers[0], nil)
+		// Notice we're passing a traversal behavior with sorting here, otherwise output may be out-of-order
+		receivers := pipe.Graph().Children(controllers[0], orderTraversalBehavior)
 		Expect(receivers).To(HaveLen(2))
 
-		receiver1Children := pipe.Graph().Children(receivers[0], nil)
+		receiver1Children := pipe.Graph().Children(receivers[0], orderTraversalBehavior)
 		Expect(receiver1Children).To(HaveLen(4))
 
 		// First parameter - routeParam
@@ -31,7 +35,7 @@ var _ = Describe("Graph Controller", func() {
 		Expect(receiver1Children[0].Id.IsBuiltIn).To(BeFalse())
 		Expect(receiver1Children[0].Kind).To(Equal(common.SymKindField))
 
-		routeParamChildren := pipe.Graph().Children(receiver1Children[0], nil)
+		routeParamChildren := pipe.Graph().Children(receiver1Children[0], orderTraversalBehavior)
 		Expect(routeParamChildren).To(HaveLen(1))
 		Expect(routeParamChildren[0].Id.Name).To(Equal("string"))
 		Expect(routeParamChildren[0].Id.IsUniverse).To(BeTrue())
@@ -44,7 +48,7 @@ var _ = Describe("Graph Controller", func() {
 		Expect(receiver1Children[1].Id.IsBuiltIn).To(BeFalse())
 		Expect(receiver1Children[1].Kind).To(Equal(common.SymKindField))
 
-		queryParamChildren := pipe.Graph().Children(receiver1Children[1], nil)
+		queryParamChildren := pipe.Graph().Children(receiver1Children[1], orderTraversalBehavior)
 		Expect(queryParamChildren).To(HaveLen(1))
 		Expect(queryParamChildren[0].Id.Name).To(Equal("int"))
 		Expect(queryParamChildren[0].Id.IsUniverse).To(BeTrue())
@@ -57,7 +61,7 @@ var _ = Describe("Graph Controller", func() {
 		Expect(receiver1Children[2].Id.IsBuiltIn).To(BeFalse())
 		Expect(receiver1Children[2].Kind).To(Equal(common.SymKindField))
 
-		headerParamChildren := pipe.Graph().Children(receiver1Children[2], nil)
+		headerParamChildren := pipe.Graph().Children(receiver1Children[2], orderTraversalBehavior)
 		Expect(headerParamChildren).To(HaveLen(1))
 		Expect(headerParamChildren[0].Id.Name).To(Equal("float32"))
 		Expect(headerParamChildren[0].Id.IsUniverse).To(BeTrue())
@@ -70,7 +74,7 @@ var _ = Describe("Graph Controller", func() {
 		Expect(receiver1Children[3].Id.IsBuiltIn).To(BeFalse())
 		Expect(receiver1Children[3].Kind).To(Equal(common.SymKindField))
 
-		retValChildren := pipe.Graph().Children(receiver1Children[3], nil)
+		retValChildren := pipe.Graph().Children(receiver1Children[3], orderTraversalBehavior)
 		Expect(retValChildren).To(HaveLen(1))
 		Expect(retValChildren[0].Id.Name).To(Equal("error"))
 		Expect(retValChildren[0].Id.IsUniverse).To(BeTrue())

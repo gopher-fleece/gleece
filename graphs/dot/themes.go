@@ -1,6 +1,10 @@
 package dot
 
-import "github.com/gopher-fleece/gleece/common"
+import (
+	"sort"
+
+	"github.com/gopher-fleece/gleece/common"
+)
 
 // RankDir represents Graphviz rankdir attribute options
 type RankDir string
@@ -21,12 +25,39 @@ type DotStyle struct {
 	ArrowHead string // edge arrow type: vee, dot, none
 }
 
+type OrderedNodeStyle struct {
+	Kind  common.SymKind
+	Style DotStyle
+}
+
 type DotTheme struct {
 	NodeStyles     map[common.SymKind]DotStyle
 	EdgeStyles     map[string]DotStyle
 	EdgeLabels     map[string]string
 	ErrorNodeStyle DotStyle
 	Direction      RankDir
+}
+
+func (t DotTheme) NodeStylesOrdered() []OrderedNodeStyle {
+	var kinds []common.SymKind
+	for k := range t.NodeStyles {
+		kinds = append(kinds, k)
+	}
+
+	// Sort the kinds alphabetically (or by some other stable order)
+	sort.Slice(kinds, func(i, j int) bool {
+		return kinds[i] < kinds[j]
+	})
+
+	// Build ordered slice
+	ordered := make([]OrderedNodeStyle, len(kinds))
+	for i, k := range kinds {
+		ordered[i] = OrderedNodeStyle{
+			Kind:  k,
+			Style: t.NodeStyles[k],
+		}
+	}
+	return ordered
 }
 
 var DefaultDotTheme = DotTheme{

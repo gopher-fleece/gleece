@@ -35,3 +35,11 @@ type SymbolEdge struct {
 	Kind     SymbolEdgeKind
 	Metadata map[string]string
 }
+
+type SymbolEdgeDescriptor struct {
+	// The edge data itself
+	Edge SymbolEdge
+
+	// The ordinal representing the order/index in which the edge was inserted
+	Ordinal uint32
+}
