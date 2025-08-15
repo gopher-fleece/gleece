@@ -3,14 +3,10 @@ package arbitrators
 import (
 	"fmt"
 	"go/ast"
-	"go/constant"
-	"go/types"
-	"strconv"
 
 	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/core/annotations"
 	"github.com/gopher-fleece/gleece/core/metadata"
-	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/gast"
 	"golang.org/x/tools/go/packages"
 )
@@ -193,66 +189,4 @@ func (arb *AstArbitrator) GetPackageFromDotImportedIdent(file *ast.File, ident *
 	}
 
 	return nil, nil
-}
-
-// ExtractEnumAliasType attempts to determine the underlying type and possible value for the given TypeName,
-// assuming it is an enumeration.
-func (arb *AstArbitrator) ExtractEnumAliasType(pkg *packages.Package, typeName *types.TypeName) (*definitions.AliasMetadata, error) {
-
-	basic, isBasicType := typeName.Type().Underlying().(*types.Basic)
-
-	if !isBasicType {
-		return nil, fmt.Errorf("type %s is not a basic type", typeName.Name())
-	}
-
-	aliasMetadata := definitions.AliasMetadata{
-		Name:      typeName.Name(),
-		AliasType: basic.String(),
-		Values:    []string{},
-	}
-
-	// Iterate through all objects in package scope
-	scope := pkg.Types.Scope()
-	for _, name := range scope.Names() {
-		obj := scope.Lookup(name)
-		if obj == nil {
-			continue
-		}
-
-		// Check if it's a constant
-		constVal, isConst := obj.(*types.Const)
-		if !isConst {
-			continue
-		}
-
-		// Check if this constant has the enum type we're looking for
-		if !types.Identical(constVal.Type(), typeName.Type()) {
-			continue
-		}
-
-		// Extract the value based on the basic kind
-		val := ""
-		switch basic.Kind() {
-		case types.String:
-			val = constant.StringVal(constVal.Val())
-		case types.Int, types.Int8, types.Int16, types.Int32, types.Int64,
-			types.Uint, types.Uint8, types.Uint16, types.Uint32, types.Uint64:
-			if intVal, ok := constant.Int64Val(constVal.Val()); ok {
-				val = strconv.FormatInt(intVal, 10)
-			}
-		case types.Float32, types.Float64:
-			if floatVal, ok := constant.Float64Val(constVal.Val()); ok {
-				val = strconv.FormatFloat(floatVal, 'f', -1, 64)
-			}
-		case types.Bool:
-			boolVal := constant.BoolVal(constVal.Val())
-			val = strconv.FormatBool(boolVal)
-		default:
-			return nil, fmt.Errorf("unsupported alias to basic type %s", basic.String())
-		}
-
-		aliasMetadata.Values = append(aliasMetadata.Values, val)
-	}
-
-	return &aliasMetadata, nil
 }
