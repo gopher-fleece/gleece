@@ -27,10 +27,10 @@ type RecursiveTypeVisitor struct {
 	currentGenDecl *ast.GenDecl
 }
 
-// NewTypeVisitor Instantiates a new type visitor.
-func NewTypeVisitor(context *VisitContext) (*RecursiveTypeVisitor, error) {
+// NewRecursiveTypeVisitor Instantiates a new type visitor.
+func NewRecursiveTypeVisitor(context *VisitContext) (*RecursiveTypeVisitor, error) {
 	visitor := RecursiveTypeVisitor{}
-	err := visitor.initialize((context))
+	err := visitor.initialize(context)
 	return &visitor, err
 }
 

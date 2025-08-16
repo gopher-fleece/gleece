@@ -484,7 +484,11 @@ func ResolveTypeSpecFromExpr(
 		}
 	}
 
-	return TypeSpecResolution{}, fmt.Errorf("could not find TypeSpec for type '%s' in package '%s'", typeName.Name(), obj.Pkg().Path())
+	return TypeSpecResolution{}, fmt.Errorf(
+		"could not find TypeSpec for type '%s' in package '%s'",
+		typeName.Name(),
+		obj.Pkg().Path(),
+	)
 }
 
 func GetAstFileName(fSet *token.FileSet, file *ast.File) string {
@@ -662,4 +666,27 @@ func IsEnumLike(pkg *packages.Package, spec *ast.TypeSpec) bool {
 	}
 
 	return false
+}
+
+func GetAstFileNameOrFallback(file *ast.File, fallback *string) string {
+	getFallback := func(typePrefix string) string {
+		if fallback != nil {
+			return *fallback
+		}
+		return fmt.Sprintf("%s_FILE", strings.ToUpper(typePrefix))
+	}
+
+	if file == nil {
+		return getFallback("NIL")
+	}
+
+	if file.Name == nil {
+		return getFallback("UNNAMED")
+	}
+
+	if file.Name.Name == "" {
+		return getFallback("UNNAMED")
+	}
+
+	return file.Name.Name
 }

@@ -84,7 +84,7 @@ func (facade *PackagesFacade) initWithGlobs(globs []string) error {
 			file, err := parser.ParseFile(facade.fileSet, absSourcePath, nil, parser.ParseComments)
 			if err != nil {
 				logger.Error("Error parsing file %s - %v", absSourcePath, err)
-				return err
+				return fmt.Errorf("failed to parse file '%s' - parser raised error: %w", absSourcePath, err)
 			}
 
 			pkgPath, err := gast.GetFileFullPath(file, facade.fileSet)
@@ -183,6 +183,24 @@ func (facade *PackagesFacade) loadAndCacheExpressions(
 	matchingPackages, err := packages.Load(cfg, packageExpressions...)
 	if err != nil {
 		return nil, err
+	}
+
+	var pkgErrs []packages.Error
+	failedPkgCount := 0
+	for _, p := range matchingPackages {
+		if len(p.Errors) > 0 {
+			failedPkgCount++
+			pkgErrs = append(pkgErrs, p.Errors...)
+		}
+	}
+
+	if len(pkgErrs) > 0 {
+		return nil, fmt.Errorf(
+			"encountered %d errors over %d packages during load - %v",
+			len(pkgErrs),
+			failedPkgCount,
+			pkgErrs,
+		)
 	}
 
 	// Note that packages.Load does *not* guarantee order

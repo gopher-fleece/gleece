@@ -58,9 +58,9 @@ func NewRouteVisitor(
 		return &visitor, err
 	}
 
-	typeVisitor, err := NewTypeVisitor(visitor.context)
+	typeVisitor, err := NewRecursiveTypeVisitor(visitor.context)
 	if err != nil {
-		return &visitor, nil
+		return &visitor, err
 	}
 
 	visitor.typeVisitor = typeVisitor
@@ -132,14 +132,15 @@ func (v *RouteVisitor) getExecutionContext(sourceFile *ast.File, funcDecl *ast.F
 }
 
 func (v *RouteVisitor) getPkgForSourceFile(sourceFile *ast.File) (*packages.Package, error) {
-	v.enterFmt("Obtaining package for source file %s", sourceFile.Name.Name)
+	fileName := gast.GetAstFileNameOrFallback(sourceFile, nil)
+	v.enterFmt("Obtaining package for source file %s", fileName)
 	defer v.exit()
 
 	pkg, err := v.context.ArbitrationProvider.Pkg().GetPackageForFile(sourceFile)
 	if err != nil {
 		return nil, v.getFrozenError(
 			"could not obtain package object for file '%s' due to error - %v",
-			sourceFile.Name.Name,
+			fileName,
 			err,
 		)
 	}

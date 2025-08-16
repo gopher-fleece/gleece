@@ -80,12 +80,12 @@ func (v *BaseVisitor) initializeWithGlobs(context *VisitContext) error {
 
 	v.context = context
 
-	pkgFacade, err := providers.NewArbitrationProvider(globs)
+	arbProvider, err := providers.NewArbitrationProvider(globs)
 	if err != nil {
 		return err
 	}
 
-	v.context.ArbitrationProvider = pkgFacade
+	v.context.ArbitrationProvider = arbProvider
 
 	if v.context.SyncedProvider == nil {
 		v.context.SyncedProvider = common.Ptr(providers.NewSyncedProvider())
@@ -192,7 +192,7 @@ func (v *BaseVisitor) setLastError(err error) {
 
 func contextInitGuard(context *VisitContext) error {
 	if context == nil {
-		return fmt.Errorf("nil context was given to initializeWithGlobs")
+		return fmt.Errorf("nil context was given to contextInitGuard")
 	}
 
 	return nil

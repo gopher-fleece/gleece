@@ -435,7 +435,7 @@ var _ = Describe("Unit Tests - AST Arbitrator (external)", func() {
 			Expect(found.Types.Scope().Lookup("Printf")).ToNot(BeNil())
 		})
 
-		It("Continues scanning other dot imports when earlier package is not present on disk", func() {
+		It("Returns a proper error when one or more package loads returns an internal error", func() {
 			file := &ast.File{
 				Imports: []*ast.ImportSpec{
 					{Name: ast.NewIdent("."), Path: &ast.BasicLit{Kind: token.STRING, Value: `"nonexistent_pkg_xyz"`}},
@@ -443,10 +443,8 @@ var _ = Describe("Unit Tests - AST Arbitrator (external)", func() {
 				},
 			}
 			ident := &ast.Ident{Name: "Sprintf"}
-			found, err := astArb.GetPackageFromDotImportedIdent(file, ident)
-			Expect(err).To(BeNil())
-			Expect(found).ToNot(BeNil())
-			Expect(found.Types.Scope().Lookup("Sprintf")).ToNot(BeNil())
+			_, err := astArb.GetPackageFromDotImportedIdent(file, ident)
+			Expect(err).To(MatchError(ContainSubstring("encountered 1 errors over 1 packages during load")))
 		})
 
 		It("Returns an error when PackagesFacade.GetPackage returns an error", func() {

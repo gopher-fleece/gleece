@@ -1,0 +1,1 @@
+This file is used to trigger glob => Parse error inside the type visitor

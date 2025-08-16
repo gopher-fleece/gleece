@@ -6,6 +6,7 @@ import (
 	"go/token"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/gopher-fleece/gleece/cmd"
@@ -70,12 +71,7 @@ func GetDefaultMetadataOrFail() pipeline.GleeceFlattenedMetadata {
 }
 
 func constructFullPathOrFail(relativePath string, failIfNotExists bool) string {
-	cwd, err := os.Getwd()
-	if err != nil {
-		Fail(fmt.Sprintf("Could not determine process working directory - %v", err))
-	}
-
-	fullPath := filepath.Join(cwd, relativePath)
+	fullPath := filepath.Join(GetCwdOrFail(), relativePath)
 
 	if failIfNotExists && !FileOrFolderExists(fullPath) {
 		Fail(fmt.Sprintf("Path %s does not exist", fullPath))
@@ -106,7 +102,7 @@ func WriteFileByRelativePathOrFail(relativePath string, data []byte) {
 	_, err := os.Stat(filePath)
 	if err != nil {
 		dirPath := filepath.Dir(filePath)
-		err = os.MkdirAll(dirPath, 0644)
+		err = os.MkdirAll(dirPath, 0755)
 		if err != nil {
 			Fail(fmt.Sprintf("Could not mkdir %s - %v", dirPath, err))
 		}
@@ -119,21 +115,62 @@ func WriteFileByRelativePathOrFail(relativePath string, data []byte) {
 	}
 }
 
-func GetAbsPathByRelativeOrFail(relativePath string) string {
+func GetCwdOrFail() string {
 	cwd, err := os.Getwd()
 	if err != nil {
 		Fail(fmt.Sprintf("Could not determine process working directory - %v", err))
 	}
+	return cwd
+}
 
-	return filepath.Join(cwd, relativePath)
+func GetAbsPathByRelativeOrFail(relativePath string) string {
+	return filepath.Join(GetCwdOrFail(), relativePath)
 }
 
 func DeleteDistInCurrentFolderOrFail() {
-	distPath := GetAbsPathByRelativeOrFail("dist")
-	err := os.RemoveAll(distPath)
-	if err != nil {
-		Fail(fmt.Sprintf("Could not delete dist folder at '%s' - %v", distPath, err))
+	DeleteRelativeFolderOrFail("dist")
+}
+
+func DeleteRelativeFolderOrFail(folder string) {
+	cwd := GetCwdOrFail()
+	delPath := GetAbsPathByRelativeOrFail(folder)
+	if !IsSubpath(cwd, delPath) {
+		Fail(fmt.Sprintf(
+			"Requested a deletion of folder '%s' but it is not a sub-folder of CWD '%s'. Halting operation for your safety.",
+			delPath,
+			cwd,
+		))
 	}
+
+	err := os.RemoveAll(delPath)
+	if err != nil {
+		Fail(fmt.Sprintf("Could not delete folder at '%s' - %v", delPath, err))
+	}
+}
+
+// IsSubpath returns true if targetPath is inside baseDir
+func IsSubpath(baseDir, targetPath string) bool {
+	absBase, err := filepath.Abs(baseDir)
+	if err != nil {
+		Fail(fmt.Sprintf("Cannot resolve base dir: %v", err))
+	}
+
+	absTarget, err := filepath.Abs(targetPath)
+	if err != nil {
+		Fail(fmt.Sprintf("Cannot resolve target path: %v", err))
+	}
+
+	rel, err := filepath.Rel(absBase, absTarget)
+	if err != nil {
+		Fail(fmt.Sprintf("Cannot compute relative path: %v", err))
+	}
+
+	// If the relative path starts with ".." (or is exactly "..") then it escapes baseDir
+	if rel == ".." || strings.HasPrefix(rel, ".."+string(os.PathSeparator)) {
+		return false
+	}
+
+	return true
 }
 
 func LoadPackageOrFail(fullName string, loadMode packages.LoadMode) *packages.Package {

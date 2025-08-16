@@ -24,12 +24,16 @@ func NewFileVersion(fullPath string) (FileVersion, error) {
 
 	stats, err := os.Stat(fullPath)
 	if err != nil {
-		return FileVersion{}, err
+		return FileVersion{}, fmt.Errorf("failed to stat file '%s' whilst constructing a new FileVersion - %w", fullPath, err)
 	}
 
 	hash, err := utils.Sha256File(fullPath)
 	if err != nil {
-		return FileVersion{}, err
+		return FileVersion{}, fmt.Errorf(
+			"failed to compute hash for file '%s' whilst constructing a new FileVersion - %w",
+			fullPath,
+			err,
+		)
 	}
 
 	return FileVersion{
