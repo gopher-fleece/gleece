@@ -197,7 +197,8 @@ func (g *SymbolGraph) AddRoute(request CreateRouteNode) (*SymbolNode, error) {
 	// Add the route to the graph
 	g.addNode(symNode)
 
-	// Add a dependency FROM the parent controller TO the route
+	// Add a dependency FROM the parent controller TO the route.
+	// Note - maybe add a check on ParentController validity, node wise? (FVersion and such)
 	g.AddEdge(request.ParentController.SymbolKey(), symNode.Id, EdgeKindReceiver, nil)
 
 	return symNode, nil

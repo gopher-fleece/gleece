@@ -393,7 +393,11 @@ func (v *RecursiveTypeVisitor) buildFieldMeta(
 
 	typeUsage, err := v.resolveTypeUsage(pkg, file, field.Type)
 	if err != nil {
-		return metadata.FieldMeta{}, v.getFrozenError("could not create type usage metadata for field %v - %v", fieldNameIdent.Name, err)
+		return metadata.FieldMeta{}, v.getFrozenError(
+			"could not create type usage metadata for field %v - %v",
+			fieldNameIdent.Name,
+			err,
+		)
 	}
 
 	return metadata.FieldMeta{
@@ -454,7 +458,11 @@ func (v *RecursiveTypeVisitor) resolveTypeUsage(
 	)
 
 	if err != nil {
-		return metadata.TypeUsageMeta{}, v.frozenError(err)
+		return metadata.TypeUsageMeta{}, v.getFrozenError(
+			"failed to build type layers for expression with type name '%v' - %v",
+			resolvedType.TypeName,
+			err,
+		)
 	}
 
 	// 3. Make sure that if the type is a built in like "error" or "string" or "any",

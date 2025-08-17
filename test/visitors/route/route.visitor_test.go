@@ -24,10 +24,14 @@ import (
 
 const controllerName = "RouteVisitorTestController"
 const receiver1Name = "Receiver1"
+const receiver2Name = "Receiver2"
+const receiver3Name = "Receiver3"
 
 type TestCtx struct {
 	controllerAstFile *ast.File
 	receiver1Decl     *ast.FuncDecl
+	receiver2Decl     *ast.FuncDecl
+	receiver3Decl     *ast.FuncDecl
 
 	arbProvider  *providers.ArbitrationProvider
 	metaCache    *caching.MetadataCache
@@ -198,7 +202,7 @@ var _ = Describe("RouteVisitor", func() {
 			Expect(err).To(MatchError(ContainSubstring("could not obtain package object for file 'UNNAMED_FILE'")))
 		})
 
-		It("Returns an error when the file cannot be stat-ed", func() {
+		It("Returns an error when hash calculation fails on a given AST file", func() {
 			// First, cleanup any remains from previous tests, if necessary
 			utils.DeleteRelativeFolderOrFail("./temp")
 
@@ -225,6 +229,33 @@ var _ = Describe("RouteVisitor", func() {
 			Expect(err).ToNot(BeNil())
 			Expect(err).To(MatchError(ContainSubstring("failed to compute hash for file")))
 		})
+
+		It("Returns a proper error if a receiver parameter has ann invalid type", func() {
+			_, err := ctx.routeVisitor.VisitMethod(ctx.receiver2Decl, ctx.controllerAstFile)
+			Expect(err).To(MatchError(ContainSubstring(
+				"could not create type usage metadata for field paramWithInvalidType - " +
+					"failed to build type layers for expression with type name 'string' - " +
+					"unsupported type expression: *ast.ChanType",
+			)))
+		})
+
+		It("Returns a proper error if a receiver return value has ann invalid type", func() {
+			_, err := ctx.routeVisitor.VisitMethod(ctx.receiver3Decl, ctx.controllerAstFile)
+			Expect(err).To(MatchError(ContainSubstring(
+				"could not create type usage metadata for field string - " +
+					"failed to build type layers for expression with type name 'string' - " +
+					"unsupported type expression: *ast.ChanType",
+			)))
+		})
+
+		It("Returns a proper error if a receiver return value has ann invalid type", func() {
+			_, err := ctx.routeVisitor.VisitMethod(ctx.receiver3Decl, ctx.controllerAstFile)
+			Expect(err).To(MatchError(ContainSubstring(
+				"could not create type usage metadata for field string - " +
+					"failed to build type layers for expression with type name 'string' - " +
+					"unsupported type expression: *ast.ChanType",
+			)))
+		})
 	})
 
 })
@@ -244,10 +275,16 @@ func createTestCtx(fileGlobs []string) TestCtx {
 	// Get the controller's source file so we can use it directly with the visitor
 	for _, f := range srcFiles {
 		for _, decl := range f.Decls {
-			if fd, ok := decl.(*ast.FuncDecl); ok && fd.Name.Name == receiver1Name {
-				ctx.controllerAstFile = f
-				ctx.receiver1Decl = fd
-				break
+			if fd, ok := decl.(*ast.FuncDecl); ok {
+				switch fd.Name.Name {
+				case receiver1Name:
+					ctx.controllerAstFile = f
+					ctx.receiver1Decl = fd
+				case receiver2Name:
+					ctx.receiver2Decl = fd
+				case receiver3Name:
+					ctx.receiver3Decl = fd
+				}
 			}
 		}
 		if ctx.controllerAstFile != nil {
