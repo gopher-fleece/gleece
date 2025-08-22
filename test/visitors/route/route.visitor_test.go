@@ -22,6 +22,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+const controllerFileRelPath = "./resources/micro.valid.controller.go"
 const controllerName = "RouteVisitorTestController"
 const receiver1Name = "Receiver1"
 const receiver2Name = "Receiver2"
@@ -44,7 +45,7 @@ type TestCtx struct {
 var _ = Describe("RouteVisitor", func() {
 	var ctx TestCtx
 	BeforeEach(func() {
-		ctx = createTestCtx([]string{"./micro.valid.controller.go"})
+		ctx = createTestCtx([]string{controllerFileRelPath})
 	})
 
 	Context("NewRouteVisitor", func() {
@@ -203,17 +204,19 @@ var _ = Describe("RouteVisitor", func() {
 		})
 
 		It("Returns an error when hash calculation fails on a given AST file", func() {
+			const tempDir = "./temp"
+
 			// First, cleanup any remains from previous tests, if necessary
-			utils.DeleteRelativeFolderOrFail("./temp")
+			utils.DeleteRelativeFolderOrFail(tempDir)
 
 			// Next, copy the original controller file to a temp file - we'll be locking it and we don't want
 			// to potentially affect other tests
-			originalControllerFile := utils.ReadFileByRelativePathOrFail("./micro.valid.controller.go")
+			originalControllerFile := utils.ReadFileByRelativePathOrFail(controllerFileRelPath)
 			tempFile := "./temp/locked.controller.go"
 			utils.WriteFileByRelativePathOrFail(tempFile, []byte(originalControllerFile))
 
 			// Defer a cleanup for the copy
-			defer os.Remove(tempFile)
+			defer utils.DeleteRelativeFolderOrFail(tempDir)
 
 			// Create a new context for this specific test
 			thisCtx := createTestCtx([]string{tempFile})

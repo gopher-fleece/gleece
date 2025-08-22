@@ -41,7 +41,7 @@ type BaseVisitor struct {
 func (v *BaseVisitor) initialize(context *VisitContext) error {
 	err := contextInitGuard(context)
 	if err != nil {
-		return err
+		return v.getFrozenError("failed to initialize visitor - %v", err)
 	}
 
 	// If an arbitration provider was given, we use that, otherwise, we enumerate the configuration globs and create
@@ -68,6 +68,7 @@ func (v *BaseVisitor) initializeWithArbitrationProvider(context *VisitContext) e
 func (v *BaseVisitor) initializeWithGlobs(context *VisitContext) error {
 	err := contextInitGuard(context)
 	if err != nil {
+		// This can actually never happen, so long as this method is called strictly from within 'initialize'
 		return err
 	}
 
