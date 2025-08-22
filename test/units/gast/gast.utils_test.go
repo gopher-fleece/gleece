@@ -1171,6 +1171,66 @@ var _ = Describe("Unit Tests - AST", func() {
 		})
 	})
 
+	Context("GetAstFileNameOrFallback", func() {
+		When("File is nil", func() {
+			It("returns the NIL fallback with provided fallback value", func() {
+				fallback := "CUSTOM"
+				result := gast.GetAstFileNameOrFallback(nil, &fallback)
+				Expect(result).To(Equal("CUSTOM"))
+			})
+
+			It("returns the NIL fallback with generated value if fallback is nil", func() {
+				result := gast.GetAstFileNameOrFallback(nil, nil)
+				Expect(result).To(Equal("NIL_FILE"))
+			})
+		})
+
+		When("File.Name is nil", func() {
+			It("returns the UNNAMED fallback with provided fallback", func() {
+				fallback := "X"
+				file := &ast.File{Name: nil}
+				result := gast.GetAstFileNameOrFallback(file, &fallback)
+				Expect(result).To(Equal("X"))
+			})
+
+			It("returns the UNNAMED fallback with generated value if fallback is nil", func() {
+				file := &ast.File{Name: nil}
+				result := gast.GetAstFileNameOrFallback(file, nil)
+				Expect(result).To(Equal("UNNAMED_FILE"))
+			})
+		})
+
+		When("File.Name is present but empty", func() {
+			It("returns the UNNAMED fallback with provided fallback", func() {
+				fallback := "EMPTY"
+				file := &ast.File{Name: &ast.Ident{Name: ""}}
+				result := gast.GetAstFileNameOrFallback(file, &fallback)
+				Expect(result).To(Equal("EMPTY"))
+			})
+
+			It("returns the UNNAMED fallback with generated value if fallback is nil", func() {
+				file := &ast.File{Name: &ast.Ident{Name: ""}}
+				result := gast.GetAstFileNameOrFallback(file, nil)
+				Expect(result).To(Equal("UNNAMED_FILE"))
+			})
+		})
+
+		When("File.Name is present and non-empty", func() {
+			It("returns the package name directly", func() {
+				file := &ast.File{Name: &ast.Ident{Name: "mypkg"}}
+				result := gast.GetAstFileNameOrFallback(file, nil)
+				Expect(result).To(Equal("mypkg"))
+			})
+
+			It("ignores fallback when package name is non-empty", func() {
+				fallback := "SHOULD_NOT_USE"
+				file := &ast.File{Name: &ast.Ident{Name: "mypkg"}}
+				result := gast.GetAstFileNameOrFallback(file, &fallback)
+				Expect(result).To(Equal("mypkg"))
+			})
+		})
+	})
+
 })
 
 func TestUnits(t *testing.T) {

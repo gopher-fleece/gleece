@@ -6,10 +6,3 @@ func GetDescription(holder *AnnotationHolder) string {
 	}
 	return holder.GetDescription()
 }
-
-func GetFirstValueOrEmpty(holder *AnnotationHolder, annotation GleeceAnnotation) string {
-	if holder == nil {
-		return ""
-	}
-	return holder.GetFirstValueOrEmpty(annotation)
-}
