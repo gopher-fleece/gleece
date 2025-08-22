@@ -56,8 +56,7 @@ func (c *MetadataCache) HasStruct(key graphs.SymbolKey) bool {
 	return c.structs[key] != nil
 }
 
-func (c *MetadataCache) HasEnum(meta *metadata.EnumMeta) bool {
-	key := graphs.NewSymbolKey(meta.Node, meta.FVersion)
+func (c *MetadataCache) HasEnum(key graphs.SymbolKey) bool {
 	return c.enums[key] != nil
 }
 

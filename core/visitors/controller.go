@@ -95,6 +95,8 @@ func (v *ControllerVisitor) addSelfToGraph(meta metadata.ControllerMeta) error {
 		},
 	)
 
+	v.context.MetadataCache.AddController(&meta)
+
 	return err
 }
 
