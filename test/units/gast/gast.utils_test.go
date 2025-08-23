@@ -1230,7 +1230,6 @@ var _ = Describe("Unit Tests - AST", func() {
 			})
 		})
 	})
-
 })
 
 func TestUnits(t *testing.T) {

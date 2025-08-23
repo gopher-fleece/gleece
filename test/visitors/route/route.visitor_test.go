@@ -233,7 +233,7 @@ var _ = Describe("RouteVisitor", func() {
 			Expect(err).To(MatchError(ContainSubstring("failed to compute hash for file")))
 		})
 
-		It("Returns a proper error if a receiver parameter has ann invalid type", func() {
+		It("Returns a proper error if a receiver parameter has an invalid type", func() {
 			_, err := ctx.routeVisitor.VisitMethod(ctx.receiver2Decl, ctx.controllerAstFile)
 			Expect(err).To(MatchError(ContainSubstring(
 				"could not create type usage metadata for field paramWithInvalidType - " +
