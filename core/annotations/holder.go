@@ -4,92 +4,38 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/gopher-fleece/gleece/gast"
 	"github.com/titanous/json5"
 )
-
-const (
-	PropertyName            = "name"
-	PropertySecurityScopes  = "scopes"
-	PropertyValidatorString = "validate"
-)
-
-type GleeceAnnotation = string
-
-const (
-	GleeceAnnotationTag             GleeceAnnotation = "Tag"
-	GleeceAnnotationQuery           GleeceAnnotation = "Query"
-	GleeceAnnotationPath            GleeceAnnotation = "Path"
-	GleeceAnnotationBody            GleeceAnnotation = "Body"
-	GleeceAnnotationHeader          GleeceAnnotation = "Header"
-	GleeceAnnotationFormField       GleeceAnnotation = "FormField"
-	GleeceAnnotationDeprecated      GleeceAnnotation = "Deprecated"
-	GleeceAnnotationHidden          GleeceAnnotation = "Hidden"
-	GleeceAnnotationSecurity        GleeceAnnotation = "Security"
-	GleeceAnnotationRoute           GleeceAnnotation = "Route"
-	GleeceAnnotationResponse        GleeceAnnotation = "Response"
-	GleeceAnnotationDescription     GleeceAnnotation = "Description"
-	GleeceAnnotationMethod          GleeceAnnotation = "Method"
-	GleeceAnnotationErrorResponse   GleeceAnnotation = "ErrorResponse"
-	GleeceAnnotationTemplateContext GleeceAnnotation = "TemplateContext"
-	// AttributeAdvancedSecurity GleeceAnnotation = "AdvancedSecurity"
-)
-
-type Attribute struct {
-	Name        string
-	Value       string
-	Properties  map[string]any
-	Description string
-}
-
-func (attr Attribute) HasProperty(name string) bool {
-	return attr.GetProperty(name) != nil
-}
-
-func (attr Attribute) GetProperty(name string) *any {
-	value, exists := attr.Properties[name]
-	if exists {
-		return &value
-	}
-	return nil
-}
-
-type NonAttributeComment struct {
-	Index int
-	Value string
-}
 
 type AnnotationHolder struct {
 	attributes           []Attribute
 	nonAttributeComments []NonAttributeComment
+	// The file name from which the comments were retrieved.
+	//
+	// Note that this does not attempt to consider cases where AST was 'messed with' or corrupted
+	// as well as //line comments
+	fileName string
 }
-
-type CommentSource string
-
-// controller, route, schema, property
-
-const (
-	CommentSourceController CommentSource = "controller"
-	CommentSourceRoute      CommentSource = "route"
-	CommentSourceSchema     CommentSource = "schema"
-	CommentSourceProperty   CommentSource = "property"
-)
 
 // Captures: 1. TEXT (after @), 2. TEXT (inside parentheses), 3. JSON5 Object, 4. Remaining TEXT
 var parsingRegex *regexp.Regexp = regexp.MustCompile(`^// @(\w+)(?:(?:\(([\w-_/\\{} ]+))(?:\s*,\s*(\{.*\}))?\))?(?:\s+(.+))?$`)
 
-func NewAnnotationHolder(comments []string, commentSource CommentSource) (AnnotationHolder, error) {
+// NewAnnotationHolder creates a holder from CommentNode entries (with positions).
+func NewAnnotationHolder(commentBlock gast.CommentBlock, commentSource CommentSource) (AnnotationHolder, error) {
 	holder := AnnotationHolder{
 		nonAttributeComments: make([]NonAttributeComment, 0),
+		fileName:             commentBlock.FileName,
 	}
 
-	for lineIndex, comment := range comments {
-		attr, isAnAttribute, err := parseComment(parsingRegex, strings.TrimSpace(comment))
+	for _, comment := range commentBlock.Comments {
+		attr, isAnAttribute, err := parseCommentNode(parsingRegex, comment)
 		if err != nil {
 			return holder, err
 		}
 
 		if isAnAttribute {
-			// Check that this is a valid attribute with valid properties
+			// Validation step left as-is
 			if err := IsValidAnnotation(attr, commentSource); err != nil {
 				return holder, err
 			}
@@ -98,8 +44,9 @@ func NewAnnotationHolder(comments []string, commentSource CommentSource) (Annota
 			holder.nonAttributeComments = append(
 				holder.nonAttributeComments,
 				NonAttributeComment{
-					Index: lineIndex,
-					Value: strings.Trim(strings.TrimPrefix(comment, "//"), " "),
+					Comment: comment,
+					Index:   comment.Index,
+					Value:   strings.Trim(strings.TrimPrefix(comment.Text, "//"), " "),
 				},
 			)
 		}
@@ -112,6 +59,35 @@ func NewAnnotationHolder(comments []string, commentSource CommentSource) (Annota
 	return holder, nil
 }
 
+func parseCommentNode(parsingRegex *regexp.Regexp, comment gast.CommentNode) (Attribute, bool, error) {
+	text := strings.TrimSpace(comment.Text)
+	matches := parsingRegex.FindStringSubmatch(text)
+
+	if len(matches) == 0 {
+		return Attribute{}, false, nil
+	}
+
+	attributeName := matches[1]
+	primaryValue := matches[2]
+	jsonConfig := matches[3]
+	description := matches[4]
+
+	var props map[string]any
+	if len(jsonConfig) > 0 {
+		if err := json5.Unmarshal([]byte(jsonConfig), &props); err != nil {
+			return Attribute{}, true, err
+		}
+	}
+
+	return Attribute{
+		Name:        attributeName,
+		Value:       primaryValue,
+		Properties:  props,
+		Description: description,
+		Comment:     comment,
+	}, true, nil
+}
+
 // NewAnnotationHolderFromData creates an annotation holder from pre-parsed attributes and comments.
 // Note that no validations are done here - this is mostly to help with tests
 func NewAnnotationHolderFromData(
@@ -122,36 +98,6 @@ func NewAnnotationHolderFromData(
 		attributes:           attributes,
 		nonAttributeComments: nonAttributeComments,
 	}
-}
-
-func parseComment(parsingRegex *regexp.Regexp, comment string) (Attribute, bool, error) {
-	matches := parsingRegex.FindStringSubmatch(comment)
-
-	if len(matches) == 0 {
-		return Attribute{}, false, nil
-	}
-
-	// Extract matched groups
-	attributeName := matches[1] // The TEXT after @ (e.g., Query)
-	primaryValue := matches[2]  // The TEXT inside parentheses (e.g., someValue)
-	jsonConfig := matches[3]    // The JSON5 object (e.g., {someProp: v1})
-	description := matches[4]   // The remaining TEXT (e.g., some description)
-
-	var props map[string]any
-	if len(jsonConfig) > 0 {
-		err := json5.Unmarshal([]byte(jsonConfig), &props)
-		if err != nil {
-			return Attribute{}, true, err
-		}
-	}
-
-	// Return the parsed parts
-	return Attribute{
-		Name:        attributeName,
-		Value:       primaryValue,
-		Properties:  props,
-		Description: description,
-	}, true, nil
 }
 
 func (holder AnnotationHolder) GetFirst(attribute GleeceAnnotation) *Attribute {

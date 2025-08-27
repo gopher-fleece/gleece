@@ -11,6 +11,7 @@ import (
 
 	"github.com/gopher-fleece/gleece/cmd"
 	"github.com/gopher-fleece/gleece/cmd/arguments"
+	"github.com/gopher-fleece/gleece/core/annotations"
 	"github.com/gopher-fleece/gleece/core/arbitrators/caching"
 	"github.com/gopher-fleece/gleece/core/pipeline"
 	"github.com/gopher-fleece/gleece/core/visitors"
@@ -302,4 +303,27 @@ func MakeFileVersion(id string, extraHashString string) *gast.FileVersion {
 // helper to create a simple ast.Ident node
 func MakeIdent(name string) ast.Node {
 	return &ast.Ident{Name: name, NamePos: token.NoPos}
+}
+
+func CommentsToCommentBlock(comments []string) gast.CommentBlock {
+	nodes := make([]gast.CommentNode, len(comments))
+	for i, c := range comments {
+		nodes[i] = gast.CommentNode{
+			Text:  c,
+			Index: i,
+		}
+	}
+
+	return gast.CommentBlock{
+		Comments: nodes,
+	}
+}
+
+func GetAnnotationHolderOrFail(comments []string, appliedOn annotations.CommentSource) *annotations.AnnotationHolder {
+	holder, err := annotations.NewAnnotationHolder(CommentsToCommentBlock(comments), appliedOn)
+	if err != nil {
+		Fail(fmt.Sprintf("Failed to create an annotation holder during testing - %v", err))
+	}
+
+	return &holder
 }

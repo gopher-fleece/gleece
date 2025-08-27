@@ -336,7 +336,7 @@ func (v *RecursiveTypeVisitor) getEnumValueDefinitions(
 		// Attempt to extract annotations
 		var holder *annotations.AnnotationHolder
 		if constNode != nil {
-			comments := gast.GetCommentsFromNode(constNode)
+			comments := gast.GetCommentsFromNode(constNode, v.context.ArbitrationProvider.Pkg().FSet())
 			if h, err := annotations.NewAnnotationHolder(comments, annotations.CommentSourceProperty); err == nil {
 				holder = &h
 			} else {
@@ -666,7 +666,7 @@ func (v *RecursiveTypeVisitor) getAnnotations(
 	}
 
 	if commentSource != nil {
-		comments := gast.MapDocListToStrings(commentSource.List)
+		comments := gast.MapDocListToCommentBlock(commentSource.List, v.context.ArbitrationProvider.Pkg().FSet())
 		holder, err := annotations.NewAnnotationHolder(comments, annotations.CommentSourceController)
 		return &holder, err
 	}

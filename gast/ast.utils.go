@@ -341,15 +341,6 @@ func GetFieldTypeString(fieldType ast.Expr) string {
 	}
 }
 
-// MapDocListToStrings converts a list of comment nodes (ast.Comment) to a string array
-func MapDocListToStrings(docList []*ast.Comment) []string {
-	var result []string
-	for _, comment := range docList {
-		result = append(result, comment.Text)
-	}
-	return result
-}
-
 func GetIdentFromExpr(expr ast.Expr) *ast.Ident {
 	switch t := expr.(type) {
 	case *ast.Ident:
@@ -359,7 +350,7 @@ func GetIdentFromExpr(expr ast.Expr) *ast.Ident {
 		return GetIdentFromExpr(t.X)
 
 	case *ast.SelectorExpr:
-		// Returns the selector's "Baz" (e.g. `otherpkg.Baz`)
+		// Returns the selector's "Baz" (e.g. `other.Baz`)
 		return t.Sel
 
 	case *ast.ArrayType:
@@ -548,49 +539,6 @@ func FindConstSpecNode(pkg *packages.Package, constName string) ast.Node {
 	return nil
 }
 
-// GetCommentsFromNode extracts comments attached directly to the AST node (like FuncDecl.Doc).
-// Returns a slice of comment texts or empty if none.
-func GetCommentsFromNode(node ast.Node) []string {
-	if node == nil {
-		return nil
-	}
-
-	// Many node types have a Doc field of type *ast.CommentGroup.
-	// We'll use a type switch to get the Doc comment group.
-	switch n := node.(type) {
-	case *ast.FuncDecl:
-	case *ast.GenDecl:
-	case *ast.TypeSpec:
-	case *ast.ValueSpec:
-	case *ast.Field:
-		if n.Doc != nil {
-			return MapDocListToStrings(n.Doc.List)
-		}
-	}
-
-	return nil
-}
-
-// GetCommentsFromTypeSpec gets comments for a given TypeSpec.
-// Similar to GetCommentsFromNode but also considers the given GenDecl whilst prioritizing comments
-// on the type itself
-func GetCommentsFromTypeSpec(typeSpec *ast.TypeSpec, owningGenDecl *ast.GenDecl) []string {
-	// Comments are usually located on the nearest GenDecl but may also be inlined on the struct itself
-	var commentSource *ast.CommentGroup
-	if typeSpec.Doc != nil {
-		commentSource = typeSpec.Doc
-	} else {
-		commentSource = owningGenDecl.Doc
-	}
-
-	// Do we want to fail if there are no attributes on the controller?
-	if commentSource != nil {
-		return MapDocListToStrings(commentSource.List)
-	}
-
-	return []string{}
-}
-
 func DoesStructEmbedType(pkg *packages.Package, structName string, embeddedStructFullPackage string, embeddedStructName string) (bool, error) {
 	// Look for the struct definition in the package
 	obj := pkg.Types.Scope().Lookup(structName)
@@ -689,4 +637,131 @@ func GetAstFileNameOrFallback(file *ast.File, fallback *string) string {
 	}
 
 	return file.Name.Name
+}
+
+// MapDocListToCommentBlock converts a list of *ast.Comment into a CommentBlock.
+// Assumes docList is the ordered list coming from a single ast.CommentGroup
+// (i.e. comments attached to the same node/file).
+//
+// Coordinates:
+//   - Lines and columns are 0-based.
+//   - EndLine/EndCol are exclusive (half-open interval).
+func MapDocListToCommentBlock(docList []*ast.Comment, fileSet *token.FileSet) CommentBlock {
+	if len(docList) == 0 {
+		return CommentBlock{
+			Comments:  []CommentNode{},
+			FileName:  "",
+			StartLine: 0,
+			StartCol:  0,
+			EndLine:   0,
+			EndCol:    0,
+		}
+	}
+
+	comments := make([]CommentNode, 0, len(docList))
+	var fileName string
+
+	// Build per-comment nodes
+	for i, c := range docList {
+		var startPos, endPos token.Position
+		if fileSet != nil {
+			startPos = fileSet.Position(c.Pos())
+			endPos = fileSet.Position(c.End())
+		}
+		// normalize to 0-based; if fileSet==nil these will be zero
+		startLine := max(0, startPos.Line-1)
+		startCol := max(0, startPos.Column-1)
+		endLine := max(0, endPos.Line-1)
+		endCol := max(0, endPos.Column-1)
+
+		if fileName == "" && startPos.Filename != "" {
+			fileName = startPos.Filename
+		}
+
+		comments = append(comments, CommentNode{
+			Text: c.Text,
+			Position: CommentPosition{
+				StartLine: startLine,
+				StartCol:  startCol,
+				EndLine:   endLine,
+				EndCol:    endCol,
+			},
+			Index: i,
+		})
+	}
+
+	// derive block-level range from first and last comment
+	first := comments[0].Position
+	last := comments[len(comments)-1].Position
+
+	return CommentBlock{
+		Comments:  comments,
+		FileName:  fileName,
+		StartLine: first.StartLine,
+		StartCol:  first.StartCol,
+		EndLine:   last.EndLine,
+		EndCol:    last.EndCol,
+	}
+}
+
+// GetCommentsFromNode extracts comments attached directly to node (like FuncDecl.Doc)
+// and returns a CommentBlock with resolved positions (via fileSet).
+// If fileSet is nil the Position fields will be zero-valued (normalized to 0).
+func GetCommentsFromNode(node ast.Node, fileSet *token.FileSet) CommentBlock {
+	if node == nil {
+		return CommentBlock{
+			Comments: []CommentNode{},
+		}
+	}
+
+	switch n := node.(type) {
+	case *ast.FuncDecl:
+		if n.Doc != nil {
+			return MapDocListToCommentBlock(n.Doc.List, fileSet)
+		}
+	case *ast.GenDecl:
+		if n.Doc != nil {
+			return MapDocListToCommentBlock(n.Doc.List, fileSet)
+		}
+	case *ast.TypeSpec:
+		if n.Doc != nil {
+			return MapDocListToCommentBlock(n.Doc.List, fileSet)
+		}
+	case *ast.ValueSpec:
+		if n.Doc != nil {
+			return MapDocListToCommentBlock(n.Doc.List, fileSet)
+		}
+	case *ast.Field:
+		if n.Doc != nil {
+			return MapDocListToCommentBlock(n.Doc.List, fileSet)
+		}
+	}
+
+	return CommentBlock{
+		Comments: []CommentNode{},
+	}
+}
+
+// GetCommentsFromTypeSpec behaves like your previous GetCommentsFromTypeSpec but
+// returns a CommentBlock and resolves positions. It prioritizes comments on the
+// TypeSpec over the owning GenDecl (same semantics as your original helper).
+func GetCommentsFromTypeSpec(
+	typeSpec *ast.TypeSpec,
+	owningGenDecl *ast.GenDecl,
+	fileSet *token.FileSet,
+) CommentBlock {
+	var commentSource *ast.CommentGroup
+	if typeSpec != nil && typeSpec.Doc != nil {
+		commentSource = typeSpec.Doc
+	} else if owningGenDecl != nil && owningGenDecl.Doc != nil {
+		commentSource = owningGenDecl.Doc
+	}
+
+	if commentSource != nil {
+		return MapDocListToCommentBlock(commentSource.List, fileSet)
+	}
+
+	return CommentBlock{
+		Comments: []CommentNode{},
+	}
 }

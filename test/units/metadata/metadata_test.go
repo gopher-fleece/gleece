@@ -108,10 +108,10 @@ var _ = Describe("Unit Tests - Metadata", func() {
 
 	var _ = Describe("StructMeta", func() {
 		holder, err := annotations.NewAnnotationHolder(
-			[]string{
+			utils.CommentsToCommentBlock([]string{
 				"// @Description This is a test struct",
 				"// @Deprecated Use something else",
-			},
+			}),
 			annotations.CommentSourceProperty,
 		)
 
@@ -198,7 +198,7 @@ var _ = Describe("Unit Tests - Metadata", func() {
 		Context("Reduce", func() {
 
 			It("reduces successfully with explicit security", func() {
-				holder := getAnnotationHolderOrFail(
+				holder := utils.GetAnnotationHolderOrFail(
 					[]string{
 						"// @Description Example controller",
 						"// @Route(/example)",
@@ -223,7 +223,7 @@ var _ = Describe("Unit Tests - Metadata", func() {
 			})
 
 			It("falls back to default security if none are defined", func() {
-				holder := getAnnotationHolderOrFail(
+				holder := utils.GetAnnotationHolderOrFail(
 					[]string{
 						"// @Description Example controller",
 						"// @Route(/example)",
@@ -269,11 +269,6 @@ var _ = Describe("Unit Tests - Metadata", func() {
 	})
 })
 
-func getAnnotationHolderOrFail(comments []string, appliedOn annotations.CommentSource) *annotations.AnnotationHolder {
-	holder, err := annotations.NewAnnotationHolder(comments, appliedOn)
-	Expect(err).ToNot(HaveOccurred())
-	return &holder
-}
 func TestUnitCommons(t *testing.T) {
 	logger.SetLogLevel(logger.LogLevelNone)
 	RegisterFailHandler(Fail)

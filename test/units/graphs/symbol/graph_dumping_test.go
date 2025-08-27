@@ -183,9 +183,9 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 
 			text := graph.ToDot(nil)
 
-			Expect(text).To(ContainSubstring("N0 [label=\"any@.| (Special)\""))
-			Expect(text).To(ContainSubstring("N1 [label=\"string@.| (Builtin)\""))
-			Expect(text).To(ContainSubstring("N0 -> N1 [label=\"Type\""))
+			Expect(text).To(MatchRegexp(`N\d \[label=\"any@\.| \(Special\)\"`))
+			Expect(text).To(MatchRegexp(`N\d \[label=\"string@\.| \(Builtin\)\"`))
+			Expect(text).To(MatchRegexp(`N\d -> N\d \[label=\"Type\"`))
 		})
 	})
 })

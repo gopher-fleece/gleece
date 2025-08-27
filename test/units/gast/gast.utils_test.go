@@ -944,8 +944,8 @@ var _ = Describe("Unit Tests - AST", func() {
 	})
 
 	Context("GetCommentsFromNode", func() {
-		It("Returns nil when node is nil", func() {
-			Expect(gast.GetCommentsFromNode(nil)).To(BeNil())
+		It("Returns an empty slice when node is nil", func() {
+			Expect(gast.GetCommentsFromNode(nil, nil)).To(utils.BeAnEmptyCommentBlock())
 		})
 
 		It("Returns comments for *ast.Field with Doc", func() {
@@ -954,17 +954,57 @@ var _ = Describe("Unit Tests - AST", func() {
 					List: []*ast.Comment{{Text: "// field comment"}},
 				},
 			}
-			Expect(gast.GetCommentsFromNode(field)).To(Equal([]string{"// field comment"}))
+
+			cBlock := gast.GetCommentsFromNode(field, nil)
+			Expect(cBlock.Comments).To(HaveLen(1))
+			Expect(cBlock.Comments[0].Text).To(Equal("// field comment"))
 		})
 
 		It("Returns nil for *ast.FuncDecl without Doc", func() {
 			funcDecl := &ast.FuncDecl{}
-			Expect(gast.GetCommentsFromNode(funcDecl)).To(BeNil())
+			cBlock := gast.GetCommentsFromNode(funcDecl, nil)
+			Expect(cBlock.Comments).To(HaveLen(0))
 		})
 
-		It("Returns nil for unsupported node types", func() {
+		It("Returns an empty slice for unsupported node types", func() {
 			badNode := &ast.BasicLit{}
-			Expect(gast.GetCommentsFromNode(badNode)).To(BeNil())
+			Expect(gast.GetCommentsFromNode(badNode, nil)).To(utils.BeAnEmptyCommentBlock())
+		})
+
+		It("Returns comments for *ast.FuncDecl with Doc", func() {
+			funcDecl := &ast.FuncDecl{
+				Doc: &ast.CommentGroup{
+					List: []*ast.Comment{{Text: "// func comment"}},
+				},
+			}
+
+			cBlock := gast.GetCommentsFromNode(funcDecl, nil)
+			Expect(cBlock.Comments).To(HaveLen(1))
+			Expect(cBlock.Comments[0].Text).To(Equal("// func comment"))
+		})
+
+		It("Returns comments for *ast.GenDecl with Doc", func() {
+			genDecl := &ast.GenDecl{
+				Doc: &ast.CommentGroup{
+					List: []*ast.Comment{{Text: "// gen comment"}},
+				},
+			}
+
+			cBlock := gast.GetCommentsFromNode(genDecl, nil)
+			Expect(cBlock.Comments).To(HaveLen(1))
+			Expect(cBlock.Comments[0].Text).To(Equal("// gen comment"))
+		})
+
+		It("Returns comments for *ast.TypeSpec with Doc", func() {
+			typeSpec := &ast.TypeSpec{
+				Doc: &ast.CommentGroup{
+					List: []*ast.Comment{{Text: "// type comment"}},
+				},
+			}
+
+			cBlock := gast.GetCommentsFromNode(typeSpec, nil)
+			Expect(cBlock.Comments).To(HaveLen(1))
+			Expect(cBlock.Comments[0].Text).To(Equal("// type comment"))
 		})
 	})
 
@@ -975,7 +1015,10 @@ var _ = Describe("Unit Tests - AST", func() {
 					List: []*ast.Comment{{Text: "// type comment"}},
 				},
 			}
-			Expect(gast.GetCommentsFromTypeSpec(typeSpec, nil)).To(Equal([]string{"// type comment"}))
+
+			cBlock := gast.GetCommentsFromTypeSpec(typeSpec, nil, nil)
+			Expect(cBlock.Comments).To(HaveLen(1))
+			Expect(cBlock.Comments[0].Text).To(Equal("// type comment"))
 		})
 
 		It("Returns owningGenDecl.Doc comments when typeSpec.Doc is nil", func() {
@@ -985,13 +1028,16 @@ var _ = Describe("Unit Tests - AST", func() {
 					List: []*ast.Comment{{Text: "// genDecl comment"}},
 				},
 			}
-			Expect(gast.GetCommentsFromTypeSpec(typeSpec, genDecl)).To(Equal([]string{"// genDecl comment"}))
+
+			cBlock := gast.GetCommentsFromTypeSpec(typeSpec, genDecl, nil)
+			Expect(cBlock.Comments).To(HaveLen(1))
+			Expect(cBlock.Comments[0].Text).To(Equal("// genDecl comment"))
 		})
 
 		It("Returns empty slice when neither Doc is present", func() {
 			typeSpec := &ast.TypeSpec{}
 			genDecl := &ast.GenDecl{}
-			Expect(gast.GetCommentsFromTypeSpec(typeSpec, genDecl)).To(Equal([]string{}))
+			Expect(gast.GetCommentsFromTypeSpec(typeSpec, genDecl, nil)).To(utils.BeAnEmptyCommentBlock())
 		})
 	})
 
@@ -1228,6 +1274,12 @@ var _ = Describe("Unit Tests - AST", func() {
 				result := gast.GetAstFileNameOrFallback(file, &fallback)
 				Expect(result).To(Equal("mypkg"))
 			})
+		})
+	})
+
+	Context("MapDocListToCommentNodes", func() {
+		It("Returns an empty slice if given a nil doc list", func() {
+			Expect(gast.MapDocListToCommentBlock(nil, nil)).To(utils.BeAnEmptyCommentBlock())
 		})
 	})
 })

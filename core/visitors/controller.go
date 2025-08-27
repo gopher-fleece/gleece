@@ -186,7 +186,12 @@ func (v *ControllerVisitor) createControllerMetadata(controllerNode *ast.TypeSpe
 		},
 	}
 
-	comments := gast.GetCommentsFromTypeSpec(controllerNode, v.currentGenDecl)
+	comments := gast.GetCommentsFromTypeSpec(
+		controllerNode,
+		v.currentGenDecl,
+		v.context.ArbitrationProvider.Pkg().FSet(),
+	)
+
 	annotationHolder, err := annotations.NewAnnotationHolder(comments, annotations.CommentSourceController)
 	if err != nil {
 		return metadata.ControllerMeta{}, v.frozenError(err)

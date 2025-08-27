@@ -5,7 +5,6 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"go/types"
 	"path"
 	"path/filepath"
 
@@ -130,14 +129,6 @@ func (facade *PackagesFacade) registerParsedFile(absSourceFilePath string, file 
 	}
 }
 
-func (facade *PackagesFacade) GetAllPackages() []*packages.Package {
-	allCached := []*packages.Package{}
-	for _, value := range facade.packagesCache {
-		allCached = append(allCached, value)
-	}
-	return allCached
-}
-
 func (facade *PackagesFacade) GetPackage(packageExpression string) (*packages.Package, error) {
 	matches, err := facade.GetPackages([]string{packageExpression})
 	if err != nil {
@@ -149,10 +140,6 @@ func (facade *PackagesFacade) GetPackage(packageExpression string) (*packages.Pa
 	}
 
 	return nil, nil
-}
-
-func (facade *PackagesFacade) LoadPackages(packageExpressions []string) error {
-	return facade.loadPackagesFiltered(packageExpressions, nil)
 }
 
 func (facade *PackagesFacade) loadPackagesFiltered(
@@ -275,45 +262,6 @@ func (facade *PackagesFacade) getCachedPkgsAndUnCachedExpressions(
 	return cachedPkgs, expressionsToLookup
 }
 
-func (facade *PackagesFacade) EvictCache() {
-	for k := range facade.packagesCache {
-		delete(facade.packagesCache, k)
-	}
-}
-
-func (facade *PackagesFacade) GetPackageNameByNamedEntity(namedEntity *types.Named) (string, error) {
-	pkg := namedEntity.Obj().Pkg()
-	if pkg == nil {
-		return "", nil // Built-in types, unnamed types, etc.
-	}
-
-	// Find the package where the struct is defined
-	pkgPath := pkg.Path()
-	targetPkg, err := facade.GetPackage(pkgPath)
-	if err != nil {
-		return "", err // Package not found in loaded AST
-	}
-
-	return targetPkg.PkgPath, nil
-}
-
-func (facade *PackagesFacade) GetPackageByTypeName(typeName *types.TypeName) (*packages.Package, error) {
-	pkg := typeName.Pkg()
-	if pkg == nil {
-		return nil, nil // Built-in types, unnamed types, etc.
-	}
-
-	return facade.GetPackage(pkg.Path())
-}
-
-func (facade *PackagesFacade) GetAstFile(absPath string) *ast.File {
-	return facade.files[absPath]
-}
-
-func (facade *PackagesFacade) GetPackageForFileName(absPath string) *packages.Package {
-	return facade.fileToPackage[absPath]
-}
-
 func (facade *PackagesFacade) GetPackageForFile(file *ast.File) (*packages.Package, error) {
 	name := gast.GetAstFileName(facade.fileSet, file)
 	if name == "" {
@@ -321,8 +269,4 @@ func (facade *PackagesFacade) GetPackageForFile(file *ast.File) (*packages.Packa
 	}
 
 	return facade.fileToPackage[name], nil
-}
-
-func (facade *PackagesFacade) GetFilesForPackage(pkgPath string) []*ast.File {
-	return facade.packageToFiles[pkgPath]
 }

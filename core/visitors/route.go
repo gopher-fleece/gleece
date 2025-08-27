@@ -101,7 +101,7 @@ func (v *RouteVisitor) getExecutionContext(sourceFile *ast.File, funcDecl *ast.F
 		return ctx, nil
 	}
 
-	comments := gast.MapDocListToStrings(funcDecl.Doc.List)
+	comments := gast.MapDocListToCommentBlock(funcDecl.Doc.List, v.context.ArbitrationProvider.Pkg().FSet())
 	holder, err := annotations.NewAnnotationHolder(comments, annotations.CommentSourceRoute)
 	if err != nil {
 		// Couldn't read comments. Fail.
