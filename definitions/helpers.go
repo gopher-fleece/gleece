@@ -20,6 +20,16 @@ var validHttpVerbs = map[string]struct{}{
 	string(HttpConnect): {},
 }
 
+// A map of HTTP verbs supported by Gleece routes.
+// This is expected to eventually become deprecated as support for additional verbs is added
+var routeSupportedHttpVerbs = map[string]struct{}{
+	string(HttpGet):    {},
+	string(HttpPost):   {},
+	string(HttpPut):    {},
+	string(HttpDelete): {},
+	string(HttpPatch):  {},
+}
+
 var validHttpStatusCode = map[uint]struct{}{
 	uint(runtime.StatusContinue):                      {},
 	uint(runtime.StatusSwitchingProtocols):            {},
@@ -93,6 +103,14 @@ func GetValidHttpVerbs() []string {
 	return verbs
 }
 
+func GetRouteSupportedHttpVerbs() []string {
+	verbs := make([]string, 0, len(routeSupportedHttpVerbs))
+	for verb := range routeSupportedHttpVerbs {
+		verbs = append(verbs, verb)
+	}
+	return verbs
+}
+
 func GetValidHttpStatusCodes() []uint {
 	codes := make([]uint, 0, len(validHttpStatusCode))
 	for code := range validHttpStatusCode {
@@ -103,6 +121,11 @@ func GetValidHttpStatusCodes() []uint {
 
 func IsValidHttpVerb(verb string) bool {
 	_, exists := validHttpVerbs[verb]
+	return exists
+}
+
+func IsValidRouteHttpVerb(verb string) bool {
+	_, exists := routeSupportedHttpVerbs[verb]
 	return exists
 }
 
@@ -121,7 +144,7 @@ func IsValidHttpStatusCode(code uint) bool {
 func ConvertToHttpStatus(code string) (runtime.HttpStatusCode, error) {
 	parsed, err := strconv.ParseUint(code, 10, 32)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("failed to convert HTTP status code string '%s' to an integer - %v", code, err)
 	}
 
 	parsedCode := uint(parsed)

@@ -14,25 +14,28 @@ import (
 )
 
 func GetMethodHideOpts(attributes *annotations.AnnotationHolder) definitions.MethodHideOptions {
+	if attributes == nil {
+		// No attributes, not hidden. A bit of an oxymoron as this isn't supposed to actually be called
+		// for any node that doesn't have any annotations
+		return definitions.MethodHideOptions{Type: definitions.HideMethodNever}
+	}
+
 	attr := attributes.GetFirst(annotations.GleeceAnnotationHidden)
 	if attr == nil {
 		// No '@Hidden' attribute
 		return definitions.MethodHideOptions{Type: definitions.HideMethodNever}
 	}
 
-	if attr.Properties == nil || len(attr.Properties) <= 0 {
-		return definitions.MethodHideOptions{Type: definitions.HideMethodAlways}
-	}
-
-	// Technically a bit redundant since we know by length whether there's a condition defined
-	// but nothing stops user from adding text to the comment so this mostly serves as a validation
-	if len(attr.Value) <= 0 {
-		// Standard '@Hidden' attribute; Always hide.
-		return definitions.MethodHideOptions{Type: definitions.HideMethodAlways}
-	}
-
-	// A '@Hidden(condition)' attribute
-	return definitions.MethodHideOptions{Type: definitions.HideMethodCondition, Condition: attr.Value}
+	// Here we can insert any expanded functionality.
+	// There are several routes we can take here.
+	// Listed below are a couple.
+	//
+	// 1. Env in Value, condition type + expected in props
+	// @Hidden(ENV_VAR, {eq: "value"})
+	//
+	// 2. CONDITION keyword in Value, various options in props
+	// @Hidden(CONDITION, { env: { var: "VAR_NAME", value: "EXPECTED_VALUE", operator: "EQUALS" }})
+	return definitions.MethodHideOptions{Type: definitions.HideMethodAlways}
 }
 
 func GetDeprecationOpts(holder *annotations.AnnotationHolder) definitions.DeprecationOptions {
@@ -156,7 +159,11 @@ func GetParamPassedIn(
 ) (definitions.ParamPassedIn, error) {
 	paramAttrib := paramAnnotations.FindFirstByValue(paramName)
 	if paramAttrib == nil {
-		return definitions.PassedInHeader, fmt.Errorf("parameter '%s' does not have a matching documentation attribute", paramName)
+		return definitions.PassedInHeader,
+			NewInvalidAnnotationError(
+				fmt.Sprintf("parameter '%s' does not have a matching documentation attribute", paramName),
+			)
+
 	}
 
 	// Currently, only body param can be an object type
@@ -298,23 +305,34 @@ func GetDefaultSecurity(config *definitions.GleeceConfig) []definitions.RouteSec
 	return defaultSecurity
 }
 
-func IsAnErrorEmbeddingType(
-	meta definitions.TypeMetadata,
-	metaPackage *packages.Package,
-) (bool, error) {
-	if meta.Name == "error" {
+func isErrorEmbedding(typeName string, isUniverse bool, pkg *packages.Package) (bool, error) {
+	if typeName == "error" {
 		return true, nil
 	}
 
 	// Universe types are leaf nodes and can never embed anything- no reason to check them
-	if meta.IsUniverseType {
+	if isUniverse {
 		return false, nil
 	}
 
-	embeds, err := gast.DoesStructEmbedType(metaPackage, meta.Name, "", "error")
+	embeds, err := gast.DoesStructEmbedType(pkg, typeName, "", "error")
 	if err != nil {
 		return false, err
 	}
 
 	return embeds, nil
+}
+
+func IsAnErrorEmbeddingTypeUsage(
+	meta TypeUsageMeta,
+	metaPackage *packages.Package,
+) (bool, error) {
+	return isErrorEmbedding(meta.Name, meta.IsUniverseType(), metaPackage)
+}
+
+func IsAnErrorEmbeddingType(
+	meta definitions.TypeMetadata,
+	metaPackage *packages.Package,
+) (bool, error) {
+	return isErrorEmbedding(meta.Name, meta.IsUniverseType, metaPackage)
 }

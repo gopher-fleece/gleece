@@ -36,6 +36,16 @@ func Filter[T any](in []T, filter func(T) bool) []T {
 	return out
 }
 
+func FilterNil[T any](in []*T) []*T {
+	var out []*T
+	for _, v := range in {
+		if v != nil {
+			out = append(out, v)
+		}
+	}
+	return out
+}
+
 // Flatten takes a slice of slices and flattens it into a single slice
 // by concatenating all inner slices in order.
 func Flatten[T any](nested [][]T) []T {
@@ -44,4 +54,14 @@ func Flatten[T any](nested [][]T) []T {
 		flat = append(flat, inner...)
 	}
 	return flat
+}
+
+func DereferenceSliceElements[T any](slice []*T) []T {
+	dereferenced := make([]T, 0, len(slice))
+	for _, item := range slice {
+		if item != nil {
+			dereferenced = append(dereferenced, *item)
+		}
+	}
+	return dereferenced
 }

@@ -8,120 +8,350 @@ import (
 	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/core/arbitrators"
 	"github.com/gopher-fleece/gleece/core/metadata"
+	"github.com/gopher-fleece/gleece/core/validators/diagnostics"
 	"github.com/gopher-fleece/gleece/definitions"
 )
 
-func ValidateRoute(
-	gleeceConfig *definitions.GleeceConfig,
-	packagesFacade *arbitrators.PackagesFacade,
-	route definitions.RouteMetadata,
-) error {
-
-	var errorCollector common.Collector[error]
-
-	validateParams(&errorCollector, route.FuncParams)
-	errorCollector.AddIfNotZero(validateReturnTypes(packagesFacade, route.Responses))
-	errorCollector.AddIfNotZero(validateSecurity(gleeceConfig, route))
-
-	errs := errorCollector.Items()
-	if len(errs) > 0 {
-		return &common.ContextualError{
-			Context: fmt.Sprintf("Route %s", route.OperationId),
-			Errors:  errs,
-		}
-	}
-	return nil
+type funcParamEx struct {
+	metadata.FuncParam
+	PassedIn definitions.ParamPassedIn
 }
 
-func validateParams(errorCollector *common.Collector[error], params []definitions.FuncParam) {
-	var processedParams []definitions.FuncParam
+type ReceiverValidator struct {
+	CommonValidator
+	gleeceConfig     *definitions.GleeceConfig
+	packagesFacade   *arbitrators.PackagesFacade
+	parentController *metadata.ControllerMeta
+	receiver         *metadata.ReceiverMeta
+}
 
-	for _, param := range params {
-		if param.IsContext {
+func NewReceiverValidator(
+	gleeceConfig *definitions.GleeceConfig,
+	packagesFacade *arbitrators.PackagesFacade,
+	controller *metadata.ControllerMeta,
+	receiver *metadata.ReceiverMeta,
+) ReceiverValidator {
+	return ReceiverValidator{
+		CommonValidator: CommonValidator{
+			holder: receiver.Annotations,
+		},
+		gleeceConfig:     gleeceConfig,
+		packagesFacade:   packagesFacade,
+		parentController: controller,
+		receiver:         receiver,
+	}
+}
+
+func (v ReceiverValidator) Validate() (diagnostics.EntityDiagnostic, error) {
+	receiverDiag := diagnostics.NewEntityDiagnostic("Receiver", v.receiver.Name)
+
+	// Run base/common validations first
+	receiverDiag.AddDiagnostics(v.CommonValidator.Validate())
+
+	paramDiags, err := v.validateParams(v.receiver)
+	if err != nil {
+		return receiverDiag, fmt.Errorf("could not validate parameter for receiver '%s' - %w", v.receiver.Name, err)
+	}
+
+	receiverDiag.AddDiagnostics(paramDiags)
+
+	retTypeDiag, err := v.validateReturnTypes(v.receiver)
+	if err != nil {
+		return receiverDiag, fmt.Errorf("could not validate return types for receiver '%s' - %w", v.receiver.Name, err)
+	}
+	receiverDiag.AddDiagnosticIfNotNil(retTypeDiag)
+
+	secDiag, err := v.validateSecurity(v.receiver)
+	if err != nil {
+		return receiverDiag, fmt.Errorf("could not validate security for receiver '%s' - %w", v.receiver.Name, err)
+	}
+	receiverDiag.AddDiagnosticIfNotNil(secDiag)
+
+	linkerDiags := NewAnnotationLinkValidator(v.receiver).Validate()
+	receiverDiag.AddDiagnostics(linkerDiags)
+
+	return receiverDiag, nil
+}
+
+func (v ReceiverValidator) validateParams(receiver *metadata.ReceiverMeta) ([]diagnostics.ResolvedDiagnostic, error) {
+	var processedParams []funcParamEx
+	diags := []diagnostics.ResolvedDiagnostic{}
+
+	for _, param := range receiver.Params {
+		if param.Type.IsContext() {
 			continue
 		}
 
-		switch param.PassedIn {
-		case definitions.PassedInBody:
-			errorCollector.AddIfNotZero(validateBodyParam(param))
-		default:
-			errorCollector.AddIfNotZero(validatePrimitiveParam(param))
+		passedIn, diag, err := v.getPassedInValue(param)
+		if err != nil {
+			return diags, err
 		}
 
-		errorCollector.AddIfNotZero(validateParamsCombinations(processedParams, param.PassedIn))
-		processedParams = append(processedParams, param)
+		common.AppendIfNotNil(diags, diag)
+		if passedIn == nil {
+			// If we couldn't process the passedIn portion, no reason in continuing.
+			// An error or error diagnostic will have been added, at this point.
+			continue
+		}
+
+		switch *passedIn {
+		case definitions.PassedInBody:
+			common.AppendIfNotNil(diags, v.validateBodyParam(receiver, param))
+		default:
+			common.AppendIfNotNil(diags, v.validatePrimitiveParam(receiver, param, *passedIn))
+		}
+
+		common.AppendIfNotNil(diags, v.validateParamsCombinations(processedParams, param, *passedIn))
+
+		processedParams = append(processedParams, funcParamEx{FuncParam: param, PassedIn: *passedIn})
 	}
+
+	return diags, nil
 }
 
-func validateBodyParam(param definitions.FuncParam) error {
-	// Verify the body is a struct
-	if param.TypeMeta.SymbolKind != common.SymKindStruct {
-		return fmt.Errorf(
-			"body parameters must be structs but '%s' (schema name '%s', type '%s') is of kind '%s'",
-			param.Name,
-			param.NameInSchema,
-			param.TypeMeta.Name,
-			param.TypeMeta.SymbolKind,
+func (v ReceiverValidator) getPassedInValue(param metadata.FuncParam) (
+	*definitions.ParamPassedIn,
+	*diagnostics.ResolvedDiagnostic,
+	error,
+) {
+	// This function gets the parameter's passed-in value (e.g. passed-in-body or passed-in-header)
+	// If it fails, it may return a standard error or an InvalidAnnotation error.
+	passedIn, err := metadata.GetParamPassedIn(param.Name, param.Annotations)
+	if err == nil {
+		return &passedIn, nil, nil
+	}
+
+	// If we didn't get a value, it generally means a missing annotation which is a 'diagnostic'
+	// or an outright malformed one which we consider an 'error'.
+	// InvalidAnnotation error is the former.
+	if _, isInvalidAnnotationErr := err.(metadata.InvalidAnnotationError); isInvalidAnnotationErr {
+		diag := diagnostics.NewErrorDiagnostic(
+			v.receiver.FVersion.Path,
+			fmt.Sprintf(
+				"Parameter '%s' in receiver '%s' is not referenced by any annotation",
+				param.Name,
+				v.receiver.Name,
+			),
+			diagnostics.DiagLinkerUnreferencedParameter,
+			v.receiver.RetValsRange(),
 		)
+		return nil, &diag, nil
+	}
+
+	// A true error or a grossly malformed annotation. Regardless, this is a flow-terminating error.
+	return nil, nil, fmt.Errorf(
+		"failed to determine 'passed-in' type for parameter '%s' in receiver '%s' - %w",
+		param.Name,
+		v.receiver.Name,
+		err,
+	)
+}
+
+func (v ReceiverValidator) validateBodyParam(
+	receiver *metadata.ReceiverMeta,
+	param metadata.FuncParam,
+) *diagnostics.ResolvedDiagnostic {
+	// Verify the body is a struct
+	if param.SymbolKind != common.SymKindStruct {
+		nameInSchema, err := metadata.GetParameterSchemaName(param.Name, param.Annotations)
+		if err != nil {
+			nameInSchema = "unknown"
+		}
+
+		diag := diagnostics.NewErrorDiagnostic(
+			receiver.FVersion.Path,
+			fmt.Sprintf(
+				"body parameters must be structs but '%s' (schema name '%s', type '%s') is of kind '%s'",
+				param.Name,
+				nameInSchema,
+				param.Type.Name,
+				param.Type.SymbolKind,
+			),
+			diagnostics.DiagReceiverInvalidBody,
+			param.Range,
+		)
+		return &diag
 	}
 
 	return nil
 }
 
-func validatePrimitiveParam(param definitions.FuncParam) error {
-	isErrType := param.TypeMeta.PkgPath == "" && param.TypeMeta.Name == "error"
-	isMapType := param.TypeMeta.PkgPath == "" && strings.HasPrefix(param.TypeMeta.Name, "map[")
-	isAnEnum := param.TypeMeta.SymbolKind == common.SymKindEnum
+func (v ReceiverValidator) validatePrimitiveParam(
+	receiver *metadata.ReceiverMeta,
+	param metadata.FuncParam,
+	passedIn definitions.ParamPassedIn,
+) *diagnostics.ResolvedDiagnostic {
+	isErrType := param.Type.PkgPath == "" && param.Type.Name == "error"
+	isMapType := param.Type.PkgPath == "" && strings.HasPrefix(param.Type.Name, "map[")
+	isAnEnum := param.Type.SymbolKind == common.SymKindEnum
 
-	if (!param.TypeMeta.IsUniverseType && !isAnEnum) || isErrType || isMapType {
-		return fmt.Errorf(
+	if (param.Type.IsUniverseType() || isAnEnum) && !isErrType && !isMapType {
+		return nil
+	}
+
+	nameInSchema, err := metadata.GetParameterSchemaName(param.Name, param.Annotations)
+	if err != nil {
+		nameInSchema = "unknown"
+	}
+	diag := diagnostics.NewErrorDiagnostic(
+		receiver.FVersion.Path,
+		fmt.Sprintf(
 			"header, path and query parameters are currently limited to primitives only but "+
 				"%s parameter '%s' (schema name '%s', type '%s') is of kind '%s'",
-			param.PassedIn,
+			passedIn,
 			param.Name,
-			param.NameInSchema,
-			param.TypeMeta.Name,
-			param.TypeMeta.SymbolKind,
-		)
-	}
+			nameInSchema,
+			param.Type.Name,
+			param.Type.SymbolKind,
+		),
+		diagnostics.DiagReceiverParamNotPrimitive,
+		param.Range,
+	)
 
-	return nil
+	return &diag
 }
 
 // This function is deprecated - no need to test here, all validation moved to the NewAnnotationHolder logic
-func validateParamsCombinations(funcParams []definitions.FuncParam, newParamType definitions.ParamPassedIn) error {
+func (v ReceiverValidator) validateParamsCombinations(
+	funcParams []funcParamEx,
+	newParam metadata.FuncParam,
+	newParamType definitions.ParamPassedIn,
+) *diagnostics.ResolvedDiagnostic {
 
-	isBodyParamAlreadyExists := slices.ContainsFunc(funcParams, func(p definitions.FuncParam) bool {
+	doesBodyParamAlreadyExists := slices.ContainsFunc(funcParams, func(p funcParamEx) bool {
 		return p.PassedIn == definitions.PassedInBody
 	})
 
-	isFormParamAlreadyExists := slices.ContainsFunc(funcParams, func(p definitions.FuncParam) bool {
+	isFormParamAlreadyExists := slices.ContainsFunc(funcParams, func(p funcParamEx) bool {
 		return p.PassedIn == definitions.PassedInForm
 	})
 
-	// Body is a special case, only one body parameter is allowed per route
-	if newParamType == definitions.PassedInBody && isBodyParamAlreadyExists {
-		return fmt.Errorf("body parameter is invalid, only one body per route is allowed")
+	var errMsg string
+
+	switch newParamType {
+	case definitions.PassedInBody:
+		if doesBodyParamAlreadyExists {
+			// Body is a special case, only one body parameter is allowed per route
+			errMsg = "Body parameter is invalid, only one body per route is allowed"
+		} else if isFormParamAlreadyExists {
+			// Form is an implementation of url encoded string in the body, thus it cannot be used if the body is already in use
+			errMsg = "Body parameter is invalid, using body is not allowed when a form is in use"
+		}
+	case definitions.PassedInForm:
+		if doesBodyParamAlreadyExists {
+			// Form is an implementation of url encoded string in the body, thus it cannot be used if the body is already in use
+			errMsg = "Form parameter is invalid, using form is not allowed when a body is in use"
+		}
 	}
 
-	// Form is an implementation of url encoded string in the body, thus it cannot be used if the body is already in use
-	if newParamType == definitions.PassedInBody && isFormParamAlreadyExists {
-		return fmt.Errorf("body parameter is invalid, using body is not allowed when a form is in use")
+	if errMsg != "" {
+		diag := diagnostics.NewErrorDiagnostic(
+			newParam.FVersion.Path,
+			errMsg,
+			diagnostics.DiagReceiverRetValsInvalidSignature,
+			newParam.Range,
+		)
+		return &diag
 	}
 
-	// Form is an implementation of url encoded string in the body, thus it cannot be used if the body is already in use
-	if newParamType == definitions.PassedInForm && isBodyParamAlreadyExists {
-		return fmt.Errorf("form parameter is invalid, using form is not allowed when a body is in use")
-	}
 	return nil
 }
 
-func validateReturnTypes(packagesFacade *arbitrators.PackagesFacade, funcRetTypes []definitions.FuncReturnValue) error {
-	// Note that controller methods must return and error or (any, error)
+func (v ReceiverValidator) validateReturnTypes(receiver *metadata.ReceiverMeta) (*diagnostics.ResolvedDiagnostic, error) {
+	// Validate return sig first
+	errorRetTypeIndex, diagErr := getDiagForRetSig(receiver)
+	if diagErr != nil {
+		return diagErr, nil
+	}
 
+	// Validate whether the method returns a proper error. This may be the first or second return type in the list
+	retType := receiver.RetVals[errorRetTypeIndex]
+	relevantPkg, err := v.packagesFacade.GetPackage(retType.PkgPath)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"failed to obtain package object for return value '%s' in receiver '%s' - %w",
+			retType.Type.Name,
+			receiver.Name,
+			err,
+		)
+	}
+
+	isValidError, err := metadata.IsAnErrorEmbeddingTypeUsage(retType.Type, relevantPkg)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"failed to determine whether return value '%s' in receiver '%s' embeds an error - %w",
+			retType.Name,
+			receiver.Name,
+			err,
+		)
+	}
+
+	if isValidError {
+		return nil, nil
+	}
+
+	// 'error' return value is not actually an error
+	return common.Ptr(
+		diagnostics.NewErrorDiagnostic(
+			receiver.FVersion.Path,
+			fmt.Sprintf(
+				"return type '%s' in receiver '%s' expected to be an error or directly embed it",
+				retType.Name,
+				receiver.Name,
+			),
+			diagnostics.DiagReceiverRetValsIsNotError,
+			receiver.RetValsRange(),
+		),
+	), nil
+}
+
+func (v ReceiverValidator) validateSecurity(receiver *metadata.ReceiverMeta) (*diagnostics.ResolvedDiagnostic, error) {
+	if v.gleeceConfig == nil || !v.gleeceConfig.RoutesConfig.AuthorizationConfig.EnforceSecurityOnAllRoutes {
+		return nil, nil
+	}
+
+	controllerSec, err := metadata.GetSecurityFromContext(v.parentController.Struct.Annotations)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"could not determine controller '%s' security for while processing receiver '%s' - %w",
+			v.parentController.Struct.Name,
+			receiver.Name,
+			err,
+		)
+	}
+
+	security, err := metadata.GetRouteSecurityWithInheritance(receiver.Annotations, controllerSec)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"could not determine route security for receiver '%s' - %w",
+			receiver.Name,
+			err,
+		)
+	}
+
+	if len(security) > 0 {
+		return nil, nil
+	}
+
+	diag := diagnostics.NewErrorDiagnostic(
+		receiver.FVersion.Path,
+		fmt.Sprintf(
+			"'enforceSecurityOnAllRoutes' setting is 'true'' but route with operation ID '%s' "+
+				"does not have any explicit or implicit (inherited) security attributes",
+			receiver.Name,
+		),
+		diagnostics.DiagReceiverRetValsIsNotError,
+		receiver.RetValsRange(),
+	)
+
+	return &diag, nil
+}
+
+func getDiagForRetSig(receiver *metadata.ReceiverMeta) (int, *diagnostics.ResolvedDiagnostic) {
+	// Note that controller methods must return and error or (any, error)
 	var errorRetTypeIndex int
 
-	switch len(funcRetTypes) {
+	switch len(receiver.RetVals) {
 	case 2:
 		// If the method returns a 2-tuple, the error is expected to be the second value in the tuple
 		errorRetTypeIndex = 1
@@ -129,48 +359,36 @@ func validateReturnTypes(packagesFacade *arbitrators.PackagesFacade, funcRetType
 		// If the method returns a single value, its expected to be an error
 		errorRetTypeIndex = 0
 	case 0:
-		return fmt.Errorf("expected method to return an error or a value and error tuple but found void")
+		return errorRetTypeIndex, common.Ptr(
+			diagnostics.NewErrorDiagnostic(
+				receiver.FVersion.Path,
+				fmt.Sprintf(
+					"expected method '%s' to return an error or a value and error tuple but found void",
+					receiver.Name,
+				),
+				diagnostics.DiagReceiverRetValsInvalidSignature,
+				receiver.RetValsRange(),
+			),
+		)
 	default:
 		typeNames := []string{}
-		for _, typeMeta := range funcRetTypes {
+		for _, typeMeta := range receiver.RetVals {
 			typeNames = append(typeNames, typeMeta.Name)
 		}
 
-		return fmt.Errorf(
-			"expected method to return an error or a value and error tuple but found (%s)",
-			strings.Join(typeNames, ", "),
+		return errorRetTypeIndex, common.Ptr(
+			diagnostics.NewErrorDiagnostic(
+				receiver.FVersion.Path,
+				fmt.Sprintf(
+					"expected method '%s' to return an error or a value and error tuple but found (%s)",
+					receiver.Name,
+					strings.Join(typeNames, ", "),
+				),
+				diagnostics.DiagReceiverRetValsInvalidSignature,
+				receiver.RetValsRange(),
+			),
 		)
 	}
 
-	// Validate whether the method returns a proper error. This may be the first or second return type in the list
-	retType := funcRetTypes[errorRetTypeIndex]
-	relevantPkg, err := packagesFacade.GetPackage(retType.PkgPath)
-	if err != nil {
-		return err
-	}
-
-	isValidError, err := metadata.IsAnErrorEmbeddingType(retType.TypeMetadata, relevantPkg)
-	if err != nil {
-		return err
-	}
-
-	if !isValidError {
-		return fmt.Errorf("return type '%s' expected to be an error or directly embed it", retType.Name)
-	}
-
-	return nil
-}
-
-func validateSecurity(
-	gleeceConfig *definitions.GleeceConfig,
-	route definitions.RouteMetadata,
-) error {
-	if gleeceConfig != nil && gleeceConfig.RoutesConfig.AuthorizationConfig.EnforceSecurityOnAllRoutes && len(route.Security) <= 0 {
-		return fmt.Errorf(
-			"'enforceSecurityOnAllRoutes' setting is 'true'' but route with operation ID '%s' "+
-				"does not have any explicit or implicit (inherited) security attributes",
-			route.OperationId,
-		)
-	}
-	return nil
+	return errorRetTypeIndex, nil
 }

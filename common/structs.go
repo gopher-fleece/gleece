@@ -66,3 +66,10 @@ func (e *ContextualError) Error() string {
 func (e *ContextualError) Unwrap() []error {
 	return e.Errors
 }
+
+type ResolvedRange struct {
+	StartLine int // 0-based
+	StartCol  int // 0-based (rune/byte decision documented)
+	EndLine   int // 0-based
+	EndCol    int // 0-based
+}

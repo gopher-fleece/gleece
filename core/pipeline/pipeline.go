@@ -1,7 +1,6 @@
 package pipeline
 
 import (
-	"errors"
 	"fmt"
 	"go/ast"
 	"slices"
@@ -12,6 +11,7 @@ import (
 	"github.com/gopher-fleece/gleece/core/arbitrators/caching"
 	"github.com/gopher-fleece/gleece/core/metadata"
 	"github.com/gopher-fleece/gleece/core/validators"
+	"github.com/gopher-fleece/gleece/core/validators/diagnostics"
 	"github.com/gopher-fleece/gleece/core/visitors"
 	"github.com/gopher-fleece/gleece/core/visitors/providers"
 	"github.com/gopher-fleece/gleece/definitions"
@@ -82,13 +82,26 @@ func (p *GleecePipeline) Run() (GleeceFlattenedMetadata, error) {
 		return GleeceFlattenedMetadata{}, err
 	}
 
-	intermediate, err := p.GenerateIntermediate()
+	diags, err := p.Validate()
 	if err != nil {
 		return GleeceFlattenedMetadata{}, err
 	}
 
-	err = p.ValidateIntermediate(&intermediate)
+	errDiagEntities := diagnostics.GetDiagnosticsWithSeverity(
+		diags,
+		[]diagnostics.DiagnosticSeverity{diagnostics.DiagnosticError},
+	)
 
+	// Check if validators returned any errors
+	if len(errDiagEntities) > 0 {
+		// If so, return a formatted list of diagnostics
+		return GleeceFlattenedMetadata{}, diagnostics.DiagnosticsToError(errDiagEntities)
+	}
+
+	intermediate, err := p.GenerateIntermediate()
+	if err != nil {
+		return GleeceFlattenedMetadata{}, err
+	}
 	return intermediate, err
 }
 
@@ -107,7 +120,7 @@ func (p *GleecePipeline) GenerateGraph() error {
 }
 
 func (p *GleecePipeline) GenerateIntermediate() (GleeceFlattenedMetadata, error) {
-	controllers, err := p.getControllers()
+	controllers, err := p.getReducedControllers()
 	if err != nil {
 		logger.Error("Pipeline failed to obtain the controller list - %w", err)
 		return GleeceFlattenedMetadata{}, err
@@ -121,7 +134,7 @@ func (p *GleecePipeline) GenerateIntermediate() (GleeceFlattenedMetadata, error)
 	}, nil
 }
 
-func (p *GleecePipeline) getControllers() ([]definitions.ControllerMetadata, error) {
+func (p *GleecePipeline) getReducedControllers() ([]definitions.ControllerMetadata, error) {
 	controllers, err := p.reduceControllers(p.rootVisitor.GetControllers())
 	if err != nil {
 		logger.Error("Failed to reduce controller tree to flat form: %w", err)
@@ -197,12 +210,23 @@ func (p *GleecePipeline) appendRouteImports(imports map[string]MapSet.Set[string
 	}
 }
 
-func (p *GleecePipeline) ValidateIntermediate(meta *GleeceFlattenedMetadata) error {
-	controllerValidationErrors := common.Map(meta.Flat, func(controller definitions.ControllerMetadata) error {
-		return validators.ValidateController(p.gleeceConfig, p.arbitrationProvider.Pkg(), controller)
-	})
+// Validate validates the metadata created by the graph generation phase
+func (p *GleecePipeline) Validate() ([]diagnostics.EntityDiagnostic, error) {
+	allDiags := []diagnostics.EntityDiagnostic{}
 
-	return errors.Join(controllerValidationErrors...)
+	for _, ctrl := range p.rootVisitor.GetControllers() {
+		validator := validators.NewControllerValidator(p.gleeceConfig, p.arbitrationProvider.Pkg(), &ctrl)
+		ctrlDiag, err := validator.Validate()
+		if err != nil {
+			return allDiags, fmt.Errorf("failed to validate controller '%s' due to an error - %w", ctrl.Struct.Name, err)
+		}
+
+		if !ctrlDiag.Empty() {
+			allDiags = append(allDiags, ctrlDiag)
+		}
+	}
+
+	return allDiags, nil
 }
 
 func (p *GleecePipeline) reduceControllers(controllers []metadata.ControllerMeta) ([]definitions.ControllerMetadata, error) {

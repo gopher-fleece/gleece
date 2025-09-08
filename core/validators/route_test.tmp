@@ -1,19 +1,41 @@
 package validators
 
 import (
+	"github.com/gopher-fleece/gleece/core/arbitrators"
+	"github.com/gopher-fleece/gleece/core/metadata"
 	"github.com/gopher-fleece/gleece/definitions"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Route Tests", func() {
+	var validator ReceiverValidator
+	BeforeEach(func() {
+		pkgFacade, err := arbitrators.NewPackagesFacade([]string{})
+		if err != nil {
+			Fail("Failed to obtain packages facade")
+		}
+
+		validator = NewReceiverValidator(
+			nil,
+			&pkgFacade,
+			&metadata.ControllerMeta{
+				Struct: metadata.StructMeta{
+					SymNodeMeta: metadata.SymNodeMeta{
+						Name: "TestCtrl",
+					},
+				},
+			},
+		)
+	})
+
 	Context("when validating parameter combinations", func() {
 		It("should allow first body parameter", func() {
 			// Arrange
 			params := []definitions.FuncParam{}
 
 			// Act
-			err := validateParamsCombinations(params, definitions.PassedInBody)
+			err := validatorvalidateParamsCombinations(params, definitions.PassedInBody)
 
 			// Assert
 			Expect(err).To(BeNil())

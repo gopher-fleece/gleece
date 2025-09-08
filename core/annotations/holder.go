@@ -4,28 +4,38 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/gast"
 	"github.com/titanous/json5"
 )
 
 type AnnotationHolder struct {
-	attributes           []Attribute
-	nonAttributeComments []NonAttributeComment
 	// The file name from which the comments were retrieved.
 	//
 	// Note that this does not attempt to consider cases where AST was 'messed with' or corrupted
 	// as well as //line comments
 	fileName string
+
+	// The source from which the comments held by the struct were retrieved.
+	// This affects downstream validation
+	source CommentSource
+
+	attributes           []Attribute
+	nonAttributeComments []NonAttributeComment
+
+	docRange common.ResolvedRange
 }
 
 // Captures: 1. TEXT (after @), 2. TEXT (inside parentheses), 3. JSON5 Object, 4. Remaining TEXT
 var parsingRegex *regexp.Regexp = regexp.MustCompile(`^// @(\w+)(?:(?:\(([\w-_/\\{} ]+))(?:\s*,\s*(\{.*\}))?\))?(?:\s+(.+))?$`)
 
 // NewAnnotationHolder creates a holder from CommentNode entries (with positions).
-func NewAnnotationHolder(commentBlock gast.CommentBlock, commentSource CommentSource) (AnnotationHolder, error) {
+func NewAnnotationHolder(commentBlock gast.CommentBlock, source CommentSource) (AnnotationHolder, error) {
 	holder := AnnotationHolder{
-		nonAttributeComments: make([]NonAttributeComment, 0),
 		fileName:             commentBlock.FileName,
+		source:               source,
+		nonAttributeComments: make([]NonAttributeComment, 0),
+		docRange:             commentBlock.Range,
 	}
 
 	for _, comment := range commentBlock.Comments {
@@ -35,10 +45,12 @@ func NewAnnotationHolder(commentBlock gast.CommentBlock, commentSource CommentSo
 		}
 
 		if isAnAttribute {
+			// TODO - REMOVE VALIDATION HERE, MOVE TO VALIDATOR LOGIC
 			// Validation step left as-is
-			if err := IsValidAnnotation(attr, commentSource); err != nil {
-				return holder, err
-			}
+			/*
+				if err := IsValidAnnotation(attr, commentSource); err != nil {
+					return holder, err
+				}*/
 			holder.attributes = append(holder.attributes, attr)
 		} else {
 			holder.nonAttributeComments = append(
@@ -52,40 +64,13 @@ func NewAnnotationHolder(commentBlock gast.CommentBlock, commentSource CommentSo
 		}
 	}
 
-	if err := IsValidAnnotationCollection(holder.attributes, commentSource); err != nil {
-		return holder, err
-	}
+	/*
+		if err := IsValidAnnotationCollection(holder.attributes, commentSource); err != nil {
+			return holder, err
+		}
+	*/
 
 	return holder, nil
-}
-
-func parseCommentNode(parsingRegex *regexp.Regexp, comment gast.CommentNode) (Attribute, bool, error) {
-	text := strings.TrimSpace(comment.Text)
-	matches := parsingRegex.FindStringSubmatch(text)
-
-	if len(matches) == 0 {
-		return Attribute{}, false, nil
-	}
-
-	attributeName := matches[1]
-	primaryValue := matches[2]
-	jsonConfig := matches[3]
-	description := matches[4]
-
-	var props map[string]any
-	if len(jsonConfig) > 0 {
-		if err := json5.Unmarshal([]byte(jsonConfig), &props); err != nil {
-			return Attribute{}, true, err
-		}
-	}
-
-	return Attribute{
-		Name:        attributeName,
-		Value:       primaryValue,
-		Properties:  props,
-		Description: description,
-		Comment:     comment,
-	}, true, nil
 }
 
 // NewAnnotationHolderFromData creates an annotation holder from pre-parsed attributes and comments.
@@ -98,6 +83,38 @@ func NewAnnotationHolderFromData(
 		attributes:           attributes,
 		nonAttributeComments: nonAttributeComments,
 	}
+}
+
+func (holder AnnotationHolder) FileName() string {
+	return holder.fileName
+}
+
+func (holder AnnotationHolder) Range() common.ResolvedRange {
+	return holder.docRange
+}
+
+// Attributes returns a shallow copy of the holder's attributes
+func (holder AnnotationHolder) Attributes() []Attribute {
+	return append([]Attribute(nil), holder.attributes...)
+}
+
+// NonAttributeComments returns a shallow copy of the holder's non-attributes
+func (holder AnnotationHolder) NonAttributeComments() []NonAttributeComment {
+	return append([]NonAttributeComment(nil), holder.nonAttributeComments...)
+}
+
+func (holder AnnotationHolder) AttributeCounts() map[string]int {
+	result := make(map[string]int)
+	for _, attr := range holder.attributes {
+
+		_, exists := result[attr.Name]
+		if exists {
+			result[attr.Name]++
+		} else {
+			result[attr.Name] = 1
+		}
+	}
+	return result
 }
 
 func (holder AnnotationHolder) GetFirst(attribute GleeceAnnotation) *Attribute {
@@ -194,4 +211,33 @@ func (holder AnnotationHolder) GetDescription() string {
 		takeUntil--
 	}
 	return strings.Join(freeComments[:takeUntil], "\n")
+}
+
+func parseCommentNode(parsingRegex *regexp.Regexp, comment gast.CommentNode) (Attribute, bool, error) {
+	text := strings.TrimSpace(comment.Text)
+	matches := parsingRegex.FindStringSubmatch(text)
+
+	if len(matches) == 0 {
+		return Attribute{}, false, nil
+	}
+
+	attributeName := matches[1]
+	primaryValue := matches[2]
+	jsonConfig := matches[3]
+	description := matches[4]
+
+	var props map[string]any
+	if len(jsonConfig) > 0 {
+		if err := json5.Unmarshal([]byte(jsonConfig), &props); err != nil {
+			return Attribute{}, true, err
+		}
+	}
+
+	return Attribute{
+		Name:        attributeName,
+		Value:       primaryValue,
+		Properties:  props,
+		Description: description,
+		Comment:     comment,
+	}, true, nil
 }

@@ -1,9 +1,11 @@
 package metadata
 
 import (
+	"cmp"
 	"fmt"
 	"go/ast"
 	"go/types"
+	"slices"
 	"strings"
 
 	"github.com/gopher-fleece/gleece/common"
@@ -84,7 +86,10 @@ type SymNodeMeta struct {
 	SymbolKind  common.SymKind
 	PkgPath     string
 	Annotations *annotations.AnnotationHolder
-	FVersion    *gast.FileVersion
+	// The node's resolved range in the file.
+	// Note this information may or may not be available
+	Range    common.ResolvedRange
+	FVersion *gast.FileVersion
 }
 
 type StructMeta struct {
@@ -164,6 +169,34 @@ type ReceiverMeta struct {
 	SymNodeMeta
 	Params  []FuncParam
 	RetVals []FuncReturnValue
+}
+
+func (v ReceiverMeta) RetValsRange() common.ResolvedRange {
+	switch len(v.RetVals) {
+	case 0:
+		return common.ResolvedRange{}
+	case 1:
+		return common.ResolvedRange{
+			StartLine: v.RetVals[0].Range.StartLine,
+			EndLine:   v.RetVals[0].Range.EndLine,
+			StartCol:  v.RetVals[0].Range.StartCol,
+			EndCol:    v.RetVals[0].Range.EndCol,
+		}
+	default:
+		// Copy so as not to affect original order
+		retVals := append([]FuncReturnValue{}, v.RetVals...)
+		slices.SortFunc(retVals, func(valA, valB FuncReturnValue) int {
+			return cmp.Compare(valA.Ordinal, valB.Ordinal)
+		})
+
+		lastIndex := len(retVals) - 1
+		return common.ResolvedRange{
+			StartLine: retVals[0].Range.StartLine,
+			EndLine:   retVals[lastIndex].Range.EndLine,
+			StartCol:  retVals[0].Range.StartCol,
+			EndCol:    retVals[lastIndex].Range.EndCol,
+		}
+	}
 }
 
 func (m ReceiverMeta) Reduce(
@@ -428,6 +461,10 @@ func (t TypeUsageMeta) Resolve(metaCache MetaCache) (definitions.TypeMetadata, e
 		SymbolKind:          t.SymbolKind,
 		AliasMetadata:       &alias,
 	}, nil
+}
+
+func (t TypeUsageMeta) IsContext() bool {
+	return t.Name == "Context" && t.PkgPath == "context"
 }
 
 type FieldMeta struct {

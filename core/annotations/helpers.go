@@ -45,7 +45,16 @@ func GetCastProperty[TPropertyType any](attrib *Attribute, property string) (*TP
 
 	targetType := reflect.TypeOf((*TPropertyType)(nil)).Elem()
 	if targetType.Kind() == reflect.Slice {
-		return getSliceProperty[TPropertyType](value, targetType)
+		castValue, err := getSliceProperty[TPropertyType](value, targetType)
+		if err != nil {
+			return castValue, fmt.Errorf(
+				"failed to cast attribute property '%v' to %v - %v",
+				property,
+				targetType.String(),
+				err,
+			)
+		}
+		return castValue, nil
 	}
 
 	castParam, castOk := (*value).(TPropertyType)

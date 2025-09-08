@@ -1,5 +1,7 @@
 package gast
 
+import "github.com/gopher-fleece/gleece/common"
+
 // CommentPosition contains resolved start/end coordinates for the comment (1-based).
 type CommentPosition struct {
 	StartLine int // 0-based
@@ -16,11 +18,17 @@ type CommentNode struct {
 	Index    int // index within the comment list (useful to detect ordering)
 }
 
+func (c CommentNode) Range() common.ResolvedRange {
+	return common.ResolvedRange{
+		StartLine: max(c.Position.StartLine, 0),
+		StartCol:  max(c.Position.StartCol, 0),
+		EndLine:   max(c.Position.EndLine, 0),
+		EndCol:    max(c.Position.EndCol, 0),
+	}
+}
+
 type CommentBlock struct {
-	Comments  []CommentNode
-	FileName  string
-	StartLine int
-	StartCol  int
-	EndLine   int
-	EndCol    int
+	Comments []CommentNode
+	FileName string
+	Range    common.ResolvedRange
 }

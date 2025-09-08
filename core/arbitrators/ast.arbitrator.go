@@ -54,6 +54,7 @@ func (arb *AstArbitrator) GetFuncParametersMeta(
 						PkgPath:     f.PkgPath,
 						Annotations: funcAnnotations,
 						FVersion:    f.FVersion,
+						Range:       arb.getRangeForNode(field),
 					},
 					Ordinal: paramOrdinal + index, // This accounts for params like "a, b string"
 					Type:    f.Type,
@@ -111,6 +112,7 @@ func (arb *AstArbitrator) GetFuncRetValMeta(
 					PkgPath:     retValField.PkgPath,
 					Annotations: funcAnnotations,
 					FVersion:    retValField.FVersion,
+					Range:       arb.getRangeForNode(field),
 				},
 				Ordinal: index, // This accounts for params like "a, b string"
 				Type:    retValField.Type,
@@ -189,4 +191,13 @@ func (arb *AstArbitrator) GetPackageFromDotImportedIdent(file *ast.File, ident *
 	}
 
 	return nil, nil
+}
+
+func (arb *AstArbitrator) getRangeForNode(n ast.Node) common.ResolvedRange {
+	return common.ResolvedRange{
+		StartLine: arb.pkgFacade.FSet().Position(n.Pos()).Line - 1,
+		StartCol:  arb.pkgFacade.FSet().Position(n.Pos()).Column - 1,
+		EndLine:   arb.pkgFacade.FSet().Position(n.End()).Line - 1,
+		EndCol:    arb.pkgFacade.FSet().Position(n.End()).Column - 1,
+	}
 }

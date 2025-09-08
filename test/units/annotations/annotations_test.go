@@ -400,7 +400,7 @@ var _ = Describe("Unit Tests - Annotation Holder", func() {
 				comments := []string{"// @UnknownAnnotation"}
 				nodes := utils.CommentsToCommentBlock(comments)
 				_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceController)
-				Expect(err.Error()).To(Equal("unknown annotation @UnknownAnnotation"))
+				Expect(err).To(MatchError(ContainSubstring("unknown annotation @UnknownAnnotation")))
 			})
 
 			It("Wrong Source Annotation", func() {
@@ -409,49 +409,49 @@ var _ = Describe("Unit Tests - Annotation Holder", func() {
 				_, notErr := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceController)
 				Expect(notErr).To(BeNil())
 				_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
-				Expect(err.Error()).To(Equal("annotation @Tag is not valid in route context"))
+				Expect(err).To(MatchError(ContainSubstring("annotation @Tag is not valid in route context")))
 			})
 
 			It("Missing Annotation value", func() {
 				comments := []string{"// @Tag"}
 				nodes := utils.CommentsToCommentBlock(comments)
 				_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceController)
-				Expect(err.Error()).To(Equal("annotation @Tag requires a value"))
+				Expect(err).To(MatchError(ContainSubstring("annotation @Tag requires a value")))
 			})
 
 			It("Wrong Annotation value", func() {
 				comments := []string{"// @Method(INVALID)"}
 				nodes := utils.CommentsToCommentBlock(comments)
 				_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
-				Expect(err.Error()).To(Equal("invalid HTTP method: INVALID"))
+				Expect(err).To(MatchError(ContainSubstring("invalid HTTP method: INVALID")))
 			})
 
 			It("Wrong Annotation value type", func() {
 				comments := []string{"// @Response(INVALID)"}
 				nodes := utils.CommentsToCommentBlock(comments)
 				_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
-				Expect(err.Error()).To(Equal("invalid status code: INVALID"))
+				Expect(err).To(MatchError(ContainSubstring("invalid status code: INVALID")))
 			})
 
 			It("Wrong Annotation properties - no properties allowed", func() {
 				comments := []string{"// @Method(POST, { invalid: \"properties\" })"}
 				nodes := utils.CommentsToCommentBlock(comments)
 				_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
-				Expect(err.Error()).To(Equal("annotation @Method does not support properties"))
+				Expect(err).To(MatchError(ContainSubstring("annotation @Method does not support properties")))
 			})
 
 			It("Wrong Annotation properties - not allowed property", func() {
 				comments := []string{"// @Query(value, { invalid: \"properties\" })"}
 				nodes := utils.CommentsToCommentBlock(comments)
 				_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
-				Expect(err.Error()).To(Equal("property invalid is not allowed for annotation @Query"))
+				Expect(err).To(MatchError(ContainSubstring("property invalid is not allowed for annotation @Query")))
 			})
 
 			It("Wrong Annotation properties - wrong property type ", func() {
 				comments := []string{"// @Query(value, { name: 123 })"}
 				nodes := utils.CommentsToCommentBlock(comments)
 				_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
-				Expect(err.Error()).To(Equal("invalid property name for annotation @Query: property name should be a string"))
+				Expect(err).To(MatchError(ContainSubstring("invalid property name for annotation @Query: property name should be a string")))
 			})
 		})
 
@@ -461,14 +461,14 @@ var _ = Describe("Unit Tests - Annotation Holder", func() {
 				comments := []string{"// @Body(value1)", "// @Body(value2)"}
 				nodes := utils.CommentsToCommentBlock(comments)
 				_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
-				Expect(err.Error()).To(Equal("multiple instances of annotation @Body are not allowed"))
+				Expect(err).To(MatchError(ContainSubstring("multiple instances of annotation @Body are not allowed")))
 			})
 
 			It("Wrong Annotation combination - two from different not allowed type", func() {
 				comments := []string{"// @Body(value1)", "// @FormField(value2)"}
 				nodes := utils.CommentsToCommentBlock(comments)
 				_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
-				Expect(err.Error()).To(Equal("annotations @FormField and @Body cannot be used together"))
+				Expect(err).To(MatchError(ContainSubstring("annotations @FormField and @Body cannot be used together")))
 			})
 		})
 
@@ -478,14 +478,14 @@ var _ = Describe("Unit Tests - Annotation Holder", func() {
 				comments := []string{"// @Query(the_value)", "// @Query(the_value)"}
 				nodes := utils.CommentsToCommentBlock(comments)
 				_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
-				Expect(err.Error()).To(Equal("duplicate value 'the_value' used in @Query and @Query annotations"))
+				Expect(err).To(MatchError(ContainSubstring("duplicate value 'the_value' used in @Query and @Query annotations")))
 			})
 
 			It("Wrong Annotation combination - two from different not allowed type", func() {
 				comments := []string{"// @Query(the_value)", "// @Header(the_value)"}
 				nodes := utils.CommentsToCommentBlock(comments)
 				_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
-				Expect(err.Error()).To(Equal("duplicate value 'the_value' used in @Query and @Header annotations"))
+				Expect(err).To(MatchError(ContainSubstring("duplicate value 'the_value' used in @Query and @Header annotations")))
 			})
 
 			It("Valid Annotation combination - two and one not allowed", func() {

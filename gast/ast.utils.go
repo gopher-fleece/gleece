@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/gopher-fleece/gleece/common"
 	"golang.org/x/tools/go/packages"
 )
 
@@ -649,12 +650,14 @@ func GetAstFileNameOrFallback(file *ast.File, fallback *string) string {
 func MapDocListToCommentBlock(docList []*ast.Comment, fileSet *token.FileSet) CommentBlock {
 	if len(docList) == 0 {
 		return CommentBlock{
-			Comments:  []CommentNode{},
-			FileName:  "",
-			StartLine: 0,
-			StartCol:  0,
-			EndLine:   0,
-			EndCol:    0,
+			Comments: []CommentNode{},
+			FileName: "",
+			Range: common.ResolvedRange{
+				StartLine: 0,
+				StartCol:  0,
+				EndLine:   0,
+				EndCol:    0,
+			},
 		}
 	}
 
@@ -695,12 +698,14 @@ func MapDocListToCommentBlock(docList []*ast.Comment, fileSet *token.FileSet) Co
 	last := comments[len(comments)-1].Position
 
 	return CommentBlock{
-		Comments:  comments,
-		FileName:  fileName,
-		StartLine: first.StartLine,
-		StartCol:  first.StartCol,
-		EndLine:   last.EndLine,
-		EndCol:    last.EndCol,
+		Comments: comments,
+		FileName: fileName,
+		Range: common.ResolvedRange{
+			StartLine: first.StartLine,
+			StartCol:  first.StartCol,
+			EndLine:   last.EndLine,
+			EndCol:    last.EndCol,
+		},
 	}
 }
 
