@@ -46,8 +46,9 @@ const (
 	DiagLinkerUnreferencedParameter            DiagnosticCode = "linker-unreferenced-parameter"
 	DiagLinkerMultipleParameterRefs            DiagnosticCode = "linker-multiple-parameter-refs"
 	DiagLinkerPathInvalidRef                   DiagnosticCode = "linker-path-annotation-invalid-reference"
-	DiagLinkerDuplicatePathParamRef            DiagnosticCode = "linker-duplicate-path-param-ref"
+	DiagLinkerDuplicatePathParamRef            DiagnosticCode = "linker-duplicate-path-param"
 	DiagLinkerDuplicatePathAliasRef            DiagnosticCode = "linker-duplicate-path-alias-ref"
+	DiagLinkerDuplicatePathParam               DiagnosticCode = "linker-duplicate-path-alias-ref"
 	DiagLinkerIncompleteAttribute              DiagnosticCode = "linker-incomplete-attribute"
 	DiagControllerLevelMissingTag              DiagnosticCode = "controller-missing-tag"
 	DiagControllerLevelAnnotationNotAllowed    DiagnosticCode = "controller-annotation-not-allowed"
@@ -55,5 +56,6 @@ const (
 	DiagReceiverParamNotPrimitive              DiagnosticCode = "receiver-parameter-not-primitive"
 	DiagReceiverRetValsInvalidSignature        DiagnosticCode = "receiver-return-values-invalid-signature"
 	DiagReceiverRetValsIsNotError              DiagnosticCode = "receiver-return-value-is-not-an-error"
+	DiagReceiverMissingSecurity                DiagnosticCode = "receiver-missing-security"
 	DiagFeatureUnsupported                     DiagnosticCode = "unsupported-feature"
 )

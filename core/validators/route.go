@@ -306,10 +306,12 @@ func (v ReceiverValidator) validateReturnTypes(receiver *metadata.ReceiverMeta) 
 }
 
 func (v ReceiverValidator) validateSecurity(receiver *metadata.ReceiverMeta) (*diagnostics.ResolvedDiagnostic, error) {
+	// First, check if we're enforcing security on all routes
 	if v.gleeceConfig == nil || !v.gleeceConfig.RoutesConfig.AuthorizationConfig.EnforceSecurityOnAllRoutes {
 		return nil, nil
 	}
 
+	// Get any security defined on the parent controller
 	controllerSec, err := metadata.GetSecurityFromContext(v.parentController.Struct.Annotations)
 	if err != nil {
 		return nil, fmt.Errorf(
@@ -320,6 +322,7 @@ func (v ReceiverValidator) validateSecurity(receiver *metadata.ReceiverMeta) (*d
 		)
 	}
 
+	// Get the security for the route - either explicit or inherited from parent controller
 	security, err := metadata.GetRouteSecurityWithInheritance(receiver.Annotations, controllerSec)
 	if err != nil {
 		return nil, fmt.Errorf(
@@ -330,9 +333,17 @@ func (v ReceiverValidator) validateSecurity(receiver *metadata.ReceiverMeta) (*d
 	}
 
 	if len(security) > 0 {
+		// An explicit/inherited security exists
 		return nil, nil
 	}
 
+	// Look for a default security in the config
+	security = metadata.GetDefaultSecurity(v.gleeceConfig)
+	if len(security) > 0 {
+		return nil, nil
+	}
+
+	// Finally, emit an error diagnostic - the receiver has no security
 	diag := diagnostics.NewErrorDiagnostic(
 		receiver.FVersion.Path,
 		fmt.Sprintf(
@@ -340,7 +351,7 @@ func (v ReceiverValidator) validateSecurity(receiver *metadata.ReceiverMeta) (*d
 				"does not have any explicit or implicit (inherited) security attributes",
 			receiver.Name,
 		),
-		diagnostics.DiagReceiverRetValsIsNotError,
+		diagnostics.DiagReceiverMissingSecurity,
 		receiver.RetValsRange(),
 	)
 

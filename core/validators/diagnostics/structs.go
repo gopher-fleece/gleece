@@ -146,7 +146,7 @@ type ClassifiedEntityDiags struct {
 
 func (d ClassifiedEntityDiags) formatSeverityClass(severity string, diags []ResolvedDiagnostic) string {
 	builder := strings.Builder{}
-	builder.WriteString(fmt.Sprintf("%s: (Total %d)", severity, len(d.Errors)))
+	builder.WriteString(fmt.Sprintf("%s: (Total %d)\n", severity, len(diags)))
 	for _, diag := range diags {
 		builder.WriteString(fmt.Sprintf("\t %s at %s - %s ", diag.Code, diag.FilePath, diag.Message))
 	}
@@ -156,10 +156,10 @@ func (d ClassifiedEntityDiags) formatSeverityClass(severity string, diags []Reso
 
 func (d ClassifiedEntityDiags) String() string {
 	builder := strings.Builder{}
-	builder.WriteString(d.formatSeverityClass("Errors", d.Errors))
-	builder.WriteString(d.formatSeverityClass("Warnings", d.Warnings))
-	builder.WriteString(d.formatSeverityClass("Info", d.Info))
-	builder.WriteString(d.formatSeverityClass("Hints", d.Hints))
+	builder.WriteString(fmt.Sprintf("%s\n", d.formatSeverityClass("Errors", d.Errors)))
+	builder.WriteString(fmt.Sprintf("%s\n", d.formatSeverityClass("Warnings", d.Warnings)))
+	builder.WriteString(fmt.Sprintf("%s\n", d.formatSeverityClass("Info", d.Info)))
+	builder.WriteString(fmt.Sprintf("%s\n", d.formatSeverityClass("Hints", d.Hints)))
 	return builder.String()
 }
 

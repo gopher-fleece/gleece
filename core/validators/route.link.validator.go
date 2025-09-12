@@ -107,11 +107,12 @@ func (v AnnotationLinkValidator) validateRoute(
 	}
 	urlParams := extractUrlParams(routeAttr.Value)
 
+	// BROKEN - NEED TO REIMPORT VALIDATE
 	// build set of aliases referenced by @Path
 	refAliases := map[string]struct{}{}
-	for _, pa := range pathAttributes {
-		if a := getAttributeAlias(&pa); a != "" {
-			refAliases[a] = struct{}{}
+	for _, pathAttrib := range pathAttributes {
+		if alias := getPathAnnotationAlias(&pathAttrib); alias != "" {
+			refAliases[alias] = struct{}{}
 		}
 	}
 
@@ -121,7 +122,7 @@ func (v AnnotationLinkValidator) validateRoute(
 			out = append(out, diagnostics.NewDiagnostic(
 				v.receiver.Annotations.FileName(),
 				fmt.Sprintf("Duplicate route parameter '%s'", param),
-				diagnostics.DiagLinkerRouteMissingPath, // keep TS code for route issues
+				diagnostics.DiagLinkerDuplicatePathParam,
 				diagnostics.DiagnosticWarning,
 				getRangeForUrlParam(routeAttr, param),
 			))
@@ -130,7 +131,7 @@ func (v AnnotationLinkValidator) validateRoute(
 
 		if _, ok := refAliases[param]; !ok {
 			out = append(out, diagnostics.NewDiagnostic(
-				v.receiver.Annotations.FileName(),
+				fmt.Sprintf("%s (ln. %d)", v.receiver.Annotations.FileName(), routeAttr.GetValueRange().StartLine),
 				fmt.Sprintf("Route parameter '%s' does not have a corresponding @Path annotation", param),
 				diagnostics.DiagLinkerRouteMissingPath,
 				diagnostics.DiagnosticError,
@@ -219,7 +220,7 @@ func (v AnnotationLinkValidator) validatePathAnnotations(
 		}
 
 		// 6 & 7: alias checks
-		alias := getAttributeAlias(attr)
+		alias := getPathAnnotationAlias(attr)
 		if alias != "" {
 			if _, dup := seenAliases[alias]; dup {
 				out = append(out, diagnostics.NewDiagnostic(
@@ -324,7 +325,7 @@ func getRangeForUrlParam(attr *annotations.Attribute, param string) common.Resol
 	}
 }
 
-func getAttributeAlias(attr *annotations.Attribute) string {
+func getPathAnnotationAlias(attr *annotations.Attribute) string {
 	if attr == nil || attr.Properties == nil {
 		return ""
 	}
