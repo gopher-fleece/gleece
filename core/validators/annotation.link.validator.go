@@ -3,6 +3,7 @@ package validators
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 	"unicode/utf8"
 
@@ -64,7 +65,24 @@ func (v AnnotationLinkValidator) Validate() []diagnostics.ResolvedDiagnostic {
 
 	// 4. Ensure all function parameters are referenced
 	diags = append(diags, v.validateAllReferenced(seenFuncParams)...)
-	return diags
+
+	// 5. Deduplicate diagnostics.
+	//
+	// This is pretty damn ugly. Prop resolution may yield various errors like invalid casts.
+	// Since we may use those funcs in a few separate locations, we may end up with duplicate diagnostics.
+	// Need to improve on this.
+	finalDiags := []diagnostics.ResolvedDiagnostic{}
+	for _, diag := range diags {
+		diagExists := slices.ContainsFunc(finalDiags, func(d diagnostics.ResolvedDiagnostic) bool {
+			return d.Equal(diag)
+		})
+
+		if !diagExists {
+			finalDiags = append(finalDiags, diag)
+		}
+	}
+
+	return finalDiags
 }
 
 // validateRoute: duplicate url params (warning) + missing @Path alias (error)
@@ -290,12 +308,18 @@ func (v AnnotationLinkValidator) getPathAliasOrDiag(attr annotations.Attribute) 
 		return value, nil
 	}
 
+	rawPropValue := attr.GetProperty(annotations.PropertyName)
+	propValueStr := "Unknown value"
+	if rawPropValue != nil {
+		propValueStr = fmt.Sprintf("%v", *rawPropValue)
+	}
+
 	diag := diagnostics.NewErrorDiagnostic(
 		v.receiver.Annotations.FileName(),
 		fmt.Sprintf(
-			"Invalid value for property 'name' in attribute %s ('%s')",
+			"Invalid value for property 'name' in attribute %s ('%v')",
 			attr.Name,
-			attr.GetProperty(annotations.PropertyName),
+			propValueStr,
 		),
 		diagnostics.DiagAnnotationPropertiesInvalidValueForKey,
 		attr.PropertiesRange,

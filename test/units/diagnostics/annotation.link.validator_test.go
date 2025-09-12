@@ -58,15 +58,7 @@ var _ = Describe("Unit Tests - Annotation Link Validation", func() {
 		linkValidator = createValidatorOrFail(&receiver)
 	})
 
-	It("Returns a diagnostic warning when an annotation cannot be applied to a receiver", func() {
-		receiver.Annotations = utils.GetAnnotationHolderOrFail(
-			[]string{
-				"// @Route(/)",
-				"// @Method(POST)",
-			},
-			annotations.CommentSourceRoute,
-		)
-
+	It("Returns a diagnostic warning when a non-context receiver parameter is unreferenced", func() {
 		diags := linkValidator.Validate()
 		Expect(diags).To(HaveLen(1))
 		Expect(diags[0].Message).To(Equal("Function parameter 'param1' is not referenced by a parameter annotation"))
@@ -79,6 +71,41 @@ var _ = Describe("Unit Tests - Annotation Link Validation", func() {
 			EndCol:    12,
 		}))
 		Expect(diags[0].Code).To(BeEquivalentTo(diagnostics.DiagLinkerUnreferencedParameter))
+		Expect(diags[0].Source).To(Equal("gleece"))
+	})
+
+	It("Does not return a diagnostic when a context receiver parameter is unreferenced", func() {
+		receiver.Params[0].Type.Name = "Context"
+		receiver.Params[0].Type.PkgPath = "context"
+
+		diags := linkValidator.Validate()
+		Expect(diags).To(HaveLen(0))
+	})
+
+	It("Returns a diagnostic error where a @Path annotation has a non-string 'name' attribute", func() {
+		receiverAnnotations := utils.GetAnnotationHolderOrFail(
+			[]string{
+				"// @Route(/)",
+				"// @Method(POST)",
+				"// @Path(param1, { name: 12 }) This should raise an 'invalid property' type error",
+			},
+			annotations.CommentSourceRoute,
+		)
+		receiver.Annotations = receiverAnnotations
+		validator := createValidatorOrFail(&receiver)
+		diags := validator.Validate()
+
+		Expect(diags).To(HaveLen(1))
+		Expect(diags[0].Message).To(Equal("Invalid value for property 'name' in attribute Path ('12')"))
+		Expect(diags[0].Severity).To(Equal(diagnostics.DiagnosticError))
+		Expect(diags[0].FilePath).To(ContainSubstring("annotation.link.validator_test.go"))
+		Expect(diags[0].Range).To(Equal(common.ResolvedRange{
+			StartLine: 0,
+			EndLine:   0,
+			StartCol:  17,
+			EndCol:    29,
+		}))
+		Expect(diags[0].Code).To(BeEquivalentTo(diagnostics.DiagAnnotationPropertiesInvalidValueForKey))
 		Expect(diags[0].Source).To(Equal("gleece"))
 	})
 })

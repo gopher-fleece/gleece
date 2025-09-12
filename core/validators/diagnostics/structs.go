@@ -26,6 +26,34 @@ type ResolvedDiagnostic struct {
 	Fixes    []TextEdit // optional
 }
 
+func (d *ResolvedDiagnostic) Equal(other ResolvedDiagnostic) bool {
+	if d.Message != other.Message {
+		return false
+	}
+
+	if d.Severity != other.Severity {
+		return false
+	}
+
+	if d.Code != other.Code {
+		return false
+	}
+
+	if d.FilePath != other.FilePath {
+		return false
+	}
+
+	if d.Range != other.Range {
+		return false
+	}
+
+	if d.Source != other.Source {
+		return false
+	}
+
+	return slices.Equal(d.Fixes, other.Fixes)
+}
+
 func NewDiagnostic(
 	filePath, message string,
 	code DiagnosticCode,
