@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/gopher-fleece/gleece/common"
+	"github.com/gopher-fleece/gleece/common/linq"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -17,7 +18,7 @@ var _ = Describe("Unit Tests - Commons", func() {
 		Context("Filter", func() {
 			It("Returns a correctly filtered slice", func() {
 				list := []string{"abc", "abcdef", "bc", "oink"}
-				result := common.Filter(list, func(s string) bool {
+				result := linq.Filter(list, func(s string) bool {
 					return !strings.Contains(s, "bc")
 				})
 				Expect(result).To(HaveLen(1))
@@ -33,7 +34,7 @@ var _ = Describe("Unit Tests - Commons", func() {
 					{5, 6},
 				}
 
-				result := common.Flatten(list)
+				result := linq.Flatten(list)
 				Expect(result).To(HaveLen(6))
 				Expect(result).To(HaveExactElements(1, 2, 3, 4, 5, 6))
 			})

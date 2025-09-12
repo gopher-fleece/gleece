@@ -16,7 +16,7 @@ var _ = Describe("Unit Tests - Metadata", func() {
 			utils.CommentsToCommentBlock([]string{
 				"// @Description This is a test struct",
 				"// @Deprecated Use something else",
-			}),
+			}, 1),
 			annotations.CommentSourceProperty,
 		)
 

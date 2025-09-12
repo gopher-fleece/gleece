@@ -67,8 +67,12 @@ func (v ReceiverValidator) Validate() (diagnostics.EntityDiagnostic, error) {
 	}
 	receiverDiag.AddDiagnosticIfNotNil(secDiag)
 
-	linkerDiags := NewAnnotationLinkValidator(v.receiver).Validate()
-	receiverDiag.AddDiagnostics(linkerDiags)
+	linkValidator, err := NewAnnotationLinkValidator(v.receiver)
+	if err != nil {
+		return receiverDiag, fmt.Errorf("failed to construct an annotation link validator - %v", err)
+	}
+
+	receiverDiag.AddDiagnostics(linkValidator.Validate())
 
 	return receiverDiag, nil
 }

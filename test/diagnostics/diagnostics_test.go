@@ -77,7 +77,7 @@ var _ = Describe("Diagnostics", func() {
 		Expect(ctrlDiag.Children[2].EntityKind).To(Equal("Receiver"))
 		Expect(ctrlDiag.Children[2].EntityName).To(Equal("MethodWithUnlinkedParam"))
 		Expect(ctrlDiag.Children[2].Diagnostics).To(HaveLen(2))
-		Expect(ctrlDiag.Children[2].Diagnostics[0].Message).To(Equal("Route parameter 'id' does not have a corresponding @Path annotation"))
+		Expect(ctrlDiag.Children[2].Diagnostics[0].Message).To(Equal("URL parameter 'id' does not have a corresponding @Path annotation"))
 		Expect(ctrlDiag.Children[2].Diagnostics[0].Severity).To(Equal(diagnostics.DiagnosticError))
 		Expect(ctrlDiag.Children[2].Diagnostics[0].Code).To(Equal(string(diagnostics.DiagLinkerRouteMissingPath)))
 		Expect(ctrlDiag.Children[2].Diagnostics[0].Range).To(Equal(common.ResolvedRange{
@@ -101,7 +101,7 @@ var _ = Describe("Diagnostics", func() {
 		Expect(ctrlDiag.Children[3].EntityKind).To(Equal("Receiver"))
 		Expect(ctrlDiag.Children[3].EntityName).To(Equal("MethodWithUnlinkedAlias"))
 		Expect(ctrlDiag.Children[3].Diagnostics).To(HaveLen(1))
-		Expect(ctrlDiag.Children[3].Diagnostics[0].Message).To(Equal("Route parameter 'aliased' does not have a corresponding @Path annotation"))
+		Expect(ctrlDiag.Children[3].Diagnostics[0].Message).To(Equal("URL parameter 'aliased' does not have a corresponding @Path annotation"))
 		Expect(ctrlDiag.Children[3].Diagnostics[0].Severity).To(Equal(diagnostics.DiagnosticError))
 		Expect(ctrlDiag.Children[3].Diagnostics[0].Code).To(Equal(string(diagnostics.DiagLinkerRouteMissingPath)))
 		Expect(ctrlDiag.Children[3].Diagnostics[0].Range).To(Equal(common.ResolvedRange{
@@ -129,17 +129,18 @@ var _ = Describe("Diagnostics", func() {
 		Expect(err).To(BeNil())
 		Expect(diags).To(HaveLen(1))
 
-		classified := diagnostics.ClassifyEntityDiags(diags[0])
-		Expect(classified.String()).To(MatchRegexp(
+		diagnosticStringOutput := diagnostics.ClassifyEntityDiags(diags[0]).String()
+		Expect(diagnosticStringOutput).To(MatchRegexp(
 			`^Errors: \(Total 4\)\s+` +
-				`linker-unreferenced-parameter .* - Function parameter 'id' is not referenced by a parameter annotation\s+` +
-				`linker-route-missing-path-reference .* - Route parameter 'id' does not have a corresponding @Path annotation\s+` +
-				`linker-unreferenced-parameter .* - Function parameter 'id' is not referenced by a parameter annotation\s+` +
-				`linker-route-missing-path-reference .* - Route parameter 'aliased' does not have a corresponding @Path annotation\s+` +
-				`Warnings: \(Total 4\)\s+` +
-				`controller-missing-tag .* - Controller 'DiagnosticsController' is lacking a @Tag annotation\s+` +
-				`annotation-value-invalid .* - Non-standard HTTP status code '641'\s+` +
-				`Info: \(Total 4\)Hints: \(Total 4\)$`,
+				`linker-unreferenced-parameter .*? - Function parameter 'id' is not referenced by a parameter annotation\s+` +
+				`linker-route-missing-path-reference .*? - (?:URL|Route) parameter 'id' does not have a corresponding @Path annotation\s+` +
+				`linker-unreferenced-parameter .*? - Function parameter 'id' is not referenced by a parameter annotation\s+` +
+				`linker-route-missing-path-reference .*? - (?:URL|Route) parameter 'aliased' does not have a corresponding @Path annotation\s+` +
+				`Warnings: \(Total 2\)\s+` +
+				`controller-missing-tag .*? - Controller 'DiagnosticsController' is lacking a @Tag annotation\s+` +
+				`annotation-value-invalid .*? - Non-standard HTTP status code '641'\s+` +
+				`Info: \(Total 0\)\s+` +
+				`Hints: \(Total 0\)\s*$`,
 		))
 	})
 
@@ -155,23 +156,30 @@ var _ = Describe("Diagnostics", func() {
 		// Check MethodWithUnAnnotatedParam block
 		Expect(errStr).To(MatchRegexp(
 			`Receiver MethodWithUnAnnotatedParam:\n\s+` +
-				`Errors: \(Total 1\)\s+linker-unreferenced-parameter .* Function parameter 'id' is not referenced by a parameter annotation\s+` +
-				`Warnings: \(Total 1\)Info: \(Total 1\)Hints: \(Total 1\)`))
+				`Errors: \(Total 1\)\s+` +
+				`linker-unreferenced-parameter .* Function parameter 'id' is not referenced by a parameter annotation\s+` +
+				`Warnings: \(Total 0\)\s+` +
+				`Info: \(Total 0\)\s+` +
+				`Hints: \(Total 0\)`))
 
 		// Check MethodWithUnlinkedParam block
 		Expect(errStr).To(MatchRegexp(
 			`Receiver MethodWithUnlinkedParam:\n\s+` +
 				`Errors: \(Total 2\)\s+` +
-				`linker-route-missing-path-reference .* Route parameter 'id' does not have a corresponding @Path annotation\s+` +
+				`linker-route-missing-path-reference .* URL parameter 'id' does not have a corresponding @Path annotation\s+` +
 				`linker-unreferenced-parameter .* Function parameter 'id' is not referenced by a parameter annotation\s+` +
-				`Warnings: \(Total 2\)Info: \(Total 2\)Hints: \(Total 2\)`))
+				`Warnings: \(Total 0\)\s+` +
+				`Info: \(Total 0\)\s+` +
+				`Hints: \(Total 0\)`))
 
 		// Check MethodWithUnlinkedAlias block
 		Expect(errStr).To(MatchRegexp(
 			`Receiver MethodWithUnlinkedAlias:\n\s+` +
-				`Errors: \(Total 1\)\s+linker-route-missing-path-reference .* Route parameter 'aliased' does not have a corresponding @Path annotation\s+` +
-				`Warnings: \(Total 1\)Info: \(Total 1\)Hints: \(Total 1\)`))
-
+				`Errors: \(Total 1\)\s+` +
+				`linker-route-missing-path-reference .* URL parameter 'aliased' does not have a corresponding @Path annotation\s+` +
+				`Warnings: \(Total 0\)\s+` +
+				`Info: \(Total 0\)\s+` +
+				`Hints: \(Total 0\)`))
 	})
 })
 

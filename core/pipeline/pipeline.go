@@ -8,6 +8,7 @@ import (
 
 	MapSet "github.com/deckarep/golang-set/v2"
 	"github.com/gopher-fleece/gleece/common"
+	"github.com/gopher-fleece/gleece/common/linq"
 	"github.com/gopher-fleece/gleece/core/arbitrators/caching"
 	"github.com/gopher-fleece/gleece/core/metadata"
 	"github.com/gopher-fleece/gleece/core/validators"
@@ -245,12 +246,12 @@ func (p *GleecePipeline) reduceControllers(controllers []metadata.ControllerMeta
 
 func (p *GleecePipeline) getModels() definitions.Models {
 	structs := p.symGraph.Structs()
-	reducedStructs := common.Map(structs, func(s metadata.StructMeta) definitions.StructMetadata {
+	reducedStructs := linq.Map(structs, func(s metadata.StructMeta) definitions.StructMetadata {
 		return s.Reduce()
 	})
 
 	enums := p.symGraph.Enums()
-	reducedEnums := common.Map(enums, func(e metadata.EnumMeta) definitions.EnumMetadata {
+	reducedEnums := linq.Map(enums, func(e metadata.EnumMeta) definitions.EnumMetadata {
 		return e.Reduce()
 	})
 

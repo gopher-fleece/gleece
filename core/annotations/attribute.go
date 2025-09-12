@@ -15,10 +15,11 @@ type NonAttributeComment struct {
 }
 
 type Attribute struct {
-	Name        string
-	Value       string
-	Properties  map[string]any
-	Description string
+	Name            string
+	Value           string
+	Properties      map[string]any
+	PropertiesRange common.ResolvedRange
+	Description     string
 
 	// Position info for the comment that produced this attribute (may be zero)
 	Comment gast.CommentNode

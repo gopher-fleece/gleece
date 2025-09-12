@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/gopher-fleece/gleece/common"
+	"github.com/gopher-fleece/gleece/common/linq"
 	"github.com/gopher-fleece/gleece/core/annotations"
 	"github.com/gopher-fleece/gleece/core/metadata"
 	"github.com/gopher-fleece/gleece/gast"
@@ -452,7 +453,7 @@ func (g *SymbolGraph) childrenSorted(node *SymbolNode, behavior *TraversalBehavi
 		return cmp.Compare(a.Ordinal, b.Ordinal)
 	})
 
-	return common.Map(results, func(v SymbolNodeWithOrdinal) *SymbolNode {
+	return linq.Map(results, func(v SymbolNodeWithOrdinal) *SymbolNode {
 		return v.Node
 	})
 }
@@ -510,7 +511,7 @@ func (g *SymbolGraph) parentsSorted(node *SymbolNode, behavior *TraversalBehavio
 		return cmp.Compare(a.Ordinal, b.Ordinal)
 	})
 
-	return common.Map(results, func(v SymbolNodeWithOrdinal) *SymbolNode {
+	return linq.Map(results, func(v SymbolNodeWithOrdinal) *SymbolNode {
 		return v.Node
 	})
 }

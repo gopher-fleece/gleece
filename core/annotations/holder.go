@@ -3,6 +3,7 @@ package annotations
 import (
 	"regexp"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/gast"
@@ -214,30 +215,123 @@ func (holder AnnotationHolder) GetDescription() string {
 }
 
 func parseCommentNode(parsingRegex *regexp.Regexp, comment gast.CommentNode) (Attribute, bool, error) {
-	text := strings.TrimSpace(comment.Text)
-	matches := parsingRegex.FindStringSubmatch(text)
+	// use raw comment.Text so the regex byte offsets line up with Position
+	text := comment.Text
 
-	if len(matches) == 0 {
+	matchIndices := parsingRegex.FindStringSubmatchIndex(text)
+	if matchIndices == nil {
 		return Attribute{}, false, nil
 	}
 
-	attributeName := matches[1]
-	primaryValue := matches[2]
-	jsonConfig := matches[3]
-	description := matches[4]
+	name, _ := getGroupString(comment.Text, matchIndices, 1)                 // Attr. name
+	value, _ := getGroupString(comment.Text, matchIndices, 2)                // Attr. Value (inside parentheses)
+	jsonConfig, jsonPresent := getGroupString(comment.Text, matchIndices, 3) // Optional JSON5 props object
+	description, _ := getGroupString(comment.Text, matchIndices, 4)          // Optional description
 
-	var props map[string]any
-	if len(jsonConfig) > 0 {
-		if err := json5.Unmarshal([]byte(jsonConfig), &props); err != nil {
+	var parsedProps map[string]any
+	if jsonPresent && jsonConfig != "" {
+		if err := json5.Unmarshal([]byte(jsonConfig), &parsedProps); err != nil {
 			return Attribute{}, true, err
 		}
 	}
 
 	return Attribute{
-		Name:        attributeName,
-		Value:       primaryValue,
-		Properties:  props,
-		Description: description,
-		Comment:     comment,
+		Name:            name,
+		Value:           value,
+		Properties:      parsedProps,
+		PropertiesRange: getPropertiesRange(comment, matchIndices),
+		Description:     description,
+		Comment:         comment,
 	}, true, nil
+}
+
+func getPropertiesRange(comment gast.CommentNode, matchIndices []int) common.ResolvedRange {
+	// if group 3 exists, compute its absolute ResolvedRange
+
+	propsRange := common.ResolvedRange{}
+	if startByte, endByte, ok := getGroupOffsets(matchIndices, 3); ok {
+		startLine, startCol := byteOffsetToLineCol(comment.Text, startByte, comment.Position.StartLine, comment.Position.StartCol)
+		endLine, endCol := byteOffsetToLineCol(comment.Text, endByte, comment.Position.StartLine, comment.Position.StartCol)
+
+		propsRange = common.ResolvedRange{
+			StartLine: startLine,
+			StartCol:  startCol,
+			EndLine:   endLine,
+			EndCol:    endCol,
+		}
+	}
+
+	return propsRange
+
+}
+
+// helper: return start,end and ok for group (1-based group index)
+func getGroupOffsets(matchIndices []int, group int) (startByte, endByte int, ok bool) {
+	pairIndex := 2 * group
+	if pairIndex+1 >= len(matchIndices) {
+		return 0, 0, false
+	}
+	startByte = matchIndices[pairIndex]
+	endByte = matchIndices[pairIndex+1]
+	if startByte < 0 || endByte < 0 {
+		return 0, 0, false
+	}
+	return startByte, endByte, true
+}
+
+// helper: return string for a group if present
+func getGroupString(commentText string, matchIndices []int, group int) (string, bool) {
+	startByte, endByte, ok := getGroupOffsets(matchIndices, group)
+	if !ok {
+		return "", false
+	}
+	return commentText[startByte:endByte], true
+}
+
+// byteOffsetToLineCol converts a byte offset into (line, col).
+// - Counts runes for columns.
+// - Properly treats '\n', '\r', and '\r\n' as single line breaks.
+// - startLine/startCol are the absolute coordinates of the first rune of s.
+func byteOffsetToLineCol(s string, byteOffset int, startLine, startCol int) (line, col int) {
+	line = startLine
+	col = startCol
+
+	i := 0
+	// iterate until we reach the requested byte offset
+	for i < byteOffset && i < len(s) {
+		// fast-path ASCII newline checks first to handle CRLF simply
+		if s[i] == '\r' {
+			// CR or CRLF
+			if i+1 < len(s) && s[i+1] == '\n' {
+				// treat CRLF as a single newline
+				i += 2
+			} else {
+				// lone CR
+				i++
+			}
+			line++
+			col = 0
+			continue
+		}
+		if s[i] == '\n' {
+			// lone LF
+			i++
+			line++
+			col = 0
+			continue
+		}
+
+		// decode next rune (handles multibyte UTF-8)
+		runeValue, runeSize := utf8.DecodeRuneInString(s[i:])
+		// defensive: if invalid rune, advance by 1 byte
+		if runeValue == utf8.RuneError && runeSize == 1 {
+			i++
+			col++
+			continue
+		}
+		i += runeSize
+		col++
+	}
+
+	return
 }

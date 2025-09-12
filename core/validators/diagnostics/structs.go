@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/gopher-fleece/gleece/common"
+	"github.com/gopher-fleece/gleece/common/linq"
 )
 
 type TextEdit struct {
@@ -129,7 +130,7 @@ func GetDiagnosticsWithSeverity(diags []EntityDiagnostic, severities []Diagnosti
 
 		if len(diagEntity.Children) > 0 {
 			// Got a bit of a ptr-value mess over here. Need to improve
-			dereferencedChildren := common.DereferenceSliceElements(diagEntity.Children)
+			dereferencedChildren := linq.DereferenceSliceElements(diagEntity.Children)
 			matching = append(matching, GetDiagnosticsWithSeverity(dereferencedChildren, severities)...)
 		}
 	}

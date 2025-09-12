@@ -18,21 +18,21 @@ var _ = Describe("Unit Tests - Annotation Holder", func() {
 
 			It("Constructs without error", func() {
 				comments := []string{"// @Description Abcd"}
-				nodes := utils.CommentsToCommentBlock(comments)
+				nodes := utils.CommentsToCommentBlock(comments, 1)
 				_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceController)
 				Expect(err).To(BeNil())
 			})
 
 			It("Correctly detects attribute exists", func() {
 				comments := []string{"// @Description Abcd"}
-				nodes := utils.CommentsToCommentBlock(comments)
+				nodes := utils.CommentsToCommentBlock(comments, 1)
 				holder, _ := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceController)
 				Expect(holder.Has(annotations.GleeceAnnotationDescription)).To(BeTrue())
 			})
 
 			It("Correctly gets the attribute", func() {
 				comments := []string{"// @Description Abcd"}
-				nodes := utils.CommentsToCommentBlock(comments)
+				nodes := utils.CommentsToCommentBlock(comments, 1)
 				holder, _ := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceController)
 				attrib := holder.GetFirst(annotations.GleeceAnnotationDescription)
 				Expect(attrib).ToNot(BeNil())
@@ -40,21 +40,21 @@ var _ = Describe("Unit Tests - Annotation Holder", func() {
 
 			It("Returns correct value from the GetDescription method", func() {
 				comments := []string{"// @Description Abcd"}
-				nodes := utils.CommentsToCommentBlock(comments)
+				nodes := utils.CommentsToCommentBlock(comments, 1)
 				holder, _ := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceController)
 				Expect(holder.GetDescription()).To(Equal("Abcd"))
 			})
 
 			It("GetFirstValueOrEmpty returns correct value when a single instance of the attribute exists", func() {
 				comments := []string{"// @Method(POST)"}
-				nodes := utils.CommentsToCommentBlock(comments)
+				nodes := utils.CommentsToCommentBlock(comments, 1)
 				holder, _ := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
 				Expect(holder.GetFirstValueOrEmpty(annotations.GleeceAnnotationMethod)).To(Equal("POST"))
 			})
 
 			It("GetFirstValueOrEmpty returns empty string when attribute does not exist", func() {
 				comments := []string{"// @Route(/route)"}
-				nodes := utils.CommentsToCommentBlock(comments)
+				nodes := utils.CommentsToCommentBlock(comments, 1)
 				holder, _ := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
 				Expect(holder.GetFirstValueOrEmpty(annotations.GleeceAnnotationMethod)).To(BeEmpty())
 			})
@@ -63,21 +63,21 @@ var _ = Describe("Unit Tests - Annotation Holder", func() {
 		When("Attribute is complex", func() {
 			It("Constructs without error", func() {
 				comments := []string{`// @Security(securitySchemaName, { scopes: ["read:users", "write:users"] }) Abcd`}
-				nodes := utils.CommentsToCommentBlock(comments)
+				nodes := utils.CommentsToCommentBlock(comments, 1)
 				_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
 				Expect(err).To(BeNil())
 			})
 
 			It("Correctly detects attribute exists", func() {
 				comments := []string{`// @Security(securitySchemaName, { scopes: ["read:users", "write:users"] }) Abcd`}
-				nodes := utils.CommentsToCommentBlock(comments)
+				nodes := utils.CommentsToCommentBlock(comments, 1)
 				holder, _ := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
 				Expect(holder.Has(annotations.GleeceAnnotationSecurity)).To(BeTrue())
 			})
 
 			It("Correctly gets the attribute", func() {
 				comments := []string{`// @Security(securitySchemaName, { scopes: ["read:users", "write:users"] }) Abcd`}
-				nodes := utils.CommentsToCommentBlock(comments)
+				nodes := utils.CommentsToCommentBlock(comments, 1)
 				holder, _ := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
 				attrib := holder.GetFirst(annotations.GleeceAnnotationSecurity)
 				Expect(attrib).ToNot(BeNil())
@@ -85,7 +85,7 @@ var _ = Describe("Unit Tests - Annotation Holder", func() {
 
 			It("Attribute has correct basic values", func() {
 				comments := []string{`// @Security(securitySchemaName, { scopes: ["read:users", "write:users"] }) Abcd`}
-				nodes := utils.CommentsToCommentBlock(comments)
+				nodes := utils.CommentsToCommentBlock(comments, 1)
 				holder, _ := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
 				attrib := holder.GetFirst(annotations.GleeceAnnotationSecurity)
 
@@ -96,7 +96,7 @@ var _ = Describe("Unit Tests - Annotation Holder", func() {
 
 			It("Attribute has correct properties", func() {
 				comments := []string{`// @Security(securitySchemaName, { scopes: ["read:users", "write:users"] }) Abcd`}
-				nodes := utils.CommentsToCommentBlock(comments)
+				nodes := utils.CommentsToCommentBlock(comments, 1)
 				holder, _ := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
 				attrib := holder.GetFirst(annotations.GleeceAnnotationSecurity)
 
@@ -109,7 +109,7 @@ var _ = Describe("Unit Tests - Annotation Holder", func() {
 
 			It("Returns nil if property does not exist", func() {
 				comments := []string{`// @Security(securitySchemaName, { scopes: ["read:users", "write:users"] }) Abcd`}
-				nodes := utils.CommentsToCommentBlock(comments)
+				nodes := utils.CommentsToCommentBlock(comments, 1)
 				holder, _ := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
 				attrib := holder.GetFirst(annotations.GleeceAnnotationSecurity)
 
@@ -120,7 +120,7 @@ var _ = Describe("Unit Tests - Annotation Holder", func() {
 
 			It("Returns an error if a slice property exists but cannot be cast to the requested non-slice type", func() {
 				comments := []string{`// @Security(securitySchemaName, { scopes: ["read:users", "write:users"] }) Abcd`}
-				nodes := utils.CommentsToCommentBlock(comments)
+				nodes := utils.CommentsToCommentBlock(comments, 1)
 				holder, _ := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
 				attrib := holder.GetFirst(annotations.GleeceAnnotationSecurity)
 
@@ -131,7 +131,7 @@ var _ = Describe("Unit Tests - Annotation Holder", func() {
 
 			It("Returns an error if a slice property exists but cannot be cast to the requested slice type", func() {
 				comments := []string{`// @Security(securitySchemaName, { scopes: ["read:users", "write:users"] }) Abcd`}
-				nodes := utils.CommentsToCommentBlock(comments)
+				nodes := utils.CommentsToCommentBlock(comments, 1)
 				holder, _ := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
 				attrib := holder.GetFirst(annotations.GleeceAnnotationSecurity)
 
@@ -142,7 +142,7 @@ var _ = Describe("Unit Tests - Annotation Holder", func() {
 
 			It("Returns an error if attempting to convert a non-slice property to a slice", func() {
 				comments := []string{`// @TemplateContext(securitySchemaName, { scopes: "V" }) Abcd`}
-				nodes := utils.CommentsToCommentBlock(comments)
+				nodes := utils.CommentsToCommentBlock(comments, 1)
 				holder, _ := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
 				attrib := holder.GetFirst(annotations.GleeceAnnotationTemplateContext)
 
@@ -153,7 +153,7 @@ var _ = Describe("Unit Tests - Annotation Holder", func() {
 
 			It("Returns an error an annotation's JSON5 part is malformed", func() {
 				comments := []string{`// @Security(securitySchemaName, { scopes: ThisIsMalformed }) Abcd`}
-				nodes := utils.CommentsToCommentBlock(comments)
+				nodes := utils.CommentsToCommentBlock(comments, 1)
 				_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(BeAssignableToTypeOf(&json5.SyntaxError{}))
@@ -181,13 +181,13 @@ var _ = Describe("Unit Tests - Annotation Holder", func() {
 		}
 
 		It("Constructs without error", func() {
-			nodes := utils.CommentsToCommentBlock(stdComments)
+			nodes := utils.CommentsToCommentBlock(stdComments, 1)
 			_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
 			Expect(err).To(BeNil())
 		})
 
 		It("Correctly detects all attributes exist", func() {
-			nodes := utils.CommentsToCommentBlock(stdComments)
+			nodes := utils.CommentsToCommentBlock(stdComments, 1)
 			holder, _ := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
 
 			Expect(holder.Has(annotations.GleeceAnnotationDescription)).To(BeTrue())
@@ -204,14 +204,14 @@ var _ = Describe("Unit Tests - Annotation Holder", func() {
 		})
 
 		It("Correctly gets all attributes of the same type", func() {
-			nodes := utils.CommentsToCommentBlock(stdComments)
+			nodes := utils.CommentsToCommentBlock(stdComments, 1)
 			holder, _ := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
 			attributes := holder.GetAll(annotations.GleeceAnnotationPath)
 			Expect(attributes).To(HaveLen(3))
 		})
 
 		It("Attributes of the same type are ordered and have correct values", func() {
-			nodes := utils.CommentsToCommentBlock(stdComments)
+			nodes := utils.CommentsToCommentBlock(stdComments, 1)
 			holder, _ := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
 			allAttributes := holder.GetAll(annotations.GleeceAnnotationPath)
 
@@ -259,7 +259,7 @@ var _ = Describe("Unit Tests - Annotation Holder", func() {
 				`// @Security(schema1, { scopes: ["read:users", "write:users"] })`,
 			}
 
-			nodes := utils.CommentsToCommentBlock(comments)
+			nodes := utils.CommentsToCommentBlock(comments, 1)
 			holder, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
 			Expect(err).To(BeNil())
 
@@ -282,7 +282,7 @@ var _ = Describe("Unit Tests - Annotation Holder", func() {
 				`// @Security(schema1, { scopes: ["read:users", "write:users"] })`,
 			}
 
-			nodes := utils.CommentsToCommentBlock(comments)
+			nodes := utils.CommentsToCommentBlock(comments, 1)
 			holder, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
 			Expect(err).To(BeNil())
 
@@ -306,7 +306,7 @@ var _ = Describe("Unit Tests - Annotation Holder", func() {
 				`// @Security(schema1, { scopes: ["read:users", "write:users"] })`,
 			}
 
-			nodes := utils.CommentsToCommentBlock(comments)
+			nodes := utils.CommentsToCommentBlock(comments, 1)
 			holder, _ := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
 			Expect(holder.GetFirstDescriptionOrEmpty(annotations.GleeceAnnotationRoute)).To(Equal("Some description1"))
 		})
@@ -322,7 +322,7 @@ var _ = Describe("Unit Tests - Annotation Holder", func() {
 				`// @Security(schema1, { scopes: ["read:users", "write:users"] })`,
 			}
 
-			nodes := utils.CommentsToCommentBlock(comments)
+			nodes := utils.CommentsToCommentBlock(comments, 1)
 			holder, _ := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
 			Expect(holder.GetFirstDescriptionOrEmpty(annotations.GleeceAnnotationRoute)).To(BeEmpty())
 		})
@@ -333,7 +333,7 @@ var _ = Describe("Unit Tests - Annotation Holder", func() {
 				`// @Security(schema2, { scopes: ["read:users", "write:users"] }) Match2`,
 			}
 
-			nodes := utils.CommentsToCommentBlock(comments)
+			nodes := utils.CommentsToCommentBlock(comments, 1)
 			holder, _ := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
 			match := holder.FindFirstByValue("schema2")
 			Expect(match).ToNot(BeNil())
@@ -346,7 +346,7 @@ var _ = Describe("Unit Tests - Annotation Holder", func() {
 				`// @Security(schema2, { scopes: ["read:users", "write:users"] }) Match2`,
 			}
 
-			nodes := utils.CommentsToCommentBlock(comments)
+			nodes := utils.CommentsToCommentBlock(comments, 1)
 			holder, _ := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
 			match := holder.FindFirstByValue("does not exists")
 			Expect(match).To(BeNil())
@@ -358,7 +358,7 @@ var _ = Describe("Unit Tests - Annotation Holder", func() {
 				`// @TemplateContext(schema2, { scopes: ["read:users", "write:users"], extraProp: "" }) Match2`,
 			}
 
-			nodes := utils.CommentsToCommentBlock(comments)
+			nodes := utils.CommentsToCommentBlock(comments, 1)
 			holder, _ := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
 			match := holder.FindFirstByProperty("extraProp", "")
 			Expect(match).ToNot(BeNil())
@@ -371,7 +371,7 @@ var _ = Describe("Unit Tests - Annotation Holder", func() {
 				`// @Security(schema2, { scopes: ["read:users", "write:users"], extraProp: "" }) Match2`,
 			}
 
-			nodes := utils.CommentsToCommentBlock(comments)
+			nodes := utils.CommentsToCommentBlock(comments, 1)
 			holder, _ := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
 			match := holder.FindFirstByProperty("extraProp", "this value doesn't exist")
 			Expect(match).To(BeNil())
@@ -383,7 +383,7 @@ var _ = Describe("Unit Tests - Annotation Holder", func() {
 				`// @Route(/test-response-validation-ptr-2)      `,
 			}
 
-			nodes := utils.CommentsToCommentBlock(comments)
+			nodes := utils.CommentsToCommentBlock(comments, 1)
 			holder, _ := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
 			methodAttr := holder.GetFirst(annotations.GleeceAnnotationMethod)
 			routeAttr := holder.GetFirst(annotations.GleeceAnnotationRoute)
@@ -398,14 +398,14 @@ var _ = Describe("Unit Tests - Annotation Holder", func() {
 
 			It("Unknown Annotation", func() {
 				comments := []string{"// @UnknownAnnotation"}
-				nodes := utils.CommentsToCommentBlock(comments)
+				nodes := utils.CommentsToCommentBlock(comments, 1)
 				_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceController)
 				Expect(err).To(MatchError(ContainSubstring("unknown annotation @UnknownAnnotation")))
 			})
 
 			It("Wrong Source Annotation", func() {
 				comments := []string{"// @Tag(the tag)"}
-				nodes := utils.CommentsToCommentBlock(comments)
+				nodes := utils.CommentsToCommentBlock(comments, 1)
 				_, notErr := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceController)
 				Expect(notErr).To(BeNil())
 				_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
@@ -414,42 +414,42 @@ var _ = Describe("Unit Tests - Annotation Holder", func() {
 
 			It("Missing Annotation value", func() {
 				comments := []string{"// @Tag"}
-				nodes := utils.CommentsToCommentBlock(comments)
+				nodes := utils.CommentsToCommentBlock(comments, 1)
 				_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceController)
 				Expect(err).To(MatchError(ContainSubstring("annotation @Tag requires a value")))
 			})
 
 			It("Wrong Annotation value", func() {
 				comments := []string{"// @Method(INVALID)"}
-				nodes := utils.CommentsToCommentBlock(comments)
+				nodes := utils.CommentsToCommentBlock(comments, 1)
 				_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
 				Expect(err).To(MatchError(ContainSubstring("invalid HTTP method: INVALID")))
 			})
 
 			It("Wrong Annotation value type", func() {
 				comments := []string{"// @Response(INVALID)"}
-				nodes := utils.CommentsToCommentBlock(comments)
+				nodes := utils.CommentsToCommentBlock(comments, 1)
 				_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
 				Expect(err).To(MatchError(ContainSubstring("invalid status code: INVALID")))
 			})
 
 			It("Wrong Annotation properties - no properties allowed", func() {
 				comments := []string{"// @Method(POST, { invalid: \"properties\" })"}
-				nodes := utils.CommentsToCommentBlock(comments)
+				nodes := utils.CommentsToCommentBlock(comments, 1)
 				_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
 				Expect(err).To(MatchError(ContainSubstring("annotation @Method does not support properties")))
 			})
 
 			It("Wrong Annotation properties - not allowed property", func() {
 				comments := []string{"// @Query(value, { invalid: \"properties\" })"}
-				nodes := utils.CommentsToCommentBlock(comments)
+				nodes := utils.CommentsToCommentBlock(comments, 1)
 				_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
 				Expect(err).To(MatchError(ContainSubstring("property invalid is not allowed for annotation @Query")))
 			})
 
 			It("Wrong Annotation properties - wrong property type ", func() {
 				comments := []string{"// @Query(value, { name: 123 })"}
-				nodes := utils.CommentsToCommentBlock(comments)
+				nodes := utils.CommentsToCommentBlock(comments, 1)
 				_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
 				Expect(err).To(MatchError(ContainSubstring("invalid property name for annotation @Query: property name should be a string")))
 			})
@@ -459,14 +459,14 @@ var _ = Describe("Unit Tests - Annotation Holder", func() {
 
 			It("Wrong Annotation combination - duplicate not allowed annotation type", func() {
 				comments := []string{"// @Body(value1)", "// @Body(value2)"}
-				nodes := utils.CommentsToCommentBlock(comments)
+				nodes := utils.CommentsToCommentBlock(comments, 1)
 				_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
 				Expect(err).To(MatchError(ContainSubstring("multiple instances of annotation @Body are not allowed")))
 			})
 
 			It("Wrong Annotation combination - two from different not allowed type", func() {
 				comments := []string{"// @Body(value1)", "// @FormField(value2)"}
-				nodes := utils.CommentsToCommentBlock(comments)
+				nodes := utils.CommentsToCommentBlock(comments, 1)
 				_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
 				Expect(err).To(MatchError(ContainSubstring("annotations @FormField and @Body cannot be used together")))
 			})
@@ -476,28 +476,28 @@ var _ = Describe("Unit Tests - Annotation Holder", func() {
 
 			It("Wrong Annotation values combination - in the same annotation type", func() {
 				comments := []string{"// @Query(the_value)", "// @Query(the_value)"}
-				nodes := utils.CommentsToCommentBlock(comments)
+				nodes := utils.CommentsToCommentBlock(comments, 1)
 				_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
 				Expect(err).To(MatchError(ContainSubstring("duplicate value 'the_value' used in @Query and @Query annotations")))
 			})
 
 			It("Wrong Annotation combination - two from different not allowed type", func() {
 				comments := []string{"// @Query(the_value)", "// @Header(the_value)"}
-				nodes := utils.CommentsToCommentBlock(comments)
+				nodes := utils.CommentsToCommentBlock(comments, 1)
 				_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
 				Expect(err).To(MatchError(ContainSubstring("duplicate value 'the_value' used in @Query and @Header annotations")))
 			})
 
 			It("Valid Annotation combination - two and one not allowed", func() {
 				comments := []string{"// @Query(the_value)", "// @Security(the_value)"}
-				nodes := utils.CommentsToCommentBlock(comments)
+				nodes := utils.CommentsToCommentBlock(comments, 1)
 				_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
 				Expect(err).To(BeNil())
 			})
 
 			It("Valid Annotation combination - two and both allowed", func() {
 				comments := []string{"// @Security(the_value)", "// @Security(the_value)"}
-				nodes := utils.CommentsToCommentBlock(comments)
+				nodes := utils.CommentsToCommentBlock(comments, 1)
 				_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
 				Expect(err).To(BeNil())
 			})

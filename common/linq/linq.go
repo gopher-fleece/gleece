@@ -1,4 +1,4 @@
-package common
+package linq
 
 // Map applies the function f to each element of the input slice in
 // order and returns a new slice containing the results. The output slice
@@ -64,4 +64,18 @@ func DereferenceSliceElements[T any](slice []*T) []T {
 		}
 	}
 	return dereferenced
+}
+
+func First[T any](input []T, matcher func(value T) bool) *T {
+	if len(input) <= 0 {
+		return nil
+	}
+
+	for _, value := range input {
+		if matcher(value) {
+			return &value
+		}
+	}
+
+	return nil
 }

@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/gopher-fleece/gleece/common"
+	"github.com/gopher-fleece/gleece/common/linq"
 	"github.com/gopher-fleece/gleece/core/annotations"
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/gast"
@@ -378,7 +379,7 @@ type EnumMeta struct {
 }
 
 func (e EnumMeta) Reduce() definitions.EnumMetadata {
-	stringifiedValues := common.Map(e.Values, func(value EnumValueDefinition) string {
+	stringifiedValues := linq.Map(e.Values, func(value EnumValueDefinition) string {
 		return fmt.Sprintf("%v", value.Value)
 	})
 

@@ -6,6 +6,7 @@ import (
 	"go/token"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 
@@ -305,7 +306,7 @@ func MakeIdent(name string) ast.Node {
 	return &ast.Ident{Name: name, NamePos: token.NoPos}
 }
 
-func CommentsToCommentBlock(comments []string) gast.CommentBlock {
+func CommentsToCommentBlock(comments []string, callerStackDepth int) gast.CommentBlock {
 	nodes := make([]gast.CommentNode, len(comments))
 	for i, c := range comments {
 		nodes[i] = gast.CommentNode{
@@ -314,13 +315,17 @@ func CommentsToCommentBlock(comments []string) gast.CommentBlock {
 		}
 	}
 
+	// Add file info, if available
+	_, file, _, _ := runtime.Caller(callerStackDepth)
+
 	return gast.CommentBlock{
 		Comments: nodes,
+		FileName: file,
 	}
 }
 
 func GetAnnotationHolderOrFail(comments []string, appliedOn annotations.CommentSource) *annotations.AnnotationHolder {
-	holder, err := annotations.NewAnnotationHolder(CommentsToCommentBlock(comments), appliedOn)
+	holder, err := annotations.NewAnnotationHolder(CommentsToCommentBlock(comments, 2), appliedOn)
 	if err != nil {
 		Fail(fmt.Sprintf("Failed to create an annotation holder during testing - %v", err))
 	}
