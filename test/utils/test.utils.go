@@ -12,6 +12,7 @@ import (
 
 	"github.com/gopher-fleece/gleece/cmd"
 	"github.com/gopher-fleece/gleece/cmd/arguments"
+	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/core/annotations"
 	"github.com/gopher-fleece/gleece/core/arbitrators/caching"
 	"github.com/gopher-fleece/gleece/core/pipeline"
@@ -321,6 +322,12 @@ func CommentsToCommentBlock(comments []string, callerStackDepth int) gast.Commen
 	return gast.CommentBlock{
 		Comments: nodes,
 		FileName: file,
+		Range: common.ResolvedRange{
+			StartLine: 45,
+			EndLine:   45 + len(comments),
+			StartCol:  0,
+			EndCol:    len(comments[len(comments)-1]), // The last comment's length
+		},
 	}
 }
 

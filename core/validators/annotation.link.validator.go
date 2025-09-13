@@ -27,7 +27,7 @@ type AnnotationLinkValidator struct {
 	receiver          *metadata.ReceiverMeta
 	groupedAttributes classifiedAttributes
 	funcParamNames    mapset.Set[string]
-	urlParams         mapset.Set[string]
+	urlParams         []string // Note we're using a slice here since we have to validate there aren't any duplicates
 }
 
 // NewAnnotationLinkValidator constructs the validator.
@@ -45,7 +45,7 @@ func NewAnnotationLinkValidator(recv *metadata.ReceiverMeta) (AnnotationLinkVali
 		receiver:          recv,
 		groupedAttributes: classifiedAttrs,
 		funcParamNames:    getReceiverParamsNameSet(recv),
-		urlParams:         mapset.NewSet(extractUrlParams(classifiedAttrs.route.Value)...),
+		urlParams:         extractUrlParams(classifiedAttrs.route.Value),
 	}, nil
 }
 
@@ -85,7 +85,6 @@ func (v AnnotationLinkValidator) Validate() []diagnostics.ResolvedDiagnostic {
 	return finalDiags
 }
 
-// validateRoute: duplicate url params (warning) + missing @Path alias (error)
 func (v AnnotationLinkValidator) validateRoute() []diagnostics.ResolvedDiagnostic {
 	diags := []diagnostics.ResolvedDiagnostic{}
 
@@ -108,14 +107,14 @@ func (v AnnotationLinkValidator) validateRoute() []diagnostics.ResolvedDiagnosti
 	referencedParams := mapset.NewSet(pathAliases...)
 	witnessedUrlParams := mapset.NewSet[string]()
 
-	for _, urlParam := range v.urlParams.ToSlice() {
+	for _, urlParam := range v.urlParams {
 		// Verify each URL param appears exactly once
 		if witnessedUrlParams.Contains(urlParam) {
 			diags = append(diags, diagnostics.NewDiagnostic(
 				v.receiver.Annotations.FileName(),
-				fmt.Sprintf("Duplicate route parameter '%s'", urlParam),
-				diagnostics.DiagLinkerDuplicatePathParam,
-				diagnostics.DiagnosticWarning,
+				fmt.Sprintf("Duplicate URL parameter '%s'", urlParam),
+				diagnostics.DiagLinkerDuplicateUrlParam,
+				diagnostics.DiagnosticError,
 				getRangeForUrlParam(v.groupedAttributes.route, urlParam),
 			))
 		} else {
@@ -182,7 +181,7 @@ func (v AnnotationLinkValidator) validatePathAnnotations(
 			diags = append(diags, diagnostics.NewErrorDiagnostic(
 				v.receiver.Annotations.FileName(),
 				fmt.Sprintf("Duplicate @Path parameter reference '%s'", expectedFuncParamName),
-				diagnostics.DiagLinkerDuplicatePathParamRef,
+				diagnostics.DiagLinkerDuplicatePathParam,
 				pathAttr.Comment.Range(),
 			))
 		} else {
@@ -209,10 +208,10 @@ func (v AnnotationLinkValidator) validatePathAnnotations(
 				}
 
 				// Check if the alias exists as a URL parameter
-				if !v.urlParams.Contains(alias) {
+				if !slices.Contains(v.urlParams, alias) {
 					suggestion := getContextualAppendedSuggestion(
 						alias,
-						v.urlParams.ToSlice(),
+						v.urlParams,
 						common.MapKeys(seenFuncParams),
 					)
 					diags = append(diags, diagnostics.NewErrorDiagnostic(

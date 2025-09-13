@@ -1,4 +1,4 @@
-package utils
+package matchers
 
 import (
 	"github.com/gopher-fleece/gleece/gast"

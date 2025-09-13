@@ -46,12 +46,6 @@ func NewAnnotationHolder(commentBlock gast.CommentBlock, source CommentSource) (
 		}
 
 		if isAnAttribute {
-			// TODO - REMOVE VALIDATION HERE, MOVE TO VALIDATOR LOGIC
-			// Validation step left as-is
-			/*
-				if err := IsValidAnnotation(attr, commentSource); err != nil {
-					return holder, err
-				}*/
 			holder.attributes = append(holder.attributes, attr)
 		} else {
 			holder.nonAttributeComments = append(
@@ -64,12 +58,6 @@ func NewAnnotationHolder(commentBlock gast.CommentBlock, source CommentSource) (
 			)
 		}
 	}
-
-	/*
-		if err := IsValidAnnotationCollection(holder.attributes, commentSource); err != nil {
-			return holder, err
-		}
-	*/
 
 	return holder, nil
 }
