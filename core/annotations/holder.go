@@ -74,6 +74,10 @@ func NewAnnotationHolderFromData(
 	}
 }
 
+func (holder AnnotationHolder) Source() CommentSource {
+	return holder.source
+}
+
 func (holder AnnotationHolder) FileName() string {
 	return holder.fileName
 }

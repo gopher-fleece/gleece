@@ -14,6 +14,7 @@ import (
 	"github.com/gopher-fleece/gleece/gast"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
 	"github.com/gopher-fleece/gleece/test/utils"
+	"github.com/gopher-fleece/gleece/test/utils/matchers"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"golang.org/x/tools/go/packages"
@@ -945,7 +946,7 @@ var _ = Describe("Unit Tests - AST", func() {
 
 	Context("GetCommentsFromNode", func() {
 		It("Returns an empty slice when node is nil", func() {
-			Expect(gast.GetCommentsFromNode(nil, nil)).To(utils.BeAnEmptyCommentBlock())
+			Expect(gast.GetCommentsFromNode(nil, nil)).To(matchers.BeAnEmptyCommentBlock())
 		})
 
 		It("Returns comments for *ast.Field with Doc", func() {
@@ -968,7 +969,7 @@ var _ = Describe("Unit Tests - AST", func() {
 
 		It("Returns an empty slice for unsupported node types", func() {
 			badNode := &ast.BasicLit{}
-			Expect(gast.GetCommentsFromNode(badNode, nil)).To(utils.BeAnEmptyCommentBlock())
+			Expect(gast.GetCommentsFromNode(badNode, nil)).To(matchers.BeAnEmptyCommentBlock())
 		})
 
 		It("Returns comments for *ast.FuncDecl with Doc", func() {
@@ -1037,7 +1038,7 @@ var _ = Describe("Unit Tests - AST", func() {
 		It("Returns empty slice when neither Doc is present", func() {
 			typeSpec := &ast.TypeSpec{}
 			genDecl := &ast.GenDecl{}
-			Expect(gast.GetCommentsFromTypeSpec(typeSpec, genDecl, nil)).To(utils.BeAnEmptyCommentBlock())
+			Expect(gast.GetCommentsFromTypeSpec(typeSpec, genDecl, nil)).To(matchers.BeAnEmptyCommentBlock())
 		})
 	})
 
@@ -1279,7 +1280,7 @@ var _ = Describe("Unit Tests - AST", func() {
 
 	Context("MapDocListToCommentNodes", func() {
 		It("Returns an empty slice if given a nil doc list", func() {
-			Expect(gast.MapDocListToCommentBlock(nil, nil)).To(utils.BeAnEmptyCommentBlock())
+			Expect(gast.MapDocListToCommentBlock(nil, nil)).To(matchers.BeAnEmptyCommentBlock())
 		})
 	})
 })

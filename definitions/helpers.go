@@ -3,8 +3,10 @@ package definitions
 import (
 	"fmt"
 	"os"
+	"slices"
 	"strconv"
 
+	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/runtime"
 )
 
@@ -104,10 +106,8 @@ func GetValidHttpVerbs() []string {
 }
 
 func GetRouteSupportedHttpVerbs() []string {
-	verbs := make([]string, 0, len(routeSupportedHttpVerbs))
-	for verb := range routeSupportedHttpVerbs {
-		verbs = append(verbs, verb)
-	}
+	verbs := common.MapKeys(routeSupportedHttpVerbs)
+	slices.Sort(verbs)
 	return verbs
 }
 

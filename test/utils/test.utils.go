@@ -319,15 +319,20 @@ func CommentsToCommentBlock(comments []string, callerStackDepth int) gast.Commen
 	// Add file info, if available
 	_, file, _, _ := runtime.Caller(callerStackDepth)
 
-	return gast.CommentBlock{
-		Comments: nodes,
-		FileName: file,
-		Range: common.ResolvedRange{
+	rng := common.ResolvedRange{}
+	if len(comments) > 0 {
+		rng = common.ResolvedRange{
 			StartLine: 45,
 			EndLine:   45 + len(comments),
 			StartCol:  0,
 			EndCol:    len(comments[len(comments)-1]), // The last comment's length
-		},
+		}
+	}
+
+	return gast.CommentBlock{
+		Comments: nodes,
+		FileName: file,
+		Range:    rng,
 	}
 }
 

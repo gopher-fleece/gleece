@@ -157,6 +157,10 @@ func GetParamPassedIn(
 	paramName string,
 	paramAnnotations *annotations.AnnotationHolder,
 ) (definitions.ParamPassedIn, error) {
+	if paramAnnotations == nil {
+		return "", fmt.Errorf("parameter '%s' does not have any annotations", paramName)
+	}
+
 	paramAttrib := paramAnnotations.FindFirstByValue(paramName)
 	if paramAttrib == nil {
 		return definitions.PassedInHeader,

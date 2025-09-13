@@ -130,7 +130,7 @@ func (v ReceiverValidator) getPassedInValue(param metadata.FuncParam) (
 	// InvalidAnnotation error is the former.
 	if _, isInvalidAnnotationErr := err.(metadata.InvalidAnnotationError); isInvalidAnnotationErr {
 		diag := diagnostics.NewErrorDiagnostic(
-			v.receiver.FVersion.Path,
+			v.receiver.Annotations.FileName(),
 			fmt.Sprintf(
 				"Parameter '%s' in receiver '%s' is not referenced by any annotation",
 				param.Name,
@@ -163,7 +163,7 @@ func (v ReceiverValidator) validateBodyParam(
 		}
 
 		diag := diagnostics.NewErrorDiagnostic(
-			receiver.FVersion.Path,
+			receiver.Annotations.FileName(),
 			fmt.Sprintf(
 				"body parameters must be structs but '%s' (schema name '%s', type '%s') is of kind '%s'",
 				param.Name,
@@ -198,7 +198,7 @@ func (v ReceiverValidator) validatePrimitiveParam(
 		nameInSchema = "unknown"
 	}
 	diag := diagnostics.NewErrorDiagnostic(
-		receiver.FVersion.Path,
+		receiver.Annotations.FileName(),
 		fmt.Sprintf(
 			"header, path and query parameters are currently limited to primitives only but "+
 				"%s parameter '%s' (schema name '%s', type '%s') is of kind '%s'",
@@ -297,7 +297,7 @@ func (v ReceiverValidator) validateReturnTypes(receiver *metadata.ReceiverMeta) 
 	// 'error' return value is not actually an error
 	return common.Ptr(
 		diagnostics.NewErrorDiagnostic(
-			receiver.FVersion.Path,
+			receiver.Annotations.FileName(),
 			fmt.Sprintf(
 				"return type '%s' in receiver '%s' expected to be an error or directly embed it",
 				retType.Name,
@@ -349,7 +349,7 @@ func (v ReceiverValidator) validateSecurity(receiver *metadata.ReceiverMeta) (*d
 
 	// Finally, emit an error diagnostic - the receiver has no security
 	diag := diagnostics.NewErrorDiagnostic(
-		receiver.FVersion.Path,
+		receiver.Annotations.FileName(),
 		fmt.Sprintf(
 			"'enforceSecurityOnAllRoutes' setting is 'true'' but route with operation ID '%s' "+
 				"does not have any explicit or implicit (inherited) security attributes",
@@ -376,11 +376,8 @@ func getDiagForRetSig(receiver *metadata.ReceiverMeta) (int, *diagnostics.Resolv
 	case 0:
 		return errorRetTypeIndex, common.Ptr(
 			diagnostics.NewErrorDiagnostic(
-				receiver.FVersion.Path,
-				fmt.Sprintf(
-					"expected method '%s' to return an error or a value and error tuple but found void",
-					receiver.Name,
-				),
+				receiver.Annotations.FileName(),
+				"Expected method to return an error or a value and error tuple but found void",
 				diagnostics.DiagReceiverRetValsInvalidSignature,
 				receiver.RetValsRange(),
 			),
@@ -393,10 +390,9 @@ func getDiagForRetSig(receiver *metadata.ReceiverMeta) (int, *diagnostics.Resolv
 
 		return errorRetTypeIndex, common.Ptr(
 			diagnostics.NewErrorDiagnostic(
-				receiver.FVersion.Path,
+				receiver.Annotations.FileName(),
 				fmt.Sprintf(
-					"expected method '%s' to return an error or a value and error tuple but found (%s)",
-					receiver.Name,
+					"Expected method to return an error or a value and error tuple but found (%s)",
 					strings.Join(typeNames, ", "),
 				),
 				diagnostics.DiagReceiverRetValsInvalidSignature,

@@ -1,4 +1,4 @@
-package diagnostics
+package validators_test
 
 import (
 	"fmt"
@@ -56,7 +56,7 @@ var _ = Describe("Unit Tests - Annotation Link Validation", func() {
 			},
 		}
 
-		linkValidator = createValidatorOrFail(&receiver)
+		linkValidator = createLinkValidatorOrFail(&receiver)
 	})
 
 	// Covers one instance of DiagLinkerUnreferencedParameter
@@ -98,7 +98,7 @@ var _ = Describe("Unit Tests - Annotation Link Validation", func() {
 				annotations.CommentSourceRoute,
 			)
 			receiver.Annotations = receiverAnnotations
-			validator := createValidatorOrFail(&receiver)
+			validator := createLinkValidatorOrFail(&receiver)
 			diags := validator.Validate()
 
 			Expect(diags).To(HaveLen(1))
@@ -126,7 +126,7 @@ var _ = Describe("Unit Tests - Annotation Link Validation", func() {
 				annotations.CommentSourceRoute,
 			)
 			receiver.Annotations = receiverAnnotations
-			validator := createValidatorOrFail(&receiver)
+			validator := createLinkValidatorOrFail(&receiver)
 			diags := validator.Validate()
 
 			Expect(diags).To(HaveLen(1))
@@ -154,7 +154,7 @@ var _ = Describe("Unit Tests - Annotation Link Validation", func() {
 				annotations.CommentSourceRoute,
 			)
 			receiver.Annotations = receiverAnnotations
-			validator := createValidatorOrFail(&receiver)
+			validator := createLinkValidatorOrFail(&receiver)
 			diags := validator.Validate()
 
 			Expect(diags).To(HaveLen(2))
@@ -200,7 +200,7 @@ var _ = Describe("Unit Tests - Annotation Link Validation", func() {
 				annotations.CommentSourceRoute,
 			)
 			receiver.Annotations = receiverAnnotations
-			validator := createValidatorOrFail(&receiver)
+			validator := createLinkValidatorOrFail(&receiver)
 			diags := validator.Validate()
 
 			Expect(diags).To(HaveLen(2))
@@ -235,7 +235,7 @@ var _ = Describe("Unit Tests - Annotation Link Validation", func() {
 				annotations.CommentSourceRoute,
 			)
 			receiver.Annotations = receiverAnnotations
-			validator := createValidatorOrFail(&receiver)
+			validator := createLinkValidatorOrFail(&receiver)
 			diags := validator.Validate()
 
 			Expect(diags).To(HaveLen(2))
@@ -266,7 +266,7 @@ func TestUnitAnnotationLinkValidator(t *testing.T) {
 	RunSpecs(t, "Unit Tests - Annotation Link Validation")
 }
 
-func createValidatorOrFail(receiver *metadata.ReceiverMeta) validators.AnnotationLinkValidator {
+func createLinkValidatorOrFail(receiver *metadata.ReceiverMeta) validators.AnnotationLinkValidator {
 	validator, err := validators.NewAnnotationLinkValidator(receiver)
 	if err != nil {
 		Fail(fmt.Sprintf("Could not construct an annotation link validator for testing - %v", err))

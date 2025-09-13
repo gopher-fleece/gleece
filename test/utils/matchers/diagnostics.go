@@ -2,6 +2,7 @@ package matchers
 
 import (
 	"github.com/gopher-fleece/gleece/common"
+	"github.com/gopher-fleece/gleece/core/metadata"
 	"github.com/gopher-fleece/gleece/core/validators/diagnostics"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/types"
@@ -55,7 +56,7 @@ func HaveCodeAndMessageSubstring(code diagnostics.DiagnosticCode, substr string)
 	return SatisfyAll(
 		WithTransform(func(d diagnostics.ResolvedDiagnostic) string {
 			return d.Code
-		}, Equal(code)),
+		}, BeEquivalentTo(code)),
 
 		WithTransform(func(d diagnostics.ResolvedDiagnostic) string {
 			return d.Message
@@ -63,9 +64,58 @@ func HaveCodeAndMessageSubstring(code diagnostics.DiagnosticCode, substr string)
 	)
 }
 
+func BeDiagnosticWarningWithCodeAndMessage(code diagnostics.DiagnosticCode, message string) types.GomegaMatcher {
+	return SatisfyAll(
+		HaveSeverity(diagnostics.DiagnosticWarning),
+		HaveCodeAndMessage(code, message),
+	)
+}
+
 func BeDiagnosticErrorWithCodeAndMessage(code diagnostics.DiagnosticCode, message string) types.GomegaMatcher {
 	return SatisfyAll(
 		HaveSeverity(diagnostics.DiagnosticError),
 		HaveCodeAndMessage(code, message),
+	)
+}
+
+func BeDiagnosticEntityOfReceiver(receiver *metadata.ReceiverMeta) types.GomegaMatcher {
+	type EntityKindAndName struct {
+		Kind string
+		Name string
+	}
+	return WithTransform(func(d diagnostics.EntityDiagnostic) EntityKindAndName {
+		return EntityKindAndName{
+			Kind: d.EntityKind,
+			Name: d.EntityName,
+		}
+	}, Equal(EntityKindAndName{
+		Kind: "Receiver",
+		Name: receiver.Name,
+	}))
+}
+
+func HaveNoChildren() types.GomegaMatcher {
+	return WithTransform(
+		func(d diagnostics.EntityDiagnostic) int {
+			return len(d.Children)
+		},
+		Equal(0),
+	)
+}
+
+func BeChildlessDiagOfReceiver(receiver *metadata.ReceiverMeta) types.GomegaMatcher {
+	return SatisfyAll(
+		BeDiagnosticEntityOfReceiver(receiver),
+		HaveNoChildren(),
+	)
+}
+
+func BeAReturnSigDiagnostic() types.GomegaMatcher {
+	return SatisfyAll(
+		HaveCodeAndMessageSubstring(
+			diagnostics.DiagReceiverRetValsInvalidSignature,
+			"Expected method to return an error or a value and error tuple but found",
+		),
+		HaveSeverity(diagnostics.DiagnosticError),
 	)
 }

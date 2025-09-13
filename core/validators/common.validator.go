@@ -2,6 +2,7 @@ package validators
 
 import (
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -16,8 +17,8 @@ type CommonValidator struct {
 	holder *annotations.AnnotationHolder
 }
 
-func (v CommonValidator) Validate() []diagnostics.ResolvedDiagnostic {
-	return v.validateCommon()
+func (g CommonValidator) Validate() []diagnostics.ResolvedDiagnostic {
+	return g.validateCommon()
 }
 
 func (g *CommonValidator) validateCommon() []diagnostics.ResolvedDiagnostic {
@@ -39,8 +40,8 @@ func (g *CommonValidator) validateCommon() []diagnostics.ResolvedDiagnostic {
 		if !exists {
 			diags = append(diags, g.getDiagnosticForAttribute(
 				attr,
-				fmt.Sprintf("Unknown annotation \"@%s\"", attr.Name),
-				"unknown-annotation",
+				fmt.Sprintf("Unknown annotation '@%s'", attr.Name),
+				diagnostics.DiagAnnotationUnknown,
 				diagnostics.DiagnosticError,
 			))
 
@@ -62,6 +63,16 @@ func (g *CommonValidator) validateAnnotation(
 ) []diagnostics.ResolvedDiagnostic {
 	var diags []diagnostics.ResolvedDiagnostic
 
+	// Check if annotation is allowed on this entity.
+	// Technically we can also stop here - no real reason to lint further
+	diags = common.AppendIfNotNil(diags, g.validateAnnotationValidInContext(def, attr))
+
+	// Check if the annotation requires/has a value
+	diags = common.AppendIfNotNil(diags, g.validateRequiredAnnotationValue(def, attr))
+
+	// Check if the annotation properties are as expected
+	diags = common.AppendIfNotNil(diags, g.validateAnnotationProperties(def, attr))
+
 	// Check if this annotation allows multiple instances
 	diags = common.AppendIfNotNil(diags, g.validateDuplicateAnnotation(annotationCount, def, attr))
 
@@ -76,6 +87,122 @@ func (g *CommonValidator) validateAnnotation(
 	return diags
 }
 
+func (g *CommonValidator) validateAnnotationValidInContext(
+	def configuration.AnnotationConfigDefinition,
+	attr annotations.Attribute,
+) *diagnostics.ResolvedDiagnostic {
+	if slices.Contains(def.Contexts, g.holder.Source()) {
+		// Context is valid
+		return nil
+	}
+
+	diag := g.getDiagnosticForAttribute(
+		attr,
+		fmt.Sprintf("Annotation '@%s' is not valid in the context of a %s", attr.Name, g.holder.Source()),
+		diagnostics.DiagAnnotationInvalidInContext,
+		diagnostics.DiagnosticWarning,
+	)
+
+	return &diag
+}
+
+func (g *CommonValidator) validateRequiredAnnotationValue(
+	def configuration.AnnotationConfigDefinition,
+	attr annotations.Attribute,
+) *diagnostics.ResolvedDiagnostic {
+	if !def.RequiresValue || attr.Value != "" {
+		return nil
+	}
+
+	diag := g.getDiagnosticForAttribute(
+		attr,
+		fmt.Sprintf("Annotation '@%s' requires a value", attr.Name),
+		diagnostics.DiagAnnotationValueMustExist,
+		diagnostics.DiagnosticError,
+	)
+
+	return &diag
+}
+
+func (g *CommonValidator) validateAnnotationProperties(
+	def configuration.AnnotationConfigDefinition,
+	attr annotations.Attribute,
+) *diagnostics.ResolvedDiagnostic {
+	if def.AllowedProperties == nil {
+		// If it's nil, any properties are allowed
+		return nil
+	}
+
+	// If no properties are allowed, ensure none are provided
+	if len(def.AllowedProperties) == 0 && len(attr.Properties) > 0 {
+		diag := g.getDiagnosticForAttribute(
+			attr,
+			fmt.Sprintf("Annotation '@%s' does not support properties", attr.Name),
+			diagnostics.DiagAnnotationPropertiesShouldNotExist,
+			diagnostics.DiagnosticWarning,
+		)
+
+		return &diag
+	}
+
+	// Check each provided property
+	for propName, propValue := range attr.Properties {
+		// Check if the property is allowed
+		propDef, allowed := def.AllowedProperties[propName]
+		if !allowed {
+			diag := g.getDiagnosticForAttribute(
+				attr,
+				fmt.Sprintf("Property '%s' is not allowed for annotation '@%s'", propName, attr.Name),
+				diagnostics.DiagAnnotationPropertyShouldNotExist,
+				diagnostics.DiagnosticWarning,
+			)
+
+			return &diag
+		}
+
+		// Check if the property value is of the expected type
+		propValueDiag := g.validatePropertyType(attr, propName, propValue, propDef.Type)
+		if propValueDiag != nil {
+			return propValueDiag
+		}
+
+		// Check if the property value is among allowed values (if specified)
+		if len(propDef.AllowedValues) > 0 {
+			validValue := slices.Contains(propDef.AllowedValues, propValue)
+
+			if !validValue {
+				diag := g.getDiagnosticForAttribute(
+					attr,
+					fmt.Sprintf("Invalid value for property '%s'", propName), // Need a way to provide better hint as to what's expected
+					diagnostics.DiagAnnotationPropertiesInvalidValueForKey,
+					diagnostics.DiagnosticError,
+				)
+
+				return &diag
+			}
+		}
+	}
+
+	// Check for missing required properties
+	for propName, propDef := range def.AllowedProperties {
+		if propDef.Required {
+			_, provided := attr.Properties[propName]
+			if !provided {
+				diag := g.getDiagnosticForAttribute(
+					attr,
+					fmt.Sprintf("Missing required property '%s'", propName),
+					diagnostics.DiagAnnotationPropertiesMissingKey,
+					diagnostics.DiagnosticError,
+				)
+
+				return &diag
+			}
+		}
+	}
+
+	return nil
+}
+
 func (g *CommonValidator) validateDuplicateAnnotation(
 	annotationCount map[string]int,
 	def configuration.AnnotationConfigDefinition,
@@ -85,8 +212,8 @@ func (g *CommonValidator) validateDuplicateAnnotation(
 	if !def.AllowsMultiple && annotationCount[attr.Name] > 1 {
 		diag := g.getDiagnosticForAttribute(
 			attr,
-			fmt.Sprintf("multiple instances of annotation @%s are not allowed", attr.Name),
-			"duplicate-annotation",
+			fmt.Sprintf("Multiple instances of annotation @%s are not allowed", attr.Name),
+			diagnostics.DiagAnnotationDuplicate,
 			diagnostics.DiagnosticWarning,
 		)
 		return &diag
@@ -106,7 +233,7 @@ func (g *CommonValidator) validateMutuallyExclusive(
 				diag := g.getDiagnosticForAttribute(
 					attr,
 					fmt.Sprintf("annotations @%s and @%s cannot be used together", attr.Name, exclusiveAttr),
-					"mutually-exclusive-annotations",
+					diagnostics.DiagAnnotationMutuallyExclusive,
 					diagnostics.DiagnosticError,
 				)
 				return &diag
@@ -134,7 +261,7 @@ func (g *CommonValidator) validateUniqueValue(
 					previousAnnotation,
 					attr.Name,
 				),
-				"duplicate-annotation-value",
+				diagnostics.DiagAnnotationDuplicateValue,
 				diagnostics.DiagnosticError,
 			)
 			diagToReturn = &diag
@@ -192,7 +319,7 @@ func (g *CommonValidator) validateMethodAttribute(attribute annotations.Attribut
 				attribute.Value,
 				supportedVerbsMsg,
 			),
-			diagnostics.DiagFeatureUnsupported,
+			diagnostics.DiagAnnotationValueInvalid,
 			diagnostics.DiagnosticError,
 		)
 	}
@@ -265,7 +392,7 @@ func (g *CommonValidator) getDiagnosticForAttributeValue(
 	)
 }
 
-func (b *CommonValidator) createMayNotHaveAnnotation(
+func (g *CommonValidator) createMayNotHaveAnnotation(
 	entity string,
 	attrib annotations.Attribute,
 ) diagnostics.ResolvedDiagnostic {
@@ -278,9 +405,62 @@ func (b *CommonValidator) createMayNotHaveAnnotation(
 	}
 
 	return diagnostics.NewErrorDiagnostic(
-		b.holder.FileName(),
+		g.holder.FileName(),
 		fmt.Sprintf("%s may not have @%s annotations", entity, attrib.Name),
 		code,
 		attrib.Comment.Range(),
 	)
+}
+
+// validatePropertyType checks if a property value is of the expected type
+// This method is far from ideal and should be updated to handle complex slice types and such.
+func (g *CommonValidator) validatePropertyType(
+	attr annotations.Attribute,
+	propName string,
+	value any,
+	expectedType string,
+) *diagnostics.ResolvedDiagnostic {
+
+	var errMessage string
+	switch expectedType {
+	case "string":
+		_, ok := value.(string)
+		if !ok {
+			errMessage = fmt.Sprintf("Property '%s' expected to be a string", propName)
+		}
+	case "number":
+		_, okFloat := value.(float64)
+		_, okInt := value.(int)
+		if !okFloat && !okInt {
+			errMessage = fmt.Sprintf("Property '%s' expected to be a number", propName)
+		}
+	case "boolean":
+		_, ok := value.(bool)
+		if !ok {
+			errMessage = fmt.Sprintf("Property '%s' expected to be a boolean", propName)
+		}
+	case "array":
+		_, ok := value.([]any)
+		if !ok {
+			errMessage = fmt.Sprintf("Property '%s' expected to be an array", propName)
+		}
+	case "object":
+		_, ok := value.(map[string]any)
+		if !ok {
+			errMessage = fmt.Sprintf("Property '%s' expected to be an object", propName)
+		}
+	}
+
+	if errMessage == "" {
+		return nil
+	}
+
+	diag := g.getDiagnosticForAttribute(
+		attr,
+		errMessage,
+		diagnostics.DiagAnnotationPropertiesInvalidValueForKey,
+		diagnostics.DiagnosticWarning,
+	)
+
+	return &diag
 }
