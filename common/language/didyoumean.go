@@ -3,7 +3,9 @@ package language
 // Copied from https://github.com/sc0Vu/didyoumean/blob/main/didyoumean.go
 // Would import package directly but this creates a bit of a supply chain issue due to low traffic.
 //
-// Slight modifications to terminology and such but corpus is unaffected.
+// Local changes:
+//     * Slight modifications to terminology
+//     * Removed 'Match' method (not necessary for us)
 
 /*
 	MIT License
@@ -110,28 +112,6 @@ func DidYouMean(key string, list []string) (result string) {
 			// winner = distance
 			result = str
 			return
-		}
-	}
-	return
-}
-
-// Match returns all match of didyoumean
-func Match(key string, list []string) (results []string) {
-	if len(key) == 0 {
-		return
-	}
-	if CaseInsensitive {
-		key = strings.ToLower(key)
-	}
-	var winner int
-	if ThresholdRate > 0 {
-		winner = int(ThresholdRate * float64(len(key)))
-	}
-	for _, result := range list {
-		distance := findEditDistance(key, result)
-		if winner <= 0 || distance <= winner {
-			winner = distance
-			results = append(results, result)
 		}
 	}
 	return
