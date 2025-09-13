@@ -13,7 +13,34 @@ import (
 )
 
 var _ = Describe("Unit Tests - Commons", func() {
-	Context("Utils", func() {
+	Context("Linq", func() {
+		Context("Map", func() {
+			It("Correctly maps items using the given function", func() {
+				type TestStruct struct {
+					A int
+					B string
+				}
+
+				value := []TestStruct{{A: 1, B: "2"}, {A: 2, B: "3"}, {A: 3, B: "4"}}
+				Expect(linq.Map(value, func(v TestStruct) int {
+					return v.A
+				})).To(Equal([]int{1, 2, 3}))
+			})
+		})
+
+		Context("MapNonZero", func() {
+			It("Correctly maps non-zero items using the given function", func() {
+				type TestStruct struct {
+					A int
+					B string
+				}
+
+				value := []TestStruct{{A: 1, B: "2"}, {A: 0, B: ""}, {A: 2, B: "3"}, {A: 3, B: "4"}}
+				Expect(linq.MapNonZero(value, func(v TestStruct) int {
+					return v.A
+				})).To(Equal([]int{1, 2, 3}))
+			})
+		})
 
 		Context("Filter", func() {
 			It("Returns a correctly filtered slice", func() {
@@ -23,6 +50,20 @@ var _ = Describe("Unit Tests - Commons", func() {
 				})
 				Expect(result).To(HaveLen(1))
 				Expect(result[0]).To(Equal("oink"))
+			})
+		})
+
+		Context("FilterNil", func() {
+			It("Correctly filters non-nil items using the given function", func() {
+				type TestStruct struct {
+					A int
+					B string
+				}
+
+				value := []*TestStruct{{A: 1, B: "2"}, nil, {A: 2, B: "3"}, {A: 3, B: "4"}, nil}
+				Expect(linq.FilterNil(value)).To(Equal(
+					[]*TestStruct{{A: 1, B: "2"}, {A: 2, B: "3"}, {A: 3, B: "4"}},
+				))
 			})
 		})
 
@@ -40,6 +81,34 @@ var _ = Describe("Unit Tests - Commons", func() {
 			})
 		})
 
+		Context("First", func() {
+			It("Returns nil if given nil input", func() {
+				result := linq.First(nil, func(a int) bool {
+					return a != 0
+				})
+
+				Expect(result).To(BeNil())
+			})
+
+			It("Returns first match if one exists", func() {
+				values := []int{0, 0, 0, 1, 5}
+				result := linq.First(values, func(a int) bool {
+					return a != 0
+				})
+				Expect(*result).To(Equal(1))
+			})
+
+			It("Returns nil if no item matches given filter function", func() {
+				values := []int{0, 0, 0, 1, 5}
+				result := linq.First(values, func(a int) bool {
+					return a < 0
+				})
+				Expect(result).To(BeNil())
+			})
+		})
+	})
+
+	Context("Iterables", func() {
 		Context("Coalesce", func() {
 			It("Returns the first non-nil value of the given arguments", func() {
 				expectedPtr := common.Ptr(5)
@@ -50,6 +119,42 @@ var _ = Describe("Unit Tests - Commons", func() {
 			It("Returns a zero value if all args are zero", func() {
 				result := common.Coalesce[string]("", "", "", "")
 				Expect(result).To(Equal(""))
+			})
+		})
+
+		Context("ConcatConditional", func() {
+			It("Returns a concatenated slice that matches the given filter", func() {
+				sliceA := []int{1, 2, 3}
+				sliceB := []int{-9, -7, 4, -5, 5, 6, 7, -1}
+				results := common.ConcatConditional(sliceA, sliceB, func(item int) bool {
+					return item > 0
+				})
+
+				Expect(results).To(Equal([]int{1, 2, 3, 4, 5, 6, 7}))
+			})
+		})
+	})
+
+	Context("Maps", func() {
+		var testMap map[string]int
+		BeforeEach(func() {
+			testMap = map[string]int{
+				"A": 4,
+				"B": 3,
+				"C": 2,
+				"D": 1,
+			}
+		})
+
+		Context("MapKeys", func() {
+			It("Correctly returns map keys", func() {
+				Expect(common.MapKeys(testMap)).To(ContainElements("A", "B", "C", "D"))
+			})
+		})
+
+		Context("MapValues", func() {
+			It("Correctly returns map values", func() {
+				Expect(common.MapValues(testMap)).To(ContainElements(4, 3, 2, 1))
 			})
 		})
 	})
