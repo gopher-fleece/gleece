@@ -2,14 +2,12 @@ package validators_test
 
 import (
 	"fmt"
-	"testing"
 
 	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/core/annotations"
 	"github.com/gopher-fleece/gleece/core/metadata"
 	"github.com/gopher-fleece/gleece/core/validators"
 	"github.com/gopher-fleece/gleece/core/validators/diagnostics"
-	"github.com/gopher-fleece/gleece/infrastructure/logger"
 	"github.com/gopher-fleece/gleece/test/utils"
 	. "github.com/gopher-fleece/gleece/test/utils/matchers"
 	. "github.com/onsi/ginkgo/v2"
@@ -106,8 +104,8 @@ var _ = Describe("Unit Tests - Annotation Link Validation", func() {
 			Expect(diags[0].Severity).To(Equal(diagnostics.DiagnosticError))
 			Expect(diags[0].FilePath).To(ContainSubstring("annotation.link.validator_test.go"))
 			Expect(diags[0].Range).To(Equal(common.ResolvedRange{
-				StartLine: 0,
-				EndLine:   0,
+				StartLine: 47,
+				EndLine:   47,
 				StartCol:  17,
 				EndCol:    29,
 			}))
@@ -134,8 +132,8 @@ var _ = Describe("Unit Tests - Annotation Link Validation", func() {
 			Expect(diags[0].Severity).To(Equal(diagnostics.DiagnosticError))
 			Expect(diags[0].FilePath).To(ContainSubstring("annotation.link.validator_test.go"))
 			Expect(diags[0].Range).To(Equal(common.ResolvedRange{
-				StartLine: 0,
-				EndLine:   0,
+				StartLine: 45,
+				EndLine:   45,
 				StartCol:  11,
 				EndCol:    22,
 			}))
@@ -163,8 +161,8 @@ var _ = Describe("Unit Tests - Annotation Link Validation", func() {
 			Expect(diags[0].Severity).To(Equal(diagnostics.DiagnosticError))
 			Expect(diags[0].FilePath).To(ContainSubstring("annotation.link.validator_test.go"))
 			Expect(diags[0].Range).To(Equal(common.ResolvedRange{
-				StartLine: 0,
-				EndLine:   0,
+				StartLine: 45,
+				EndLine:   45,
 				StartCol:  11,
 				EndCol:    15,
 			}))
@@ -177,10 +175,10 @@ var _ = Describe("Unit Tests - Annotation Link Validation", func() {
 			// Note that this range is reliant on Comment positioning which is a bit of
 			// a problem to reasonably emulate for tests and currently not done
 			Expect(diags[1].Range).To(Equal(common.ResolvedRange{
-				StartLine: 0,
-				EndLine:   0,
+				StartLine: 47,
+				EndLine:   47,
 				StartCol:  0,
-				EndCol:    0,
+				EndCol:    34,
 			}))
 			Expect(diags[1].Code).To(BeEquivalentTo(diagnostics.DiagLinkerPathInvalidRef))
 			Expect(diags[1].Source).To(Equal("gleece"))
@@ -209,8 +207,8 @@ var _ = Describe("Unit Tests - Annotation Link Validation", func() {
 			Expect(diags[0].Severity).To(Equal(diagnostics.DiagnosticError))
 			Expect(diags[0].FilePath).To(ContainSubstring("annotation.link.validator_test.go"))
 			Expect(diags[0].Range).To(Equal(common.ResolvedRange{
-				StartLine: 0,
-				EndLine:   0,
+				StartLine: 47,
+				EndLine:   47,
 				StartCol:  9,
 				EndCol:    15,
 			}))
@@ -244,8 +242,8 @@ var _ = Describe("Unit Tests - Annotation Link Validation", func() {
 			Expect(diags[0].Severity).To(Equal(diagnostics.DiagnosticError))
 			Expect(diags[0].FilePath).To(ContainSubstring("annotation.link.validator_test.go"))
 			Expect(diags[0].Range).To(Equal(common.ResolvedRange{
-				StartLine: 0,
-				EndLine:   0,
+				StartLine: 48,
+				EndLine:   48,
 				StartCol:  9,
 				EndCol:    15,
 			}))
@@ -259,12 +257,6 @@ var _ = Describe("Unit Tests - Annotation Link Validation", func() {
 		})
 	})
 })
-
-func TestUnitAnnotationLinkValidator(t *testing.T) {
-	logger.SetLogLevel(logger.LogLevelNone)
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Unit Tests - Annotation Link Validation")
-}
 
 func createLinkValidatorOrFail(receiver *metadata.ReceiverMeta) validators.AnnotationLinkValidator {
 	validator, err := validators.NewAnnotationLinkValidator(receiver)

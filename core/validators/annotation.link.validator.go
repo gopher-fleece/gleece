@@ -1,6 +1,7 @@
 package validators
 
 import (
+	"cmp"
 	"errors"
 	"fmt"
 	"slices"
@@ -17,9 +18,9 @@ import (
 )
 
 type classifiedAttributes struct {
-	route                annotations.Attribute
-	path                 []annotations.Attribute
-	nonPathValueToAttrib map[string]annotations.Attribute
+	route             annotations.Attribute
+	path              []annotations.Attribute
+	nonPathAttributes []annotations.Attribute
 }
 
 // AnnotationLinkValidator performs route/@Path/param cross-validation.
@@ -233,15 +234,21 @@ func (v AnnotationLinkValidator) validateNonPathAnnotations(
 ) []diagnostics.ResolvedDiagnostic {
 	diags := []diagnostics.ResolvedDiagnostic{}
 
-	for attrValue, attr := range v.groupedAttributes.nonPathValueToAttrib {
-		if attrValue == "" {
+	// Sort everything so diags are emitted in a deterministic order
+	nonPathAttributes := v.groupedAttributes.nonPathAttributes
+	slices.SortFunc(nonPathAttributes, func(a, b annotations.Attribute) int {
+		return cmp.Compare(a.Name, b.Name)
+	})
+
+	for _, attr := range nonPathAttributes {
+		if attr.Value == "" {
 			// Potentially partial annotation. May be linted by a context free analyzer (i.e., not here)
 			continue
 		}
 
-		if !v.funcParamNames.Contains(attrValue) {
+		if !v.funcParamNames.Contains(attr.Value) {
 			suggestion := getContextualAppendedSuggestion(
-				attrValue,
+				attr.Value,
 				v.funcParamNames.ToSlice(),
 				common.MapKeys(seenFuncParams),
 			)
@@ -251,7 +258,7 @@ func (v AnnotationLinkValidator) validateNonPathAnnotations(
 				fmt.Sprintf(
 					"@%s '%s' does not match any parameter of %s%s",
 					attr.Name,
-					attrValue,
+					attr.Value,
 					v.receiver.Name,
 					suggestion,
 				),
@@ -259,7 +266,7 @@ func (v AnnotationLinkValidator) validateNonPathAnnotations(
 				attr.GetValueRange(),
 			))
 		} else {
-			seenFuncParams[attrValue] = attr
+			seenFuncParams[attr.Value] = attr
 		}
 	}
 
@@ -355,8 +362,8 @@ func getContextualAppendedSuggestion(input string, allOpts []string, alreadyUsed
 
 func classifyAttributes(receiver *metadata.ReceiverMeta) (classifiedAttributes, error) {
 	classified := classifiedAttributes{
-		path:                 []annotations.Attribute{},
-		nonPathValueToAttrib: map[string]annotations.Attribute{},
+		path:              []annotations.Attribute{},
+		nonPathAttributes: []annotations.Attribute{},
 	}
 
 	routeAttrSeen := false
@@ -372,7 +379,7 @@ func classifyAttributes(receiver *metadata.ReceiverMeta) (classifiedAttributes, 
 			annotations.GleeceAnnotationBody,
 			annotations.GleeceAnnotationFormField:
 			if strings.TrimSpace(attr.Value) != "" {
-				classified.nonPathValueToAttrib[attr.Value] = attr
+				classified.nonPathAttributes = append(classified.nonPathAttributes, attr)
 			}
 		}
 	}

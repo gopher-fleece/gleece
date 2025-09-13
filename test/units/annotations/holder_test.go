@@ -378,131 +378,16 @@ var _ = Describe("Unit Tests - Annotation Holder", func() {
 		})
 
 		It("Should trim valid attribute with extra space at the end", func() {
-			comments := []string{
+			holder := utils.GetAnnotationHolderOrFail([]string{
 				`// @Method(GET)	`,
 				`// @Route(/test-response-validation-ptr-2)      `,
-			}
+			}, annotations.CommentSourceRoute)
 
-			nodes := utils.CommentsToCommentBlock(comments, 1)
-			holder, _ := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
 			methodAttr := holder.GetFirst(annotations.GleeceAnnotationMethod)
 			routeAttr := holder.GetFirst(annotations.GleeceAnnotationRoute)
 			Expect(methodAttr.Name).To(Equal(annotations.GleeceAnnotationMethod))
 			Expect(routeAttr.Name).To(Equal(annotations.GleeceAnnotationRoute))
 		})
-	})
-
-	Context("Given comments", func() {
-
-		When("Annotation is wrong", func() {
-
-			It("Unknown Annotation", func() {
-				comments := []string{"// @UnknownAnnotation"}
-				nodes := utils.CommentsToCommentBlock(comments, 1)
-				_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceController)
-				Expect(err).To(MatchError(ContainSubstring("unknown annotation @UnknownAnnotation")))
-			})
-
-			It("Wrong Source Annotation", func() {
-				comments := []string{"// @Tag(the tag)"}
-				nodes := utils.CommentsToCommentBlock(comments, 1)
-				_, notErr := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceController)
-				Expect(notErr).To(BeNil())
-				_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
-				Expect(err).To(MatchError(ContainSubstring("annotation @Tag is not valid in route context")))
-			})
-
-			It("Missing Annotation value", func() {
-				comments := []string{"// @Tag"}
-				nodes := utils.CommentsToCommentBlock(comments, 1)
-				_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceController)
-				Expect(err).To(MatchError(ContainSubstring("annotation @Tag requires a value")))
-			})
-
-			It("Wrong Annotation value", func() {
-				comments := []string{"// @Method(INVALID)"}
-				nodes := utils.CommentsToCommentBlock(comments, 1)
-				_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
-				Expect(err).To(MatchError(ContainSubstring("invalid HTTP method: INVALID")))
-			})
-
-			It("Wrong Annotation value type", func() {
-				comments := []string{"// @Response(INVALID)"}
-				nodes := utils.CommentsToCommentBlock(comments, 1)
-				_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
-				Expect(err).To(MatchError(ContainSubstring("invalid status code: INVALID")))
-			})
-
-			It("Wrong Annotation properties - no properties allowed", func() {
-				comments := []string{"// @Method(POST, { invalid: \"properties\" })"}
-				nodes := utils.CommentsToCommentBlock(comments, 1)
-				_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
-				Expect(err).To(MatchError(ContainSubstring("annotation @Method does not support properties")))
-			})
-
-			It("Wrong Annotation properties - not allowed property", func() {
-				comments := []string{"// @Query(value, { invalid: \"properties\" })"}
-				nodes := utils.CommentsToCommentBlock(comments, 1)
-				_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
-				Expect(err).To(MatchError(ContainSubstring("property invalid is not allowed for annotation @Query")))
-			})
-
-			It("Wrong Annotation properties - wrong property type ", func() {
-				comments := []string{"// @Query(value, { name: 123 })"}
-				nodes := utils.CommentsToCommentBlock(comments, 1)
-				_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
-				Expect(err).To(MatchError(ContainSubstring("invalid property name for annotation @Query: property name should be a string")))
-			})
-		})
-
-		When("Annotation combination", func() {
-
-			It("Wrong Annotation combination - duplicate not allowed annotation type", func() {
-				comments := []string{"// @Body(value1)", "// @Body(value2)"}
-				nodes := utils.CommentsToCommentBlock(comments, 1)
-				_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
-				Expect(err).To(MatchError(ContainSubstring("multiple instances of annotation @Body are not allowed")))
-			})
-
-			It("Wrong Annotation combination - two from different not allowed type", func() {
-				comments := []string{"// @Body(value1)", "// @FormField(value2)"}
-				nodes := utils.CommentsToCommentBlock(comments, 1)
-				_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
-				Expect(err).To(MatchError(ContainSubstring("annotations @FormField and @Body cannot be used together")))
-			})
-		})
-
-		When("Annotation values combination", func() {
-
-			It("Wrong Annotation values combination - in the same annotation type", func() {
-				comments := []string{"// @Query(the_value)", "// @Query(the_value)"}
-				nodes := utils.CommentsToCommentBlock(comments, 1)
-				_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
-				Expect(err).To(MatchError(ContainSubstring("duplicate value 'the_value' used in @Query and @Query annotations")))
-			})
-
-			It("Wrong Annotation combination - two from different not allowed type", func() {
-				comments := []string{"// @Query(the_value)", "// @Header(the_value)"}
-				nodes := utils.CommentsToCommentBlock(comments, 1)
-				_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
-				Expect(err).To(MatchError(ContainSubstring("duplicate value 'the_value' used in @Query and @Header annotations")))
-			})
-
-			It("Valid Annotation combination - two and one not allowed", func() {
-				comments := []string{"// @Query(the_value)", "// @Security(the_value)"}
-				nodes := utils.CommentsToCommentBlock(comments, 1)
-				_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
-				Expect(err).To(BeNil())
-			})
-
-			It("Valid Annotation combination - two and both allowed", func() {
-				comments := []string{"// @Security(the_value)", "// @Security(the_value)"}
-				nodes := utils.CommentsToCommentBlock(comments, 1)
-				_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
-				Expect(err).To(BeNil())
-			})
-		})
-
 	})
 })
 

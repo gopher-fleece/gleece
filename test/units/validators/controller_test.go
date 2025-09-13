@@ -1,15 +1,12 @@
 package validators_test
 
 import (
-	"testing"
-
 	"github.com/gopher-fleece/gleece/core/annotations"
 	"github.com/gopher-fleece/gleece/core/arbitrators"
 	"github.com/gopher-fleece/gleece/core/metadata"
 	"github.com/gopher-fleece/gleece/core/validators"
 	"github.com/gopher-fleece/gleece/core/validators/diagnostics"
 	"github.com/gopher-fleece/gleece/definitions"
-	"github.com/gopher-fleece/gleece/infrastructure/logger"
 	"github.com/gopher-fleece/gleece/test/utils"
 	. "github.com/gopher-fleece/gleece/test/utils/matchers"
 	. "github.com/onsi/ginkgo/v2"
@@ -80,9 +77,3 @@ var _ = Describe("Unit Tests - Controller Validator", func() {
 	})
 
 })
-
-func TestUnitControllerValidator(t *testing.T) {
-	logger.SetLogLevel(logger.LogLevelNone)
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Unit Tests - Controller Validator")
-}

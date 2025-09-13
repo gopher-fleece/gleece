@@ -7,3 +7,11 @@ func MapKeys[TKey comparable, TValue any](m map[TKey]TValue) []TKey {
 	}
 	return out
 }
+
+func MapValues[TKey comparable, TValue any](m map[TKey]TValue) []TValue {
+	out := make([]TValue, 0, len(m))
+	for _, v := range m {
+		out = append(out, v)
+	}
+	return out
+}

@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/gopher-fleece/gleece/cmd"
 	"github.com/gopher-fleece/gleece/cmd/arguments"
@@ -308,11 +309,20 @@ func MakeIdent(name string) ast.Node {
 }
 
 func CommentsToCommentBlock(comments []string, callerStackDepth int) gast.CommentBlock {
-	nodes := make([]gast.CommentNode, len(comments))
-	for i, c := range comments {
-		nodes[i] = gast.CommentNode{
-			Text:  c,
-			Index: i,
+	// This func also fakes some positions to allow for at-least cursory checks by tests
+	fakeStartLine := 45
+
+	commentNodes := make([]gast.CommentNode, len(comments))
+	for index, comment := range comments {
+		commentNodes[index] = gast.CommentNode{
+			Text:  comment,
+			Index: index,
+			Position: gast.CommentPosition{
+				StartLine: fakeStartLine + index,
+				EndLine:   fakeStartLine + index,
+				StartCol:  0,
+				EndCol:    utf8.RuneCountInString(comment),
+			},
 		}
 	}
 
@@ -321,16 +331,18 @@ func CommentsToCommentBlock(comments []string, callerStackDepth int) gast.Commen
 
 	rng := common.ResolvedRange{}
 	if len(comments) > 0 {
+		lastCommentNode := commentNodes[len(commentNodes) - 1]
+
 		rng = common.ResolvedRange{
-			StartLine: 45,
-			EndLine:   45 + len(comments),
+			StartLine: fakeStartLine,
+			EndLine:   lastCommentNode.Position.EndLine,
 			StartCol:  0,
-			EndCol:    len(comments[len(comments)-1]), // The last comment's length
+			EndCol:    lastCommentNode.Position.EndCol,
 		}
 	}
 
 	return gast.CommentBlock{
-		Comments: nodes,
+		Comments: commentNodes,
 		FileName: file,
 		Range:    rng,
 	}

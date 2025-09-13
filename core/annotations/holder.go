@@ -208,7 +208,7 @@ func (holder AnnotationHolder) GetDescription() string {
 
 func parseCommentNode(parsingRegex *regexp.Regexp, comment gast.CommentNode) (Attribute, bool, error) {
 	// use raw comment.Text so the regex byte offsets line up with Position
-	text := comment.Text
+	text := strings.TrimSpace(comment.Text)
 
 	matchIndices := parsingRegex.FindStringSubmatchIndex(text)
 	if matchIndices == nil {

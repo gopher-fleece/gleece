@@ -212,7 +212,7 @@ func (g *CommonValidator) validateDuplicateAnnotation(
 	if !def.AllowsMultiple && annotationCount[attr.Name] > 1 {
 		diag := g.getDiagnosticForAttribute(
 			attr,
-			fmt.Sprintf("Multiple instances of annotation @%s are not allowed", attr.Name),
+			fmt.Sprintf("Multiple instances of '@%s' annotations are not allowed", attr.Name),
 			diagnostics.DiagAnnotationDuplicate,
 			diagnostics.DiagnosticWarning,
 		)
@@ -232,7 +232,7 @@ func (g *CommonValidator) validateMutuallyExclusive(
 			if annotationCount[exclusiveAttr] > 0 {
 				diag := g.getDiagnosticForAttribute(
 					attr,
-					fmt.Sprintf("annotations @%s and @%s cannot be used together", attr.Name, exclusiveAttr),
+					fmt.Sprintf("Annotations '@%s' and '@%s' are mutually exclusive", attr.Name, exclusiveAttr),
 					diagnostics.DiagAnnotationMutuallyExclusive,
 					diagnostics.DiagnosticError,
 				)
@@ -252,14 +252,12 @@ func (g *CommonValidator) validateUniqueValue(
 
 	if def.RequiresUniqueValue && attr.Value != "" {
 		// Check if this value has been used by any annotation type requiring uniqueness
-		if previousAnnotation, exists := uniqueValues[attr.Value]; exists {
+		if _, exists := uniqueValues[attr.Value]; exists {
 			diag := g.getDiagnosticForAttribute(
 				attr,
 				fmt.Sprintf(
-					"duplicate value '%s' used in @%s and @%s annotations",
+					"Duplicate value '%s' referenced by multiple annotations",
 					attr.Value,
-					previousAnnotation,
-					attr.Name,
 				),
 				diagnostics.DiagAnnotationDuplicateValue,
 				diagnostics.DiagnosticError,
