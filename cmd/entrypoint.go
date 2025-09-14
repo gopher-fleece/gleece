@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/gopher-fleece/gleece/cmd/arguments"
 	"github.com/gopher-fleece/gleece/core/pipeline"
@@ -18,22 +19,36 @@ import (
 func LoadGleeceConfig(configPath string) (*definitions.GleeceConfig, error) {
 
 	// Read the JSON file
-	fileContent, err := os.ReadFile(configPath)
+	var configPathToUse string
+
+	absPath, err := filepath.Abs(configPath)
 	if err != nil {
-		return nil, fmt.Errorf(`could not read config file from "%s" - "%v"`, configPath, err.Error())
+		logger.Warn("Could not determine absolute path for config path '%s'. Will attempt to use as-is", configPath)
+		configPathToUse = configPath
+	} else {
+		configPathToUse = absPath
+	}
+
+	fileContent, err := os.ReadFile(configPathToUse)
+	if err != nil {
+		return nil, fmt.Errorf(`could not read config file from "%s" - "%v"`, configPathToUse, err.Error())
 	}
 
 	// Unmarshal the JSON content into the struct
 	var config definitions.GleeceConfig
 	err = json5.Unmarshal(fileContent, &config)
 	if err != nil {
-		return nil, fmt.Errorf(`could not unmarshal config file "%s" to JSON5 - "%v"`, configPath, err)
+		return nil, fmt.Errorf(`could not unmarshal config file "%s" to JSON5 - "%v"`, configPathToUse, err)
 	}
 
 	// Validate the struct
 	err = validation.ValidateStruct(config)
 	if err != nil {
-		return nil, fmt.Errorf(`configuration file "%s" is invalid - "%s"`, configPath, validation.ExtractValidationErrorMessage(err, nil))
+		return nil, fmt.Errorf(
+			`configuration file "%s" is invalid - "%s"`,
+			configPathToUse,
+			validation.ExtractValidationErrorMessage(err, nil),
+		)
 	}
 
 	return &config, nil
