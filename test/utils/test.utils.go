@@ -16,6 +16,7 @@ import (
 	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/core/annotations"
 	"github.com/gopher-fleece/gleece/core/arbitrators/caching"
+	"github.com/gopher-fleece/gleece/core/metadata"
 	"github.com/gopher-fleece/gleece/core/pipeline"
 	"github.com/gopher-fleece/gleece/core/visitors"
 	"github.com/gopher-fleece/gleece/core/visitors/providers"
@@ -331,7 +332,7 @@ func CommentsToCommentBlock(comments []string, callerStackDepth int) gast.Commen
 
 	rng := common.ResolvedRange{}
 	if len(comments) > 0 {
-		lastCommentNode := commentNodes[len(commentNodes) - 1]
+		lastCommentNode := commentNodes[len(commentNodes)-1]
 
 		rng = common.ResolvedRange{
 			StartLine: fakeStartLine,
@@ -355,4 +356,46 @@ func GetAnnotationHolderOrFail(comments []string, appliedOn annotations.CommentS
 	}
 
 	return &holder
+}
+
+func GetMockParams(number int) []metadata.FuncParam {
+	params := make([]metadata.FuncParam, 0, number)
+	for i := range number {
+		params = append(
+			params,
+			metadata.FuncParam{
+				SymNodeMeta: metadata.SymNodeMeta{
+					Name: fmt.Sprintf("param%d", i),
+				},
+				Ordinal: i,
+				Type: metadata.TypeUsageMeta{
+					SymNodeMeta: metadata.SymNodeMeta{
+						Name: "int",
+					},
+				},
+			},
+		)
+	}
+	return params
+}
+
+func GetMockRetVals(number int) []metadata.FuncReturnValue {
+	retVals := make([]metadata.FuncReturnValue, 0, number)
+	for i := range number {
+		retVals = append(
+			retVals,
+			metadata.FuncReturnValue{
+				SymNodeMeta: metadata.SymNodeMeta{
+					Name: "",
+				},
+				Ordinal: i,
+				Type: metadata.TypeUsageMeta{
+					SymNodeMeta: metadata.SymNodeMeta{
+						Name: "int",
+					},
+				},
+			},
+		)
+	}
+	return retVals
 }

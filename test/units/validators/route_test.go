@@ -206,6 +206,31 @@ var _ = Describe("Unit Tests - Route Validator", func() {
 				"@Query 'value' does not match any parameter of TestReceiver",
 			))
 		})
+
+		It("Returns a DiagFeatureUnsupported when a @Method annotation has a valid but unsupported HTTP verb", func() {
+			receiver.Annotations = utils.GetAnnotationHolderOrFail(
+				[]string{
+					"// @Route(/)",
+					"// @Method(OPTIONS) Valid but unsupported",
+				},
+				annotations.CommentSourceRoute,
+			)
+
+			validator = validators.NewReceiverValidator(gleeceConfig, pkgFacade, &controller, &receiver)
+
+			diag, err := validator.Validate()
+			Expect(err).To(BeNil())
+			Expect(diag).To(BeChildlessDiagOfReceiver(&receiver))
+
+			Expect(diag.Diagnostics).To(HaveLen(2))
+
+			Expect(diag.Diagnostics[0]).To(BeDiagnosticErrorWithCodeAndMessage(
+				diagnostics.DiagFeatureUnsupported,
+				"HTTP verb 'OPTIONS' is currently unsupported for @Method annotations. Supported verbs are: DELETE, GET, PATCH, POST, PUT",
+			))
+
+			Expect(diag.Diagnostics[1]).To(BeAReturnSigDiagnostic())
+		})
 	})
 
 	Context("Annotation combinations", func() {
@@ -442,6 +467,77 @@ var _ = Describe("Unit Tests - Route Validator", func() {
 					})
 				})
 			})
+		})
+	})
+
+	Context("Error handling", func() {
+		It("Returns a 'could not validate parameter' error when an error prevents validation of parameter", func() {
+			receiver.Annotations = utils.GetAnnotationHolderOrFail(
+				[]string{
+					"// @Route(/)",
+					"// @Method(POST)",
+				},
+				annotations.CommentSourceRoute,
+			)
+			receiver.Params = utils.GetMockParams(1)
+
+			validator = validators.NewReceiverValidator(gleeceConfig, pkgFacade, &controller, &receiver)
+
+			_, err := validator.Validate()
+			Expect(err).To(MatchError(ContainSubstring("could not validate parameter")))
+		})
+
+		It("Returns a 'could not validate return types' error when an error prevents validation of return value", func() {
+			receiver.Annotations = utils.GetAnnotationHolderOrFail(
+				[]string{
+					"// @Route(/)",
+					"// @Method(POST)",
+				},
+				annotations.CommentSourceRoute,
+			)
+			receiver.RetVals = utils.GetMockRetVals(1)
+			receiver.RetVals[0].PkgPath = "non-existent/package"
+
+			validator = validators.NewReceiverValidator(gleeceConfig, pkgFacade, &controller, &receiver)
+
+			_, err := validator.Validate()
+			Expect(err).To(MatchError(ContainSubstring("could not validate return types")))
+		})
+
+		It("Returns a 'could not validate security' error when an error prevents validation of return value", func() {
+			receiver.Annotations = utils.GetAnnotationHolderOrFail(
+				[]string{
+					"// @Route(/)",
+					"// @Method(POST)",
+				},
+				annotations.CommentSourceRoute,
+			)
+
+			controller.Struct.Annotations = common.Ptr(annotations.NewAnnotationHolderFromData(
+				[]annotations.Attribute{
+					{Name: "Security"}, // This should trigger a security validation failure in when resolving parent security
+				},
+				[]annotations.NonAttributeComment{},
+			))
+
+			validator = validators.NewReceiverValidator(gleeceConfig, pkgFacade, &controller, &receiver)
+
+			_, err := validator.Validate()
+			Expect(err).To(MatchError(ContainSubstring("could not validate security")))
+		})
+
+		It("Returns a 'could not validate security' error when an error prevents validation of return value", func() {
+			receiver.Annotations = utils.GetAnnotationHolderOrFail(
+				[]string{
+					"// @Method(POST)",
+				},
+				annotations.CommentSourceRoute,
+			)
+
+			validator = validators.NewReceiverValidator(gleeceConfig, pkgFacade, &controller, &receiver)
+
+			_, err := validator.Validate()
+			Expect(err).To(MatchError(ContainSubstring("failed to construct an annotation link validator")))
 		})
 	})
 })

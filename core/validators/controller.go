@@ -73,55 +73,7 @@ func (v *ControllerValidator) validateAnnotationPresence() []diagnostics.Resolve
 			))
 	}
 
-	diagnosticsList = append(
-		diagnosticsList,
-		v.yieldDiagsForExcessiveAttr(counts, annotations.GleeceAnnotationQuery)...,
-	)
-
-	diagnosticsList = append(
-		diagnosticsList,
-		v.yieldDiagsForExcessiveAttr(counts, annotations.GleeceAnnotationPath)...,
-	)
-
-	diagnosticsList = append(
-		diagnosticsList,
-		v.yieldDiagsForExcessiveAttr(counts, annotations.GleeceAnnotationBody)...,
-	)
-
-	diagnosticsList = append(
-		diagnosticsList,
-		v.yieldDiagsForExcessiveAttr(counts, annotations.GleeceAnnotationFormField)...,
-	)
-
-	diagnosticsList = append(
-		diagnosticsList,
-		v.yieldDiagsForExcessiveAttr(counts, annotations.GleeceAnnotationHeader)...,
-	)
-
-	diagnosticsList = append(
-		diagnosticsList,
-		v.yieldDiagsForExcessiveAttr(counts, annotations.GleeceAnnotationMethod)...,
-	)
-
 	return diagnosticsList
-}
-
-func (v *ControllerValidator) yieldDiagsForExcessiveAttr(countMap map[string]int, attrName string) []diagnostics.ResolvedDiagnostic {
-	diags := []diagnostics.ResolvedDiagnostic{}
-	if countMap[annotations.GleeceAnnotationPath] <= 0 {
-		return diags
-	}
-
-	unexpectedAttrInstances := v.holder.GetAll(attrName)
-	for _, attrInstance := range unexpectedAttrInstances {
-		diags = append(
-			diags,
-			v.createMayNotHaveAnnotation("Controllers", *attrInstance),
-		)
-	}
-
-	return diags
-
 }
 
 func (v *ControllerValidator) validateReceiver(receiver *metadata.ReceiverMeta) (diagnostics.EntityDiagnostic, error) {

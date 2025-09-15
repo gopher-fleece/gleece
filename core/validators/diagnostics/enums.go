@@ -56,7 +56,6 @@ const (
 	DiagLinkerDuplicateUrlParam                DiagnosticCode = "linker-duplicate-url-parameter"
 	DiagLinkerIncompleteAttribute              DiagnosticCode = "linker-incomplete-attribute"
 	DiagControllerLevelMissingTag              DiagnosticCode = "controller-missing-tag"
-	DiagControllerLevelAnnotationNotAllowed    DiagnosticCode = "controller-annotation-not-allowed"
 	DiagReceiverInvalidBody                    DiagnosticCode = "receiver-invalid-body"
 	DiagReceiverParamNotPrimitive              DiagnosticCode = "receiver-parameter-not-primitive"
 	DiagReceiverRetValsInvalidSignature        DiagnosticCode = "receiver-return-values-invalid-signature"

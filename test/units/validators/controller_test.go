@@ -76,4 +76,23 @@ var _ = Describe("Unit Tests - Controller Validator", func() {
 		))
 	})
 
+	It("Returns a DiagAnnotationInvalidInContext when annotation cannot be used on a controller", func() {
+		controller.Struct.Annotations = utils.GetAnnotationHolderOrFail(
+			[]string{
+				"// @Tag(Test)",
+				"// @Method(POST)",
+			},
+			annotations.CommentSourceController,
+		)
+
+		validator = validators.NewControllerValidator(gleeceConfig, pkgFacade, &controller)
+		diag, err := validator.Validate()
+		Expect(err).To(BeNil())
+
+		Expect(diag.Diagnostics).To(HaveLen(1))
+		Expect(diag.Diagnostics[0]).To(BeDiagnosticWarningWithCodeAndMessage(
+			diagnostics.DiagAnnotationInvalidInContext,
+			"Annotation '@Method' is not valid in the context of a controller",
+		))
+	})
 })

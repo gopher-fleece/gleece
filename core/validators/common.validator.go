@@ -390,26 +390,6 @@ func (g *CommonValidator) getDiagnosticForAttributeValue(
 	)
 }
 
-func (g *CommonValidator) createMayNotHaveAnnotation(
-	entity string,
-	attrib annotations.Attribute,
-) diagnostics.ResolvedDiagnostic {
-	var code diagnostics.DiagnosticCode
-
-	if entity == "Controllers" {
-		code = diagnostics.DiagControllerLevelAnnotationNotAllowed
-	} else {
-		code = diagnostics.DiagMethodLevelAnnotationNotAllowed
-	}
-
-	return diagnostics.NewErrorDiagnostic(
-		g.holder.FileName(),
-		fmt.Sprintf("%s may not have @%s annotations", entity, attrib.Name),
-		code,
-		attrib.Comment.Range(),
-	)
-}
-
 // validatePropertyType checks if a property value is of the expected type
 // This method is far from ideal and should be updated to handle complex slice types and such.
 func (g *CommonValidator) validatePropertyType(

@@ -3,6 +3,7 @@ package metadata_test
 import (
 	"go/ast"
 
+	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/core/annotations"
 	"github.com/gopher-fleece/gleece/core/metadata"
 	"github.com/gopher-fleece/gleece/test/utils"
@@ -169,6 +170,51 @@ var _ = Describe("Unit Tests - Metadata", func() {
 
 				_, err := controller.Reduce(ctx.GleeceConfig, ctx.MetadataCache, ctx.SyncedProvider)
 				Expect(err).To(MatchError(ContainSubstring("a security schema's name cannot be empty")))
+			})
+		})
+	})
+
+	var _ = Describe("ReceiverMeta", func() {
+		var receiver metadata.ReceiverMeta
+
+		BeforeEach(func() {
+			receiver = metadata.ReceiverMeta{
+				SymNodeMeta: metadata.SymNodeMeta{
+					Name:    "ExampleReceiver",
+					PkgPath: "example.com/test",
+				},
+			}
+		})
+
+		Context("RetValsRange", func() {
+			It("Returns correct RetVal ranges for functions with more than a single return value", func() {
+				// Get 3 ret-vals to trigger default case for RetValsRange
+				receiver.RetVals = utils.GetMockRetVals(3)
+				receiver.RetVals[0].Range = common.ResolvedRange{
+					StartLine: 11,
+					EndLine:   11,
+					StartCol:  4,
+					EndCol:    9,
+				}
+				receiver.RetVals[1].Range = common.ResolvedRange{
+					StartLine: 12,
+					EndLine:   12,
+					StartCol:  4,
+					EndCol:    9,
+				}
+				receiver.RetVals[2].Range = common.ResolvedRange{
+					StartLine: 13,
+					EndLine:   13,
+					StartCol:  5,
+					EndCol:    10,
+				}
+
+				Expect(receiver.RetValsRange()).To(Equal(common.ResolvedRange{
+					StartLine: 11,
+					EndLine:   13,
+					StartCol:  4,
+					EndCol:    10,
+				}))
 			})
 		})
 	})
