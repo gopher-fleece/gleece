@@ -227,6 +227,7 @@ func (v *RecursiveTypeVisitor) constructStructMeta(
 			PkgPath:     pkg.PkgPath,
 			Annotations: holder,
 			FVersion:    fVersion,
+			Range:       common.ResolveNodeRange(pkg.Fset, node),
 		},
 		Fields: fields,
 	}, nil
@@ -295,6 +296,7 @@ func (v *RecursiveTypeVisitor) extractEnumAliasType(
 			PkgPath:     pkg.PkgPath,
 			FVersion:    fVersion,
 			Annotations: enumAnnotations,
+			Range:       common.ResolveNodeRange(pkg.Fset, spec),
 		},
 		ValueKind: kind,
 		Values:    enumValues,
@@ -352,6 +354,7 @@ func (v *RecursiveTypeVisitor) getEnumValueDefinitions(
 				PkgPath:     enumPkg.PkgPath,
 				Annotations: holder,
 				FVersion:    enumFVersion,
+				Range:       common.ResolveNodeRange(enumPkg.Fset, constNode),
 			},
 			Value: val,
 		})
@@ -408,6 +411,7 @@ func (v *RecursiveTypeVisitor) buildFieldMeta(
 			SymbolKind:  common.SymKindField,
 			Annotations: holder,
 			FVersion:    fieldFVersion,
+			Range:       common.ResolveNodeRange(pkg.Fset, field),
 		},
 		Type:       typeUsage,
 		IsEmbedded: isEmbedded,
@@ -431,9 +435,11 @@ func (v *RecursiveTypeVisitor) resolveTypeUsage(
 	importType := common.ImportTypeNone
 	var underlyingAnnotations *annotations.AnnotationHolder
 	var pkgPath string
+	var nodeRange common.ResolvedRange
 
 	// 2. Gather any auxiliary metadata we need for non-universe types
 	if !resolvedType.IsUniverse {
+		nodeRange = common.ResolveNodeRange(resolvedType.DeclaringPackage.Fset, typeExpr)
 		importType, err = v.context.ArbitrationProvider.Ast().GetImportType(file, typeExpr)
 		if err != nil {
 			return metadata.TypeUsageMeta{}, v.frozenError(err)
@@ -444,9 +450,7 @@ func (v *RecursiveTypeVisitor) resolveTypeUsage(
 			return metadata.TypeUsageMeta{}, err
 		}
 
-		if !resolvedType.IsUniverse {
-			pkgPath = resolvedType.DeclaringPackage.PkgPath
-		}
+		pkgPath = resolvedType.DeclaringPackage.PkgPath
 	}
 
 	typeUsageKind := getTypeSymKind(resolvedType.DeclaringPackage, resolvedType)
@@ -479,6 +483,7 @@ func (v *RecursiveTypeVisitor) resolveTypeUsage(
 			PkgPath:     pkgPath,
 			SymbolKind:  typeUsageKind,
 			Annotations: underlyingAnnotations,
+			Range:       nodeRange, // May be empty for builtins
 		},
 		Layers: typeLayers,
 		Import: importType,

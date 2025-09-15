@@ -182,6 +182,10 @@ func (v *ControllerVisitor) createControllerMetadata(controllerNode *ast.TypeSpe
 			SymNodeMeta: metadata.SymNodeMeta{
 				Name:    controllerNode.Name.Name,
 				PkgPath: pkg.PkgPath,
+				Range: common.ResolveNodeRange(
+					v.context.ArbitrationProvider.Pkg().FSet(),
+					controllerNode,
+				),
 			},
 		},
 	}

@@ -2,6 +2,8 @@ package common
 
 import (
 	"fmt"
+	"go/ast"
+	"go/token"
 	"strings"
 )
 
@@ -72,4 +74,16 @@ type ResolvedRange struct {
 	StartCol  int // 0-based (rune/byte decision documented)
 	EndLine   int // 0-based
 	EndCol    int // 0-based
+}
+
+func ResolveNodeRange(fSet *token.FileSet, node ast.Node) ResolvedRange {
+	resolvedStart := fSet.Position(node.Pos())
+	resolvedEnd := fSet.Position(node.End())
+
+	return ResolvedRange{
+		StartLine: resolvedStart.Line - 1, // convert to 0-based
+		StartCol:  resolvedStart.Column - 1,
+		EndLine:   resolvedEnd.Line - 1,
+		EndCol:    resolvedEnd.Column - 1,
+	}
 }
