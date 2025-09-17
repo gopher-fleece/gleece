@@ -38,18 +38,40 @@ Developing APIs doesn’t have to be a chore - it should be simple, efficient, a
 
 Gone are the days of manually writing repetitive boilerplate code or struggling to keep your API documentation in sync with your implementation.
 
+
 With Gleece, you can:  
-- ✨ **Simplify** your API development process.  
-- 📝 Automatically **generate OpenAPI v3.0.0 / v3.1.0** specification directly from your code.  
-- 🎯 Ensure your APIs are always **well-documented and consistent**.  
-- ✅ **Validate input data** effortlessly to keep your APIs robust and secure.
-- 🛡 **Security first** approach, easy authorization with supplied check function.
-- 🧩 **Customize behavior** to your exact needs by extending or overriding the routes templates.
-- ⚡️ Choose Your Framework - seamlessly works with **Gin, Echo, Gorilla Mux, Chi, & Fiber** Rest frameworks.
+- **Simplify and standardize**  your API development process.  
+- Automatically **generate OpenAPI v3.0.0 / v3.1.0** specifications directly from your code.  
+- Ensure your APIs are always **up-to-date, well-documented and consistent**.  
+- Effortlessly **validate input data** to ensure your APIs are reliable and secure.
+- Adopt a **security first** approach with simple yet powerful authorization flows.
+- **Customize behavior** to your exact needs by extending or overriding the routes templates.
+- Bring your own router - works seamlessly with **Gin, Echo, Gorilla Mux, Chi, & Fiber**.
 
-Gleece aims to make Go developers’ lives easier by seamlessly integrating API routes, validation, and documentation into a single cohesive workflow.
+Gleece aims to make Go developers’ lives easier by seamlessly integrating API routing, validation, and documentation into a single cohesive workflow without sacrificing performance.
 
-## 💫 Look & Feel  
+## Documentation
+
+Explore the complete [Gleece documentation](https://docs.gleece.dev/docs/intro) to get started quickly.  
+
+You can also check out the [Gleece Example Project](https://github.com/gopher-fleece/gleecexample#readme), which demonstrates how to set up and use Gleece in a real-world scenario. This hands-on reference will help you integrate Gleece seamlessly.
+
+If you've encountered a gap in the documentation or feel some topic is inadequately covered, please let us know via [GitHub Issues](https://github.com/gopher-fleece/gleece/issues)
+
+
+## How It Works
+
+*Gleece* is almost exclusively a **design time** framework- there are no magic tricks or runtime shenanigans.
+
+Once your API implementation is ready, use *Gleece*'s CLI to generate routes according to your chosen engine.
+
+These generated routes work just like any manually written route and need to be registered to your engine's router instance through your application code.
+
+You can continue to use your engine's native calls, middlewares, and other features as before - *Gleece*'s generated code acts only as a complementary plugin to your router.
+
+For a deeper look into *Gleece*'s internals, please see 
+
+## Look & Feel  
 
 Here’s a practical snippet of how Gleece simplifies your API development:  
 
@@ -57,24 +79,7 @@ Here’s a practical snippet of how Gleece simplifies your API development:
 
 All other aspects, including HTTP routing generation, authorization enforcement, payload validation, error handling, and OpenAPI v3 specification generation, are handled by Gleece.
 
-## 🪄 How It Works
-
-There's NO magic or hidden underlying hacks at runtime! 😊
-
-Once your API functions are ready, use the Gleece CLI to generate routes according to your chosen engine.
-
-These generated routes work just like any manually written route and need to be registered to your engine's router instance through your application code.
-
-You can continue to use your engine's native calls, middlewares, and other features as before - Gleece's generated code acts only as a complementary plugin to your router.
-
-
-## 📚 Documentation  
-
-Explore the complete [Gleece documentation](https://docs.gleece.dev/docs/intro) to get started quickly.  
-
-You can also check out the [Gleece Example Project](https://github.com/gopher-fleece/gleecexample#readme), which demonstrates how to set up and use Gleece in a real-world scenario. This hands-on reference will help you integrate Gleece seamlessly.
-
-## 🎨 VSCode Extension
+## Visual Studio Code Extension
 
 To enhance your development experience with Gleece, we provide an official VSCode extension that provides intelligent annotation highlighting and improved code visibility.
 
@@ -82,18 +87,18 @@ For more information and capabilities see the [Gleece VSCode Extension](https://
 
 To install it search `Gleece` in the "Extension" tab or go to the [VSCode Marketplace](https://marketplace.visualstudio.com/items?itemName=haim-kastner.gleece-extension).
 
-## 💡 Our Initiative
+## Our Initiative
 
 We believe that API development should be code-first, focusing on the developer experience while maintaining industry standards. Coming from the TypeScript ecosystem, we were inspired by frameworks like [TSOA](https://github.com/lukeautry/tsoa) that handle everything from routing and validation to OpenAPI generation - all from a single source of truth: your code.
 
 Read more about our initiative and development philosophy in my [Gleece Project](https://blog.castnet.club/en/blog/gleece-project) blog post.
 
 
-## 🔐 Security
+## Security
 
 To report security concerns or vulnerabilities, please follow the instructions in our [Security Policy](./SECURITY.md).
 
-## 📫 Contact
+## Contact
 
 For general inquiries or feedback, please reach out to us at [contact@gleece.dev](mailto:contact@gleece.dev).
 
@@ -101,5 +106,5 @@ Anyway, we'd love to hear from you, especially if you or your company use Gleece
 
 ---
 
-## 📜 License  
+## License  
 Gleece is licensed under the [MIT LICENSE](./LICENSE). 

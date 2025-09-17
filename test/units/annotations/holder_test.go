@@ -3,7 +3,9 @@ package annotations_test
 import (
 	"testing"
 
+	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/core/annotations"
+	"github.com/gopher-fleece/gleece/gast"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
 	"github.com/gopher-fleece/gleece/test/utils"
 	. "github.com/onsi/ginkgo/v2"
@@ -157,6 +159,14 @@ var _ = Describe("Unit Tests - Annotation Holder", func() {
 				_, err := annotations.NewAnnotationHolder(nodes, annotations.CommentSourceRoute)
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(BeAssignableToTypeOf(&json5.SyntaxError{}))
+			})
+
+			It("Returns an empty range if an attribute has no text", func() {
+				attr := annotations.Attribute{
+					Name:    annotations.GleeceAnnotationDescription,
+					Comment: gast.CommentNode{},
+				}
+				Expect(attr.GetValueRange()).To(Equal(common.ResolvedRange{}))
 			})
 		})
 	})

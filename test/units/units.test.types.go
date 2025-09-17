@@ -52,4 +52,5 @@ type SimpleStruct struct {
 
 type StructWithStructSlice struct {
 	AStructArrayField []SimpleStruct
+	ByteSlice         []byte
 }

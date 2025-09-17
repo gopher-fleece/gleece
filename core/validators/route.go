@@ -226,7 +226,7 @@ func (v ReceiverValidator) validateParamsCombinations(
 		return p.PassedIn == definitions.PassedInBody
 	})
 
-	isFormParamAlreadyExists := slices.ContainsFunc(funcParams, func(p funcParamEx) bool {
+	doesFormParamAlreadyExists := slices.ContainsFunc(funcParams, func(p funcParamEx) bool {
 		return p.PassedIn == definitions.PassedInForm
 	})
 
@@ -237,7 +237,7 @@ func (v ReceiverValidator) validateParamsCombinations(
 		if doesBodyParamAlreadyExists {
 			// Body is a special case, only one body parameter is allowed per route
 			errMsg = "Body parameter is invalid, only one body per route is allowed"
-		} else if isFormParamAlreadyExists {
+		} else if doesFormParamAlreadyExists {
 			// Form is an implementation of url encoded string in the body, thus it cannot be used if the body is already in use
 			errMsg = "Body parameter is invalid, using body is not allowed when a form is in use"
 		}

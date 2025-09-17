@@ -36,6 +36,10 @@ type ObjectWithEnum struct {
 	Statuses []StatusEnumeration `json:"statuses"`
 }
 
+type ObjectWithByteSlice struct {
+	Value []byte
+}
+
 // @Route(/e2e)
 // @Tag(E2E)
 type E2EController struct {
@@ -703,4 +707,10 @@ func (ec *E2EController) ContextInjectionEmpty(ctx context.Context) error {
 func (ec *E2EController) ContextInjection(ctx context.Context, data TheModel) error {
 	ec.SetHeader("x-context-auth", ctx.Value(ContextAuth).(string))
 	return nil
+}
+
+// @Method(POST)
+// @Route(/byte-slice)
+func (ec *E2EController) ReturnsStructWithByteSlice() (ObjectWithByteSlice, error) {
+	return ObjectWithByteSlice{}, nil
 }

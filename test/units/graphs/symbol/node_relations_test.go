@@ -107,6 +107,34 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 				result := graph.Children(structNode, filter)
 				Expect(result).To(HaveLen(0))
 			})
+
+			It("Returns only matching nodes when a filter function is given", func() {
+				filter := &symboldg.TraversalBehavior{
+					Filtering: symboldg.TraversalFilter{
+						FilterFunc: func(node *symboldg.SymbolNode) bool {
+							return node.Id.Name == "Child"
+						},
+					},
+				}
+
+				// Add another field under the struct to verify filter works as expected
+				fieldMeta := metadata.FieldMeta{
+					SymNodeMeta: metadata.SymNodeMeta{Node: utils.MakeIdent("AnotherChild"), FVersion: fVersion},
+					Type: metadata.TypeUsageMeta{
+						SymNodeMeta: metadata.SymNodeMeta{Name: "int", FVersion: fVersion},
+						Layers: []metadata.TypeLayer{
+							metadata.NewBaseLayer(common.Ptr(graphs.NewUniverseSymbolKey("int"))),
+						},
+					},
+				}
+				fieldNode, _ = graph.AddField(symboldg.CreateFieldNode{Data: fieldMeta})
+				graph.AddEdge(structNode.Id, fieldNode.Id, symboldg.EdgeKindField, nil)
+
+				result := graph.Children(structNode, filter)
+				Expect(result).To(HaveLen(1))
+				Expect(result[0].Kind).To(Equal(common.SymKindField))
+				Expect(result[0].Id.Name).To(Equal("Child"))
+			})
 		})
 
 		When("Sorted", func() {
