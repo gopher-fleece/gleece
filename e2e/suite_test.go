@@ -154,13 +154,6 @@ func RegenerateRoutes() {
 		Fail("Failed to generate gin routes - \n" + err.Error())
 	}
 
-	// Get from env var whenever to regenerate all routes again.
-	// Use it only when modifying the templates which requires new routes for tests for all other engines too.
-	generate, exists := os.LookupEnv("GENERATE_ALL_E2E_ROUTES")
-	if !exists || generate != "true" {
-		return
-	}
-
 	// Build routes for echo ...
 	err = GenerateE2ERoutes(arguments.CliArguments{ConfigPath: "./e2e.echo.gleece.config.json"}, "echo")
 	if err != nil {

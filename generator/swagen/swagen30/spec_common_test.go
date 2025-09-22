@@ -19,6 +19,18 @@ var _ = Describe("Spec Common", func() {
 			}
 		})
 
+		It("should return a schema ref for a byte type", func() {
+			schemaRef := InterfaceToSchemaRef(openapi, "[]byte")
+			Expect(schemaRef.Value.Format).To(Equal("base64"))
+			Expect(schemaRef.Value.Type).To(Equal(openapi3.NewStringSchema().Type))
+		})
+
+		It("should return a schema ref for an time.Time type", func() {
+			schemaRef := InterfaceToSchemaRef(openapi, "time.Time")
+			Expect(schemaRef.Value.Format).To(Equal("date-time"))
+			Expect(schemaRef.Value.Type).To(Equal(openapi3.NewStringSchema().Type))
+		})
+
 		It("should return a schema ref for a string type", func() {
 			schemaRef := InterfaceToSchemaRef(openapi, "string")
 			Expect(schemaRef.Value).To(Equal(openapi3.NewStringSchema()))

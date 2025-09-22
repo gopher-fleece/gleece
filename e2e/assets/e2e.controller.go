@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gofiber/fiber/v2"
@@ -37,7 +38,7 @@ type ObjectWithEnum struct {
 }
 
 type ObjectWithByteSlice struct {
-	Value []byte
+	Value []byte `json:"value"`
 }
 
 // @Route(/e2e)
@@ -710,7 +711,25 @@ func (ec *E2EController) ContextInjection(ctx context.Context, data TheModel) er
 }
 
 // @Method(POST)
+// @Body(arrive)
 // @Route(/byte-slice)
-func (ec *E2EController) ReturnsStructWithByteSlice() (ObjectWithByteSlice, error) {
-	return ObjectWithByteSlice{}, nil
+func (ec *E2EController) ReturnsStructWithByteSlice(arrive *ObjectWithByteSlice) (ObjectWithByteSlice, error) {
+	data := "hello " + string(arrive.Value)
+	return ObjectWithByteSlice{
+		Value: []byte(data),
+	}, nil
+}
+
+type ObjectWithSpecialPrimitives struct {
+	Value time.Time `json:"value"`
+}
+
+// @Method(POST)
+// @Body(arrive)
+// @Route(/special-primitives)
+func (ec *E2EController) ReturnsStructWithSpecialPrimitives(arrive *ObjectWithSpecialPrimitives) (ObjectWithSpecialPrimitives, error) {
+	newValue := arrive.Value.Add(time.Hour * 25)
+	return ObjectWithSpecialPrimitives{
+		Value: newValue,
+	}, nil
 }
