@@ -48,23 +48,23 @@ With Gleece, you can:
 - **Customize behavior** to your exact needs by extending or overriding the routes templates.
 - Bring your own router - works seamlessly with **Gin, Echo, Gorilla Mux, Chi, & Fiber**.
 
-Gleece aims to make Go developers’ lives easier by seamlessly integrating API routing, validation, and documentation into a single cohesive workflow without sacrificing performance.
+Gleece aims to make Go developers’ lives easier by seamlessly integrating API routing, validation, and documentation into a single cohesive workflow **without sacrificing performance**.
 
-For more information, check out the '[Concept](https://docs.gleece.dev/docs/about/concept)' section of our documentation
+For more information, check out the [concept](https://docs.gleece.dev/docs/about/concept) section of our documentation
 
 
 ## Documentation
 
 Explore the complete [documentation site](https://docs.gleece.dev/docs/intro) to get started quickly.  
 
-You can also check out the [Gleece Example Project](https://github.com/gopher-fleece/gleecexample#readme), which demonstrates how to set up and use Gleece in a real-world scenario. This hands-on reference will help you integrate Gleece seamlessly.
+You can also check out our [example project](https://github.com/gopher-fleece/gleecexample#readme), which demonstrates how to set up and use Gleece in a real-world scenario. This hands-on reference will help you integrate Gleece seamlessly.
 
 If you've encountered a gap in the documentation or feel some topic is inadequately covered, please let us know via [GitHub Issues](https://github.com/gopher-fleece/gleece/issues)
 
 
 ## Under the hood
 
-*Gleece* is almost exclusively a **design time** framework/transpiler- there are no magic tricks or runtime shenanigans.
+*Gleece* is almost exclusively a **design/build time** framework/transpiler- there are no magic tricks or runtime shenanigans.
 
 Once your API implementation is ready, use *Gleece*'s CLI to generate routes according to your chosen engine.
 
@@ -72,7 +72,7 @@ These generated routes work just like any manually written code and need to be r
 
 You can continue to use your engine's native calls, middlewares, and other features as before - *Gleece*'s generated code acts only as a complementary plugin to your router.
 
-For a deeper look into *Gleece*'s internals, please see the '[Architecture](https://docs.gleece.dev/docs/about/architecture)' section of our documentation.
+For a deeper look into *Gleece*'s internals, please see the [architecture](https://docs.gleece.dev/docs/about/architecture) section of our documentation.
 
 
 ## Look & Feel  
@@ -85,11 +85,11 @@ All other aspects, including HTTP routing generation, authorization enforcement,
 
 ## Visual Studio Code Extension
 
-To enhance your development experience with Gleece, we provide an official VSCode extension that provides intelligent annotation highlighting and improved code visibility.
+To enhance your development experience with Gleece, we provide an official Visual Studio Code extension that provides intelligent annotation highlighting and improved code visibility.
 
-For more information and capabilities see the [Gleece VSCode Extension](https://github.com/gopher-fleece/gleece-vscode-extension#readme).
+For more information and capabilities see the [Gleece VS Code Extension](https://github.com/gopher-fleece/gleece-vscode-extension#readme).
 
-To install it search `Gleece` in the "Extension" tab or go to the [VSCode Marketplace](https://marketplace.visualstudio.com/items?itemName=haim-kastner.gleece-extension).
+To install it search `Gleece` in the "Extension" tab or go to the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=haim-kastner.gleece-extension).
 
 ## Our Initiative
 

@@ -7,7 +7,9 @@
 *Gleece* 2 is a major milestone that includes a complete overhaul of the internal code analysis and validation facilities
 as well as a multitude of small bug fixes.
 
-These changes aim to allow us to better expand and maintain the project and provide the groundwork for powerful and unique features down the road like live OAS preview, LSP support and more.
+These changes aim drastically improve performance and allow us to better expand and maintain the project and provide the groundwork for powerful and unique features down the road like live OAS preview, LSP support and more.
+
+For more information, please see the [architecture](https://docs.gleece.dev/docs/about/architecture) section of our documentation.
 
 ### Features
 
@@ -19,6 +21,8 @@ These changes aim to allow us to better expand and maintain the project and prov
 
 * Created a `GleecePipeline` to orchestrate execution and lifecycle.
 	  This allows re-using caches and previous analysis results to expedite subsequent operations.
+
+* Added support for `byte` and `time.Time` fields in returned structs
 
 ### Enhancements
 
@@ -42,5 +46,3 @@ These changes aim to allow us to better expand and maintain the project and prov
 * Fixed several issues with import detection resulting in resolution failures
 
 * Fixed an issue that could cause type information to be emitted with incorrect `PkgPath`
-
-* Fixed an OAS validation error caused by `[]byte` and `time` fields in returned structs
