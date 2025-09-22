@@ -28,31 +28,21 @@ var rootCmd = &cobra.Command{
 	),
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if !cliArgs.NoBanner {
-			fmt.Println(arguments.GopherAscii)
+			logger.Raw(arguments.GopherAscii)
 		}
 
-		// Handle the verbosity flag here if you want it executed for every subcommand
-		if cmd.Flag("verbosity") == nil {
-			logger.SetLogLevel(logger.LogLevelInfo)
-			return
-		}
-
-		verbosityInt, err := cmd.Flags().GetUint8("verbosity")
-		if err != nil {
-			logger.SetLogLevel(logger.LogLevelAll)
-			logger.Warn("Could not obtain verbosity level from arguments. Fell back to 'all'. Error - %v", err)
-			return
-		}
-
-		verbosity := logger.LogLevel(verbosityInt)
-		logger.SetLogLevel(verbosity)
+		// This is basically safe as Cobra have already validated or provided default
+		// values if we got here
+		verbosity, _ := cmd.Flags().GetUint8("verbosity")
+		logger.SetLogLevel(logger.LogLevel(verbosity))
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		logger.Info(`Gleece called with no parameters. Assuming 'generate spec-and-routes -c "./gleece.config.json"'`)
 		err := GenerateSpecAndRoutes(arguments.CliArguments{ConfigPath: "./gleece.config.json"})
 		if err != nil {
 			logger.Fatal("Failed to generate spec and routes: %v", err)
-			os.Exit(1)
+		} else {
+			logger.Info("Spec and routes generation successful")
 		}
 	},
 }

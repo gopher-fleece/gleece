@@ -1,0 +1,89 @@
+package common
+
+import (
+	"fmt"
+	"go/ast"
+	"go/token"
+	"strings"
+)
+
+type Collector[T comparable] struct {
+	items []T
+}
+
+// AddIfNotZero adds an item to the collector but only if it's not zero.
+// Note that the definition of 'zero' changes with type
+func (c *Collector[T]) AddIfNotZero(item T) {
+	var zero T
+	if item != zero {
+		c.items = append(c.items, item)
+	}
+}
+
+func (c *Collector[T]) Add(item T) {
+	c.items = append(c.items, item)
+}
+
+func (c *Collector[T]) AddMany(items []T) {
+	for _, item := range items {
+		c.Add(item)
+	}
+}
+
+func (c *Collector[T]) Items() []T {
+	return c.items
+}
+
+func (c *Collector[T]) HasAny() bool {
+	return len(c.items) > 0
+}
+
+type ContextualError struct {
+	Context string
+	Errors  []error
+}
+
+func (e *ContextualError) Error() string {
+	if len(e.Errors) == 0 {
+		return fmt.Sprintf("[%s] no errors", e.Context)
+	}
+	sb := strings.Builder{}
+	sb.WriteString(fmt.Sprintf("[%s] encountered %d error(s):", e.Context, len(e.Errors)))
+	for _, err := range e.Errors {
+		if err == nil {
+			continue
+		}
+
+		lines := strings.Split(err.Error(), "\n")
+		sb.WriteString(fmt.Sprintf("\n\t- %s", lines[0])) // First line with dash
+
+		// Indent any remaining lines
+		for _, line := range lines[1:] {
+			sb.WriteString(fmt.Sprintf("\n\t  %s", line))
+		}
+	}
+	return sb.String()
+}
+
+func (e *ContextualError) Unwrap() []error {
+	return e.Errors
+}
+
+type ResolvedRange struct {
+	StartLine int // 0-based
+	StartCol  int // 0-based (rune/byte decision documented)
+	EndLine   int // 0-based
+	EndCol    int // 0-based
+}
+
+func ResolveNodeRange(fSet *token.FileSet, node ast.Node) ResolvedRange {
+	resolvedStart := fSet.Position(node.Pos())
+	resolvedEnd := fSet.Position(node.End())
+
+	return ResolvedRange{
+		StartLine: resolvedStart.Line - 1, // convert to 0-based
+		StartCol:  resolvedStart.Column - 1,
+		EndLine:   resolvedEnd.Line - 1,
+		EndCol:    resolvedEnd.Column - 1,
+	}
+}

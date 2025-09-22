@@ -87,13 +87,13 @@ func TestGleeceE2E(t *testing.T) {
 
 func GenerateE2ERoutes(args arguments.CliArguments, engineName string) error {
 	logger.Info("Generating spec and routes")
-	config, meta, models, hasAnyErrorTypes, err := cmd.GetConfigAndMetadata(args)
+	config, meta, err := cmd.GetConfigAndMetadata(args)
 	if err != nil {
 		return err
 	}
 
 	// // Generate the routes first
-	if err := routes.GenerateRoutes(config, meta, models); err != nil {
+	if err := routes.GenerateRoutes(config, meta); err != nil {
 		logger.Fatal("Failed to generate routes - %v", err)
 		return err
 	}
@@ -111,14 +111,19 @@ func GenerateE2ERoutes(args arguments.CliArguments, engineName string) error {
 	config.RoutesConfig.PackageName = "ex_extra_routes"
 
 	// Generate the routes for ex_extra - a vanilla version of the routes without any customizations amd as default as possible
-	if err := routes.GenerateRoutes(config, meta, models); err != nil {
+	if err := routes.GenerateRoutes(config, meta); err != nil {
 		logger.Fatal("Failed to generate ex_extra_routes - %v", err)
 		return err
 	}
 
 	// Generate the OpenAPI 3.0.0 spec
 	config.OpenAPIGeneratorConfig.SpecGeneratorConfig.OutputPath = fmt.Sprintf("./%s/openapi/openapi3.0.0.json", engineName)
-	if err := swagen.GenerateAndOutputSpec(&config.OpenAPIGeneratorConfig, meta, models, hasAnyErrorTypes); err != nil {
+	if err := swagen.GenerateAndOutputSpec(
+		&config.OpenAPIGeneratorConfig,
+		meta.Flat,
+		&meta.Models,
+		meta.PlainErrorPresent,
+	); err != nil {
 		logger.Fatal("Failed to generate OpenAPI spec - %v", err)
 		return err
 	}
@@ -126,7 +131,12 @@ func GenerateE2ERoutes(args arguments.CliArguments, engineName string) error {
 	// Generate the OpenAPI 3.1.0 spec
 	config.OpenAPIGeneratorConfig.Info.Version = "3.1.0"
 	config.OpenAPIGeneratorConfig.SpecGeneratorConfig.OutputPath = fmt.Sprintf("./%s/openapi/openapi3.1.0.json", engineName)
-	if err := swagen.GenerateAndOutputSpec(&config.OpenAPIGeneratorConfig, meta, models, hasAnyErrorTypes); err != nil {
+	if err := swagen.GenerateAndOutputSpec(
+		&config.OpenAPIGeneratorConfig,
+		meta.Flat,
+		&meta.Models,
+		meta.PlainErrorPresent,
+	); err != nil {
 		logger.Fatal("Failed to generate OpenAPI spec - %v", err)
 		return err
 	}
@@ -141,14 +151,7 @@ func RegenerateRoutes() {
 	// Always build routes for gin  ...
 	err = GenerateE2ERoutes(arguments.CliArguments{ConfigPath: "./e2e.gin.gleece.config.json"}, "gin")
 	if err != nil {
-		Fail("Failed to generate gin routes - " + err.Error())
-	}
-
-	// Get from env var whenever to regenerate all routes again.
-	// Use it only when modifying the templates which requires new routes for tests for all other engines too.
-	generate, exists := os.LookupEnv("GENERATE_ALL_E2E_ROUTES")
-	if !exists || generate != "true" {
-		return
+		Fail("Failed to generate gin routes - \n" + err.Error())
 	}
 
 	// Build routes for echo ...

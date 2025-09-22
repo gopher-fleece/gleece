@@ -57,7 +57,7 @@ func RegisterRoutes(engine *mux.Router) {
 				handleAuthorizationError(w, authErr, "{{{OperationId}}}")
 				return
 			}
-			controller := {{{Name}}}Import.{{../Name}}{}
+			controller := {{{Name}}}.{{../Name}}{}
 			controller.InitController(req)
 			{{#ifAnyParamRequiresConversion FuncParams}}
 			var conversionErr error

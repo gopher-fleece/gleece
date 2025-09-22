@@ -13,21 +13,21 @@ import (
 
 var _ = Describe("Error-handling", func() {
 	It("Returns a clear error when configuration is not found", func() {
-		_, _, _, _, err := cmd.GetConfigAndMetadata(arguments.CliArguments{ConfigPath: "/this/path/does/not/exist.json"})
+		_, _, err := cmd.GetConfigAndMetadata(arguments.CliArguments{ConfigPath: "/this/path/does/not/exist.json"})
 		Expect(err).To(MatchError(ContainSubstring("could not read config file from")))
 		// Expect(err).To(MatchError(ContainSubstring("no such file or directory")))
 	})
 
 	It("Returns a clear error when configuration is syntactically broken", func() {
 		configPath := utils.GetAbsPathByRelativeOrFail("gleece.broken.json.config")
-		_, _, _, _, err := cmd.GetConfigAndMetadata(arguments.CliArguments{ConfigPath: configPath})
+		_, _, err := cmd.GetConfigAndMetadata(arguments.CliArguments{ConfigPath: configPath})
 		Expect(err).To(MatchError(ContainSubstring("could not unmarshal config file")))
 		Expect(err).To(MatchError(ContainSubstring("invalid character")))
 	})
 
 	It("Returns a clear error when configuration fails validation", func() {
 		configPath := utils.GetAbsPathByRelativeOrFail("gleece.invalid.config.json")
-		_, _, _, _, err := cmd.GetConfigAndMetadata(arguments.CliArguments{ConfigPath: configPath})
+		_, _, err := cmd.GetConfigAndMetadata(arguments.CliArguments{ConfigPath: configPath})
 		Expect(err).To(MatchError(ContainSubstring("Field 'ControllerGlobs' failed validation with tag 'min'")))
 	})
 
@@ -69,13 +69,18 @@ var _ = Describe("Error-handling", func() {
 		Expect(err).To(MatchError(ContainSubstring("could not read given template ImportsExtension override at")))
 	})
 
-	It("Returns a clear error when type declared outside of global path", func() {
-		configPath := utils.GetAbsPathByRelativeOrFail("gleece.unscanned.types.json")
-		err := cmd.GenerateRoutes(arguments.CliArguments{ConfigPath: configPath})
-		Expect(err).To(MatchError(ContainSubstring("encountered an error visiting controller UnScannedTypeController method EmptyMethod - type 'HoldsVeryNestedStructs' was not found in package 'errorhandling_test'")))
-		// TODO: Test that case too
-		// Expect(err).To(MatchError(ContainSubstring("encountered an error visiting controller UnScannedTypeController method EmptyMethod - could not find type 'HoldsVeryNestedStructs' in package 'github.com/gopher-fleece/gleece/test/errorhandling', are you sure it's included in the 'commonConfig->controllerGlobs' search paths?")))
-	})
+	// Gleece now automatically crawls over package dependencies so this test is no longer valid.
+	// Leaving it in for now for reference.
+
+	/*
+		It("Returns a clear error when type declared outside of global path", func() {
+			configPath := utils.GetAbsPathByRelativeOrFail("gleece.unscanned.types.json")
+			err := cmd.GenerateRoutes(arguments.CliArguments{ConfigPath: configPath})
+			Expect(err).To(MatchError(ContainSubstring("encountered an error visiting controller UnScannedTypeController method EmptyMethod - type 'HoldsVeryNestedStructs' was not found in package 'errorhandling_test'")))
+			// TODO: Test that case too
+			// Expect(err).To(MatchError(ContainSubstring("encountered an error visiting controller UnScannedTypeController method EmptyMethod - could not find type 'HoldsVeryNestedStructs' in package 'github.com/gopher-fleece/gleece/test/errorhandling', are you sure it's included in the 'commonConfig->controllerGlobs' search paths?")))
+		})
+	*/
 })
 
 func TestErrorHandling(t *testing.T) {

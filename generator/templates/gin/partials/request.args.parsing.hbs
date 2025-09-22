@@ -1,20 +1,20 @@
 
 {{#equal PassedIn "Path"}}
-	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
+	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.PkgPath}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
 	{{ToLowerCamel Name}}Raw, is{{Name}}Exists := ginCtx.Params.Get("{{{NameInSchema}}}")
 	{{> RequestSwitchParamType}}
 	{{> RunValidator}}
 {{/equal}}
 
 {{#equal PassedIn "Query"}}
-	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
+	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.PkgPath}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
 	{{ToLowerCamel Name}}Raw, is{{Name}}Exists := ginCtx.GetQuery("{{{NameInSchema}}}")
 	{{> RequestSwitchParamType}}
 	{{> RunValidator}}
 {{/equal}}
 
 {{#equal PassedIn "Header"}}
-	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
+	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.PkgPath}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
 	{{ToLowerCamel Name}}Raw := ginCtx.GetHeader("{{{NameInSchema}}}")
 	_, is{{Name}}Exists := ginCtx.Request.Header[textproto.CanonicalMIMEHeaderKey("{{{NameInSchema}}}")]
 	{{> RequestSwitchParamType}}
@@ -22,14 +22,14 @@
 {{/equal}}
 
 {{#equal PassedIn "Form"}}
-	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
+	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.PkgPath}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
 	{{ToLowerCamel Name}}Raw, is{{Name}}Exists := ginCtx.GetPostForm("{{{NameInSchema}}}")
 	{{> RequestSwitchParamType}}
 	{{> RunValidator}}
 {{/equal}}
 
 {{#equal PassedIn "Body"}}
-	var {{ToLowerCamel Name}}RawPtr *{{SlicePrefix TypeMeta.Name}}{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{SliceSlice TypeMeta.Name}} = nil
+	var {{ToLowerCamel Name}}RawPtr *{{SlicePrefix TypeMeta.Name}}{{#if TypeMeta.PkgPath}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{SliceSlice TypeMeta.Name}} = nil
 	conversionErr = bindAndValidateBody(ginCtx, "{{{ResponseContentType}}}", "{{Validator}}",&{{ToLowerCamel Name}}RawPtr)
 	if conversionErr != nil {
 		{{> JsonBodyValidationErrorResponse }}

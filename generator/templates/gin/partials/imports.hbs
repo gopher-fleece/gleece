@@ -13,21 +13,7 @@ import (
 	"github.com/gopher-fleece/runtime"
 	RequestAuth "{{{AuthConfig.AuthFileFullPackageName}}}"
 
-{{#each Controllers}}
-	{{{Name}}}Import "{{{FullyQualifiedPackage}}}"
-	{{#each Routes}}
-		{{#each FuncParams}}
-			{{#if TypeMeta.FullyQualifiedPackage}}
-				Param{{{UniqueImportSerial}}}{{{UnwrapArrayTypeRecursive Name}}} "{{{TypeMeta.FullyQualifiedPackage}}}"
-			{{/if}}
-		{{/each}}
-		{{#each Responses}}
-			{{#if FullyQualifiedPackage}}
-				Response{{{UniqueImportSerial}}}{{{UnwrapArrayTypeRecursive Name}}} "{{{FullyQualifiedPackage}}}"
-			{{/if}}
-		{{/each}}
-	{{/each}}
-{{/each}}
+{{{UnpackImportsMap Imports}}}
 
 {{> ImportsExtension }}
 

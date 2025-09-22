@@ -57,6 +57,14 @@ func ToOpenApiSchema(typeName string) *openapi3.Schema {
 		return openapi3.NewBoolSchema()
 	case "number":
 		return openapi3.NewFloat64Schema()
+	case "binary":
+		schema := openapi3.NewStringSchema()
+		schema.Format = "base64"
+		return schema
+	case "date-time":
+		schema := openapi3.NewStringSchema()
+		schema.Format = "date-time"
+		return schema
 	case "array":
 		return openapi3.NewArraySchema()
 	case "object":

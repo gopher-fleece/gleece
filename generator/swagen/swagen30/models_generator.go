@@ -22,7 +22,21 @@ func generateStructSpec(openapi *openapi3.T, model definitions.StructMetadata) {
 		Deprecated:  swagtool.IsDeprecated(&model.Deprecation),
 	}
 
-	hasEmbeddedField := swagtool.HasEmbeddedField(model.Fields)
+	var hasEmbeddedField bool
+	var relevantFields []definitions.FieldMetadata
+
+	// We need to ignore nested 'error' fields to preserve existing behavior.
+	// Could probably be made better.
+	// Perhaps switch the entire spec generation process to use the richer AST-containing representation?
+	for _, field := range model.Fields {
+		if field.IsEmbedded {
+			if field.Type == "error" {
+				continue
+			}
+			hasEmbeddedField = true
+		}
+		relevantFields = append(relevantFields, field)
+	}
 
 	if !hasEmbeddedField {
 		// If the model has no embedded fields, the schema can be used directly
@@ -39,7 +53,7 @@ func generateStructSpec(openapi *openapi3.T, model definitions.StructMetadata) {
 
 	requiredFields := []string{}
 
-	for _, field := range model.Fields {
+	for _, field := range relevantFields {
 		fieldSchemaRef := InterfaceToSchemaRef(openapi, field.Type)
 
 		if field.IsEmbedded {

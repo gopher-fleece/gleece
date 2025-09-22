@@ -26,6 +26,18 @@ var _ = Describe("Spec V3.1 Common", func() {
 			Expect(schema.Schema().Type).To(Equal([]string{"string"}))
 		})
 
+		It("should return a schema for an date-time type", func() {
+			schema := InterfaceToSchemaV3(doc, "Time")
+			Expect(schema.Schema().Type).To(Equal([]string{"string"}))
+			Expect(schema.Schema().Format).To(Equal("date-time"))
+		})
+
+		It("should return a schema for a binary type", func() {
+			schema := InterfaceToSchemaV3(doc, "[]byte")
+			Expect(schema.Schema().Type).To(Equal([]string{"string"}))
+			Expect(schema.Schema().Format).To(Equal("base64"))
+		})
+
 		It("should return a schema ref for an object type", func() {
 			schemaProxy := InterfaceToSchemaV3(doc, "testObject")
 			Expect(schemaProxy.GetReference()).To(Equal("#/components/schemas/testObject"))

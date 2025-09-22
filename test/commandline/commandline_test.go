@@ -13,17 +13,34 @@ import (
 
 var _ = AfterEach(func() {
 	utils.DeleteDistInCurrentFolderOrFail()
+	logger.SetLogLevel(logger.LogLevelNone)
 })
 
 var _ = Describe("Commandline", func() {
-	It("Generate spec should complete successfully", func() {
-		defer func() {
-			if r := recover(); r != nil {
-				// If a panic occurs, fail the test
-				Fail(fmt.Sprintf("CLI test panicked - %v", r))
-			}
-		}()
+	defer func() {
+		if r := recover(); r != nil {
+			// If a panic occurs, fail the test
+			Fail(fmt.Sprintf("CLI test panicked - %v", r))
+		}
+	}()
 
+	Context("PersistentPreRun", func() {
+		It("Prints banner if no-banner is not specified", func() {
+			logger.SetLogLevel(logger.LogLevelAll)
+			result := cmd.ExecuteWithArgs([]string{"version"}, true)
+			Expect(result.Logs).To(ContainSubstring("▒▒▒██████  █▒▒▒▒"))
+		})
+	})
+
+	Context("Run", func() {
+		It("Correctly detects, runs and returns when called with no parameters", func() {
+			result := cmd.ExecuteWithArgs([]string{}, true)
+			// We expect a failure since there's not gleece.config.file here - doesn't matter, we just need to verify the no-params case.
+			Expect(result.Logs).To(ContainSubstring("Gleece called with no parameters"))
+		})
+	})
+
+	It("Generate spec should complete successfully", func() {
 		absPath := utils.GetAbsPathByRelativeOrFail("./gleece.test.config.json")
 
 		result := cmd.ExecuteWithArgs([]string{"generate", "spec", "--no-banner", "-c", absPath}, true)
@@ -41,12 +58,6 @@ var _ = Describe("Commandline", func() {
 	})
 
 	It("Generate routes should complete successfully", func() {
-		defer func() {
-			if r := recover(); r != nil {
-				// If a panic occurs, fail the test
-				Fail(fmt.Sprintf("CLI test panicked - %v", r))
-			}
-		}()
 
 		absPath := utils.GetAbsPathByRelativeOrFail("./gleece.test.config.json")
 

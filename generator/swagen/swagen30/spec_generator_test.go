@@ -43,7 +43,7 @@ var _ = Describe("Spec Generator", func() {
 			},
 			Description: "Example controller",
 			Name:        "ExampleController",
-			Package:     "example",
+			PkgPath:     "github.com/gopher-fleece/gleece/definitions",
 			Routes: []definitions.RouteMetadata{
 				{
 					Security: []definitions.RouteSecurity{
@@ -84,8 +84,8 @@ var _ = Describe("Spec Generator", func() {
 					Responses: []definitions.FuncReturnValue{
 						{
 							TypeMetadata: definitions.TypeMetadata{
-								Name:                  "[]ExampleSchema",
-								FullyQualifiedPackage: "example",
+								Name:    "[]ExampleSchema",
+								PkgPath: "example",
 							},
 						},
 						{
@@ -106,7 +106,7 @@ var _ = Describe("Spec Generator", func() {
 							PassedIn:     definitions.PassedInQuery,
 							Description:  "Example query param",
 							Validator:    "required,email",
-							Deprecation: &definitions.DeprecationOptions{
+							Deprecation: definitions.DeprecationOptions{
 								Description: "This query is deprecated example",
 								Deprecated:  true,
 							},
@@ -197,8 +197,8 @@ var _ = Describe("Spec Generator", func() {
 					Responses: []definitions.FuncReturnValue{
 						{
 							TypeMetadata: definitions.TypeMetadata{
-								Name:                  "int",
-								FullyQualifiedPackage: "example",
+								Name:    "int",
+								PkgPath: "example",
 							},
 						},
 						{
@@ -302,8 +302,8 @@ var _ = Describe("Spec Generator", func() {
 					Responses: []definitions.FuncReturnValue{
 						{
 							TypeMetadata: definitions.TypeMetadata{
-								Name:                  "[]ExampleSchemaWithEnum",
-								FullyQualifiedPackage: "example",
+								Name:    "[]ExampleSchemaWithEnum",
+								PkgPath: "example",
 							},
 						},
 						{
@@ -544,7 +544,7 @@ var _ = Describe("Spec Generator", func() {
 			},
 			Description: "Example controller",
 			Name:        "ExampleController",
-			Package:     "example",
+			PkgPath:     "github.com/gopher-fleece/gleece/definitions",
 			Routes: []definitions.RouteMetadata{
 				{
 					HttpVerb: "GET",
@@ -563,8 +563,8 @@ var _ = Describe("Spec Generator", func() {
 					Responses: []definitions.FuncReturnValue{
 						{
 							TypeMetadata: definitions.TypeMetadata{
-								Name:                  "[]string",
-								FullyQualifiedPackage: "example",
+								Name:    "[]string",
+								PkgPath: "example",
 							},
 						},
 						{
@@ -607,7 +607,7 @@ var _ = Describe("Spec Generator", func() {
 			},
 			Description: "Example controller",
 			Name:        "ExampleController",
-			Package:     "example",
+			PkgPath:     "github.com/gopher-fleece/gleece/definitions",
 			Routes: []definitions.RouteMetadata{
 				{
 					Security: []definitions.RouteSecurity{

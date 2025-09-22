@@ -1,6 +1,6 @@
 
 {{#equal PassedIn "Path"}}
-	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
+	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.PkgPath}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
 	{{ToLowerCamel Name}}Raw := echoCtx.Param("{{{NameInSchema}}}")
 	is{{Name}}Exists := true // if parameter is in route but not provided, it won't reach this handler
 	{{> RequestSwitchParamType}}
@@ -8,7 +8,7 @@
 {{/equal}}
 
 {{#equal PassedIn "Query"}}
-	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
+	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.PkgPath}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
 	{{ToLowerCamel Name}}Raw := echoCtx.QueryParam("{{{NameInSchema}}}")
 	is{{Name}}Exists := echoCtx.Request().URL.Query().Has("{{{NameInSchema}}}")
 	{{> RequestSwitchParamType}}
@@ -16,7 +16,7 @@
 {{/equal}}
 
 {{#equal PassedIn "Header"}}
-	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
+	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.PkgPath}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
 	{{ToLowerCamel Name}}Raw := echoCtx.Request().Header.Get("{{{NameInSchema}}}")
 	_, is{{Name}}Exists := echoCtx.Request().Header["{{{NameInSchema}}}"]
 	if !is{{Name}}Exists {
@@ -30,7 +30,7 @@
 
 {{#equal PassedIn "Form"}}
 	echoCtx.Request().ParseForm()
-	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
+	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.PkgPath}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
 	{{ToLowerCamel Name}}RawArr, is{{Name}}Exists := echoCtx.Request().PostForm["{{{NameInSchema}}}"]
 	{{ToLowerCamel Name}}Raw := ""
 	if is{{Name}}Exists {
@@ -42,7 +42,7 @@
 {{/equal}}
 
 {{#equal PassedIn "Body"}}
-	var {{ToLowerCamel Name}}RawPtr *{{SlicePrefix TypeMeta.Name}}{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{SliceSlice TypeMeta.Name}} = nil
+	var {{ToLowerCamel Name}}RawPtr *{{SlicePrefix TypeMeta.Name}}{{#if TypeMeta.PkgPath}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{SliceSlice TypeMeta.Name}} = nil
 	conversionErr = bindAndValidateBody(echoCtx, "{{{ResponseContentType}}}", "{{Validator}}",&{{ToLowerCamel Name}}RawPtr)
 	if conversionErr != nil {
 		{{> JsonBodyValidationErrorResponse }}

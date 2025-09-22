@@ -75,6 +75,10 @@ func ToOpenApiType(typeName string) string {
 		return "boolean"
 	case "float32", "float64":
 		return "number"
+	case "[]byte", "bytes":
+		return "binary"
+	case "Time", "time.Time":
+		return "date-time"
 	default:
 		if strings.HasPrefix(typeName, "[]") {
 			return "array"
