@@ -291,7 +291,7 @@ func (v FuncParam) Reduce(metaCache MetaCache, syncedProvider IdProvider) (defin
 	var passedIn definitions.ParamPassedIn
 	var validator string
 
-	isContext := v.Type.Name == "Context" && v.Type.PkgPath == "context"
+	isContext := v.Type.IsContext()
 
 	if !isContext {
 		nameInSchema, err = GetParameterSchemaName(v.Name, v.Annotations)
