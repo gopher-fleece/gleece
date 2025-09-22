@@ -531,7 +531,7 @@ var _ = Describe("E2E Models Spec", func() {
 			Body: &assets.ObjectWithByteSlice{
 				Value: []byte("test"), // dGVzdA==
 			},
-			ExpectedBodyContain: "{\"Value\":\"aGVsbG8gdGVzdA==\"}", // hello test
+			ExpectedBodyContain: "{\"value\":\"aGVsbG8gdGVzdA==\"}", // hello test
 			ExpendedHeaders:     nil,
 			Path:                "/e2e/byte-slice",
 			Method:              "POST",
@@ -539,7 +539,7 @@ var _ = Describe("E2E Models Spec", func() {
 		})
 
 		// Date of 1.1.2024
-		theDate := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+		theDate := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
 
 		RunRouterTest(common.RouterTest{
 			Name:           "Should return byte from a byte slice input",
@@ -547,7 +547,7 @@ var _ = Describe("E2E Models Spec", func() {
 			Body: &assets.ObjectWithSpecialPrimitives{
 				Value: theDate,
 			},
-			ExpectedBodyContain: "{\"value\":\"2024-01-02T01:00:00Z\"}", // + 1 day + 1 hour
+			ExpectedBodyContain: "{\"value\":\"2025-01-02T01:00:00Z\"}", // + 1 day + 1 hour
 			ExpendedHeaders:     nil,
 			Path:                "/e2e/special-primitives",
 			Method:              "POST",

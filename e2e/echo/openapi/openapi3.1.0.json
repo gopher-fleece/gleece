@@ -165,7 +165,7 @@
       },
       "ObjectWithByteSlice": {
         "properties": {
-          "Value": {
+          "value": {
             "format": "base64",
             "type": "string"
           }

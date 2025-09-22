@@ -38,7 +38,7 @@ type ObjectWithEnum struct {
 }
 
 type ObjectWithByteSlice struct {
-	Value []byte
+	Value []byte `json:"value"`
 }
 
 // @Route(/e2e)
