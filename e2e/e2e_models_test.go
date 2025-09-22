@@ -1,6 +1,8 @@
 package e2e
 
 import (
+	"time"
+
 	"github.com/gopher-fleece/gleece/e2e/assets"
 	"github.com/gopher-fleece/gleece/e2e/common"
 	"github.com/haimkastner/unitsnet-go/units"
@@ -521,4 +523,36 @@ var _ = Describe("E2E Models Spec", func() {
 			RunningMode:         &exExtraRouting,
 		})
 	})
+
+	It("Should return status code 200 all types", func() {
+		RunRouterTest(common.RouterTest{
+			Name:           "Should return byte from a byte slice input",
+			ExpectedStatus: 200,
+			Body: &assets.ObjectWithByteSlice{
+				Value: []byte("test"), // dGVzdA==
+			},
+			ExpectedBodyContain: "{\"Value\":\"aGVsbG8gdGVzdA==\"}", // hello test
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/byte-slice",
+			Method:              "POST",
+			RunningMode:         &allRouting,
+		})
+
+		// Date of 1.1.2024
+		theDate := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+
+		RunRouterTest(common.RouterTest{
+			Name:           "Should return byte from a byte slice input",
+			ExpectedStatus: 200,
+			Body: &assets.ObjectWithSpecialPrimitives{
+				Value: theDate,
+			},
+			ExpectedBodyContain: "{\"value\":\"2024-01-02T01:00:00Z\"}", // + 1 day + 1 hour
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/special-primitives",
+			Method:              "POST",
+			RunningMode:         &allRouting,
+		})
+	})
+
 })

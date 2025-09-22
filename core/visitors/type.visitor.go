@@ -111,6 +111,12 @@ func (v *RecursiveTypeVisitor) VisitStructType(
 	v.enterFmt("Visiting struct %s", node.Name.Name)
 	defer v.exit()
 
+	if node.Name.Name == "Time" && file.Name.Name == "time" {
+		// Special case: time.Time is a struct but we treat it as a builtin, and in the specification & json marshalling it will be string formatted
+		symKey := graphs.NewUniverseSymbolKey("time.Time")
+		return metadata.StructMeta{}, symKey, nil
+	}
+
 	// Check the cache first
 	symKey, fVersion, cached, err := v.checkStructCache(file, node)
 	if err != nil || cached != nil {

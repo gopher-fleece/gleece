@@ -1,2778 +1,2876 @@
 {
-	"components": {
-		"schemas": {
-			"BlaBla": {
-				"properties": {
-					"listOfLength": {
-						"items": {
-							"$ref": "#/components/schemas/LengthDto"
-						},
-						"type": "array"
-					}
-				},
-				"title": "BlaBla",
-				"type": "object"
-			},
-			"BlaBla2": {
-				"properties": {
-					"value": {
-						"minimum": 0,
-						"type": "integer"
-					}
-				},
-				"required": [
-					"value"
-				],
-				"title": "BlaBla2",
-				"type": "object"
-			},
-			"BodyInfo": {
-				"properties": {
-					"bodyParam": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"bodyParam"
-				],
-				"title": "BodyInfo",
-				"type": "object"
-			},
-			"BodyResponse": {
-				"properties": {
-					"data": {
-						"type": "string"
-					}
-				},
-				"title": "BodyResponse",
-				"type": "object"
-			},
-			"CustomError": {
-				"properties": {
-					"message": {
-						"type": "string"
-					}
-				},
-				"title": "CustomError",
-				"type": "object"
-			},
-			"FirstLevelModel": {
-				"allOf": [
-					{
-						"properties": {
-							"firstLevelModelField": {
-								"type": "string"
-							}
-						},
-						"required": [
-							"firstLevelModelField"
-						],
-						"title": "FirstLevelModel",
-						"type": "object"
-					},
-					{
-						"$ref": "#/components/schemas/SecondLevelModel"
-					}
-				]
-			},
-			"LengthDto": {
-				"description": "LengthDto represents a Length measurement with a numerical value and its corresponding unit.",
-				"properties": {
-					"unit": {
-						"$ref": "#/components/schemas/LengthUnits"
-					},
-					"value": {
-						"description": "Value is the numerical representation of the Length.",
-						"type": "number"
-					}
-				},
-				"title": "LengthDto",
-				"type": "object"
-			},
-			"LengthDtoWithValidation": {
-				"properties": {
-					"unit": {
-						"$ref": "#/components/schemas/LengthUnits"
-					},
-					"value": {
-						"description": "units.LengthDto",
-						"type": "number"
-					}
-				},
-				"required": [
-					"unit"
-				],
-				"title": "LengthDtoWithValidation",
-				"type": "object"
-			},
-			"LengthUnits": {
-				"description": "LengthUnits defines various units of Length.",
-				"enum": [
-					"Angstrom",
-					"AstronomicalUnit",
-					"Centimeter",
-					"Chain",
-					"DataMile",
-					"Decameter",
-					"Decimeter",
-					"DtpPica",
-					"DtpPoint",
-					"Fathom",
-					"Femtometer",
-					"Foot",
-					"Gigameter",
-					"Hand",
-					"Hectometer",
-					"Inch",
-					"Kilofoot",
-					"KilolightYear",
-					"Kilometer",
-					"Kiloparsec",
-					"Kiloyard",
-					"LightYear",
-					"MegalightYear",
-					"Megameter",
-					"Megaparsec",
-					"Meter",
-					"Microinch",
-					"Micrometer",
-					"Mil",
-					"Mile",
-					"Millimeter",
-					"Nanometer",
-					"NauticalMile",
-					"Parsec",
-					"Picometer",
-					"PrinterPica",
-					"PrinterPoint",
-					"Shackle",
-					"SolarRadius",
-					"Twip",
-					"UsSurveyFoot",
-					"Yard"
-				],
-				"title": "LengthUnits",
-				"type": "string"
-			},
-			"NumberEnumeration": {
-				"description": "Test enum with = flavor too",
-				"enum": [
-					"1",
-					"2"
-				],
-				"title": "NumberEnumeration",
-				"type": "integer"
-			},
-			"ObjectWithEnum": {
-				"properties": {
-					"status": {
-						"$ref": "#/components/schemas/StatusEnumeration"
-					},
-					"statuses": {
-						"items": {
-							"$ref": "#/components/schemas/StatusEnumeration"
-						},
-						"type": "array"
-					},
-					"value": {
-						"type": "string"
-					},
-					"values": {
-						"items": {
-							"type": "string"
-						},
-						"type": "array"
-					}
-				},
-				"required": [
-					"status"
-				],
-				"title": "ObjectWithEnum",
-				"type": "object"
-			},
-			"OtherModel": {
-				"properties": {
-					"otherModelField": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"otherModelField"
-				],
-				"title": "OtherModel",
-				"type": "object"
-			},
-			"RecursiveModelWithPointer": {
-				"properties": {
-					"prop0": {
-						"type": "string"
-					},
-					"prop1": {
-						"type": "string"
-					},
-					"prop2": {
-						"type": "string"
-					},
-					"prop3": {
-						"type": "string"
-					},
-					"prop4": {
-						"$ref": "#/components/schemas/TheModel"
-					}
-				},
-				"required": [
-					"prop1",
-					"prop2",
-					"prop3",
-					"prop4"
-				],
-				"title": "RecursiveModelWithPointer",
-				"type": "object"
-			},
-			"ResponseTest": {
-				"properties": {
-					"index": {
-						"minimum": 0,
-						"type": "integer"
-					},
-					"success": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"index"
-				],
-				"title": "ResponseTest",
-				"type": "object"
-			},
-			"Rfc7807Error": {
-				"description": "A standard RFC-7807 error",
-				"properties": {
-					"detail": {
-						"description": "A human-readable explanation specific to this occurrence of the problem.",
-						"type": "string"
-					},
-					"error": {
-						"description": "Error message",
-						"type": "string"
-					},
-					"extensions": {
-						"description": "Additional metadata about the error.",
-						"type": "object"
-					},
-					"instance": {
-						"description": "A URI reference that identifies the specific occurrence of the problem.",
-						"type": "string"
-					},
-					"status": {
-						"description": "The HTTP status code generated by the origin server for this occurrence of the problem.",
-						"type": "integer"
-					},
-					"title": {
-						"description": "A short, human-readable summary of the problem type.",
-						"type": "string"
-					},
-					"type": {
-						"description": "A URI reference that identifies the problem type.",
-						"type": "string"
-					}
-				},
-				"required": [
-					"type",
-					"title",
-					"status"
-				],
-				"title": "Rfc7807Error",
-				"type": "object"
-			},
-			"SecondLevelModel": {
-				"properties": {
-					"secondLevelModelField": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"secondLevelModelField"
-				],
-				"title": "SecondLevelModel",
-				"type": "object"
-			},
-			"SpeedDto": {
-				"description": "SpeedDto represents a Speed measurement with a numerical value and its corresponding unit.",
-				"properties": {
-					"unit": {
-						"$ref": "#/components/schemas/SpeedUnits"
-					},
-					"value": {
-						"description": "Value is the numerical representation of the Speed.",
-						"type": "number"
-					}
-				},
-				"title": "SpeedDto",
-				"type": "object"
-			},
-			"SpeedUnits": {
-				"description": "SpeedUnits defines various units of Speed.",
-				"enum": [
-					"CentimeterPerHour",
-					"CentimeterPerMinute",
-					"CentimeterPerSecond",
-					"DecimeterPerMinute",
-					"DecimeterPerSecond",
-					"FootPerHour",
-					"FootPerMinute",
-					"FootPerSecond",
-					"InchPerHour",
-					"InchPerMinute",
-					"InchPerSecond",
-					"KilometerPerHour",
-					"KilometerPerMinute",
-					"KilometerPerSecond",
-					"Knot",
-					"Mach",
-					"MeterPerHour",
-					"MeterPerMinute",
-					"MeterPerSecond",
-					"MicrometerPerMinute",
-					"MicrometerPerSecond",
-					"MilePerHour",
-					"MillimeterPerHour",
-					"MillimeterPerMinute",
-					"MillimeterPerSecond",
-					"NanometerPerMinute",
-					"NanometerPerSecond",
-					"UsSurveyFootPerHour",
-					"UsSurveyFootPerMinute",
-					"UsSurveyFootPerSecond",
-					"YardPerHour",
-					"YardPerMinute",
-					"YardPerSecond"
-				],
-				"title": "SpeedUnits",
-				"type": "string"
-			},
-			"StatusEnumeration": {
-				"enum": [
-					"active",
-					"inactive"
-				],
-				"title": "StatusEnumeration",
-				"type": "string"
-			},
-			"TheModel": {
-				"allOf": [
-					{
-						"properties": {
-							"modelField": {
-								"type": "string"
-							}
-						},
-						"required": [
-							"modelField"
-						],
-						"title": "TheModel",
-						"type": "object"
-					},
-					{
-						"$ref": "#/components/schemas/FirstLevelModel"
-					},
-					{
-						"$ref": "#/components/schemas/OtherModel"
-					}
-				]
-			},
-			"TheModelWithInnerPointer": {
-				"properties": {
-					"field1": {
-						"type": "string"
-					},
-					"field2": {
-						"type": "string"
-					},
-					"recursiveModelWithPointer": {
-						"$ref": "#/components/schemas/RecursiveModelWithPointer"
-					},
-					"theModel": {
-						"$ref": "#/components/schemas/TheModel"
-					}
-				},
-				"title": "TheModelWithInnerPointer",
-				"type": "object"
-			},
-			"UniqueExternalUsage": {
-				"description": "Test the recursive import process on first-and-ever-used type in struct only",
-				"properties": {
-					"data": {
-						"$ref": "#/components/schemas/SpeedDto"
-					},
-					"unit": {
-						"$ref": "#/components/schemas/SpeedUnits"
-					}
-				},
-				"title": "UniqueExternalUsage",
-				"type": "object"
-			}
-		},
-		"securitySchemes": {
-			"securitySchemaName": {
-				"description": "API Key for accessing the API",
-				"in": "header",
-				"name": "x-header-name",
-				"type": "apiKey"
-			},
-			"securitySchemaName2": {
-				"description": "API Key for accessing the API",
-				"in": "header",
-				"name": "x-header-name",
-				"type": "apiKey"
-			}
-		}
-	},
-	"info": {
-		"contact": {
-			"email": "support@example.com",
-			"name": "API Support",
-			"url": "http://www.example.com/support"
-		},
-		"description": "This is a sample API",
-		"license": {
-			"name": "Apache 2.0",
-			"url": "http://www.apache.org/licenses/LICENSE-2.0.html"
-		},
-		"termsOfService": "http://example.com/terms/",
-		"title": "Sample API",
-		"version": "3.1.0"
-	},
-	"openapi": "3.0.0",
-	"paths": {
-		"/e2e/503-error-code": {
-			"get": {
-				"operationId": "Error503",
-				"responses": {
-					"204": {
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/arrays-in-body-and-res": {
-			"post": {
-				"operationId": "ArraysInBodyAndRes",
-				"requestBody": {
-					"content": {
-						"application/json": {
-							"schema": {
-								"items": {
-									"$ref": "#/components/schemas/LengthDto"
-								},
-								"type": "array"
-							}
-						}
-					},
-					"required": true
-				},
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"items": {
-										"$ref": "#/components/schemas/LengthDto"
-									},
-									"type": "array"
-								}
-							}
-						},
-						"description": ""
-					},
-					"500": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Rfc7807Error"
-								}
-							}
-						},
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/arrays-inside-body-and-res": {
-			"post": {
-				"operationId": "ArraysInsideBodyAndRes",
-				"requestBody": {
-					"content": {
-						"application/json": {
-							"schema": {
-								"items": {
-									"$ref": "#/components/schemas/BlaBla"
-								},
-								"type": "array"
-							}
-						}
-					}
-				},
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"items": {
-										"$ref": "#/components/schemas/BlaBla"
-									},
-									"type": "array"
-								}
-							}
-						},
-						"description": ""
-					},
-					"500": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Rfc7807Error"
-								}
-							}
-						},
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/context-access": {
-			"get": {
-				"operationId": "ContextAccess",
-				"responses": {
-					"204": {
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/context-injection": {
-			"post": {
-				"operationId": "ContextInjection",
-				"requestBody": {
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/TheModel"
-							}
-						}
-					},
-					"required": true
-				},
-				"responses": {
-					"200": {
-						"description": ""
-					},
-					"500": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Rfc7807Error"
-								}
-							}
-						},
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/context-injection-empty": {
-			"post": {
-				"operationId": "ContextInjectionEmpty",
-				"responses": {
-					"200": {
-						"description": ""
-					},
-					"500": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Rfc7807Error"
-								}
-							}
-						},
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/custom-error": {
-			"get": {
-				"operationId": "CustomError",
-				"responses": {
-					"204": {
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/custom-error-503": {
-			"get": {
-				"operationId": "CustomError503",
-				"responses": {
-					"204": {
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/custom-error-ptr": {
-			"get": {
-				"operationId": "CustomPtrError",
-				"responses": {
-					"204": {
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/deep-arrays-with-validation": {
-			"post": {
-				"operationId": "DeepArraysWithValidation",
-				"requestBody": {
-					"content": {
-						"application/json": {
-							"schema": {
-								"items": {
-									"items": {
-										"$ref": "#/components/schemas/BlaBla2"
-									},
-									"type": "array"
-								},
-								"type": "array"
-							}
-						}
-					},
-					"required": true
-				},
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"items": {
-										"items": {
-											"items": {
-												"$ref": "#/components/schemas/BlaBla2"
-											},
-											"type": "array"
-										},
-										"type": "array"
-									},
-									"type": "array"
-								}
-							}
-						},
-						"description": ""
-					},
-					"500": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Rfc7807Error"
-								}
-							}
-						},
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/default-error": {
-			"get": {
-				"operationId": "DefaultError",
-				"responses": {
-					"204": {
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/default-error-with-payload": {
-			"get": {
-				"operationId": "DefaultErrorWithPayload",
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "string"
-								}
-							}
-						},
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/embedded-structs": {
-			"post": {
-				"operationId": "EmbeddedStructs",
-				"requestBody": {
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/TheModel"
-							}
-						}
-					},
-					"required": true
-				},
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/TheModel"
-								}
-							}
-						},
-						"description": ""
-					},
-					"500": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Rfc7807Error"
-								}
-							}
-						},
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/external-packages": {
-			"post": {
-				"operationId": "ExternalPackages",
-				"parameters": [
-					{
-						"in": "query",
-						"name": "unit",
-						"schema": {
-							"$ref": "#/components/schemas/LengthUnits"
-						}
-					}
-				],
-				"requestBody": {
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/LengthDto"
-							}
-						}
-					},
-					"required": true
-				},
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/LengthDto"
-								}
-							}
-						},
-						"description": ""
-					},
-					"500": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Rfc7807Error"
-								}
-							}
-						},
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/external-packages-unique-in-struct": {
-			"post": {
-				"operationId": "ExternalPackagesUniqueInStruct",
-				"requestBody": {
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/UniqueExternalUsage"
-							}
-						}
-					},
-					"required": true
-				},
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "string"
-								}
-							}
-						},
-						"description": ""
-					},
-					"500": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Rfc7807Error"
-								}
-							}
-						},
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/external-packages-validation": {
-			"post": {
-				"operationId": "ExternalPackagesValidation",
-				"parameters": [
-					{
-						"in": "query",
-						"name": "unit",
-						"schema": {
-							"$ref": "#/components/schemas/LengthUnits"
-						}
-					}
-				],
-				"requestBody": {
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/LengthDtoWithValidation"
-							}
-						}
-					},
-					"required": true
-				},
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/LengthDto"
-								}
-							}
-						},
-						"description": ""
-					},
-					"500": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Rfc7807Error"
-								}
-							}
-						},
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/form": {
-			"post": {
-				"description": "Create a new user",
-				"operationId": "TestForm",
-				"requestBody": {
-					"content": {
-						"application/x-www-form-urlencoded": {
-							"schema": {
-								"properties": {
-									"item1": {
-										"type": "string"
-									},
-									"item2": {
-										"type": "string"
-									}
-								},
-								"required": [
-									"item1",
-									"item2"
-								],
-								"type": "object"
-							}
-						}
-					}
-				},
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "string"
-								}
-							}
-						},
-						"description": "The ID of the newly created user"
-					},
-					"500": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Rfc7807Error"
-								}
-							}
-						},
-						"description": "The error when process failed"
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"summary": "Create a new user",
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/get-header-start-with-letter": {
-			"get": {
-				"operationId": "GetHeaderStartWithLetter",
-				"parameters": [
-					{
-						"in": "header",
-						"name": "headerParam",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "string"
-								}
-							}
-						},
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/get-with-all-params-ptr/{pathParam}": {
-			"get": {
-				"operationId": "GetWithAllParamsPtr",
-				"parameters": [
-					{
-						"in": "query",
-						"name": "queryParam",
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "path",
-						"name": "pathParam",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "header",
-						"name": "headerParam",
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "string"
-								}
-							}
-						},
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/get-with-all-params-required-ptr/{pathParam}": {
-			"get": {
-				"operationId": "GetWithAllParamsRequiredPtr",
-				"parameters": [
-					{
-						"in": "query",
-						"name": "queryParam",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "path",
-						"name": "pathParam",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "header",
-						"name": "headerParam",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "string"
-								}
-							}
-						},
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/get-with-all-params/{pathParam}": {
-			"get": {
-				"operationId": "GetWithAllParams",
-				"parameters": [
-					{
-						"in": "query",
-						"name": "queryParam",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "path",
-						"name": "pathParam",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "header",
-						"name": "headerParam",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "string"
-								}
-							}
-						},
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/http-method": {
-			"delete": {
-				"operationId": "Delete",
-				"responses": {
-					"204": {
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			},
-			"get": {
-				"operationId": "Get",
-				"responses": {
-					"204": {
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			},
-			"patch": {
-				"operationId": "Patch",
-				"responses": {
-					"204": {
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			},
-			"post": {
-				"operationId": "Post",
-				"responses": {
-					"204": {
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			},
-			"put": {
-				"operationId": "Put",
-				"responses": {
-					"204": {
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/post-with-all-params-body": {
-			"post": {
-				"operationId": "PostWithAllParamsWithBody",
-				"parameters": [
-					{
-						"in": "query",
-						"name": "queryParam",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "header",
-						"name": "headerParam",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/BodyInfo"
-							}
-						}
-					},
-					"required": true
-				},
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/BodyInfo"
-								}
-							}
-						},
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/post-with-all-params-body-ptr": {
-			"post": {
-				"operationId": "PostWithAllParamsWithBodyPtr",
-				"parameters": [
-					{
-						"in": "query",
-						"name": "queryParam",
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "header",
-						"name": "headerParam",
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/BodyInfo"
-							}
-						}
-					}
-				},
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/BodyInfo"
-								}
-							}
-						},
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/post-with-all-params-body-required-ptr": {
-			"post": {
-				"operationId": "PostWithAllParamsWithBodyRequiredPtr",
-				"requestBody": {
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/BodyInfo"
-							}
-						}
-					},
-					"required": true
-				},
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/BodyInfo"
-								}
-							}
-						},
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/primitive-alias-array-return-type": {
-			"get": {
-				"operationId": "PrimitiveAliasArrayReturnType",
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"items": {
-										"$ref": "#/components/schemas/NumberEnumeration"
-									},
-									"type": "array"
-								}
-							}
-						},
-						"description": ""
-					},
-					"500": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Rfc7807Error"
-								}
-							}
-						},
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/primitive-alias-return-type": {
-			"get": {
-				"operationId": "PrimitiveAliasReturnType",
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/NumberEnumeration"
-								}
-							}
-						},
-						"description": ""
-					},
-					"500": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Rfc7807Error"
-								}
-							}
-						},
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/primitive-array-return-type": {
-			"get": {
-				"operationId": "PrimitiveArrayReturnType",
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"items": {
-										"type": "integer"
-									},
-									"type": "array"
-								}
-							}
-						},
-						"description": ""
-					},
-					"500": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Rfc7807Error"
-								}
-							}
-						},
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/primitive-return-type": {
-			"get": {
-				"operationId": "PrimitiveReturnType",
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "integer"
-								}
-							}
-						},
-						"description": ""
-					},
-					"500": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Rfc7807Error"
-								}
-							}
-						},
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/simple-get": {
-			"get": {
-				"operationId": "SimpleGet",
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "string"
-								}
-							}
-						},
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/simple-get-empty": {
-			"get": {
-				"operationId": "SimpleGetEmpty",
-				"parameters": [
-					{
-						"in": "query",
-						"name": "queryParam",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"responses": {
-					"204": {
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/simple-get-empty-string": {
-			"get": {
-				"operationId": "SimpleGetEmptyString",
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "string"
-								}
-							}
-						},
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/simple-get-null-string": {
-			"get": {
-				"operationId": "SimpleGetNullString",
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "string"
-								}
-							}
-						},
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/simple-get-object": {
-			"get": {
-				"operationId": "SimpleGetObject",
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/BodyResponse"
-								}
-							}
-						},
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/simple-get-object-null": {
-			"get": {
-				"operationId": "SimpleGetObjectNull",
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/BodyResponse"
-								}
-							}
-						},
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/simple-get-object-ptr": {
-			"get": {
-				"operationId": "SimpleGetObjectPtr",
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/BodyResponse"
-								}
-							}
-						},
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/simple-get-ptr-string": {
-			"get": {
-				"operationId": "SimpleGetPtrString",
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "string"
-								}
-							}
-						},
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/structs-with-inner-pointer": {
-			"post": {
-				"operationId": "StructsWithInnerPointer",
-				"requestBody": {
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/TheModelWithInnerPointer"
-							}
-						}
-					},
-					"required": true
-				},
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "string"
-								}
-							}
-						},
-						"description": ""
-					},
-					"500": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Rfc7807Error"
-								}
-							}
-						},
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/template-context-1": {
-			"get": {
-				"operationId": "TemplateContext1",
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "string"
-								}
-							}
-						},
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/template-context-2": {
-			"get": {
-				"operationId": "TemplateContext2",
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "string"
-								}
-							}
-						},
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/test-enums": {
-			"post": {
-				"operationId": "TestEnums",
-				"parameters": [
-					{
-						"in": "query",
-						"name": "value1",
-						"required": true,
-						"schema": {
-							"$ref": "#/components/schemas/StatusEnumeration"
-						}
-					},
-					{
-						"in": "query",
-						"name": "value2",
-						"required": true,
-						"schema": {
-							"$ref": "#/components/schemas/NumberEnumeration"
-						}
-					}
-				],
-				"requestBody": {
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/ObjectWithEnum"
-							}
-						}
-					},
-					"required": true
-				},
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ObjectWithEnum"
-								}
-							}
-						},
-						"description": "The ID of the newly created user"
-					},
-					"500": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Rfc7807Error"
-								}
-							}
-						},
-						"description": "The error when process failed"
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/test-enums-in-all/{value1}": {
-			"post": {
-				"operationId": "TestEnumsInAll",
-				"parameters": [
-					{
-						"in": "path",
-						"name": "value1",
-						"required": true,
-						"schema": {
-							"$ref": "#/components/schemas/StatusEnumeration"
-						}
-					},
-					{
-						"in": "header",
-						"name": "value2",
-						"required": true,
-						"schema": {
-							"$ref": "#/components/schemas/NumberEnumeration"
-						}
-					}
-				],
-				"requestBody": {
-					"content": {
-						"application/x-www-form-urlencoded": {
-							"schema": {
-								"properties": {
-									"value3": {
-										"$ref": "#/components/schemas/StatusEnumeration"
-									}
-								},
-								"required": [
-									"value3"
-								],
-								"type": "object"
-							}
-						}
-					}
-				},
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "string"
-								}
-							}
-						},
-						"description": "The ID of the newly created user"
-					},
-					"500": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Rfc7807Error"
-								}
-							}
-						},
-						"description": "The error when process failed"
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/test-enums-optional": {
-			"post": {
-				"operationId": "TestEnumsOptional",
-				"parameters": [
-					{
-						"in": "header",
-						"name": "value1",
-						"schema": {
-							"$ref": "#/components/schemas/StatusEnumeration"
-						}
-					}
-				],
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "string"
-								}
-							}
-						},
-						"description": "The ID of the newly created user"
-					},
-					"500": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Rfc7807Error"
-								}
-							}
-						},
-						"description": "The error when process failed"
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/test-primitive-conversions": {
-			"post": {
-				"operationId": "TestPrimitiveConversions",
-				"parameters": [
-					{
-						"in": "query",
-						"name": "value1",
-						"required": true,
-						"schema": {
-							"type": "integer"
-						}
-					},
-					{
-						"in": "query",
-						"name": "value2",
-						"required": true,
-						"schema": {
-							"type": "boolean"
-						}
-					},
-					{
-						"in": "query",
-						"name": "value3",
-						"required": true,
-						"schema": {
-							"type": "integer"
-						}
-					},
-					{
-						"in": "query",
-						"name": "value4",
-						"required": true,
-						"schema": {
-							"type": "number"
-						}
-					}
-				],
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "string"
-								}
-							}
-						},
-						"description": "The ID of the newly created user"
-					},
-					"500": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Rfc7807Error"
-								}
-							}
-						},
-						"description": "The error when process failed"
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/test-response-validation": {
-			"post": {
-				"operationId": "TestResponseValidation",
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ResponseTest"
-								}
-							}
-						},
-						"description": ""
-					},
-					"500": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Rfc7807Error"
-								}
-							}
-						},
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/test-response-validation-null": {
-			"post": {
-				"operationId": "TestResponseValidationNull",
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ResponseTest"
-								}
-							}
-						},
-						"description": "The ID of the newly created user"
-					},
-					"500": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Rfc7807Error"
-								}
-							}
-						},
-						"description": "The error when process failed"
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/test-response-validation-ptr": {
-			"post": {
-				"operationId": "TestResponseValidationPtr",
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ResponseTest"
-								}
-							}
-						},
-						"description": "The ID of the newly created user"
-					},
-					"500": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/Rfc7807Error"
-								}
-							}
-						},
-						"description": "The error when process failed"
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/with-default-class-security": {
-			"get": {
-				"operationId": "WithDefaultClassSecurity",
-				"parameters": [
-					{
-						"in": "header",
-						"name": "x-test-scopes",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "string"
-								}
-							}
-						},
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName": [
-							"class"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/with-default-config-security": {
-			"get": {
-				"operationId": "WithDefaultConfigSecurity",
-				"parameters": [
-					{
-						"in": "header",
-						"name": "x-test-scopes",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "string"
-								}
-							}
-						},
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName2": [
-							"config"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/with-default-override-class-security": {
-			"get": {
-				"operationId": "WithOverrideClassSecurity",
-				"parameters": [
-					{
-						"in": "header",
-						"name": "x-test-scopes",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "string"
-								}
-							}
-						},
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName": [
-							"method"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/with-one-security": {
-			"get": {
-				"operationId": "WithOneSecurity",
-				"parameters": [
-					{
-						"in": "header",
-						"name": "x-test-scopes",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "string"
-								}
-							}
-						},
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName": [
-							"other"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/with-two-security": {
-			"get": {
-				"operationId": "WithTwoSecurity",
-				"parameters": [
-					{
-						"in": "header",
-						"name": "x-test-scopes",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "string"
-								}
-							}
-						},
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName": [
-							"other"
-						]
-					},
-					{
-						"securitySchemaName2": [
-							"write",
-							"read"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		},
-		"/e2e/with-two-security-same-method": {
-			"get": {
-				"operationId": "WithTwoSecuritySameMethod",
-				"parameters": [
-					{
-						"in": "header",
-						"name": "x-test-scopes",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"responses": {
-					"200": {
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "string"
-								}
-							}
-						},
-						"description": ""
-					},
-					"default": {
-						"description": ""
-					}
-				},
-				"security": [
-					{
-						"securitySchemaName": [
-							"other"
-						]
-					},
-					{
-						"securitySchemaName": [
-							"write",
-							"read"
-						]
-					}
-				],
-				"tags": [
-					"E2E"
-				]
-			}
-		}
-	},
-	"servers": [
-		{
-			"url": "https://api.example.com"
-		}
-	]
+  "components": {
+    "schemas": {
+      "BlaBla": {
+        "properties": {
+          "listOfLength": {
+            "items": {
+              "$ref": "#/components/schemas/LengthDto"
+            },
+            "type": "array"
+          }
+        },
+        "title": "BlaBla",
+        "type": "object"
+      },
+      "BlaBla2": {
+        "properties": {
+          "value": {
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "value"
+        ],
+        "title": "BlaBla2",
+        "type": "object"
+      },
+      "BodyInfo": {
+        "properties": {
+          "bodyParam": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "bodyParam"
+        ],
+        "title": "BodyInfo",
+        "type": "object"
+      },
+      "BodyResponse": {
+        "properties": {
+          "data": {
+            "type": "string"
+          }
+        },
+        "title": "BodyResponse",
+        "type": "object"
+      },
+      "CustomError": {
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "title": "CustomError",
+        "type": "object"
+      },
+      "FirstLevelModel": {
+        "allOf": [
+          {
+            "properties": {
+              "firstLevelModelField": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "firstLevelModelField"
+            ],
+            "title": "FirstLevelModel",
+            "type": "object"
+          },
+          {
+            "$ref": "#/components/schemas/SecondLevelModel"
+          }
+        ]
+      },
+      "LengthDto": {
+        "description": "LengthDto represents a Length measurement with a numerical value and its corresponding unit.",
+        "properties": {
+          "unit": {
+            "$ref": "#/components/schemas/LengthUnits"
+          },
+          "value": {
+            "description": "Value is the numerical representation of the Length.",
+            "type": "number"
+          }
+        },
+        "title": "LengthDto",
+        "type": "object"
+      },
+      "LengthDtoWithValidation": {
+        "properties": {
+          "unit": {
+            "$ref": "#/components/schemas/LengthUnits"
+          },
+          "value": {
+            "description": "units.LengthDto",
+            "type": "number"
+          }
+        },
+        "required": [
+          "unit"
+        ],
+        "title": "LengthDtoWithValidation",
+        "type": "object"
+      },
+      "LengthUnits": {
+        "description": "LengthUnits defines various units of Length.",
+        "enum": [
+          "Angstrom",
+          "AstronomicalUnit",
+          "Centimeter",
+          "Chain",
+          "DataMile",
+          "Decameter",
+          "Decimeter",
+          "DtpPica",
+          "DtpPoint",
+          "Fathom",
+          "Femtometer",
+          "Foot",
+          "Gigameter",
+          "Hand",
+          "Hectometer",
+          "Inch",
+          "Kilofoot",
+          "KilolightYear",
+          "Kilometer",
+          "Kiloparsec",
+          "Kiloyard",
+          "LightYear",
+          "MegalightYear",
+          "Megameter",
+          "Megaparsec",
+          "Meter",
+          "Microinch",
+          "Micrometer",
+          "Mil",
+          "Mile",
+          "Millimeter",
+          "Nanometer",
+          "NauticalMile",
+          "Parsec",
+          "Picometer",
+          "PrinterPica",
+          "PrinterPoint",
+          "Shackle",
+          "SolarRadius",
+          "Twip",
+          "UsSurveyFoot",
+          "Yard"
+        ],
+        "title": "LengthUnits",
+        "type": "string"
+      },
+      "NumberEnumeration": {
+        "description": "Test enum with = flavor too",
+        "enum": [
+          "1",
+          "2"
+        ],
+        "title": "NumberEnumeration",
+        "type": "integer"
+      },
+      "ObjectWithByteSlice": {
+        "properties": {
+          "Value": {
+            "format": "base64",
+            "type": "string"
+          }
+        },
+        "title": "ObjectWithByteSlice",
+        "type": "object"
+      },
+      "ObjectWithEnum": {
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/StatusEnumeration"
+          },
+          "statuses": {
+            "items": {
+              "$ref": "#/components/schemas/StatusEnumeration"
+            },
+            "type": "array"
+          },
+          "value": {
+            "type": "string"
+          },
+          "values": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "ObjectWithEnum",
+        "type": "object"
+      },
+      "ObjectWithSpecialPrimitives": {
+        "properties": {
+          "value": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "title": "ObjectWithSpecialPrimitives",
+        "type": "object"
+      },
+      "OtherModel": {
+        "properties": {
+          "otherModelField": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "otherModelField"
+        ],
+        "title": "OtherModel",
+        "type": "object"
+      },
+      "RecursiveModelWithPointer": {
+        "properties": {
+          "prop0": {
+            "type": "string"
+          },
+          "prop1": {
+            "type": "string"
+          },
+          "prop2": {
+            "type": "string"
+          },
+          "prop3": {
+            "type": "string"
+          },
+          "prop4": {
+            "$ref": "#/components/schemas/TheModel"
+          }
+        },
+        "required": [
+          "prop1",
+          "prop2",
+          "prop3",
+          "prop4"
+        ],
+        "title": "RecursiveModelWithPointer",
+        "type": "object"
+      },
+      "ResponseTest": {
+        "properties": {
+          "index": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "success": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "index"
+        ],
+        "title": "ResponseTest",
+        "type": "object"
+      },
+      "Rfc7807Error": {
+        "description": "A standard RFC-7807 error",
+        "properties": {
+          "detail": {
+            "description": "A human-readable explanation specific to this occurrence of the problem.",
+            "type": "string"
+          },
+          "error": {
+            "description": "Error message",
+            "type": "string"
+          },
+          "extensions": {
+            "description": "Additional metadata about the error.",
+            "type": "object"
+          },
+          "instance": {
+            "description": "A URI reference that identifies the specific occurrence of the problem.",
+            "type": "string"
+          },
+          "status": {
+            "description": "The HTTP status code generated by the origin server for this occurrence of the problem.",
+            "type": "integer"
+          },
+          "title": {
+            "description": "A short, human-readable summary of the problem type.",
+            "type": "string"
+          },
+          "type": {
+            "description": "A URI reference that identifies the problem type.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "title",
+          "status"
+        ],
+        "title": "Rfc7807Error",
+        "type": "object"
+      },
+      "SecondLevelModel": {
+        "properties": {
+          "secondLevelModelField": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "secondLevelModelField"
+        ],
+        "title": "SecondLevelModel",
+        "type": "object"
+      },
+      "SpeedDto": {
+        "description": "SpeedDto represents a Speed measurement with a numerical value and its corresponding unit.",
+        "properties": {
+          "unit": {
+            "$ref": "#/components/schemas/SpeedUnits"
+          },
+          "value": {
+            "description": "Value is the numerical representation of the Speed.",
+            "type": "number"
+          }
+        },
+        "title": "SpeedDto",
+        "type": "object"
+      },
+      "SpeedUnits": {
+        "description": "SpeedUnits defines various units of Speed.",
+        "enum": [
+          "CentimeterPerHour",
+          "CentimeterPerMinute",
+          "CentimeterPerSecond",
+          "DecimeterPerMinute",
+          "DecimeterPerSecond",
+          "FootPerHour",
+          "FootPerMinute",
+          "FootPerSecond",
+          "InchPerHour",
+          "InchPerMinute",
+          "InchPerSecond",
+          "KilometerPerHour",
+          "KilometerPerMinute",
+          "KilometerPerSecond",
+          "Knot",
+          "Mach",
+          "MeterPerHour",
+          "MeterPerMinute",
+          "MeterPerSecond",
+          "MicrometerPerMinute",
+          "MicrometerPerSecond",
+          "MilePerHour",
+          "MillimeterPerHour",
+          "MillimeterPerMinute",
+          "MillimeterPerSecond",
+          "NanometerPerMinute",
+          "NanometerPerSecond",
+          "UsSurveyFootPerHour",
+          "UsSurveyFootPerMinute",
+          "UsSurveyFootPerSecond",
+          "YardPerHour",
+          "YardPerMinute",
+          "YardPerSecond"
+        ],
+        "title": "SpeedUnits",
+        "type": "string"
+      },
+      "StatusEnumeration": {
+        "enum": [
+          "active",
+          "inactive"
+        ],
+        "title": "StatusEnumeration",
+        "type": "string"
+      },
+      "TheModel": {
+        "allOf": [
+          {
+            "properties": {
+              "modelField": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "modelField"
+            ],
+            "title": "TheModel",
+            "type": "object"
+          },
+          {
+            "$ref": "#/components/schemas/FirstLevelModel"
+          },
+          {
+            "$ref": "#/components/schemas/OtherModel"
+          }
+        ]
+      },
+      "TheModelWithInnerPointer": {
+        "properties": {
+          "field1": {
+            "type": "string"
+          },
+          "field2": {
+            "type": "string"
+          },
+          "recursiveModelWithPointer": {
+            "$ref": "#/components/schemas/RecursiveModelWithPointer"
+          },
+          "theModel": {
+            "$ref": "#/components/schemas/TheModel"
+          }
+        },
+        "title": "TheModelWithInnerPointer",
+        "type": "object"
+      },
+      "UniqueExternalUsage": {
+        "description": "Test the recursive import process on first-and-ever-used type in struct only",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/SpeedDto"
+          },
+          "unit": {
+            "$ref": "#/components/schemas/SpeedUnits"
+          }
+        },
+        "title": "UniqueExternalUsage",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "securitySchemaName": {
+        "description": "API Key for accessing the API",
+        "in": "header",
+        "name": "x-header-name",
+        "type": "apiKey"
+      },
+      "securitySchemaName2": {
+        "description": "API Key for accessing the API",
+        "in": "header",
+        "name": "x-header-name",
+        "type": "apiKey"
+      }
+    }
+  },
+  "info": {
+    "contact": {
+      "email": "support@example.com",
+      "name": "API Support",
+      "url": "http://www.example.com/support"
+    },
+    "description": "This is a sample API",
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    },
+    "termsOfService": "http://example.com/terms/",
+    "title": "Sample API",
+    "version": "3.1.0"
+  },
+  "openapi": "3.0.0",
+  "paths": {
+    "/e2e/503-error-code": {
+      "get": {
+        "operationId": "Error503",
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/arrays-in-body-and-res": {
+      "post": {
+        "operationId": "ArraysInBodyAndRes",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "$ref": "#/components/schemas/LengthDto"
+                },
+                "type": "array"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LengthDto"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rfc7807Error"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/arrays-inside-body-and-res": {
+      "post": {
+        "operationId": "ArraysInsideBodyAndRes",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "$ref": "#/components/schemas/BlaBla"
+                },
+                "type": "array"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/BlaBla"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rfc7807Error"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/byte-slice": {
+      "post": {
+        "operationId": "ReturnsStructWithByteSlice",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ObjectWithByteSlice"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObjectWithByteSlice"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/context-access": {
+      "get": {
+        "operationId": "ContextAccess",
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/context-injection": {
+      "post": {
+        "operationId": "ContextInjection",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TheModel"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rfc7807Error"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/context-injection-empty": {
+      "post": {
+        "operationId": "ContextInjectionEmpty",
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rfc7807Error"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/custom-error": {
+      "get": {
+        "operationId": "CustomError",
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/custom-error-503": {
+      "get": {
+        "operationId": "CustomError503",
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/custom-error-ptr": {
+      "get": {
+        "operationId": "CustomPtrError",
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/deep-arrays-with-validation": {
+      "post": {
+        "operationId": "DeepArraysWithValidation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "items": {
+                    "$ref": "#/components/schemas/BlaBla2"
+                  },
+                  "type": "array"
+                },
+                "type": "array"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "items": {
+                      "items": {
+                        "$ref": "#/components/schemas/BlaBla2"
+                      },
+                      "type": "array"
+                    },
+                    "type": "array"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rfc7807Error"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/default-error": {
+      "get": {
+        "operationId": "DefaultError",
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/default-error-with-payload": {
+      "get": {
+        "operationId": "DefaultErrorWithPayload",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/embedded-structs": {
+      "post": {
+        "operationId": "EmbeddedStructs",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TheModel"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TheModel"
+                }
+              }
+            },
+            "description": ""
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rfc7807Error"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/external-packages": {
+      "post": {
+        "operationId": "ExternalPackages",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "unit",
+            "schema": {
+              "$ref": "#/components/schemas/LengthUnits"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LengthDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LengthDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rfc7807Error"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/external-packages-unique-in-struct": {
+      "post": {
+        "operationId": "ExternalPackagesUniqueInStruct",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UniqueExternalUsage"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": ""
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rfc7807Error"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/external-packages-validation": {
+      "post": {
+        "operationId": "ExternalPackagesValidation",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "unit",
+            "schema": {
+              "$ref": "#/components/schemas/LengthUnits"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LengthDtoWithValidation"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LengthDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rfc7807Error"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/form": {
+      "post": {
+        "description": "Create a new user",
+        "operationId": "TestForm",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "properties": {
+                  "item1": {
+                    "type": "string"
+                  },
+                  "item2": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "item1",
+                  "item2"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "The ID of the newly created user"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rfc7807Error"
+                }
+              }
+            },
+            "description": "The error when process failed"
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "summary": "Create a new user",
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/get-header-start-with-letter": {
+      "get": {
+        "operationId": "GetHeaderStartWithLetter",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "headerParam",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/get-with-all-params-ptr/{pathParam}": {
+      "get": {
+        "operationId": "GetWithAllParamsPtr",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "queryParam",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "pathParam",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "headerParam",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/get-with-all-params-required-ptr/{pathParam}": {
+      "get": {
+        "operationId": "GetWithAllParamsRequiredPtr",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "queryParam",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "pathParam",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "headerParam",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/get-with-all-params/{pathParam}": {
+      "get": {
+        "operationId": "GetWithAllParams",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "queryParam",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "pathParam",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "headerParam",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/http-method": {
+      "delete": {
+        "operationId": "Delete",
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      },
+      "get": {
+        "operationId": "Get",
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      },
+      "patch": {
+        "operationId": "Patch",
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      },
+      "post": {
+        "operationId": "Post",
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      },
+      "put": {
+        "operationId": "Put",
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/post-with-all-params-body": {
+      "post": {
+        "operationId": "PostWithAllParamsWithBody",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "queryParam",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "headerParam",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BodyInfo"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BodyInfo"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/post-with-all-params-body-ptr": {
+      "post": {
+        "operationId": "PostWithAllParamsWithBodyPtr",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "queryParam",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "headerParam",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BodyInfo"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BodyInfo"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/post-with-all-params-body-required-ptr": {
+      "post": {
+        "operationId": "PostWithAllParamsWithBodyRequiredPtr",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BodyInfo"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BodyInfo"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/primitive-alias-array-return-type": {
+      "get": {
+        "operationId": "PrimitiveAliasArrayReturnType",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/NumberEnumeration"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rfc7807Error"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/primitive-alias-return-type": {
+      "get": {
+        "operationId": "PrimitiveAliasReturnType",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NumberEnumeration"
+                }
+              }
+            },
+            "description": ""
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rfc7807Error"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/primitive-array-return-type": {
+      "get": {
+        "operationId": "PrimitiveArrayReturnType",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "type": "integer"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rfc7807Error"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/primitive-return-type": {
+      "get": {
+        "operationId": "PrimitiveReturnType",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "description": ""
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rfc7807Error"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/simple-get": {
+      "get": {
+        "operationId": "SimpleGet",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/simple-get-empty": {
+      "get": {
+        "operationId": "SimpleGetEmpty",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "queryParam",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/simple-get-empty-string": {
+      "get": {
+        "operationId": "SimpleGetEmptyString",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/simple-get-null-string": {
+      "get": {
+        "operationId": "SimpleGetNullString",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/simple-get-object": {
+      "get": {
+        "operationId": "SimpleGetObject",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BodyResponse"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/simple-get-object-null": {
+      "get": {
+        "operationId": "SimpleGetObjectNull",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BodyResponse"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/simple-get-object-ptr": {
+      "get": {
+        "operationId": "SimpleGetObjectPtr",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BodyResponse"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/simple-get-ptr-string": {
+      "get": {
+        "operationId": "SimpleGetPtrString",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/special-primitives": {
+      "post": {
+        "operationId": "ReturnsStructWithSpecialPrimitives",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ObjectWithSpecialPrimitives"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObjectWithSpecialPrimitives"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/structs-with-inner-pointer": {
+      "post": {
+        "operationId": "StructsWithInnerPointer",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TheModelWithInnerPointer"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": ""
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rfc7807Error"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/template-context-1": {
+      "get": {
+        "operationId": "TemplateContext1",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/template-context-2": {
+      "get": {
+        "operationId": "TemplateContext2",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/test-enums": {
+      "post": {
+        "operationId": "TestEnums",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "value1",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/StatusEnumeration"
+            }
+          },
+          {
+            "in": "query",
+            "name": "value2",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/NumberEnumeration"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ObjectWithEnum"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObjectWithEnum"
+                }
+              }
+            },
+            "description": "The ID of the newly created user"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rfc7807Error"
+                }
+              }
+            },
+            "description": "The error when process failed"
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/test-enums-in-all/{value1}": {
+      "post": {
+        "operationId": "TestEnumsInAll",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "value1",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/StatusEnumeration"
+            }
+          },
+          {
+            "in": "header",
+            "name": "value2",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/NumberEnumeration"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "properties": {
+                  "value3": {
+                    "$ref": "#/components/schemas/StatusEnumeration"
+                  }
+                },
+                "required": [
+                  "value3"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "The ID of the newly created user"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rfc7807Error"
+                }
+              }
+            },
+            "description": "The error when process failed"
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/test-enums-optional": {
+      "post": {
+        "operationId": "TestEnumsOptional",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "value1",
+            "schema": {
+              "$ref": "#/components/schemas/StatusEnumeration"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "The ID of the newly created user"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rfc7807Error"
+                }
+              }
+            },
+            "description": "The error when process failed"
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/test-primitive-conversions": {
+      "post": {
+        "operationId": "TestPrimitiveConversions",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "value1",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "value2",
+            "required": true,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "value3",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "value4",
+            "required": true,
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "The ID of the newly created user"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rfc7807Error"
+                }
+              }
+            },
+            "description": "The error when process failed"
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/test-response-validation": {
+      "post": {
+        "operationId": "TestResponseValidation",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseTest"
+                }
+              }
+            },
+            "description": ""
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rfc7807Error"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/test-response-validation-null": {
+      "post": {
+        "operationId": "TestResponseValidationNull",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseTest"
+                }
+              }
+            },
+            "description": "The ID of the newly created user"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rfc7807Error"
+                }
+              }
+            },
+            "description": "The error when process failed"
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/test-response-validation-ptr": {
+      "post": {
+        "operationId": "TestResponseValidationPtr",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseTest"
+                }
+              }
+            },
+            "description": "The ID of the newly created user"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rfc7807Error"
+                }
+              }
+            },
+            "description": "The error when process failed"
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/with-default-class-security": {
+      "get": {
+        "operationId": "WithDefaultClassSecurity",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-test-scopes",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName": [
+              "class"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/with-default-config-security": {
+      "get": {
+        "operationId": "WithDefaultConfigSecurity",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-test-scopes",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/with-default-override-class-security": {
+      "get": {
+        "operationId": "WithOverrideClassSecurity",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-test-scopes",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName": [
+              "method"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/with-one-security": {
+      "get": {
+        "operationId": "WithOneSecurity",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-test-scopes",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName": [
+              "other"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/with-two-security": {
+      "get": {
+        "operationId": "WithTwoSecurity",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-test-scopes",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName": [
+              "other"
+            ]
+          },
+          {
+            "securitySchemaName2": [
+              "write",
+              "read"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/with-two-security-same-method": {
+      "get": {
+        "operationId": "WithTwoSecuritySameMethod",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-test-scopes",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName": [
+              "other"
+            ]
+          },
+          {
+            "securitySchemaName": [
+              "write",
+              "read"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.example.com"
+    }
+  ]
 }

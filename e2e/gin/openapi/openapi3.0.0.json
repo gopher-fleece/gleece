@@ -163,6 +163,16 @@
         "title": "NumberEnumeration",
         "type": "integer"
       },
+      "ObjectWithByteSlice": {
+        "properties": {
+          "Value": {
+            "format": "base64",
+            "type": "string"
+          }
+        },
+        "title": "ObjectWithByteSlice",
+        "type": "object"
+      },
       "ObjectWithEnum": {
         "properties": {
           "status": {
@@ -188,6 +198,16 @@
           "status"
         ],
         "title": "ObjectWithEnum",
+        "type": "object"
+      },
+      "ObjectWithSpecialPrimitives": {
+        "properties": {
+          "value": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "title": "ObjectWithSpecialPrimitives",
         "type": "object"
       },
       "OtherModel": {
@@ -558,6 +578,45 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Rfc7807Error"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/byte-slice": {
+      "post": {
+        "operationId": "ReturnsStructWithByteSlice",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ObjectWithByteSlice"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObjectWithByteSlice"
                 }
               }
             },
@@ -2000,6 +2059,45 @@
               "application/json": {
                 "schema": {
                   "type": "string"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/special-primitives": {
+      "post": {
+        "operationId": "ReturnsStructWithSpecialPrimitives",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ObjectWithSpecialPrimitives"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObjectWithSpecialPrimitives"
                 }
               }
             },

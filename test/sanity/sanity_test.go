@@ -199,13 +199,16 @@ var _ = Describe("Sanity Controller", func() {
 		Expect(model3.PkgPath).To(Equal("github.com/gopher-fleece/gleece/test/units"))
 		Expect(model3.Description).To(BeEmpty())
 
-		Expect(model3.Fields).To(HaveLen(1))
+		Expect(model3.Fields).To(HaveLen(2))
 		Expect(model3.Fields[0].Name).To(Equal("AStructArrayField"))
 		Expect(model3.Fields[0].Type).To(Equal("[]SimpleStruct"))
 		Expect(model3.Fields[0].Description).To(BeEmpty())
 		Expect(model3.Fields[0].Tag).To(BeEmpty())
 		Expect(model3.Fields[0].Deprecation.Deprecated).To(BeFalse())
 		Expect(model3.Fields[0].Deprecation.Description).To(Equal(""))
+
+		Expect(model3.Fields[1].Name).To(Equal("ByteSlice"))
+		Expect(model3.Fields[1].Type).To(Equal("[]byte"))
 
 		Expect(model3.Deprecation.Deprecated).To(BeFalse())
 		Expect(model3.Deprecation.Description).To(Equal(""))
