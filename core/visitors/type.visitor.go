@@ -112,8 +112,9 @@ func (v *RecursiveTypeVisitor) VisitStructType(
 	defer v.exit()
 
 	if node.Name.Name == "Time" && file.Name.Name == "time" {
-		// Special case: time.Time is a struct but we treat it as a builtin, and in the specification & json marshalling it will be string formatted
-		symKey := graphs.NewUniverseSymbolKey("time.Time")
+		// Special case: time.Time is a struct but we treat it as a builtin
+		// and in the specification & json marshalling it will be a string with 'date-time' format
+		symKey := graphs.NewNonUniverseBuiltInSymbolKey("time.Time")
 		return metadata.StructMeta{}, symKey, nil
 	}
 
