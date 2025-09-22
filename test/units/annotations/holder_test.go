@@ -399,6 +399,57 @@ var _ = Describe("Unit Tests - Annotation Holder", func() {
 			Expect(routeAttr.Name).To(Equal(annotations.GleeceAnnotationRoute))
 		})
 	})
+
+	Context("Methods", func() {
+		var holder *annotations.AnnotationHolder
+		BeforeEach(func() {
+			holder = utils.GetAnnotationHolderOrFail(
+				[]string{
+					"// Some comment",
+					"// @Method(POST)",
+					"// @Route(/)",
+				},
+				annotations.CommentSourceRoute,
+			)
+		})
+
+		It("Correctly returns all attributes", func() {
+			Expect(holder.Attributes()).To(HaveExactElements(
+				HaveField("Name", "Method"),
+				HaveField("Name", "Route"),
+			))
+		})
+
+		It("Correctly returns all non-attributes", func() {
+			nonAttrs := holder.NonAttributeComments()
+			Expect(nonAttrs).To(HaveLen(1))
+			Expect(nonAttrs[0].Value).To(Equal("Some comment"))
+		})
+
+		It("Correctly counts annotations", func() {
+			holder = utils.GetAnnotationHolderOrFail(
+				[]string{
+					"// Some comment",
+					"// @Method(POST)",
+					"// @Route(/)",
+					"// @Path(id)",
+					"// @Path(notId)",
+					"// @ErrorResponse(500)",
+					"// @ErrorResponse(404)",
+				},
+				annotations.CommentSourceRoute,
+			)
+
+			counts := holder.AttributeCounts()
+			Expect(counts).To(Not(BeNil()))
+			Expect(common.MapKeys(counts)).To(ConsistOf("Method", "Route", "Path", "ErrorResponse"))
+			Expect(counts).To(HaveKeyWithValue("Method", 1))
+			Expect(counts).To(HaveKeyWithValue("Route", 1))
+			Expect(counts).To(HaveKeyWithValue("Path", 2))
+			Expect(counts).To(HaveKeyWithValue("ErrorResponse", 2))
+
+		})
+	})
 })
 
 func TestUnitAnnotationHolder(t *testing.T) {
