@@ -30,6 +30,8 @@ For more information, please see the [architecture](https://docs.gleece.dev/docs
 
 * Adjusted most processes to yield sorted results for more consistent builds results
 
+* Reduced import clutter in generated route files
+
 * Re-structured the project to provide a much clearer separation of concerns and allow for easier maintenance
 
 * Improved test coverage
