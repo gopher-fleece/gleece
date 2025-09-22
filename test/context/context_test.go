@@ -18,20 +18,19 @@ var _ = AfterEach(func() {
 
 var _ = Describe("Context Controller", func() {
 	It("Does not raise an error when a receiver has a Go Context as a parameter", func() {
-		utils.GetControllersAndModelsOrFail()
+		utils.GetDefaultMetadataOrFail()
 	})
 
 	It("Does not include Go Context parameters in the model list", func() {
-		_, modelsList, _ := utils.GetControllersAndModelsOrFail()
-		Expect(modelsList).ToNot(ContainElement(Satisfy(func(model definitions.StructMetadata) bool {
-			return model.Name == "Context" && model.FullyQualifiedPackage == "context"
+		meta := utils.GetDefaultMetadataOrFail()
+		Expect(meta.Models.Structs).ToNot(ContainElement(Satisfy(func(model definitions.StructMetadata) bool {
+			return model.Name == "Context" && model.PkgPath == "context"
 		})))
 	})
 
 	It("Correctly inject context in the routing file when the first parameter is a context.Context", func() {
 		// Process the metadata once
-		config, metadata, structs, _, err := utils.GetDefaultConfigAndMetadataOrFail()
-		Expect(err).To(BeNil())
+		config, meta := utils.GetDefaultConfigAndMetadataOrFail()
 
 		// Each engine has a different way of accessing the raw HTTP context
 		expectedSubstringPerEngine := map[string]string{
@@ -46,7 +45,7 @@ var _ = Describe("Context Controller", func() {
 		for _, engine := range definitions.SupportedRoutingEngineStrings {
 			config.RoutesConfig.Engine = definitions.RoutingEngineType(engine)
 
-			err := routes.GenerateRoutes(config, metadata, &definitions.Models{Structs: structs})
+			err := routes.GenerateRoutes(config, meta)
 			Expect(err).To(BeNil())
 
 			// Read the generated routes file
@@ -61,8 +60,7 @@ var _ = Describe("Context Controller", func() {
 
 	It("Correctly inject context in the routing file when the last parameter is a context.Context", func() {
 		// Process the metadata once
-		config, metadata, structs, _, err := utils.GetDefaultConfigAndMetadataOrFail()
-		Expect(err).To(BeNil())
+		config, meta := utils.GetDefaultConfigAndMetadataOrFail()
 
 		// Each engine has a different way of accessing the raw HTTP context
 		expectedSubstringPerEngine := map[string]string{
@@ -77,7 +75,7 @@ var _ = Describe("Context Controller", func() {
 		for _, engine := range definitions.SupportedRoutingEngineStrings {
 			config.RoutesConfig.Engine = definitions.RoutingEngineType(engine)
 
-			err := routes.GenerateRoutes(config, metadata, &definitions.Models{Structs: structs})
+			err := routes.GenerateRoutes(config, meta)
 			Expect(err).To(BeNil())
 
 			// Read the generated routes file

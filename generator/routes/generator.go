@@ -10,6 +10,7 @@ import (
 
 	"github.com/aymerick/raymond"
 
+	"github.com/gopher-fleece/gleece/core/pipeline"
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/generator/compilation"
 	"github.com/gopher-fleece/gleece/generator/templates/chi"
@@ -190,7 +191,10 @@ func getOutputFileMod(requestedPermissions string) os.FileMode {
 
 }
 
-func GenerateRoutes(config *definitions.GleeceConfig, controllerMeta []definitions.ControllerMetadata, models *definitions.Models) error {
+func GenerateRoutes(
+	config *definitions.GleeceConfig,
+	fullMeta pipeline.GleeceFlattenedMetadata, // Possibly not ideal, if we want route regeneration using partial information
+) error {
 
 	args := (*config).RoutesConfig
 
@@ -203,7 +207,7 @@ func GenerateRoutes(config *definitions.GleeceConfig, controllerMeta []definitio
 		helpersRegistered = true
 	}
 
-	ctx, err := GetTemplateContext(models, config, controllerMeta)
+	ctx, err := GetTemplateContext(config, fullMeta)
 
 	if err != nil {
 		logger.Fatal("Could not create a context for the template rendering process")

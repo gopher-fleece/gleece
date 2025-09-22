@@ -1,6 +1,8 @@
 package e2e
 
 import (
+	"time"
+
 	"github.com/gopher-fleece/gleece/e2e/assets"
 	"github.com/gopher-fleece/gleece/e2e/common"
 	"github.com/haimkastner/unitsnet-go/units"
@@ -192,7 +194,6 @@ var _ = Describe("E2E Models Spec", func() {
 	})
 
 	It("Should test struct with pointer fields", func() {
-
 		data := "data"
 		dataPtr := &data
 		model := assets.TheModel{
@@ -203,10 +204,12 @@ var _ = Describe("E2E Models Spec", func() {
 					SecondLevelModelField: "second level",
 				},
 			},
+
 			OtherModel: assets.OtherModel{
 				OtherModelField: "other model",
 			},
 		}
+
 		body := assets.TheModelWithInnerPointer{
 			Field1: &data,
 			Field2: &dataPtr,
@@ -520,4 +523,36 @@ var _ = Describe("E2E Models Spec", func() {
 			RunningMode:         &exExtraRouting,
 		})
 	})
+
+	It("Should return status code 200 all types", func() {
+		RunRouterTest(common.RouterTest{
+			Name:           "Should return byte from a byte slice input",
+			ExpectedStatus: 200,
+			Body: &assets.ObjectWithByteSlice{
+				Value: []byte("test"), // dGVzdA==
+			},
+			ExpectedBodyContain: "{\"value\":\"aGVsbG8gdGVzdA==\"}", // hello test
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/byte-slice",
+			Method:              "POST",
+			RunningMode:         &allRouting,
+		})
+
+		// Date of 1.1.2024
+		theDate := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+
+		RunRouterTest(common.RouterTest{
+			Name:           "Should return byte from a byte slice input",
+			ExpectedStatus: 200,
+			Body: &assets.ObjectWithSpecialPrimitives{
+				Value: theDate,
+			},
+			ExpectedBodyContain: "{\"value\":\"2025-01-02T01:00:00Z\"}", // + 1 day + 1 hour
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/special-primitives",
+			Method:              "POST",
+			RunningMode:         &allRouting,
+		})
+	})
+
 })

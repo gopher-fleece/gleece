@@ -1,6 +1,6 @@
 
 {{#equal PassedIn "Path"}}
-	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
+	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.PkgPath}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
 	{{ToLowerCamel Name}}Raw := fiberCtx.Params("{{{NameInSchema}}}")
 	is{{Name}}Exists := true // if parameter is in route but not provided, it won't reach this handler
 	{{> RequestSwitchParamType}}
@@ -8,7 +8,7 @@
 {{/equal}}
 
 {{#equal PassedIn "Query"}}
-	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
+	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.PkgPath}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
 	{{ToLowerCamel Name}}Raw := fiberCtx.Query("{{{NameInSchema}}}")
 	is{{Name}}Exists := fiberCtx.Context().QueryArgs().Has("{{{NameInSchema}}}")
 	{{> RequestSwitchParamType}}
@@ -16,7 +16,7 @@
 {{/equal}}
 
 {{#equal PassedIn "Header"}}
-	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
+	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.PkgPath}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
 	{{ToLowerCamel Name}}Raw := fiberCtx.Get("{{{NameInSchema}}}")
 	is{{Name}}Exists := len(fiberCtx.Request().Header.Peek("{{{NameInSchema}}}")) > 0
 	{{> RequestSwitchParamType}}
@@ -24,7 +24,7 @@
 {{/equal}}
 
 {{#equal PassedIn "Form"}}
-	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
+	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.PkgPath}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
 	{{ToLowerCamel Name}}Raw := fiberCtx.FormValue("{{{NameInSchema}}}")
 	is{{Name}}Exists := fiberCtx.Context().PostArgs().Has("{{{NameInSchema}}}")
 	{{> RequestSwitchParamType}}
@@ -32,7 +32,7 @@
 {{/equal}}
 
 {{#equal PassedIn "Body"}}
-	var {{ToLowerCamel Name}}RawPtr *{{SlicePrefix TypeMeta.Name}}{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{SliceSlice TypeMeta.Name}} = nil
+	var {{ToLowerCamel Name}}RawPtr *{{SlicePrefix TypeMeta.Name}}{{#if TypeMeta.PkgPath}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{SliceSlice TypeMeta.Name}} = nil
 	conversionErr = bindAndValidateBody(fiberCtx, "{{{ResponseContentType}}}", "{{Validator}}",&{{ToLowerCamel Name}}RawPtr)
 	if conversionErr != nil {
 		{{> JsonBodyValidationErrorResponse }}

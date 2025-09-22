@@ -10,8 +10,21 @@ import (
 )
 
 func ToOpenApiSchemaV3(typeName string) *highbase.Schema {
-	return &highbase.Schema{
-		Type: []string{typeName},
+	switch typeName {
+	case "binary":
+		return &highbase.Schema{
+			Type:   []string{"string"},
+			Format: "base64",
+		}
+	case "date-time":
+		return &highbase.Schema{
+			Type:   []string{"string"},
+			Format: "date-time",
+		}
+	default:
+		return &highbase.Schema{
+			Type: []string{typeName},
+		}
 	}
 }
 

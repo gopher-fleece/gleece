@@ -174,7 +174,15 @@ func (ec *UsersController) GetUserDomicile(id string) (Domicile, error) {
 // @Response(200) The ID of the newly created user
 // @ErrorResponse(500) The error when process failed
 // @Security(securitySchemaName, { scopes: ["read:users", "write:users"] })
-func (ec *UsersController) CreateNewUser(id int, id2 int, email string, name string, origin string, trace string, domicile Domicile) (string, error) {
+func (ec *UsersController) CreateNewUser(
+	id int,
+	id2 int,
+	email string,
+	name string,
+	origin string,
+	trace string,
+	domicile Domicile,
+) (string, error) {
 	userId := uuid.New()
 	return domicile.Address + " " + userId.String(), nil
 }

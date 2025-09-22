@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gofiber/fiber/v2"
@@ -36,7 +37,12 @@ type ObjectWithEnum struct {
 	Statuses []StatusEnumeration `json:"statuses"`
 }
 
+type ObjectWithByteSlice struct {
+	Value []byte `json:"value"`
+}
+
 // @Route(/e2e)
+// @Tag(E2E)
 type E2EController struct {
 	runtime.GleeceController // Embedding the GleeceController to inherit its methods
 }
@@ -231,6 +237,7 @@ func (ec *E2EController) GetHeaderStartWithLetter(headerParam string) (string, e
 
 // @Route(/e2e)
 // @Security(securitySchemaName, { scopes: ["class"] })
+// @Tag(E2E)
 type E2EClassSecController struct {
 	runtime.GleeceController // Embedding the GleeceController to inherit its methods
 }
@@ -701,4 +708,28 @@ func (ec *E2EController) ContextInjectionEmpty(ctx context.Context) error {
 func (ec *E2EController) ContextInjection(ctx context.Context, data TheModel) error {
 	ec.SetHeader("x-context-auth", ctx.Value(ContextAuth).(string))
 	return nil
+}
+
+// @Method(POST)
+// @Body(arrive)
+// @Route(/byte-slice)
+func (ec *E2EController) ReturnsStructWithByteSlice(arrive *ObjectWithByteSlice) (ObjectWithByteSlice, error) {
+	data := "hello " + string(arrive.Value)
+	return ObjectWithByteSlice{
+		Value: []byte(data),
+	}, nil
+}
+
+type ObjectWithSpecialPrimitives struct {
+	Value time.Time `json:"value"`
+}
+
+// @Method(POST)
+// @Body(arrive)
+// @Route(/special-primitives)
+func (ec *E2EController) ReturnsStructWithSpecialPrimitives(arrive *ObjectWithSpecialPrimitives) (ObjectWithSpecialPrimitives, error) {
+	newValue := arrive.Value.Add(time.Hour * 25)
+	return ObjectWithSpecialPrimitives{
+		Value: newValue,
+	}, nil
 }

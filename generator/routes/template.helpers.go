@@ -3,6 +3,8 @@ package routes
 import (
 	"fmt"
 	"regexp"
+	"sort"
+	"strings"
 
 	"github.com/aymerick/raymond"
 	"github.com/gopher-fleece/gleece/common"
@@ -82,7 +84,7 @@ func registerHandlebarsHelpers() {
 				// The CTX param is not come from the http "input" and should not be converted from anything
 				continue
 			}
-			if param.TypeMeta.Name != "string" && param.TypeMeta.FullyQualifiedPackage != "" && param.TypeMeta.EntityKind != definitions.AstNodeKindAlias {
+			if param.TypeMeta.Name != "string" && param.TypeMeta.PkgPath != "" && param.TypeMeta.SymbolKind != common.SymKindEnum {
 				// Currently, only 'string' parameters don't undergo any validation
 				return options.Fn()
 			}
@@ -122,4 +124,31 @@ func registerHandlebarsHelpers() {
 		content := options.Fn()
 		return string(collapsibleSpaceRegex.ReplaceAllString(content, ""))
 	})
+
+	raymond.RegisterHelper("UnpackImportsMap", func(context map[string][]string) string {
+		var importsBuilder strings.Builder
+
+		// Step 1: Collect and sort package paths
+		pkgPaths := make([]string, 0, len(context))
+		for pkgPath := range context {
+			pkgPaths = append(pkgPaths, pkgPath)
+		}
+		sort.Strings(pkgPaths)
+
+		// Step 2: Sort aliases and emit
+		for _, pkgPath := range pkgPaths {
+			aliases := context[pkgPath]
+			if len(aliases) == 0 {
+				continue
+			}
+			sort.Strings(aliases)
+
+			for _, alias := range aliases {
+				importsBuilder.WriteString(fmt.Sprintf("%s \"%s\"\n", alias, pkgPath))
+			}
+		}
+
+		return importsBuilder.String()
+	})
+
 }

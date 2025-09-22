@@ -2,10 +2,11 @@ package e2e
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/gopher-fleece/gleece/definitions"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"os"
 )
 
 var _ = Describe("E2E Generated Date Comment Test", func() {

@@ -125,7 +125,7 @@ func setNewRouteOperation(openapi *openapi3.T, def definitions.ControllerMetadat
 }
 
 func handleRouteParamDeprecation(routeParam definitions.FuncParam, specParam *openapi3.ParameterRef) {
-	if routeParam.Deprecation != nil && *&routeParam.Deprecation.Deprecated {
+	if routeParam.Deprecation.Deprecated {
 		specParam.Value.Deprecated = true
 	}
 }

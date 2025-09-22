@@ -1,6 +1,6 @@
 
 {{#equal PassedIn "Path"}}
-	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
+	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.PkgPath}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
 	{{ToLowerCamel Name}}Raw := chi.URLParam(req, "{{{NameInSchema}}}")
 	is{{Name}}Exists := true // if parameter is in route but not provided, it won't reach this handler
 	{{> RequestSwitchParamType}}
@@ -8,7 +8,7 @@
 {{/equal}}
 
 {{#equal PassedIn "Query"}}
-	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
+	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.PkgPath}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
 
 	{{ToLowerCamel Name}}Raw := req.URL.Query().Get("{{{NameInSchema}}}")
 	is{{Name}}Exists := req.URL.Query().Has("{{{NameInSchema}}}")
@@ -17,7 +17,7 @@
 {{/equal}}
 
 {{#equal PassedIn "Header"}}
-	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
+	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.PkgPath}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
 	{{ToLowerCamel Name}}Raw := req.Header.Get("{{{NameInSchema}}}")
 	_, is{{Name}}Exists := req.Header["{{{NameInSchema}}}"]
 	if !is{{Name}}Exists {
@@ -31,7 +31,7 @@
 
 {{#equal PassedIn "Form"}}
 	req.ParseForm()
-	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
+	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.PkgPath}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
 	{{ToLowerCamel Name}}RawArr, is{{Name}}Exists := req.PostForm["{{{NameInSchema}}}"]
 	{{ToLowerCamel Name}}Raw := ""
 	if is{{Name}}Exists {
@@ -43,7 +43,7 @@
 {{/equal}}
 
 {{#equal PassedIn "Body"}}
-	var {{ToLowerCamel Name}}RawPtr *{{SlicePrefix TypeMeta.Name}}{{#if TypeMeta.FullyQualifiedPackage}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{SliceSlice TypeMeta.Name}} = nil
+	var {{ToLowerCamel Name}}RawPtr *{{SlicePrefix TypeMeta.Name}}{{#if TypeMeta.PkgPath}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{SliceSlice TypeMeta.Name}} = nil
 	conversionErr = bindAndValidateBody(req, "{{{ResponseContentType}}}", "{{Validator}}",&{{ToLowerCamel Name}}RawPtr)
 	if conversionErr != nil {
 		{{> JsonBodyValidationErrorResponse }}
