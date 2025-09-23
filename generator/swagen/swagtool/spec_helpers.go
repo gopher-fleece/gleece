@@ -164,8 +164,15 @@ func GetJsonNameFromTag(tag string, defaultName string) string {
 	return strings.Split(fullTagValue, ",")[0]
 }
 
-func IsMapObject(typeName string) bool {
-	return strings.HasPrefix(typeName, "map[")
+// IsGenericObject checks if the type should be represented as a generic object wihtout representation in the models collection in OpenAPI specification
+// (e.g. map, any, interface{}, etc.)
+func IsGenericObject(typeName string) bool {
+	switch typeName {
+	case "interface{}", "any", "":
+		return true
+	default:
+		return strings.HasPrefix(typeName, "map[")
+	}
 }
 
 func IsFieldRequired(validationString string) bool {

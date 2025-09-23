@@ -146,23 +146,31 @@ var _ = Describe("Spec Helpers", func() {
 		})
 	})
 
-	Describe("IsMapObject", func() {
+	Describe("IsGenericObject", func() {
 		It("should return true for map types", func() {
-			Expect(IsMapObject("map[string]int")).To(BeTrue())
-			Expect(IsMapObject("map[string]interface{}")).To(BeTrue())
-			Expect(IsMapObject("map[int]string")).To(BeTrue())
+			Expect(IsGenericObject("map[string]int")).To(BeTrue())
+			Expect(IsGenericObject("map[string]interface{}")).To(BeTrue())
+			Expect(IsGenericObject("map[int]string")).To(BeTrue())
 		})
 
-		It("should return false for non-map types", func() {
-			Expect(IsMapObject("string")).To(BeFalse())
-			Expect(IsMapObject("[]string")).To(BeFalse())
-			Expect(IsMapObject("int")).To(BeFalse())
-			Expect(IsMapObject("")).To(BeFalse())
+		It("should return false for non-generic types", func() {
+			Expect(IsGenericObject("string")).To(BeFalse())
+			Expect(IsGenericObject("[]string")).To(BeFalse())
+			Expect(IsGenericObject("int")).To(BeFalse())
+			Expect(IsGenericObject("model")).To(BeFalse())
+			Expect(IsGenericObject("Model")).To(BeFalse())
 		})
 
 		It("should return false for partial map-like strings", func() {
-			Expect(IsMapObject("mapstring]")).To(BeFalse())
-			Expect(IsMapObject("[map]")).To(BeFalse())
+			Expect(IsGenericObject("mapstring]")).To(BeFalse())
+			Expect(IsGenericObject("[map]")).To(BeFalse())
+		})
+
+		It("should return true for generic types", func() {
+			Expect(IsGenericObject("any")).To(BeTrue())
+			Expect(IsGenericObject("interface{}")).To(BeTrue())
+			Expect(IsGenericObject("map[string]any")).To(BeTrue())
+			Expect(IsGenericObject("")).To(BeTrue())
 		})
 	})
 

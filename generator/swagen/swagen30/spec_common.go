@@ -18,7 +18,7 @@ func InterfaceToSchemaRef(openapi *openapi3.T, interfaceType string) *openapi3.S
 	openapiType := swagtool.ToOpenApiType(interfaceType)
 	fieldSchemaRef := ToOpenApiSchemaRef(openapiType)
 
-	if openapiType == "object" && !swagtool.IsMapObject(interfaceType) { // For now, ignore map objects, they will be handled later
+	if openapiType == "object" && !swagtool.IsGenericObject(interfaceType) {
 		// Handle other types or complex types as references to other schemas
 		fieldSchemaRef = &openapi3.SchemaRef{
 			Ref: "#/components/schemas/" + interfaceType,

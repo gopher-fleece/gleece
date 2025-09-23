@@ -33,7 +33,7 @@ func InterfaceToSchemaV3(doc *v3.Document, interfaceType string) *highbase.Schem
 	openapiType := swagtool.ToOpenApiType(interfaceType)
 	fieldSchema := ToOpenApiSchemaV3(openapiType)
 
-	if openapiType == "object" && !swagtool.IsMapObject(interfaceType) { // For now, ignore map objects, they will be handled later
+	if openapiType == "object" && !swagtool.IsGenericObject(interfaceType) {
 		return highbase.CreateSchemaProxyRef("#/components/schemas/" + interfaceType)
 	}
 	if openapiType == "array" {
