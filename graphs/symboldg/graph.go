@@ -7,6 +7,7 @@ import (
 	"slices"
 	"strings"
 
+	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/common/linq"
 	"github.com/gopher-fleece/gleece/core/annotations"
@@ -33,7 +34,7 @@ type SymbolGraphBuilder interface {
 
 	Structs() []metadata.StructMeta
 	Enums() []metadata.EnumMeta
-	FindByKind(kind common.SymKind) []*SymbolNode
+	FindByKind(kinds ...common.SymKind) []*SymbolNode
 
 	IsPrimitivePresent(primitive PrimitiveType) bool
 	IsSpecialPresent(special SpecialType) bool
@@ -356,11 +357,12 @@ func (g *SymbolGraph) AddConst(request CreateConstNode) (*SymbolNode, error) {
 	)
 }
 
-func (g *SymbolGraph) FindByKind(kind common.SymKind) []*SymbolNode {
+func (g *SymbolGraph) FindByKind(kinds ...common.SymKind) []*SymbolNode {
 	var results []*SymbolNode
 
+	kindsSet := mapset.NewThreadUnsafeSet(kinds...)
 	for _, node := range g.nodes {
-		if node.Kind == kind {
+		if kindsSet.ContainsOne(node.Kind) {
 			results = append(results, node)
 		}
 	}

@@ -1,6 +1,9 @@
 package graphs_test
 
 import (
+	"fmt"
+
+	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/graphs/symboldg"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -86,6 +89,46 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 			t, ok := symboldg.ToSpecialType("does.NotExist")
 			Expect(ok).To(BeFalse())
 			Expect(t).To(Equal(symboldg.SpecialType("")))
+		})
+	})
+
+	Context("ToSymbolKind", func() {
+		validKinds := map[string]common.SymKind{
+			"Unknown":    common.SymKindUnknown,
+			"Package":    common.SymKindPackage,
+			"Struct":     common.SymKindStruct,
+			"Controller": common.SymKindController,
+			"Interface":  common.SymKindInterface,
+			"Alias":      common.SymKindAlias,
+			"Enum":       common.SymKindEnum,
+			"EnumValue":  common.SymKindEnumValue,
+			"Function":   common.SymKindFunction,
+			"Receiver":   common.SymKindReceiver,
+			"Field":      common.SymKindField,
+			"Parameter":  common.SymKindParameter,
+			"Variable":   common.SymKindVariable,
+			"Constant":   common.SymKindConstant,
+			"RetType":    common.SymKindReturnType,
+			"Builtin":    common.SymKindBuiltin,
+			"Special":    common.SymKindSpecialBuiltin,
+		}
+
+		It("converts valid strings to SymKind without error", func() {
+			for str, expected := range validKinds {
+				result, err := common.ToSymbolKind(str)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(result).To(Equal(expected), fmt.Sprintf("string %q", str))
+			}
+		})
+
+		It("returns an error for invalid strings", func() {
+			invalidInputs := []string{"foo", "Bar", "", "123"}
+
+			for _, input := range invalidInputs {
+				result, err := common.ToSymbolKind(input)
+				Expect(err).To(HaveOccurred(), fmt.Sprintf("input: %q", input))
+				Expect(result).To(Equal(common.SymKind("")))
+			}
 		})
 	})
 

@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"flag"
 	"fmt"
 	"log"
 )
@@ -54,7 +55,10 @@ func getPrintPrefix(level LogLevel) string {
 // SetLogLevel Sets the logger's verbosity level
 func SetLogLevel(level LogLevel) {
 	verbosityLevel = level
-	System("Verbosity level set to %s\n", getPrintPrefix(level))
+	// This message is annoying during testing
+	if flag.Lookup("test.v") == nil {
+		System("Verbosity level set to %s\n", getPrintPrefix(level))
+	}
 }
 
 // GetLogLevel returns the logger's current verbosity level
@@ -63,7 +67,7 @@ func GetLogLevel() LogLevel {
 }
 
 // Prints a message, if level is greater to or equal to the currently set verbosity level
-func logger(level LogLevel, format string, v ...interface{}) {
+func logger(level LogLevel, format string, v ...any) {
 	if level >= verbosityLevel {
 		prefix := fmt.Sprintf("[%s]", getPrintPrefix(level))
 		message := fmt.Sprintf("%-8s %s", prefix, format)
@@ -72,34 +76,31 @@ func logger(level LogLevel, format string, v ...interface{}) {
 }
 
 // Prints a debug message
-func Debug(format string, v ...interface{}) {
+func Debug(format string, v ...any) {
 	logger(LogLevelDebug, format, v...)
 }
 
 // Prints an info message
-func Info(format string, v ...interface{}) {
+func Info(format string, v ...any) {
 	logger(LogLevelInfo, format, v...)
 }
 
 // Prints a warning message
-func Warn(format string, v ...interface{}) {
+func Warn(format string, v ...any) {
 	logger(LogLevelWarn, format, v...)
 }
 
 // Prints an error message
-func Error(format string, v ...interface{}) {
+func Error(format string, v ...any) {
 	logger(LogLevelError, format, v...)
 }
 
 // Prints a fatal message
-func Fatal(format string, v ...interface{}) {
+func Fatal(format string, v ...any) {
 	logger(LogLevelFatal, format, v...)
 }
 
-func System(format string, v ...interface{}) {
+func System(format string, v ...any) {
 	message := fmt.Sprintf("[SYSTEM] %s", format)
 	log.Printf(message, v...)
-}
-func Raw(format string, v ...interface{}) {
-	log.Printf(format, v...)
 }

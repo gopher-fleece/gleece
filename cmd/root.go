@@ -28,7 +28,7 @@ var rootCmd = &cobra.Command{
 	),
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if !cliArgs.NoBanner {
-			logger.Raw(arguments.GopherAscii)
+			cmd.Println(arguments.GopherAscii)
 		}
 
 		// This is basically safe as Cobra have already validated or provided default
@@ -45,6 +45,12 @@ var rootCmd = &cobra.Command{
 			logger.Info("Spec and routes generation successful")
 		}
 	},
+}
+
+func Reset() {
+	// There must be a better way to orchestrate this...
+	cliArgs = arguments.CliArguments{}
+	resetDumpCommand()
 }
 
 func Execute() {
@@ -91,7 +97,10 @@ func ExecuteWithArgs(args []string, redirectLogs bool) arguments.ExecuteWithArgs
 }
 
 func init() {
+	// Init the subcommand hierarchies
 	initGenerateCommandHierarchy()
+	initDumpCommandHierarchy()
+
 	rootCmd.PersistentFlags().BoolVar(
 		&cliArgs.NoBanner,
 		"no-banner",
@@ -109,4 +118,5 @@ func init() {
 
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(generateCmd)
+	rootCmd.AddCommand(dumpCmd)
 }

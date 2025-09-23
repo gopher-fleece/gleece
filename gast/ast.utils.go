@@ -24,10 +24,12 @@ func IsFuncDeclReceiverForStruct(structName string, funcDecl *ast.FuncDecl) bool
 	case *ast.Ident:
 		return expr.Name == structName
 	case *ast.StarExpr:
-		return expr.X.(*ast.Ident).Name == structName
-	default:
-		return false
+		ident, isIdent := expr.X.(*ast.Ident)
+		if isIdent && ident.Name == structName {
+			return true
+		}
 	}
+	return false
 }
 
 // DoesStructEmbedStruct tests the given structToCheck in the *ast.File `sourceFile`

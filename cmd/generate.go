@@ -10,8 +10,6 @@ import (
 var generateCmd = &cobra.Command{
 	Use:   "generate spec-and-routes --config \"/path/to/gleece.config.json\"",
 	Short: "Generate OpenAPI schema and routing middlewares from a Go project",
-	Run: func(cmd *cobra.Command, args []string) {
-	},
 }
 
 var specCommand = &cobra.Command{
