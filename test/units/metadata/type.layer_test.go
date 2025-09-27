@@ -14,8 +14,7 @@ var _ = Describe("Unit Tests - Metadata", func() {
 			It("creates a pointer layer with correct kind", func() {
 				layer := metadata.NewPointerLayer()
 				Expect(layer.Kind).To(Equal(metadata.TypeLayerKindPointer))
-				Expect(layer.KeyType).To(BeNil())
-				Expect(layer.ValueType).To(BeNil())
+				Expect(layer.TypeParams).To(BeNil())
 				Expect(layer.BaseTypeRef).To(BeNil())
 			})
 		})
@@ -24,8 +23,7 @@ var _ = Describe("Unit Tests - Metadata", func() {
 			It("creates an array layer with correct kind", func() {
 				layer := metadata.NewArrayLayer()
 				Expect(layer.Kind).To(Equal(metadata.TypeLayerKindArray))
-				Expect(layer.KeyType).To(BeNil())
-				Expect(layer.ValueType).To(BeNil())
+				Expect(layer.TypeParams).To(BeNil())
 				Expect(layer.BaseTypeRef).To(BeNil())
 			})
 		})
@@ -37,8 +35,7 @@ var _ = Describe("Unit Tests - Metadata", func() {
 				layer := metadata.NewMapLayer(&key, &value)
 
 				Expect(layer.Kind).To(Equal(metadata.TypeLayerKindMap))
-				Expect(layer.KeyType).To(Equal(&key))
-				Expect(layer.ValueType).To(Equal(&value))
+				Expect(layer.TypeParams).To(HaveExactElements(&key, &value))
 				Expect(layer.BaseTypeRef).To(BeNil())
 			})
 		})
@@ -50,8 +47,7 @@ var _ = Describe("Unit Tests - Metadata", func() {
 
 				Expect(layer.Kind).To(Equal(metadata.TypeLayerKindBase))
 				Expect(layer.BaseTypeRef).To(Equal(&base))
-				Expect(layer.KeyType).To(BeNil())
-				Expect(layer.ValueType).To(BeNil())
+				Expect(layer.TypeParams).To(BeNil())
 			})
 		})
 	})

@@ -80,7 +80,6 @@ var _ = Describe("Graph Controller", func() {
 		Expect(retValChildren[0].Id.IsUniverse).To(BeTrue())
 		Expect(retValChildren[0].Id.IsBuiltIn).To(BeTrue())
 		Expect(retValChildren[0].Kind).To(Equal(common.SymKindSpecialBuiltin))
-
 	})
 })
 

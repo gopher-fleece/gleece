@@ -177,7 +177,7 @@ func (d ClassifiedEntityDiags) formatSeverityClass(severity string, diags []Reso
 	builder := strings.Builder{}
 	builder.WriteString(fmt.Sprintf("%s: (Total %d)\n", severity, len(diags)))
 	for _, diag := range diags {
-		builder.WriteString(fmt.Sprintf("\t %s at %s - %s ", diag.Code, diag.FilePath, diag.Message))
+		builder.WriteString(fmt.Sprintf("\t %s at %s - %s\n", diag.Code, diag.FilePath, diag.Message))
 	}
 
 	return builder.String()

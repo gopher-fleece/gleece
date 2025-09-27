@@ -78,6 +78,7 @@ const (
 	SpecialTypeTime           SpecialType = "time.Time"
 	SpecialTypeAny            SpecialType = "any" // alias of interface{}
 	SpecialTypeUnsafePointer  SpecialType = "unsafe.Pointer"
+	SpecialTypeMap            SpecialType = "map" // Not really a solid fit but will do for now
 )
 
 func (s SpecialType) IsUniverse() bool {
@@ -103,6 +104,8 @@ func ToSpecialType(s string) (SpecialType, bool) {
 		return SpecialTypeTime, true
 	case "unsafe.Pointer":
 		return SpecialTypeUnsafePointer, true
+	case "map":
+		return SpecialTypeMap, true
 	default:
 		return "", false
 	}

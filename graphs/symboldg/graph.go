@@ -27,6 +27,7 @@ type SymbolGraphBuilder interface {
 	AddConst(request CreateConstNode) (*SymbolNode, error)
 	AddPrimitive(kind PrimitiveType) *SymbolNode
 	AddSpecial(special SpecialType) *SymbolNode
+	AddMap(requests CreateMapNode) (*SymbolNode, error)
 	AddEdge(from, to graphs.SymbolKey, kind SymbolEdgeKind, meta map[string]string)
 	RemoveEdge(from, to graphs.SymbolKey, kind *SymbolEdgeKind)
 	RemoveNode(key graphs.SymbolKey)
@@ -326,7 +327,7 @@ func (g *SymbolGraph) AddEnum(request CreateEnumNode) (*SymbolNode, error) {
 }
 
 func (g *SymbolGraph) AddField(request CreateFieldNode) (*SymbolNode, error) {
-	symNode, err := g.createAndAddSymNode(
+	fieldNode, err := g.createAndAddSymNode(
 		request.Data.Node,
 		common.SymKindField,
 		request.Data.FVersion,
@@ -337,13 +338,23 @@ func (g *SymbolGraph) AddField(request CreateFieldNode) (*SymbolNode, error) {
 		return nil, err
 	}
 
-	typeRef, err := getTypeRef(request.Data.Type)
+	typeRef, err := request.Data.Type.GetSymbolKey()
 	if err != nil {
 		return nil, err
 	}
 
-	g.AddEdge(symNode.Id, typeRef, EdgeKindType, nil)
-	return symNode, err
+	g.AddEdge(fieldNode.Id, typeRef, EdgeKindType, nil)
+
+	typeParamKeys, err := request.Data.Type.GetTypeParameterKeys()
+	if err != nil {
+		return nil, fmt.Errorf("failed to obtain type parameter symbol keys for field '%s' - %v", request.Data.Name, err)
+	}
+
+	for _, tParamKey := range typeParamKeys {
+		g.AddEdge(typeRef, tParamKey, EdgeKindTypeParam, nil)
+	}
+
+	return fieldNode, err
 }
 
 func (g *SymbolGraph) AddConst(request CreateConstNode) (*SymbolNode, error) {
@@ -407,6 +418,15 @@ func (g *SymbolGraph) IsSpecialPresent(special SpecialType) bool {
 
 func (g *SymbolGraph) AddSpecial(special SpecialType) *SymbolNode {
 	return g.addBuiltinSymbol(string(special), common.SymKindSpecialBuiltin, special.IsUniverse())
+}
+
+func (g *SymbolGraph) AddMap(request CreateMapNode) (*SymbolNode, error) {
+	fullKey, err := request.Data.GetSymbolKey()
+	if err != nil {
+		return nil, fmt.Errorf("could not derive a full symbol key for map - %s", err)
+	}
+
+	return g.addBuiltinSymbolByKey(fullKey, common.SymKindSpecialBuiltin), nil
 }
 
 func (g *SymbolGraph) Children(node *SymbolNode, behavior *TraversalBehavior) []*SymbolNode {
@@ -583,6 +603,10 @@ func (g *SymbolGraph) addBuiltinSymbol(typeName string, kind common.SymKind, isU
 		key = graphs.NewNonUniverseBuiltInSymbolKey(typeName)
 	}
 
+	return g.addBuiltinSymbolByKey(key, kind)
+}
+
+func (g *SymbolGraph) addBuiltinSymbolByKey(key graphs.SymbolKey, kind common.SymKind) *SymbolNode {
 	if node, exists := g.nodes[key.BaseId()]; exists {
 		return node
 	}
@@ -757,19 +781,6 @@ func (g *SymbolGraph) ToDot(theme *dot.DotTheme) string {
 	builder.RenderLegend()
 
 	return builder.Finish()
-}
-
-func getTypeRef(typeUsage metadata.TypeUsageMeta) (graphs.SymbolKey, error) {
-	if !typeUsage.SymbolKind.IsBuiltin() {
-
-		return typeUsage.GetBaseTypeRefKey()
-	}
-
-	if typeUsage.IsUniverseType() {
-		return graphs.NewUniverseSymbolKey(typeUsage.Name), nil
-	}
-
-	return graphs.NewNonUniverseBuiltInSymbolKey(fmt.Sprintf("%s.%s", typeUsage.PkgPath, typeUsage.Name)), nil
 }
 
 func edgeMapKey(kind SymbolEdgeKind, toBaseId string) string {

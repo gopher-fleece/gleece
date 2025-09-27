@@ -90,8 +90,8 @@ func (sk SymbolKey) PrettyPrint() string {
 }
 
 func (sk SymbolKey) Equals(other SymbolKey) bool {
-	if sk.IsUniverse {
-		return other.IsUniverse && sk.Name == other.Name
+	if sk.IsUniverse || sk.IsBuiltIn {
+		return other.IsUniverse && sk.Name == other.Name && sk.IsBuiltIn == other.IsBuiltIn
 	}
 
 	return sk.Name == other.Name && sk.Position == other.Position && sk.FileId == other.FileId
@@ -154,5 +154,55 @@ func NewNonUniverseBuiltInSymbolKey(typeName string) SymbolKey {
 		Name:       typeName,
 		IsUniverse: false,
 		IsBuiltIn:  true,
+	}
+}
+
+func NewNonBuiltinGenericTypeSymbolKey(
+	node ast.Node,
+	version *gast.FileVersion,
+	typeParamKeys []SymbolKey,
+) SymbolKey {
+	primaryKey := NewSymbolKey(node, version)
+	typeKeys := []string{primaryKey.Id()}
+
+	for _, key := range typeParamKeys {
+		typeKeys = append(typeKeys, key.Id())
+	}
+
+	return SymbolKey{
+		Name:       strings.Join(typeKeys, ":"),
+		IsUniverse: false,
+		IsBuiltIn:  false,
+	}
+}
+
+func NewBuiltinGenericTypeSymbolKey(
+	typeName string,
+	typeParamKeys []SymbolKey,
+) SymbolKey {
+	typeKeys := []string{typeName}
+	for _, key := range typeParamKeys {
+		typeKeys = append(typeKeys, key.Id())
+	}
+
+	return SymbolKey{
+		Name:       strings.Join(typeKeys, ":"),
+		IsUniverse: true,
+		IsBuiltIn:  true,
+	}
+}
+
+// CombineSymKeys combines multiple symbol keys into one.
+// The result's universe/builtin attributes are based on the base's
+func CombineSymKeys(base *SymbolKey, others ...*SymbolKey) SymbolKey {
+	typeKeys := []string{base.Id()}
+	for _, key := range others {
+		typeKeys = append(typeKeys, key.Id())
+	}
+
+	return SymbolKey{
+		Name:       strings.Join(typeKeys, ":"),
+		IsUniverse: base.IsUniverse,
+		IsBuiltIn:  base.IsBuiltIn,
 	}
 }

@@ -247,7 +247,7 @@ func (p *GleecePipeline) reduceControllers(controllers []metadata.ControllerMeta
 func (p *GleecePipeline) getModels() definitions.Models {
 	structs := p.symGraph.Structs()
 	reducedStructs := linq.Map(structs, func(s metadata.StructMeta) definitions.StructMetadata {
-		return s.Reduce()
+		return s.Reduce(&p.syncedProvider)
 	})
 
 	enums := p.symGraph.Enums()

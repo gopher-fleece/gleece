@@ -98,10 +98,10 @@ type StructMeta struct {
 	Fields []FieldMeta
 }
 
-func (s StructMeta) Reduce() definitions.StructMetadata {
+func (s StructMeta) Reduce(syncedProvider IdProvider) definitions.StructMetadata {
 	reducedFields := make([]definitions.FieldMetadata, len(s.Fields))
 	for idx, field := range s.Fields {
-		reducedFields[idx] = field.Reduce()
+		reducedFields[idx] = field.Reduce(syncedProvider)
 	}
 
 	return definitions.StructMetadata{
@@ -282,7 +282,7 @@ type FuncParam struct {
 }
 
 func (v FuncParam) Reduce(metaCache MetaCache, syncedProvider IdProvider) (definitions.FuncParam, error) {
-	typeMeta, err := v.Type.Resolve(metaCache)
+	typeMeta, err := v.Type.Resolve(metaCache, syncedProvider)
 	if err != nil {
 		return definitions.FuncParam{}, err
 	}
@@ -346,7 +346,7 @@ type FuncReturnValue struct {
 }
 
 func (v FuncReturnValue) Reduce(metaCache MetaCache, syncedProvider IdProvider) (definitions.FuncReturnValue, error) {
-	typeMeta, err := v.Type.Resolve(metaCache)
+	typeMeta, err := v.Type.Resolve(metaCache, syncedProvider)
 	if err != nil {
 		return definitions.FuncReturnValue{}, err
 	}
@@ -395,18 +395,88 @@ func (e EnumMeta) Reduce() definitions.EnumMetadata {
 
 type TypeUsageMeta struct {
 	SymNodeMeta
-	Import common.ImportType
-	Layers []TypeLayer
+	Import     common.ImportType
+	TypeParams []TypeUsageMeta // Type parameters like TKey/TValue in map[TKey]TValue
+	Layers     []TypeLayer
+}
+
+func (t TypeUsageMeta) GetSyntacticRepresentation(syncedProvider IdProvider) (string, error) {
+	sb := strings.Builder{}
+
+	for _, layer := range t.Layers {
+		sb.WriteString(layer.FormatToIr(syncedProvider))
+	}
+
+	return sb.String(), nil
+}
+
+func (t TypeUsageMeta) GetTypeParameterKeys() ([]graphs.SymbolKey, error) {
+	typeParamKeys := []graphs.SymbolKey{}
+	for _, tParam := range t.TypeParams {
+		tParamKey, err := tParam.GetSymbolKey()
+		if err != nil {
+			return nil, fmt.Errorf(
+				"failed to determine type ref for generic parameter '%s' on type '%s' - %v",
+				tParam.Name,
+				t.Name,
+				err,
+			)
+		}
+		typeParamKeys = append(typeParamKeys, tParamKey)
+	}
+
+	return typeParamKeys, nil
+}
+
+func (t TypeUsageMeta) GetSymbolKey() (graphs.SymbolKey, error) {
+	if !t.SymbolKind.IsBuiltin() {
+		return t.GetBaseTypeRefKey()
+	}
+
+	typeParamKeys := []graphs.SymbolKey{}
+
+	if len(t.TypeParams) > 0 {
+		keys, err := t.GetTypeParameterKeys()
+		if err != nil {
+			return graphs.SymbolKey{}, fmt.Errorf(
+				"failed to obtain type parameter symbol keys for type '%s' - %v",
+				t.Name,
+				err,
+			)
+		}
+		typeParamKeys = keys
+	}
+
+	// Universe and map (which is technically just a grammatical construct) are treated the same
+	if t.IsUniverseType() || t.IsMap() {
+		if len(typeParamKeys) > 0 {
+			return graphs.NewBuiltinGenericTypeSymbolKey(t.Name, typeParamKeys), nil
+		}
+		return graphs.NewUniverseSymbolKey(t.Name), nil
+	}
+
+	if len(typeParamKeys) > 0 {
+		return graphs.NewNonBuiltinGenericTypeSymbolKey(t.Node, t.FVersion, typeParamKeys), nil
+	}
+
+	return graphs.NewNonUniverseBuiltInSymbolKey(fmt.Sprintf("%s.%s", t.PkgPath, t.Name)), nil
 }
 
 func (t TypeUsageMeta) GetBaseTypeRefKey() (graphs.SymbolKey, error) {
 	if len(t.Layers) == 0 {
 		return graphs.SymbolKey{}, fmt.Errorf("TypeUsageMeta has no layers")
 	}
-	baseRef := t.Layers[len(t.Layers)-1].BaseTypeRef
+
+	baseLayer := t.Layers[len(t.Layers)-1]
+	baseRef := baseLayer.BaseTypeRef
 	if baseRef == nil {
 		return graphs.SymbolKey{}, fmt.Errorf("BaseTypeRef is nil on last TypeLayer")
 	}
+
+	if len(baseLayer.TypeParams) > 0 {
+		return graphs.CombineSymKeys(baseRef, baseLayer.TypeParams...), nil
+	}
+
 	return *baseRef, nil
 }
 
@@ -422,7 +492,7 @@ func (t TypeUsageMeta) GetArrayLayersString() string {
 	return strings.Repeat("[]", arrayCount)
 }
 
-func (t TypeUsageMeta) Resolve(metaCache MetaCache) (definitions.TypeMetadata, error) {
+func (t TypeUsageMeta) Resolve(metaCache MetaCache, syncedProvider IdProvider) (definitions.TypeMetadata, error) {
 	typeRef, err := t.GetBaseTypeRefKey()
 	if err != nil {
 		return definitions.TypeMetadata{}, err
@@ -447,9 +517,10 @@ func (t TypeUsageMeta) Resolve(metaCache MetaCache) (definitions.TypeMetadata, e
 		description = t.Annotations.GetDescription()
 	}
 
-	// Join the actual type name with its "[]" prefixes, as necessary.
-	// Ugly, but the spec generator uses that - for now.
-	name := t.GetArrayLayersString() + t.Name
+	name, err := t.GetSyntacticRepresentation(syncedProvider)
+	if err != nil {
+		return definitions.TypeMetadata{}, fmt.Errorf("failed to obtain syntactic representation for type '%s'", t.Name)
+	}
 
 	return definitions.TypeMetadata{
 		Name:                name,
@@ -464,6 +535,14 @@ func (t TypeUsageMeta) Resolve(metaCache MetaCache) (definitions.TypeMetadata, e
 	}, nil
 }
 
+func (t TypeUsageMeta) IsSpecialBuiltin() bool {
+	return t.IsMap() || t.IsContext()
+}
+
+func (t TypeUsageMeta) IsMap() bool {
+	return t.Name == "map" && t.PkgPath == ""
+}
+
 func (t TypeUsageMeta) IsContext() bool {
 	return t.Name == "Context" && t.PkgPath == "context"
 }
@@ -474,7 +553,7 @@ type FieldMeta struct {
 	IsEmbedded bool
 }
 
-func (f FieldMeta) Reduce() definitions.FieldMetadata {
+func (f FieldMeta) Reduce(syncedProvider IdProvider) definitions.FieldMetadata {
 	fieldNode, ok := f.Node.(*ast.Field)
 	if !ok {
 		// Reduce has a pretty nice signature so pretty reluctant to hole it with an added error
@@ -486,7 +565,12 @@ func (f FieldMeta) Reduce() definitions.FieldMetadata {
 		tag = strings.Trim(fieldNode.Tag.Value, "`")
 	}
 
-	decoratedType := f.Type.GetArrayLayersString() + f.Type.Name
+	decoratedType, _ := f.Type.GetSyntacticRepresentation(syncedProvider)
+	/*if err != nil {
+		return definitions.TypeMetadata{}, fmt.Errorf("failed to obtain syntactic representation for type '%s'", t.Name)
+	}*/
+
+	// decoratedType := f.Type.GetArrayLayersString() + f.Type.Name
 	return definitions.FieldMetadata{
 		Name:        f.Name,
 		Type:        decoratedType,

@@ -14,6 +14,12 @@ import (
 	"golang.org/x/tools/go/packages"
 )
 
+type CommonNodeInfo struct {
+	Range       common.ResolvedRange
+	Annotations *annotations.AnnotationHolder
+	PkgPath     string
+	ImportType  common.ImportType
+}
 type RecursiveTypeVisitor struct {
 	BaseVisitor
 
@@ -84,7 +90,7 @@ func (v *RecursiveTypeVisitor) VisitField(
 
 		results = append(results, fieldMeta)
 
-		if _, err := v.resolveFieldTypeRecursive(pkg, file, field); err != nil {
+		if _, err := v.resolveFieldTypeRecursive(pkg, file, nameIdent, field); err != nil {
 			return nil, v.frozenError(err)
 		}
 
@@ -374,10 +380,8 @@ func (v *RecursiveTypeVisitor) resolveFieldNames(field *ast.Field, isEmbedded bo
 	if !isEmbedded {
 		return field.Names
 	}
-	if ident := gast.GetIdentFromExpr(field.Type); ident != nil {
-		return []*ast.Ident{{Name: ident.Name}}
-	}
-	return nil
+
+	return gast.GetIdentFromExpr(field.Type)
 }
 
 func (v *RecursiveTypeVisitor) buildFieldMeta(
@@ -401,7 +405,7 @@ func (v *RecursiveTypeVisitor) buildFieldMeta(
 		)
 	}
 
-	typeUsage, err := v.resolveTypeUsage(pkg, file, field.Type)
+	typeUsage, err := v.resolveTypeUsage(pkg, file, fieldNameIdent, field.Type)
 	if err != nil {
 		return metadata.FieldMeta{}, v.getFrozenError(
 			"could not create type usage metadata for field %v - %v",
@@ -428,43 +432,40 @@ func (v *RecursiveTypeVisitor) buildFieldMeta(
 func (v *RecursiveTypeVisitor) resolveTypeUsage(
 	pkg *packages.Package,
 	file *ast.File,
-	typeExpr ast.Expr,
+	entityExpr ast.Expr,
+	entityTypeExpr ast.Expr,
 ) (metadata.TypeUsageMeta, error) {
-	v.enterFmt("Type usage resolution for file %s expression %v", file.Name.Name, typeExpr)
+	v.enterFmt("Type usage resolution for file %s expression %v", file.Name.Name, entityTypeExpr)
 	defer v.exit()
 
 	// 1. Resolve the type
-	resolvedType, err := gast.ResolveTypeSpecFromExpr(pkg, file, typeExpr, v.context.ArbitrationProvider.Pkg().GetPackage)
+	resolvedType, err := gast.ResolveTypeSpecFromExpr(
+		pkg,
+		file,
+		entityExpr,
+		entityTypeExpr,
+		v.context.ArbitrationProvider.Pkg().GetPackage,
+	)
 	if err != nil {
 		return metadata.TypeUsageMeta{}, v.frozenError(err)
 	}
 
-	importType := common.ImportTypeNone
-	var underlyingAnnotations *annotations.AnnotationHolder
-	var pkgPath string
-	var nodeRange common.ResolvedRange
+	nodeInfo := CommonNodeInfo{ImportType: common.ImportTypeNone}
 
 	// 2. Gather any auxiliary metadata we need for non-universe types
 	if !resolvedType.IsUniverse {
-		nodeRange = common.ResolveNodeRange(resolvedType.DeclaringPackage.Fset, typeExpr)
-		importType, err = v.context.ArbitrationProvider.Ast().GetImportType(file, typeExpr)
+		info, err := v.getCommonNodeInfo(file, resolvedType)
 		if err != nil {
-			return metadata.TypeUsageMeta{}, v.frozenError(err)
+			return metadata.TypeUsageMeta{}, fmt.Errorf("failed to obtain common node info for type '%s'", resolvedType.TypeName)
 		}
-
-		underlyingAnnotations, err = v.tryGetUnderlyingAnnotations(resolvedType)
-		if err != nil {
-			return metadata.TypeUsageMeta{}, err
-		}
-
-		pkgPath = resolvedType.DeclaringPackage.PkgPath
+		nodeInfo = info
 	}
 
 	typeUsageKind := getTypeSymKind(resolvedType.DeclaringPackage, resolvedType)
 	typeLayers, err := v.buildTypeLayers(
 		resolvedType.DeclaringPackage,
 		resolvedType.DeclaringAstFile,
-		typeExpr,
+		entityTypeExpr,
 		resolvedType.TypeName,
 	)
 
@@ -482,20 +483,137 @@ func (v *RecursiveTypeVisitor) resolveTypeUsage(
 		return metadata.TypeUsageMeta{}, err
 	}
 
+	// 4. Resolve any type parameters
+	typeParamUsages := []metadata.TypeUsageMeta{}
+	if len(resolvedType.TypeParameters) > 0 {
+		for _, tParam := range resolvedType.TypeParameters {
+			usage, err := v.resolveTypeUsageFromTypeResolution(file, tParam)
+			if err != nil {
+				return metadata.TypeUsageMeta{}, fmt.Errorf(
+					"failed to resolve generic type parameter '%s' in type '%s' - %v'",
+					tParam.TypeName,
+					resolvedType.TypeName,
+					err,
+				)
+			}
+			typeParamUsages = append(typeParamUsages, usage)
+		}
+	}
+
 	// Finally, cobble it all together
 	return metadata.TypeUsageMeta{
 		SymNodeMeta: metadata.SymNodeMeta{
 			Name:        resolvedType.TypeName,
-			Node:        typeExpr,
-			PkgPath:     pkgPath,
+			Node:        entityTypeExpr,
+			PkgPath:     nodeInfo.PkgPath,
 			SymbolKind:  typeUsageKind,
-			Annotations: underlyingAnnotations,
-			Range:       nodeRange, // May be empty for builtins
+			Annotations: nodeInfo.Annotations,
+			Range:       nodeInfo.Range, // May be empty for builtins
 		},
-		Layers: typeLayers,
-		Import: importType,
+		TypeParams: typeParamUsages,
+		Layers:     typeLayers,
+		Import:     nodeInfo.ImportType,
 	}, nil
 
+}
+
+func (v *RecursiveTypeVisitor) resolveTypeUsageFromTypeResolution(
+	parentFile *ast.File,
+	resolution gast.TypeSpecResolution,
+) (metadata.TypeUsageMeta, error) {
+	v.enterFmt("Resolving usage for type named '%s'", resolution.TypeName)
+	defer v.exit()
+
+	nodeInfo := CommonNodeInfo{ImportType: common.ImportTypeNone}
+
+	// 2. Gather any auxiliary metadata we need for non-universe types
+	if !resolution.IsUniverse {
+		info, err := v.getCommonNodeInfo(parentFile, resolution)
+		if err != nil {
+			return metadata.TypeUsageMeta{}, fmt.Errorf("failed to obtain common node info for type '%s'", resolution.TypeName)
+		}
+		nodeInfo = info
+	}
+
+	typeUsageKind := getTypeSymKind(resolution.DeclaringPackage, resolution)
+	typeLayers, err := v.buildTypeLayers(
+		resolution.DeclaringPackage,
+		resolution.DeclaringAstFile,
+		resolution.TypeNameIdent,
+		resolution.TypeName,
+	)
+
+	if err != nil {
+		return metadata.TypeUsageMeta{}, v.getFrozenError(
+			"failed to build type layers for expression with type name '%v' - %v",
+			resolution.TypeName,
+			err,
+		)
+	}
+
+	// 3. Make sure that if the type is a built in like "error" or "string" or "any",
+	// it's inserted into the symbol graph
+	if err := v.ensureBuiltinTypeIsGraph(resolution); err != nil {
+		return metadata.TypeUsageMeta{}, err
+	}
+
+	// 4. Resolve any type parameters
+	typeParamUsages := []metadata.TypeUsageMeta{}
+	if len(resolution.TypeParameters) > 0 {
+		for _, tParam := range resolution.TypeParameters {
+			usage, err := v.resolveTypeUsageFromTypeResolution(parentFile, tParam)
+			if err != nil {
+				return metadata.TypeUsageMeta{}, fmt.Errorf(
+					"failed to resolve generic type parameter '%s' in type '%s' - %v'",
+					tParam.TypeName,
+					resolution.TypeName,
+					err,
+				)
+			}
+			typeParamUsages = append(typeParamUsages, usage)
+		}
+	}
+
+	// Finally, cobble it all together
+	return metadata.TypeUsageMeta{
+		SymNodeMeta: metadata.SymNodeMeta{
+			Name:        resolution.TypeName,
+			Node:        resolution.TypeNameIdent,
+			PkgPath:     nodeInfo.PkgPath,
+			SymbolKind:  typeUsageKind,
+			Annotations: nodeInfo.Annotations,
+			Range:       nodeInfo.Range, // May be empty for builtins
+		},
+		TypeParams: typeParamUsages,
+		Layers:     typeLayers,
+		Import:     nodeInfo.ImportType,
+	}, nil
+
+}
+
+func (v *RecursiveTypeVisitor) getCommonNodeInfo(
+	file *ast.File,
+	resolvedType gast.TypeSpecResolution,
+) (CommonNodeInfo, error) {
+	nodeRange := common.ResolveNodeRange(resolvedType.DeclaringPackage.Fset, resolvedType.OriginalTypeExpr)
+	importType, err := v.context.ArbitrationProvider.Ast().GetImportType(file, resolvedType.OriginalTypeExpr)
+	if err != nil {
+		return CommonNodeInfo{}, v.frozenError(err)
+	}
+
+	underlyingAnnotations, err := v.tryGetUnderlyingAnnotations(resolvedType)
+	if err != nil {
+		return CommonNodeInfo{}, err
+	}
+
+	pkgPath := resolvedType.DeclaringPackage.PkgPath
+
+	return CommonNodeInfo{
+		Range:       nodeRange,
+		ImportType:  importType,
+		Annotations: underlyingAnnotations,
+		PkgPath:     pkgPath,
+	}, nil
 }
 
 // ensureBuiltinTypeIsGraph ensures that, if the given resolved type is a 'builtin' or 'special builtin' type, it's
@@ -504,8 +622,8 @@ func (v *RecursiveTypeVisitor) ensureBuiltinTypeIsGraph(resolved gast.TypeSpecRe
 	v.enterFmt("Ensuring built-in resolution for %s", resolved.TypeName)
 	defer v.exit()
 
-	if resolved.DeclaringAstFile != nil {
-		// This isn't a universe type — nothing to do here
+	// Ignore non-universe and generic types - those are handled elsewhere. Need to clean this mess up...
+	if resolved.DeclaringAstFile != nil || len(resolved.TypeParameters) > 0 {
 		return nil
 	}
 
@@ -564,28 +682,43 @@ func (v *RecursiveTypeVisitor) buildStructFields(
 func (v *RecursiveTypeVisitor) resolveFieldTypeRecursive(
 	pkg *packages.Package,
 	file *ast.File,
+	fieldNameIdent *ast.Ident,
 	field *ast.Field,
 ) (gast.TypeSpecResolution, error) {
 	v.enterFmt("Recursively resolving type for field [%v] in file %s", field.Names, file.Name.Name)
 	defer v.exit()
 
-	resolved, err := gast.ResolveTypeSpecFromField(pkg, file, field, v.context.ArbitrationProvider.Pkg().GetPackage)
+	resolved, err := gast.ResolveTypeSpecFromField(
+		pkg,
+		file,
+		fieldNameIdent,
+		field,
+		v.context.ArbitrationProvider.Pkg().GetPackage,
+	)
 	if err != nil {
 		return gast.TypeSpecResolution{}, err
 	}
 
-	if err := v.recursivelyResolve(resolved); err != nil {
+	if err := v.recursivelyResolve(file, resolved); err != nil {
 		return gast.TypeSpecResolution{}, err
 	}
 
 	return resolved, err
 }
 
-func (v *RecursiveTypeVisitor) recursivelyResolve(resolved gast.TypeSpecResolution) error {
+func (v *RecursiveTypeVisitor) recursivelyResolve(file *ast.File, resolved gast.TypeSpecResolution) error {
 	v.enterFmt("Headless recursive resolution for type %s", resolved.String())
 	defer v.exit()
 
 	if resolved.IsUniverse {
+		if resolved.TypeName == "map" {
+			tUsage, err := v.resolveTypeUsageFromTypeResolution(file, resolved)
+			if err != nil {
+				return fmt.Errorf("failed to resolve usage type for map - %v", err)
+			}
+
+			v.context.GraphBuilder.AddMap(symboldg.CreateMapNode{Data: tUsage})
+		}
 		return nil
 	}
 
@@ -711,11 +844,14 @@ func (v *RecursiveTypeVisitor) buildTypeLayers(
 		return append([]metadata.TypeLayer{metadata.NewArrayLayer()}, inner...), nil
 
 	case *ast.MapType:
-		keyLayers, err := v.buildTypeLayers(pkg, file, t.Key, exprTypeName)
+		keyName := gast.GetExprTypeString(t.Key)
+		keyLayers, err := v.buildTypeLayers(pkg, file, t.Key, keyName)
 		if err != nil {
 			return nil, err
 		}
-		valueLayers, err := v.buildTypeLayers(pkg, file, t.Value, exprTypeName)
+
+		valueName := gast.GetExprTypeString(t.Value)
+		valueLayers, err := v.buildTypeLayers(pkg, file, t.Value, valueName)
 		if err != nil {
 			return nil, err
 		}
@@ -754,7 +890,13 @@ func (v *RecursiveTypeVisitor) resolveBaseTypeKey(
 	v.enterFmt("Resolving base type key for expression position %d in file %s", expr.Pos(), file.Name.Name)
 	defer v.exit()
 
-	resolved, err := gast.ResolveTypeSpecFromExpr(pkg, file, expr, v.context.ArbitrationProvider.Pkg().GetPackage)
+	resolved, err := gast.ResolveTypeSpecFromExpr(
+		pkg,
+		file,
+		expr,
+		expr,
+		v.context.ArbitrationProvider.Pkg().GetPackage,
+	)
 	if err != nil {
 		return nil, err
 	}

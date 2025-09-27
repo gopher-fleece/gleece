@@ -8,6 +8,7 @@ import (
 	"go/types"
 	"math"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/gopher-fleece/gleece/common"
@@ -282,33 +283,33 @@ func GetUnderlyingTypeName(t types.Type) string {
 	}
 }
 
-func GetFieldTypeString(fieldType ast.Expr) string {
-	switch t := fieldType.(type) {
+func GetExprTypeString(expr ast.Expr) string {
+	switch t := expr.(type) {
 	case *ast.Ident:
 		return t.Name
 
 	case *ast.SelectorExpr:
-		return fmt.Sprintf("%s.%s", GetFieldTypeString(t.X), t.Sel.Name)
+		return fmt.Sprintf("%s.%s", GetExprTypeString(t.X), t.Sel.Name)
 
 	case *ast.StarExpr:
-		return fmt.Sprintf("*%s", GetFieldTypeString(t.X))
+		return fmt.Sprintf("*%s", GetExprTypeString(t.X))
 
 	case *ast.ArrayType:
 		// This takes care of *slices* like '[]int'
 		if t.Len == nil {
-			return fmt.Sprintf("[]%s", GetFieldTypeString(t.Elt))
+			return fmt.Sprintf("[]%s", GetExprTypeString(t.Elt))
 		}
 
 		// This handles fixed-size arrays like '[3]int'
 		if lit, ok := t.Len.(*ast.BasicLit); ok {
-			return fmt.Sprintf("[%s]%s", lit.Value, GetFieldTypeString(t.Elt))
+			return fmt.Sprintf("[%s]%s", lit.Value, GetExprTypeString(t.Elt))
 		}
 
 		// And a fallback for weird edge cases
-		return fmt.Sprintf("[?]%s", GetFieldTypeString(t.Elt))
+		return fmt.Sprintf("[?]%s", GetExprTypeString(t.Elt))
 
 	case *ast.MapType:
-		return fmt.Sprintf("map[%s]%s", GetFieldTypeString(t.Key), GetFieldTypeString(t.Value))
+		return fmt.Sprintf("map[%s]%s", GetExprTypeString(t.Key), GetExprTypeString(t.Value))
 
 	case *ast.ChanType:
 		dir := ""
@@ -320,7 +321,7 @@ func GetFieldTypeString(fieldType ast.Expr) string {
 		default:
 			dir = "bidirectional"
 		}
-		return fmt.Sprintf("Channel (%s, type: %s)", dir, GetFieldTypeString(t.Value))
+		return fmt.Sprintf("Channel (%s, type: %s)", dir, GetExprTypeString(t.Value))
 
 	case *ast.FuncType:
 		return "Function"
@@ -332,34 +333,33 @@ func GetFieldTypeString(fieldType ast.Expr) string {
 		return "Struct"
 
 	case *ast.Ellipsis:
-		return fmt.Sprintf("Variadic (...%s)", GetFieldTypeString(t.Elt))
+		return fmt.Sprintf("Variadic (...%s)", GetExprTypeString(t.Elt))
 
 	case *ast.ParenExpr:
-		return fmt.Sprintf("Parenthesized (%s)", GetFieldTypeString(t.X))
+		return fmt.Sprintf("Parenthesized (%s)", GetExprTypeString(t.X))
 
 	default:
-		return fmt.Sprintf("Unknown type (%T)", fieldType)
+		return fmt.Sprintf("Unknown type (%T)", expr)
 	}
 }
 
-func GetIdentFromExpr(expr ast.Expr) *ast.Ident {
+func GetIdentFromExpr(expr ast.Expr) []*ast.Ident {
 	switch t := expr.(type) {
 	case *ast.Ident:
-		return t
+		return []*ast.Ident{t}
 
 	case *ast.StarExpr:
 		return GetIdentFromExpr(t.X)
 
 	case *ast.SelectorExpr:
 		// Returns the selector's "Baz" (e.g. `other.Baz`)
-		return t.Sel
+		return []*ast.Ident{t.Sel}
 
 	case *ast.ArrayType:
 		return GetIdentFromExpr(t.Elt)
 
 	case *ast.MapType:
-		// optional: you could return key or value ident
-		return GetIdentFromExpr(t.Value)
+		return slices.Concat(GetIdentFromExpr(t.Key), GetIdentFromExpr(t.Value))
 
 	case *ast.ChanType:
 		return GetIdentFromExpr(t.Value)
@@ -378,8 +378,10 @@ type TypeSpecResolution struct {
 	DeclaringPackage *packages.Package
 	DeclaringAstFile *ast.File
 	TypeSpec         *ast.TypeSpec
+	OriginalTypeExpr ast.Expr
 	TypeNameIdent    *ast.Ident
 	GenDecl          *ast.GenDecl
+	TypeParameters   []TypeSpecResolution // Recursive- this holds generic parameters like map TKey/TValue
 }
 
 func (t TypeSpecResolution) String() string {
@@ -400,10 +402,11 @@ func (t TypeSpecResolution) String() string {
 func ResolveTypeSpecFromField(
 	declaringPkg *packages.Package, // <<<< Used only for locally defined type references
 	declaringFile *ast.File,
+	fieldNameIdent *ast.Ident,
 	field *ast.Field,
 	pkgResolver func(pkgPath string) (*packages.Package, error),
 ) (TypeSpecResolution, error) {
-	return ResolveTypeSpecFromExpr(declaringPkg, declaringFile, field.Type, pkgResolver)
+	return ResolveTypeSpecFromExpr(declaringPkg, declaringFile, fieldNameIdent, field.Type, pkgResolver)
 }
 
 // ResolveTypeSpecFromExpr resolves a type expression to its defining TypeSpec,
@@ -411,15 +414,26 @@ func ResolveTypeSpecFromField(
 func ResolveTypeSpecFromExpr(
 	pkg *packages.Package,
 	file *ast.File,
-	expr ast.Expr,
+	entityExpr ast.Expr,
+	entityTypeExpr ast.Expr,
 	getPkg func(pkgPath string) (*packages.Package, error), // typically your package resolver
 ) (TypeSpecResolution, error) {
-	ident := GetIdentFromExpr(expr)
-	if ident == nil {
+	if mapTypeExpr, isMapType := entityTypeExpr.(*ast.MapType); isMapType {
+		return ResolveMapType(pkg, file, entityExpr, mapTypeExpr, getPkg)
+	}
+
+	identifiers := GetIdentFromExpr(entityTypeExpr)
+	if identifiers == nil {
 		return TypeSpecResolution{}, fmt.Errorf(
 			"cannot resolve type: expression has no base identifier or is an unsupported type such as an inline struct",
 		)
 	}
+
+	if len(identifiers) > 1 {
+		return TypeSpecResolution{}, fmt.Errorf("GetIdentFromExpr returned more than one result - this indicates a logic bug")
+	}
+
+	ident := identifiers[0]
 
 	obj := pkg.TypesInfo.Uses[ident]
 	if obj == nil {
@@ -439,8 +453,10 @@ func ResolveTypeSpecFromExpr(
 	// Universe type fallback
 	if obj.Pkg() == nil && types.Universe.Lookup(obj.Name()) == obj {
 		return TypeSpecResolution{
-			TypeName:   obj.Name(),
-			IsUniverse: true,
+			TypeName:         obj.Name(),
+			IsUniverse:       true,
+			TypeNameIdent:    ident,
+			OriginalTypeExpr: entityTypeExpr,
 		}, nil
 	}
 
@@ -449,6 +465,24 @@ func ResolveTypeSpecFromExpr(
 		return TypeSpecResolution{}, fmt.Errorf("could not locate declaring package: %s", obj.Pkg().Path())
 	}
 
+	resolvedFromPkg := resolveTypeSpecFromPackage(declPkg, entityTypeExpr, typeName, ident)
+	if resolvedFromPkg != nil {
+		return *resolvedFromPkg, nil
+	}
+
+	return TypeSpecResolution{}, fmt.Errorf(
+		"could not find TypeSpec for type '%s' in package '%s'",
+		typeName.Name(),
+		obj.Pkg().Path(),
+	)
+}
+
+func resolveTypeSpecFromPackage(
+	declPkg *packages.Package,
+	entityTypeExpr ast.Expr,
+	typeName *types.TypeName,
+	originIdent *ast.Ident,
+) *TypeSpecResolution {
 	// Search for the TypeSpec by matching name in declPkg.Syntax
 	for _, declFile := range declPkg.Syntax {
 		for _, decl := range declFile.Decls {
@@ -462,25 +496,53 @@ func ResolveTypeSpecFromExpr(
 					continue
 				}
 				if typeSpec.Name.Name == typeName.Name() {
-					return TypeSpecResolution{
+					return common.Ptr(TypeSpecResolution{
 						DeclaringPackage: declPkg,
 						DeclaringAstFile: declFile,
 						TypeSpec:         typeSpec,
 						GenDecl:          genDecl,
 						TypeName:         typeName.Name(),
-						TypeNameIdent:    ident,
+						TypeNameIdent:    originIdent,
+						OriginalTypeExpr: entityTypeExpr,
 						IsUniverse:       false,
-					}, nil
+					})
 				}
 			}
 		}
 	}
 
-	return TypeSpecResolution{}, fmt.Errorf(
-		"could not find TypeSpec for type '%s' in package '%s'",
-		typeName.Name(),
-		obj.Pkg().Path(),
-	)
+	return nil
+}
+
+func ResolveMapType(
+	pkg *packages.Package,
+	file *ast.File,
+	mapExpr ast.Expr,
+	mapType *ast.MapType,
+	getPkg func(pkgPath string) (*packages.Package, error), // typically your package resolver
+) (TypeSpecResolution, error) {
+	resolvedKey, err := ResolveTypeSpecFromExpr(pkg, file, mapType, mapType.Key, getPkg)
+	if err != nil {
+		return TypeSpecResolution{}, fmt.Errorf("failed to resolve map key - %v", err)
+	}
+
+	resolvedValue, err := ResolveTypeSpecFromExpr(pkg, file, mapType, mapType.Value, getPkg)
+	if err != nil {
+		return TypeSpecResolution{}, fmt.Errorf("failed to resolve map key - %v", err)
+	}
+
+	mapIdent := GetIdentFromExpr(mapExpr)
+	if len(mapIdent) != 1 {
+		return TypeSpecResolution{}, fmt.Errorf("mapExpr returned more than a single ident - this indicates a logic bug")
+	}
+
+	return TypeSpecResolution{
+		TypeName:         "map",
+		TypeNameIdent:    mapIdent[0],
+		OriginalTypeExpr: mapExpr,
+		IsUniverse:       true,
+		TypeParameters:   []TypeSpecResolution{resolvedKey, resolvedValue},
+	}, nil
 }
 
 func GetAstFileName(fSet *token.FileSet, file *ast.File) string {

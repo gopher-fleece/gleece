@@ -61,3 +61,7 @@ type CreateConstNode struct {
 	Data        metadata.ConstMeta
 	Annotations *annotations.AnnotationHolder
 }
+
+type CreateMapNode struct {
+	Data metadata.TypeUsageMeta
+}

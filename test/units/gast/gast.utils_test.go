@@ -426,7 +426,7 @@ var _ = Describe("Unit Tests - AST", func() {
 				}
 
 				astField := utils.GetAstFieldByNameOrFail(typesPkgFullSyntax, "StructForGetUnderlyingTypeName", fieldName)
-				actualStr := gast.GetFieldTypeString(astField.Type)
+				actualStr := gast.GetExprTypeString(astField.Type)
 
 				Expect(actualStr).To(Equal(expectedStr), fmt.Sprintf("Mismatch on field %q", fieldName))
 			}
@@ -444,7 +444,7 @@ var _ = Describe("Unit Tests - AST", func() {
 				utils.FailWithTestCodeError("Function argument's type is not an ellipsis expression")
 			}
 
-			Expect(gast.GetFieldTypeString(ellipsisExpr)).To(Equal("Variadic (...int)"))
+			Expect(gast.GetExprTypeString(ellipsisExpr)).To(Equal("Variadic (...int)"))
 		})
 
 		It("Correctly falls back for unsupported array length expressions", func() {
@@ -457,7 +457,7 @@ var _ = Describe("Unit Tests - AST", func() {
 				Elt: &ast.Ident{Name: "int"},
 			}
 
-			result := gast.GetFieldTypeString(arrayExpr)
+			result := gast.GetExprTypeString(arrayExpr)
 			Expect(result).To(Equal("[?]int"))
 		})
 
@@ -466,7 +466,7 @@ var _ = Describe("Unit Tests - AST", func() {
 				Dir:   ast.SEND,
 				Value: &ast.Ident{Name: "int"},
 			}
-			Expect(gast.GetFieldTypeString(channel)).To(Equal("Channel (send-only, type: int)"))
+			Expect(gast.GetExprTypeString(channel)).To(Equal("Channel (send-only, type: int)"))
 		})
 
 		It("Returns receive-only channel type string", func() {
@@ -474,18 +474,18 @@ var _ = Describe("Unit Tests - AST", func() {
 				Dir:   ast.RECV,
 				Value: &ast.Ident{Name: "string"},
 			}
-			Expect(gast.GetFieldTypeString(channel)).To(Equal("Channel (receive-only, type: string)"))
+			Expect(gast.GetExprTypeString(channel)).To(Equal("Channel (receive-only, type: string)"))
 		})
 
 		It("Returns 'Interface' for *ast.InterfaceType", func() {
 			iFace := &ast.InterfaceType{}
-			Expect(gast.GetFieldTypeString(iFace)).To(Equal("Interface"))
+			Expect(gast.GetExprTypeString(iFace)).To(Equal("Interface"))
 		})
 
 		It("Returns Unknown type for unhandled AST type", func() {
 			// ast.BadExpr is never specifically handled, so it will hit the default branch.
 			bad := &ast.BadExpr{}
-			got := gast.GetFieldTypeString(bad)
+			got := gast.GetExprTypeString(bad)
 			Expect(got).To(MatchRegexp(`Unknown type \(\*ast\.BadExpr\)`))
 		})
 	})
@@ -493,36 +493,37 @@ var _ = Describe("Unit Tests - AST", func() {
 	Context("GetIdentFromExpr", func() {
 		It("Returns the ident when given an *ast.Ident", func() {
 			id := &ast.Ident{Name: "x"}
-			Expect(gast.GetIdentFromExpr(id)).To(Equal(id))
+			Expect(gast.GetIdentFromExpr(id)).To(HaveExactElements(id))
 		})
 
 		It("Unwraps a star expression", func() {
 			id := &ast.Ident{Name: "x"}
-			Expect(gast.GetIdentFromExpr(&ast.StarExpr{X: id})).To(Equal(id))
+			Expect(gast.GetIdentFromExpr(&ast.StarExpr{X: id})).To(HaveExactElements(id))
 		})
 
 		It("Returns selector's Sel for SelectorExpr", func() {
 			sel := &ast.Ident{Name: "Baz"}
 			se := &ast.SelectorExpr{X: ast.NewIdent("pkg"), Sel: sel}
-			Expect(gast.GetIdentFromExpr(se)).To(Equal(sel))
+			Expect(gast.GetIdentFromExpr(se)).To(HaveExactElements(sel))
 		})
 
 		It("Unwraps array element type", func() {
 			id := &ast.Ident{Name: "x"}
 			arr := &ast.ArrayType{Elt: id}
-			Expect(gast.GetIdentFromExpr(arr)).To(Equal(id))
+			Expect(gast.GetIdentFromExpr(arr)).To(HaveExactElements(id))
 		})
 
 		It("Returns value ident for map types", func() {
-			id := &ast.Ident{Name: "val"}
-			m := &ast.MapType{Key: &ast.Ident{Name: "k"}, Value: id}
-			Expect(gast.GetIdentFromExpr(m)).To(Equal(id))
+			keyIdent := &ast.Ident{Name: "key"}
+			valueIdent := &ast.Ident{Name: "val"}
+			m := &ast.MapType{Key: keyIdent, Value: valueIdent}
+			Expect(gast.GetIdentFromExpr(m)).To(HaveExactElements(keyIdent, valueIdent))
 		})
 
 		It("Returns value ident for channel types", func() {
 			id := &ast.Ident{Name: "c"}
 			ch := &ast.ChanType{Value: id}
-			Expect(gast.GetIdentFromExpr(ch)).To(Equal(id))
+			Expect(gast.GetIdentFromExpr(ch)).To(HaveExactElements(id))
 		})
 
 		It("Returns nil for function types", func() {
@@ -545,9 +546,15 @@ var _ = Describe("Unit Tests - AST", func() {
 				},
 			}
 
-			res, err := gast.ResolveTypeSpecFromExpr(pkg, &ast.File{Name: ast.NewIdent("f")}, expr, func(string) (*packages.Package, error) {
-				return nil, nil
-			})
+			res, err := gast.ResolveTypeSpecFromExpr(
+				pkg,
+				&ast.File{Name: ast.NewIdent("f")},
+				expr,
+				expr,
+				func(string) (*packages.Package, error) {
+					return nil, nil
+				},
+			)
 
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("expression has no base identifier"))
@@ -564,9 +571,15 @@ var _ = Describe("Unit Tests - AST", func() {
 				Types: types.NewPackage("mypkg/path", "mypkg"),
 			}
 
-			res, err := gast.ResolveTypeSpecFromExpr(pkg, &ast.File{Name: ast.NewIdent("f")}, ident, func(string) (*packages.Package, error) {
-				return nil, nil
-			})
+			res, err := gast.ResolveTypeSpecFromExpr(
+				pkg,
+				&ast.File{Name: ast.NewIdent("f")},
+				ident,
+				ident,
+				func(string) (*packages.Package, error) {
+					return nil, nil
+				},
+			)
 
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("cannot resolve identifier"))
@@ -586,9 +599,15 @@ var _ = Describe("Unit Tests - AST", func() {
 				},
 			}
 
-			res, err := gast.ResolveTypeSpecFromExpr(pkg, &ast.File{Name: ast.NewIdent("f")}, ident, func(string) (*packages.Package, error) {
-				return nil, nil
-			})
+			res, err := gast.ResolveTypeSpecFromExpr(
+				pkg,
+				&ast.File{Name: ast.NewIdent("f")},
+				ident,
+				ident,
+				func(string) (*packages.Package, error) {
+					return nil, nil
+				},
+			)
 
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("resolved object is not a type"))
@@ -608,9 +627,15 @@ var _ = Describe("Unit Tests - AST", func() {
 				},
 			}
 
-			res, err := gast.ResolveTypeSpecFromExpr(pkg, &ast.File{Name: ast.NewIdent("f")}, ident, func(string) (*packages.Package, error) {
-				return nil, nil
-			})
+			res, err := gast.ResolveTypeSpecFromExpr(
+				pkg,
+				&ast.File{Name: ast.NewIdent("f")},
+				ident,
+				ident,
+				func(string) (*packages.Package, error) {
+					return nil, nil
+				},
+			)
 
 			Expect(err).ToNot(HaveOccurred())
 			Expect(res.IsUniverse).To(BeTrue())
@@ -631,9 +656,15 @@ var _ = Describe("Unit Tests - AST", func() {
 				},
 			}
 
-			res, err := gast.ResolveTypeSpecFromExpr(pkg, &ast.File{Name: ast.NewIdent("f")}, ident, func(path string) (*packages.Package, error) {
-				return nil, fmt.Errorf("fail-resolve")
-			})
+			res, err := gast.ResolveTypeSpecFromExpr(
+				pkg,
+				&ast.File{Name: ast.NewIdent("f")},
+				ident,
+				ident,
+				func(path string) (*packages.Package, error) {
+					return nil, fmt.Errorf("fail-resolve")
+				},
+			)
 
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("could not locate declaring package"))
@@ -672,13 +703,19 @@ var _ = Describe("Unit Tests - AST", func() {
 				Syntax: []*ast.File{declFile},
 			}
 
-			res, err := gast.ResolveTypeSpecFromExpr(mainPkg, &ast.File{Name: ast.NewIdent("f")}, ident, func(path string) (*packages.Package, error) {
-				// Only accept the path used above
-				if path == "decl/pg" {
-					return declPkg, nil
-				}
-				return nil, fmt.Errorf("not found")
-			})
+			res, err := gast.ResolveTypeSpecFromExpr(
+				mainPkg,
+				&ast.File{Name: ast.NewIdent("f")},
+				ident,
+				ident,
+				func(path string) (*packages.Package, error) {
+					// Only accept the path used above
+					if path == "decl/pg" {
+						return declPkg, nil
+					}
+					return nil, fmt.Errorf("not found")
+				},
+			)
 
 			Expect(err).ToNot(HaveOccurred())
 			Expect(res.IsUniverse).To(BeFalse())
@@ -709,12 +746,18 @@ var _ = Describe("Unit Tests - AST", func() {
 				},
 			}
 
-			res, err := gast.ResolveTypeSpecFromExpr(mainPkg, &ast.File{Name: ast.NewIdent("f")}, ident, func(path string) (*packages.Package, error) {
-				if path == "decl2/pg" {
-					return declPkg, nil
-				}
-				return nil, fmt.Errorf("not found")
-			})
+			res, err := gast.ResolveTypeSpecFromExpr(
+				mainPkg,
+				&ast.File{Name: ast.NewIdent("f")},
+				ident,
+				ident,
+				func(path string) (*packages.Package, error) {
+					if path == "decl2/pg" {
+						return declPkg, nil
+					}
+					return nil, fmt.Errorf("not found")
+				},
+			)
 
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("could not find TypeSpec for type"))
@@ -757,12 +800,18 @@ var _ = Describe("Unit Tests - AST", func() {
 			}
 
 			// getPkg returns the declaring package for the object's package path
-			res, err := gast.ResolveTypeSpecFromExpr(mainPkg, &ast.File{Name: ast.NewIdent("f")}, ident, func(path string) (*packages.Package, error) {
-				if path == "decl3/pg" {
-					return declPkg, nil
-				}
-				return nil, fmt.Errorf("not found")
-			})
+			res, err := gast.ResolveTypeSpecFromExpr(
+				mainPkg,
+				&ast.File{Name: ast.NewIdent("f")},
+				ident,
+				ident,
+				func(path string) (*packages.Package, error) {
+					if path == "decl3/pg" {
+						return declPkg, nil
+					}
+					return nil, fmt.Errorf("not found")
+				},
+			)
 
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("could not find TypeSpec for type"))
@@ -1285,7 +1334,7 @@ var _ = Describe("Unit Tests - AST", func() {
 	})
 })
 
-func TestUnits(t *testing.T) {
+func TestUnitsAST(t *testing.T) {
 	logger.SetLogLevel(logger.LogLevelNone)
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Unit Tests - AST")
