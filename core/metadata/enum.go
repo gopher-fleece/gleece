@@ -78,7 +78,7 @@ type EnumMeta struct {
 	Values    []EnumValueDefinition
 }
 
-func (e EnumMeta) Reduce() definitions.EnumMetadata {
+func (e EnumMeta) Reduce(_ ReductionContext) (definitions.EnumMetadata, error) {
 	stringifiedValues := linq.Map(e.Values, func(value EnumValueDefinition) string {
 		return fmt.Sprintf("%v", value.Value)
 	})
@@ -90,5 +90,5 @@ func (e EnumMeta) Reduce() definitions.EnumMetadata {
 		Values:      stringifiedValues,
 		Type:        string(e.ValueKind),
 		Deprecation: GetDeprecationOpts(e.Annotations),
-	}
+	}, nil
 }

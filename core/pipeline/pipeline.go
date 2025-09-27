@@ -8,7 +8,6 @@ import (
 
 	MapSet "github.com/deckarep/golang-set/v2"
 	"github.com/gopher-fleece/gleece/common"
-	"github.com/gopher-fleece/gleece/common/linq"
 	"github.com/gopher-fleece/gleece/core/arbitrators/caching"
 	"github.com/gopher-fleece/gleece/core/metadata"
 	"github.com/gopher-fleece/gleece/core/validators"
@@ -127,10 +126,16 @@ func (p *GleecePipeline) GenerateIntermediate() (GleeceFlattenedMetadata, error)
 		return GleeceFlattenedMetadata{}, err
 	}
 
+	models, err := p.getModels()
+	if err != nil {
+		logger.Error("Pipeline failed to obtain models list - %w", err)
+		return GleeceFlattenedMetadata{}, err
+	}
+
 	return GleeceFlattenedMetadata{
 		Imports:           p.getImports(controllers),
 		Flat:              controllers,
-		Models:            p.getModels(),
+		Models:            models,
 		PlainErrorPresent: p.symGraph.IsSpecialPresent(symboldg.SpecialTypeError),
 	}, nil
 }
@@ -234,7 +239,7 @@ func (p *GleecePipeline) reduceControllers(controllers []metadata.ControllerMeta
 	var reducedControllers []definitions.ControllerMetadata
 
 	for _, controller := range controllers {
-		reduced, err := controller.Reduce(p.gleeceConfig, p.metadataCache, &p.syncedProvider)
+		reduced, err := controller.Reduce(p.getReductionContext())
 		if err != nil {
 			return []definitions.ControllerMetadata{}, err
 		}
@@ -244,16 +249,26 @@ func (p *GleecePipeline) reduceControllers(controllers []metadata.ControllerMeta
 	return reducedControllers, nil
 }
 
-func (p *GleecePipeline) getModels() definitions.Models {
-	structs := p.symGraph.Structs()
-	reducedStructs := linq.Map(structs, func(s metadata.StructMeta) definitions.StructMetadata {
-		return s.Reduce()
-	})
+func (p *GleecePipeline) getModels() (definitions.Models, error) {
+	ctx := p.getReductionContext()
 
-	enums := p.symGraph.Enums()
-	reducedEnums := linq.Map(enums, func(e metadata.EnumMeta) definitions.EnumMetadata {
-		return e.Reduce()
-	})
+	reducedStructs := []definitions.StructMetadata{}
+	for _, structEntity := range p.symGraph.Structs() {
+		reduced, err := structEntity.Reduce(ctx)
+		if err != nil {
+			return definitions.Models{}, fmt.Errorf("failed during reduction of struct '%s' - %v", structEntity.Name, err)
+		}
+		reducedStructs = append(reducedStructs, reduced)
+	}
+
+	reducedEnums := []definitions.EnumMetadata{}
+	for _, enumEntity := range p.symGraph.Enums() {
+		reduced, err := enumEntity.Reduce(ctx)
+		if err != nil {
+			return definitions.Models{}, fmt.Errorf("failed during reduction of enum '%s' - %v", enumEntity.Name, err)
+		}
+		reducedEnums = append(reducedEnums, reduced)
+	}
 
 	slices.SortFunc(reducedStructs, func(a, b definitions.StructMetadata) int {
 		return strings.Compare(a.Name, b.Name)
@@ -266,5 +281,13 @@ func (p *GleecePipeline) getModels() definitions.Models {
 	return definitions.Models{
 		Structs: reducedStructs,
 		Enums:   reducedEnums,
+	}, nil
+}
+
+func (p *GleecePipeline) getReductionContext() metadata.ReductionContext {
+	return metadata.ReductionContext{
+		GleeceConfig:   p.gleeceConfig,
+		MetaCache:      p.metadataCache,
+		SyncedProvider: &p.syncedProvider,
 	}
 }

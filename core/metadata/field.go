@@ -1,6 +1,7 @@
 package metadata
 
 import (
+	"fmt"
 	"go/ast"
 	"strings"
 
@@ -16,11 +17,10 @@ type FieldMeta struct {
 	IsEmbedded bool
 }
 
-func (f FieldMeta) Reduce() definitions.FieldMetadata {
+func (f FieldMeta) Reduce(_ ReductionContext) (definitions.FieldMetadata, error) {
 	fieldNode, ok := f.Node.(*ast.Field)
 	if !ok {
-		// Reduce has a pretty nice signature so pretty reluctant to hole it with an added error
-		panic("field %s has a non-field node type")
+		return definitions.FieldMetadata{}, fmt.Errorf("field %s has a non-field node type", f.Name)
 	}
 
 	var tag string
@@ -36,7 +36,7 @@ func (f FieldMeta) Reduce() definitions.FieldMetadata {
 		Tag:         tag,
 		IsEmbedded:  f.IsEmbedded,
 		Deprecation: common.Ptr(GetDeprecationOpts(f.Annotations)),
-	}
+	}, nil
 }
 
 func (m TypeUsageMeta) IsUniverseType() bool {

@@ -8,8 +8,8 @@ type FuncReturnValue struct {
 	Type    TypeUsageMeta
 }
 
-func (v FuncReturnValue) Reduce(metaCache MetaCache, syncedProvider IdProvider) (definitions.FuncReturnValue, error) {
-	typeMeta, err := v.Type.Resolve(metaCache)
+func (v FuncReturnValue) Reduce(ctx ReductionContext) (definitions.FuncReturnValue, error) {
+	typeMeta, err := v.Type.Resolve(ctx)
 	if err != nil {
 		return definitions.FuncReturnValue{}, err
 	}
@@ -21,7 +21,7 @@ func (v FuncReturnValue) Reduce(metaCache MetaCache, syncedProvider IdProvider) 
 
 	return definitions.FuncReturnValue{
 		Ordinal:            v.Ordinal,
-		UniqueImportSerial: syncedProvider.GetIdForKey(typeRef),
+		UniqueImportSerial: ctx.SyncedProvider.GetIdForKey(typeRef),
 		TypeMetadata:       typeMeta,
 	}, nil
 }

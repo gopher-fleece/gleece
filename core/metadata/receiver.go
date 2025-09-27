@@ -16,37 +16,8 @@ type ReceiverMeta struct {
 	RetVals []FuncReturnValue
 }
 
-func (v ReceiverMeta) RetValsRange() common.ResolvedRange {
-	switch len(v.RetVals) {
-	case 0:
-		return common.ResolvedRange{}
-	case 1:
-		return common.ResolvedRange{
-			StartLine: v.RetVals[0].Range.StartLine,
-			EndLine:   v.RetVals[0].Range.EndLine,
-			StartCol:  v.RetVals[0].Range.StartCol,
-			EndCol:    v.RetVals[0].Range.EndCol,
-		}
-	default:
-		// Copy so as not to affect original order
-		retVals := append([]FuncReturnValue{}, v.RetVals...)
-		slices.SortFunc(retVals, func(valA, valB FuncReturnValue) int {
-			return cmp.Compare(valA.Ordinal, valB.Ordinal)
-		})
-
-		lastIndex := len(retVals) - 1
-		return common.ResolvedRange{
-			StartLine: retVals[0].Range.StartLine,
-			EndLine:   retVals[lastIndex].Range.EndLine,
-			StartCol:  retVals[0].Range.StartCol,
-			EndCol:    retVals[lastIndex].Range.EndCol,
-		}
-	}
-}
-
 func (m ReceiverMeta) Reduce(
-	metaCache MetaCache,
-	syncedProvider IdProvider,
+	ctx ReductionContext,
 	parentSecurity []definitions.RouteSecurity,
 ) (definitions.RouteMetadata, error) {
 
@@ -71,7 +42,7 @@ func (m ReceiverMeta) Reduce(
 
 	responses := []definitions.FuncReturnValue{}
 	for _, fRetVal := range m.RetVals {
-		response, err := fRetVal.Reduce(metaCache, syncedProvider)
+		response, err := fRetVal.Reduce(ctx)
 		if err != nil {
 			return definitions.RouteMetadata{}, err
 		}
@@ -80,7 +51,7 @@ func (m ReceiverMeta) Reduce(
 
 	reducedParams := []definitions.FuncParam{}
 	for _, param := range m.Params {
-		reducedParam, err := param.Reduce(metaCache, syncedProvider)
+		reducedParam, err := param.Reduce(ctx)
 		if err != nil {
 			return definitions.RouteMetadata{}, err
 		}
@@ -117,4 +88,32 @@ func (m ReceiverMeta) Reduce(
 		Responses:           responses,
 		ErrorResponses:      errorResponses,
 	}, nil
+}
+
+func (v ReceiverMeta) RetValsRange() common.ResolvedRange {
+	switch len(v.RetVals) {
+	case 0:
+		return common.ResolvedRange{}
+	case 1:
+		return common.ResolvedRange{
+			StartLine: v.RetVals[0].Range.StartLine,
+			EndLine:   v.RetVals[0].Range.EndLine,
+			StartCol:  v.RetVals[0].Range.StartCol,
+			EndCol:    v.RetVals[0].Range.EndCol,
+		}
+	default:
+		// Copy so as not to affect original order
+		retVals := append([]FuncReturnValue{}, v.RetVals...)
+		slices.SortFunc(retVals, func(valA, valB FuncReturnValue) int {
+			return cmp.Compare(valA.Ordinal, valB.Ordinal)
+		})
+
+		lastIndex := len(retVals) - 1
+		return common.ResolvedRange{
+			StartLine: retVals[0].Range.StartLine,
+			EndLine:   retVals[lastIndex].Range.EndLine,
+			StartCol:  retVals[0].Range.StartCol,
+			EndCol:    retVals[lastIndex].Range.EndCol,
+		}
+	}
 }

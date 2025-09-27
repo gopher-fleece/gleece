@@ -12,8 +12,9 @@ import (
 
 type TypeUsageMeta struct {
 	SymNodeMeta
-	Import common.ImportType
-	Layers []TypeLayer
+	TypeParams []TypeUsageMeta // Generic type parameters like TKey/TValue in map[TKey]TValue
+	Import     common.ImportType
+	Layers     []TypeLayer
 }
 
 func (t TypeUsageMeta) GetBaseTypeRefKey() (graphs.SymbolKey, error) {
@@ -39,13 +40,13 @@ func (t TypeUsageMeta) GetArrayLayersString() string {
 	return strings.Repeat("[]", arrayCount)
 }
 
-func (t TypeUsageMeta) Resolve(metaCache MetaCache) (definitions.TypeMetadata, error) {
+func (t TypeUsageMeta) Resolve(ctx ReductionContext) (definitions.TypeMetadata, error) {
 	typeRef, err := t.GetBaseTypeRefKey()
 	if err != nil {
 		return definitions.TypeMetadata{}, err
 	}
 
-	underlyingEnum := metaCache.GetEnum(typeRef)
+	underlyingEnum := ctx.MetaCache.GetEnum(typeRef)
 
 	alias := definitions.AliasMetadata{}
 	if underlyingEnum != nil {

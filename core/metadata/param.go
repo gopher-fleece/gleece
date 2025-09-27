@@ -8,8 +8,8 @@ type FuncParam struct {
 	Type    TypeUsageMeta
 }
 
-func (v FuncParam) Reduce(metaCache MetaCache, syncedProvider IdProvider) (definitions.FuncParam, error) {
-	typeMeta, err := v.Type.Resolve(metaCache)
+func (v FuncParam) Reduce(ctx ReductionContext) (definitions.FuncParam, error) {
+	typeMeta, err := v.Type.Resolve(ctx)
 	if err != nil {
 		return definitions.FuncParam{}, err
 	}
@@ -60,7 +60,7 @@ func (v FuncParam) Reduce(metaCache MetaCache, syncedProvider IdProvider) (defin
 		PassedIn:           passedIn,
 		NameInSchema:       nameInSchema,
 		Description:        paramDescription,
-		UniqueImportSerial: syncedProvider.GetIdForKey(typeRef),
+		UniqueImportSerial: ctx.SyncedProvider.GetIdForKey(typeRef),
 		Validator:          validator,
 		Deprecation:        GetDeprecationOpts(v.Annotations),
 	}, nil

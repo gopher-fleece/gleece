@@ -1,6 +1,8 @@
 package metadata
 
 import (
+	"fmt"
+
 	"github.com/gopher-fleece/gleece/core/annotations"
 	"github.com/gopher-fleece/gleece/definitions"
 )
@@ -10,10 +12,14 @@ type StructMeta struct {
 	Fields []FieldMeta
 }
 
-func (s StructMeta) Reduce() definitions.StructMetadata {
+func (s StructMeta) Reduce(ctx ReductionContext) (definitions.StructMetadata, error) {
 	reducedFields := make([]definitions.FieldMetadata, len(s.Fields))
 	for idx, field := range s.Fields {
-		reducedFields[idx] = field.Reduce()
+		reduced, err := field.Reduce(ctx)
+		if err != nil {
+			return definitions.StructMetadata{}, fmt.Errorf("failed to reduce field '%s' - %v", field.Name, err)
+		}
+		reducedFields[idx] = reduced
 	}
 
 	return definitions.StructMetadata{
@@ -22,5 +28,5 @@ func (s StructMeta) Reduce() definitions.StructMetadata {
 		Description: annotations.GetDescription(s.Annotations),
 		Fields:      reducedFields,
 		Deprecation: GetDeprecationOpts(s.Annotations),
-	}
+	}, nil
 }
