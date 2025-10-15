@@ -26,16 +26,16 @@ func validateNotNilSlice(fl validator.FieldLevel) bool {
 func validateStartsWithLetter(fl validator.FieldLevel) bool {
 	field := fl.Field().String()
 	if field == "" {
-		return false
+		return true // for empty validation, pass "required" tag too
 	}
 	firstChar := rune(field[0])
 	return unicode.IsLetter(firstChar)
 }
 
 // registerEnumValidator creates a custom validation function for enum types
-func registerEnumValidator(enumValues interface{}) validator.Func {
+func registerEnumValidator(enumValues any) validator.Func {
 	values := reflect.ValueOf(enumValues)
-	allowedValues := make(map[interface{}]struct{})
+	allowedValues := make(map[any]struct{})
 
 	for i := 0; i < values.Len(); i++ {
 		allowedValues[values.Index(i).Interface()] = struct{}{}
@@ -82,6 +82,7 @@ func initValidator() {
 		"security_schema_in",
 		registerEnumValidator(
 			[]definitions.SecuritySchemeIn{
+				definitions.Empty,
 				definitions.InQuery,
 				definitions.InHeader,
 				definitions.InCookie,
