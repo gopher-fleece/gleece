@@ -379,6 +379,11 @@
         "in": "header",
         "name": "x-header-name",
         "type": "apiKey"
+      },
+      "securitySchemaName3": {
+        "description": "Bearer authentication for the API",
+        "scheme": "bearer",
+        "type": "http"
       }
     }
   },
