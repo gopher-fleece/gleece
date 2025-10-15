@@ -9,7 +9,7 @@ Generated Date: 2025-10-15
 Target Engine: Chi v5 (https://github.com/go-chi/chi)
 --
 Usage:
-Refer to the Gleece documentation for details on how to use the generated routes and handlers.
+Refer to the Gleece documentation https://docs.gleece.dev for details on how to use the generated routes and handlers.
 --
 Repository: https://github.com/gopher-fleece/gleece
 --
@@ -29,12 +29,24 @@ import (
 	"github.com/go-playground/validator/v10"
 	RequestAuth "github.com/gopher-fleece/gleece/e2e/chi/auth"
 	"github.com/gopher-fleece/runtime"
+	E2EClassSecControllerImport "github.com/gopher-fleece/gleece/e2e/assets"
 	E2EControllerImport "github.com/gopher-fleece/gleece/e2e/assets"
+	Param124data "github.com/haimkastner/unitsnet-go/units"
+	Param127data "github.com/gopher-fleece/gleece/e2e/assets"
+	Param140data "github.com/gopher-fleece/gleece/e2e/assets"
+	Response70CustomError "github.com/gopher-fleece/gleece/e2e/assets"
+	Response73CustomError "github.com/gopher-fleece/gleece/e2e/assets"
+	Param130data "github.com/gopher-fleece/gleece/e2e/assets"
+	Param133data "github.com/gopher-fleece/gleece/e2e/assets"
+	Param113unit "github.com/haimkastner/unitsnet-go/units"
+	Param114data "github.com/haimkastner/unitsnet-go/units"
+	Param117data "github.com/gopher-fleece/gleece/e2e/assets"
+	Param121data "github.com/gopher-fleece/gleece/e2e/assets"
+	Param120unit "github.com/haimkastner/unitsnet-go/units"
 	Param41theBody "github.com/gopher-fleece/gleece/e2e/assets"
 	Param46theBody "github.com/gopher-fleece/gleece/e2e/assets"
 	Param49theBody "github.com/gopher-fleece/gleece/e2e/assets"
-	Response70CustomError "github.com/gopher-fleece/gleece/e2e/assets"
-	Response73CustomError "github.com/gopher-fleece/gleece/e2e/assets"
+	Param136data "github.com/gopher-fleece/gleece/e2e/assets"
 	Param100value1 "github.com/gopher-fleece/gleece/e2e/assets"
 	Param101value2 "github.com/gopher-fleece/gleece/e2e/assets"
 	Param102value3 "github.com/gopher-fleece/gleece/e2e/assets"
@@ -42,17 +54,6 @@ import (
 	Param106value2 "github.com/gopher-fleece/gleece/e2e/assets"
 	Param107value3 "github.com/gopher-fleece/gleece/e2e/assets"
 	Param110value1 "github.com/gopher-fleece/gleece/e2e/assets"
-	Param113unit "github.com/haimkastner/unitsnet-go/units"
-	Param114data "github.com/haimkastner/unitsnet-go/units"
-	Param117data "github.com/gopher-fleece/gleece/e2e/assets"
-	Param121data "github.com/gopher-fleece/gleece/e2e/assets"
-	Param120unit "github.com/haimkastner/unitsnet-go/units"
-	Param124data "github.com/haimkastner/unitsnet-go/units"
-	Param127data "github.com/gopher-fleece/gleece/e2e/assets"
-	Param130data "github.com/gopher-fleece/gleece/e2e/assets"
-	Param133data "github.com/gopher-fleece/gleece/e2e/assets"
-	Param137data "github.com/gopher-fleece/gleece/e2e/assets"
-	E2EClassSecControllerImport "github.com/gopher-fleece/gleece/e2e/assets"
 	// import extension placeholder
 )
 var validatorInstance = validator.New()
@@ -302,8 +303,8 @@ func RegisterCustomValidator(validateTagName string, validateFunc runtime.Valida
 func RegisterRoutes(engine *chi.Mux) {
 	urlParamRegex = regexp.MustCompile(`\{([\w\d-_]+)\}`)
 	// register routes extension placeholder
-	// E2EController
-	engine.Get(toChiUrl("/e2e/simple-get"), func(w http.ResponseWriter, req *http.Request) {
+	// E2EClassSecController
+	engine.Get(toChiUrl("/e2e/with-default-class-security"), func(w http.ResponseWriter, req *http.Request) {
 		// route start routes extension placeholder
 		authErr := authorize(
 			req,
@@ -312,9 +313,9 @@ func RegisterRoutes(engine *chi.Mux) {
 					Relation: SecurityListRelationAnd,
 					Checks: []runtime.SecurityCheck{
 						{
-							SchemaName: "securitySchemaName2",
+							SchemaName: "securitySchemaName",
 							Scopes: []string{
-								"config",
+								"class",
 							},
 						},
 					},
@@ -322,877 +323,24 @@ func RegisterRoutes(engine *chi.Mux) {
 			},
 		)
 		if authErr != nil {
-			handleAuthorizationError(w, authErr, "SimpleGet")
+			handleAuthorizationError(w, authErr, "WithDefaultClassSecurity")
 			return
 		}
-		controller := E2EControllerImport.E2EController{}
+		controller := E2EClassSecControllerImport.E2EClassSecController{}
 		controller.InitController(req)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
+		var headerParamRawPtr *string = nil
+		headerParamRaw := req.Header.Get("x-test-scopes")
+		_, isheaderParamExists := req.Header["x-test-scopes"]
+		if !isheaderParamExists {
+			// In echo, the req..Header["key"] is not 100% reliable, so we need other check, but only if is was not found in the first method
+			headerValues := req.Header.Values("x-test-scopes")
+			isheaderParamExists = len(headerValues) > 0
 		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		value, opError := controller.SimpleGet()
-		for key, value := range controller.GetHeaders() {
-			w.Header().Set(key, value)
+		if isheaderParamExists {
+			headerParam := headerParamRaw
+			headerParamRawPtr = &headerParam
 		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'SimpleGet'",
-				Status:     statusCode,
-				Instance:   "/controller/error/SimpleGet",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			w.WriteHeader(statusCode)
-			json.NewEncoder(w).Encode(stdError)
-			return
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(statusCode)
-		json.NewEncoder(w).Encode(value)
-		// route end routes extension placeholder
-	})
-	engine.Get(toChiUrl("/e2e/simple-get-empty-string"), func(w http.ResponseWriter, req *http.Request) {
-		// route start routes extension placeholder
-		authErr := authorize(
-			req,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			handleAuthorizationError(w, authErr, "SimpleGetEmptyString")
-			return
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(req)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		value, opError := controller.SimpleGetEmptyString()
-		for key, value := range controller.GetHeaders() {
-			w.Header().Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'SimpleGetEmptyString'",
-				Status:     statusCode,
-				Instance:   "/controller/error/SimpleGetEmptyString",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			w.WriteHeader(statusCode)
-			json.NewEncoder(w).Encode(stdError)
-			return
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(statusCode)
-		json.NewEncoder(w).Encode(value)
-		// route end routes extension placeholder
-	})
-	engine.Get(toChiUrl("/e2e/simple-get-ptr-string"), func(w http.ResponseWriter, req *http.Request) {
-		// route start routes extension placeholder
-		authErr := authorize(
-			req,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			handleAuthorizationError(w, authErr, "SimpleGetPtrString")
-			return
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(req)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		value, opError := controller.SimpleGetPtrString()
-		for key, value := range controller.GetHeaders() {
-			w.Header().Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'SimpleGetPtrString'",
-				Status:     statusCode,
-				Instance:   "/controller/error/SimpleGetPtrString",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			w.WriteHeader(statusCode)
-			json.NewEncoder(w).Encode(stdError)
-			return
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(statusCode)
-		json.NewEncoder(w).Encode(value)
-		// route end routes extension placeholder
-	})
-	engine.Get(toChiUrl("/e2e/simple-get-null-string"), func(w http.ResponseWriter, req *http.Request) {
-		// route start routes extension placeholder
-		authErr := authorize(
-			req,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			handleAuthorizationError(w, authErr, "SimpleGetNullString")
-			return
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(req)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		value, opError := controller.SimpleGetNullString()
-		for key, value := range controller.GetHeaders() {
-			w.Header().Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'SimpleGetNullString'",
-				Status:     statusCode,
-				Instance:   "/controller/error/SimpleGetNullString",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			w.WriteHeader(statusCode)
-			json.NewEncoder(w).Encode(stdError)
-			return
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(statusCode)
-		json.NewEncoder(w).Encode(value)
-		// route end routes extension placeholder
-	})
-	engine.Get(toChiUrl("/e2e/simple-get-object"), func(w http.ResponseWriter, req *http.Request) {
-		// route start routes extension placeholder
-		authErr := authorize(
-			req,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			handleAuthorizationError(w, authErr, "SimpleGetObject")
-			return
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(req)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		value, opError := controller.SimpleGetObject()
-		for key, value := range controller.GetHeaders() {
-			w.Header().Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'SimpleGetObject'",
-				Status:     statusCode,
-				Instance:   "/controller/error/SimpleGetObject",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			w.WriteHeader(statusCode)
-			json.NewEncoder(w).Encode(stdError)
-			return
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(statusCode)
-		json.NewEncoder(w).Encode(value)
-		// route end routes extension placeholder
-	})
-	engine.Get(toChiUrl("/e2e/simple-get-object-ptr"), func(w http.ResponseWriter, req *http.Request) {
-		// route start routes extension placeholder
-		authErr := authorize(
-			req,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			handleAuthorizationError(w, authErr, "SimpleGetObjectPtr")
-			return
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(req)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		value, opError := controller.SimpleGetObjectPtr()
-		for key, value := range controller.GetHeaders() {
-			w.Header().Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'SimpleGetObjectPtr'",
-				Status:     statusCode,
-				Instance:   "/controller/error/SimpleGetObjectPtr",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			w.WriteHeader(statusCode)
-			json.NewEncoder(w).Encode(stdError)
-			return
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(statusCode)
-		json.NewEncoder(w).Encode(value)
-		// route end routes extension placeholder
-	})
-	engine.Get(toChiUrl("/e2e/simple-get-object-null"), func(w http.ResponseWriter, req *http.Request) {
-		// route start routes extension placeholder
-		authErr := authorize(
-			req,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			handleAuthorizationError(w, authErr, "SimpleGetObjectNull")
-			return
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(req)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		value, opError := controller.SimpleGetObjectNull()
-		for key, value := range controller.GetHeaders() {
-			w.Header().Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'SimpleGetObjectNull'",
-				Status:     statusCode,
-				Instance:   "/controller/error/SimpleGetObjectNull",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			w.WriteHeader(statusCode)
-			json.NewEncoder(w).Encode(stdError)
-			return
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(statusCode)
-		json.NewEncoder(w).Encode(value)
-		// route end routes extension placeholder
-	})
-	engine.Get(toChiUrl("/e2e/primitive-return-type"), func(w http.ResponseWriter, req *http.Request) {
-		// route start routes extension placeholder
-		authErr := authorize(
-			req,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			handleAuthorizationError(w, authErr, "PrimitiveReturnType")
-			return
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(req)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		value, opError := controller.PrimitiveReturnType()
-		for key, value := range controller.GetHeaders() {
-			w.Header().Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'PrimitiveReturnType'",
-				Status:     statusCode,
-				Instance:   "/controller/error/PrimitiveReturnType",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			w.WriteHeader(statusCode)
-			json.NewEncoder(w).Encode(stdError)
-			return
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(statusCode)
-		json.NewEncoder(w).Encode(value)
-		// route end routes extension placeholder
-	})
-	engine.Get(toChiUrl("/e2e/primitive-array-return-type"), func(w http.ResponseWriter, req *http.Request) {
-		// route start routes extension placeholder
-		authErr := authorize(
-			req,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			handleAuthorizationError(w, authErr, "PrimitiveArrayReturnType")
-			return
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(req)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		value, opError := controller.PrimitiveArrayReturnType()
-		for key, value := range controller.GetHeaders() {
-			w.Header().Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'PrimitiveArrayReturnType'",
-				Status:     statusCode,
-				Instance:   "/controller/error/PrimitiveArrayReturnType",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			w.WriteHeader(statusCode)
-			json.NewEncoder(w).Encode(stdError)
-			return
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(statusCode)
-		json.NewEncoder(w).Encode(value)
-		// route end routes extension placeholder
-	})
-	engine.Get(toChiUrl("/e2e/primitive-alias-return-type"), func(w http.ResponseWriter, req *http.Request) {
-		// route start routes extension placeholder
-		authErr := authorize(
-			req,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			handleAuthorizationError(w, authErr, "PrimitiveAliasReturnType")
-			return
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(req)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		value, opError := controller.PrimitiveAliasReturnType()
-		for key, value := range controller.GetHeaders() {
-			w.Header().Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'PrimitiveAliasReturnType'",
-				Status:     statusCode,
-				Instance:   "/controller/error/PrimitiveAliasReturnType",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			w.WriteHeader(statusCode)
-			json.NewEncoder(w).Encode(stdError)
-			return
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(statusCode)
-		json.NewEncoder(w).Encode(value)
-		// route end routes extension placeholder
-	})
-	engine.Get(toChiUrl("/e2e/primitive-alias-array-return-type"), func(w http.ResponseWriter, req *http.Request) {
-		// route start routes extension placeholder
-		authErr := authorize(
-			req,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			handleAuthorizationError(w, authErr, "PrimitiveAliasArrayReturnType")
-			return
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(req)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		value, opError := controller.PrimitiveAliasArrayReturnType()
-		for key, value := range controller.GetHeaders() {
-			w.Header().Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'PrimitiveAliasArrayReturnType'",
-				Status:     statusCode,
-				Instance:   "/controller/error/PrimitiveAliasArrayReturnType",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			w.WriteHeader(statusCode)
-			json.NewEncoder(w).Encode(stdError)
-			return
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(statusCode)
-		json.NewEncoder(w).Encode(value)
-		// route end routes extension placeholder
-	})
-	engine.Get(toChiUrl("/e2e/simple-get-empty"), func(w http.ResponseWriter, req *http.Request) {
-		// route start routes extension placeholder
-		authErr := authorize(
-			req,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			handleAuthorizationError(w, authErr, "SimpleGetEmpty")
-			return
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(req)
-		var queryParamRawPtr *string = nil
-		queryParamRaw := req.URL.Query().Get("queryParam")
-		isqueryParamExists := req.URL.Query().Has("queryParam")
-		if isqueryParamExists {
-			queryParam := queryParamRaw
-			queryParamRawPtr = &queryParam
-		}
-		if validatorErr := validatorInstance.Var(queryParamRawPtr, "required"); validatorErr != nil {
+		if validatorErr := validatorInstance.Var(headerParamRawPtr, "required"); validatorErr != nil {
 			// Middlewares onInputValidationMiddlewares section
 			for _, middleware := range onInputValidationMiddlewares {
 				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, validatorErr)
@@ -1202,8 +350,8 @@ func RegisterRoutes(engine *chi.Mux) {
 				}
 			}
 			// End middlewares onInputValidationMiddlewares section
-			fieldName := "queryParam"
-			validationError := wrapValidatorError(validatorErr, "SimpleGetEmpty", fieldName)
+			fieldName := "headerParam"
+			validationError := wrapValidatorError(validatorErr, "WithDefaultClassSecurity", fieldName)
 			// validation error response extension placeholder
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			json.NewEncoder(w).Encode(validationError)
@@ -1219,7 +367,407 @@ func RegisterRoutes(engine *chi.Mux) {
 		}
 		// End middlewares beforeOperationMiddlewares section
 		// before operation routes extension placeholder
-		opError := controller.SimpleGetEmpty(*queryParamRawPtr)
+		value, opError := controller.WithDefaultClassSecurity(*headerParamRawPtr)
+		for key, value := range controller.GetHeaders() {
+			w.Header().Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'WithDefaultClassSecurity'",
+				Status:     statusCode,
+				Instance:   "/controller/error/WithDefaultClassSecurity",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			w.WriteHeader(statusCode)
+			json.NewEncoder(w).Encode(stdError)
+			return
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(statusCode)
+		json.NewEncoder(w).Encode(value)
+		// route end routes extension placeholder
+	})
+	engine.Get(toChiUrl("/e2e/with-default-override-class-security"), func(w http.ResponseWriter, req *http.Request) {
+		// route start routes extension placeholder
+		authErr := authorize(
+			req,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName",
+							Scopes: []string{
+								"method",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(w, authErr, "WithOverrideClassSecurity")
+			return
+		}
+		controller := E2EClassSecControllerImport.E2EClassSecController{}
+		controller.InitController(req)
+		var headerParamRawPtr *string = nil
+		headerParamRaw := req.Header.Get("x-test-scopes")
+		_, isheaderParamExists := req.Header["x-test-scopes"]
+		if !isheaderParamExists {
+			// In echo, the req..Header["key"] is not 100% reliable, so we need other check, but only if is was not found in the first method
+			headerValues := req.Header.Values("x-test-scopes")
+			isheaderParamExists = len(headerValues) > 0
+		}
+		if isheaderParamExists {
+			headerParam := headerParamRaw
+			headerParamRawPtr = &headerParam
+		}
+		if validatorErr := validatorInstance.Var(headerParamRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, validatorErr)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "headerParam"
+			validationError := wrapValidatorError(validatorErr, "WithOverrideClassSecurity", fieldName)
+			// validation error response extension placeholder
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			json.NewEncoder(w).Encode(validationError)
+			return
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.WithOverrideClassSecurity(*headerParamRawPtr)
+		for key, value := range controller.GetHeaders() {
+			w.Header().Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'WithOverrideClassSecurity'",
+				Status:     statusCode,
+				Instance:   "/controller/error/WithOverrideClassSecurity",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			w.WriteHeader(statusCode)
+			json.NewEncoder(w).Encode(stdError)
+			return
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(statusCode)
+		json.NewEncoder(w).Encode(value)
+		// route end routes extension placeholder
+	})
+	// E2EController
+	engine.Post(toChiUrl("/e2e/arrays-in-body-and-res"), func(w http.ResponseWriter, req *http.Request) {
+		// route start routes extension placeholder
+		authErr := authorize(
+			req,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(w, authErr, "ArraysInBodyAndRes")
+			return
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(req)
+		var conversionErr error
+		var dataRawPtr *[]Param124data.LengthDto = nil
+		conversionErr = bindAndValidateBody(req, "application/json", "required", &dataRawPtr)
+		if conversionErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, conversionErr)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			validationError := runtime.Rfc7807Error{
+				Type: http.StatusText(http.StatusUnprocessableEntity),
+				Detail: fmt.Sprintf(
+					"A request was made to operation 'ArraysInBodyAndRes' but body parameter '%s' did not pass validation of '%s' - %s",
+					"data",
+					"[]LengthDto",
+					extractValidationErrorMessage(conversionErr, nil),
+				),
+				Status:   http.StatusUnprocessableEntity,
+				Instance: "/validation/error/ArraysInBodyAndRes",
+			}
+			// json body validation error response extension placeholder
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			json.NewEncoder(w).Encode(validationError)
+			return
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.ArraysInBodyAndRes(*dataRawPtr)
+		for key, value := range controller.GetHeaders() {
+			w.Header().Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'ArraysInBodyAndRes'",
+				Status:     statusCode,
+				Instance:   "/controller/error/ArraysInBodyAndRes",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			w.WriteHeader(statusCode)
+			json.NewEncoder(w).Encode(stdError)
+			return
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(statusCode)
+		json.NewEncoder(w).Encode(value)
+		// route end routes extension placeholder
+	})
+	engine.Post(toChiUrl("/e2e/arrays-inside-body-and-res"), func(w http.ResponseWriter, req *http.Request) {
+		// route start routes extension placeholder
+		authErr := authorize(
+			req,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(w, authErr, "ArraysInsideBodyAndRes")
+			return
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(req)
+		var conversionErr error
+		var dataRawPtr *[]Param127data.BlaBla = nil
+		conversionErr = bindAndValidateBody(req, "application/json", "", &dataRawPtr)
+		if conversionErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, conversionErr)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			validationError := runtime.Rfc7807Error{
+				Type: http.StatusText(http.StatusUnprocessableEntity),
+				Detail: fmt.Sprintf(
+					"A request was made to operation 'ArraysInsideBodyAndRes' but body parameter '%s' did not pass validation of '%s' - %s",
+					"data",
+					"[]BlaBla",
+					extractValidationErrorMessage(conversionErr, nil),
+				),
+				Status:   http.StatusUnprocessableEntity,
+				Instance: "/validation/error/ArraysInsideBodyAndRes",
+			}
+			// json body validation error response extension placeholder
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			json.NewEncoder(w).Encode(validationError)
+			return
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.ArraysInsideBodyAndRes(dataRawPtr)
+		for key, value := range controller.GetHeaders() {
+			w.Header().Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'ArraysInsideBodyAndRes'",
+				Status:     statusCode,
+				Instance:   "/controller/error/ArraysInsideBodyAndRes",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			w.WriteHeader(statusCode)
+			json.NewEncoder(w).Encode(stdError)
+			return
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(statusCode)
+		json.NewEncoder(w).Encode(value)
+		// route end routes extension placeholder
+	})
+	engine.Get(toChiUrl("/e2e/context-access"), func(w http.ResponseWriter, req *http.Request) {
+		// route start routes extension placeholder
+		authErr := authorize(
+			req,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(w, authErr, "ContextAccess")
+			return
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(req)
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		opError := controller.ContextAccess()
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
@@ -1237,9 +785,9 @@ func RegisterRoutes(engine *chi.Mux) {
 			// End middlewares onErrorMiddlewares section
 			stdError := runtime.Rfc7807Error{
 				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'SimpleGetEmpty'",
+				Detail:     "Encountered an error during operation 'ContextAccess'",
 				Status:     statusCode,
-				Instance:   "/controller/error/SimpleGetEmpty",
+				Instance:   "/controller/error/ContextAccess",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			// json error response extension placeholder
@@ -1259,6 +807,1433 @@ func RegisterRoutes(engine *chi.Mux) {
 		// End middlewares afterOperationSuccessMiddlewares section
 		// after operation routes extension placeholder
 		w.WriteHeader(statusCode)
+		// route end routes extension placeholder
+	})
+	engine.Post(toChiUrl("/e2e/context-injection"), func(w http.ResponseWriter, req *http.Request) {
+		// route start routes extension placeholder
+		authErr := authorize(
+			req,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(w, authErr, "ContextInjection")
+			return
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(req)
+		var conversionErr error
+		var dataRawPtr *Param140data.TheModel = nil
+		conversionErr = bindAndValidateBody(req, "application/json", "required", &dataRawPtr)
+		if conversionErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, conversionErr)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			validationError := runtime.Rfc7807Error{
+				Type: http.StatusText(http.StatusUnprocessableEntity),
+				Detail: fmt.Sprintf(
+					"A request was made to operation 'ContextInjection' but body parameter '%s' did not pass validation of '%s' - %s",
+					"data",
+					"TheModel",
+					extractValidationErrorMessage(conversionErr, nil),
+				),
+				Status:   http.StatusUnprocessableEntity,
+				Instance: "/validation/error/ContextInjection",
+			}
+			// json body validation error response extension placeholder
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			json.NewEncoder(w).Encode(validationError)
+			return
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		opError := controller.ContextInjection(getRequestContext(req), *dataRawPtr)
+		for key, value := range controller.GetHeaders() {
+			w.Header().Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, false, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'ContextInjection'",
+				Status:     statusCode,
+				Instance:   "/controller/error/ContextInjection",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			w.WriteHeader(statusCode)
+			json.NewEncoder(w).Encode(stdError)
+			return
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		w.WriteHeader(statusCode)
+		// route end routes extension placeholder
+	})
+	engine.Post(toChiUrl("/e2e/context-injection-empty"), func(w http.ResponseWriter, req *http.Request) {
+		// route start routes extension placeholder
+		authErr := authorize(
+			req,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(w, authErr, "ContextInjectionEmpty")
+			return
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(req)
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		opError := controller.ContextInjectionEmpty(getRequestContext(req))
+		for key, value := range controller.GetHeaders() {
+			w.Header().Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, false, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'ContextInjectionEmpty'",
+				Status:     statusCode,
+				Instance:   "/controller/error/ContextInjectionEmpty",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			w.WriteHeader(statusCode)
+			json.NewEncoder(w).Encode(stdError)
+			return
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		w.WriteHeader(statusCode)
+		// route end routes extension placeholder
+	})
+	engine.Get(toChiUrl("/e2e/custom-error"), func(w http.ResponseWriter, req *http.Request) {
+		// route start routes extension placeholder
+		authErr := authorize(
+			req,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(w, authErr, "CustomError")
+			return
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(req)
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		opError := controller.CustomError()
+		for key, value := range controller.GetHeaders() {
+			w.Header().Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, false, opError)
+		emptyErr := Response70CustomError.CustomError{}
+		if opError != emptyErr {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			w.WriteHeader(statusCode)
+			json.NewEncoder(w).Encode(opError)
+			return
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		w.WriteHeader(statusCode)
+		// route end routes extension placeholder
+	})
+	engine.Get(toChiUrl("/e2e/custom-error-503"), func(w http.ResponseWriter, req *http.Request) {
+		// route start routes extension placeholder
+		authErr := authorize(
+			req,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(w, authErr, "CustomError503")
+			return
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(req)
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		opError := controller.CustomError503()
+		for key, value := range controller.GetHeaders() {
+			w.Header().Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, false, opError)
+		emptyErr := Response73CustomError.CustomError{}
+		if opError != emptyErr {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			w.WriteHeader(statusCode)
+			json.NewEncoder(w).Encode(opError)
+			return
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		w.WriteHeader(statusCode)
+		// route end routes extension placeholder
+	})
+	engine.Get(toChiUrl("/e2e/custom-error-ptr"), func(w http.ResponseWriter, req *http.Request) {
+		// route start routes extension placeholder
+		authErr := authorize(
+			req,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(w, authErr, "CustomPtrError")
+			return
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(req)
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		opError := controller.CustomPtrError()
+		for key, value := range controller.GetHeaders() {
+			w.Header().Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, false, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			w.WriteHeader(statusCode)
+			json.NewEncoder(w).Encode(opError)
+			return
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		w.WriteHeader(statusCode)
+		// route end routes extension placeholder
+	})
+	engine.Post(toChiUrl("/e2e/deep-arrays-with-validation"), func(w http.ResponseWriter, req *http.Request) {
+		// route start routes extension placeholder
+		authErr := authorize(
+			req,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(w, authErr, "DeepArraysWithValidation")
+			return
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(req)
+		var conversionErr error
+		var dataRawPtr *[][]Param130data.BlaBla2 = nil
+		conversionErr = bindAndValidateBody(req, "application/json", "required", &dataRawPtr)
+		if conversionErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, conversionErr)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			validationError := runtime.Rfc7807Error{
+				Type: http.StatusText(http.StatusUnprocessableEntity),
+				Detail: fmt.Sprintf(
+					"A request was made to operation 'DeepArraysWithValidation' but body parameter '%s' did not pass validation of '%s' - %s",
+					"data",
+					"[][]BlaBla2",
+					extractValidationErrorMessage(conversionErr, nil),
+				),
+				Status:   http.StatusUnprocessableEntity,
+				Instance: "/validation/error/DeepArraysWithValidation",
+			}
+			// json body validation error response extension placeholder
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			json.NewEncoder(w).Encode(validationError)
+			return
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.DeepArraysWithValidation(*dataRawPtr)
+		for key, value := range controller.GetHeaders() {
+			w.Header().Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'DeepArraysWithValidation'",
+				Status:     statusCode,
+				Instance:   "/controller/error/DeepArraysWithValidation",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			w.WriteHeader(statusCode)
+			json.NewEncoder(w).Encode(stdError)
+			return
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(statusCode)
+		json.NewEncoder(w).Encode(value)
+		// route end routes extension placeholder
+	})
+	engine.Get(toChiUrl("/e2e/default-error"), func(w http.ResponseWriter, req *http.Request) {
+		// route start routes extension placeholder
+		authErr := authorize(
+			req,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(w, authErr, "DefaultError")
+			return
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(req)
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		opError := controller.DefaultError()
+		for key, value := range controller.GetHeaders() {
+			w.Header().Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, false, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'DefaultError'",
+				Status:     statusCode,
+				Instance:   "/controller/error/DefaultError",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			w.WriteHeader(statusCode)
+			json.NewEncoder(w).Encode(stdError)
+			return
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		w.WriteHeader(statusCode)
+		// route end routes extension placeholder
+	})
+	engine.Get(toChiUrl("/e2e/default-error-with-payload"), func(w http.ResponseWriter, req *http.Request) {
+		// route start routes extension placeholder
+		authErr := authorize(
+			req,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(w, authErr, "DefaultErrorWithPayload")
+			return
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(req)
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.DefaultErrorWithPayload()
+		for key, value := range controller.GetHeaders() {
+			w.Header().Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'DefaultErrorWithPayload'",
+				Status:     statusCode,
+				Instance:   "/controller/error/DefaultErrorWithPayload",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			w.WriteHeader(statusCode)
+			json.NewEncoder(w).Encode(stdError)
+			return
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(statusCode)
+		json.NewEncoder(w).Encode(value)
+		// route end routes extension placeholder
+	})
+	engine.Delete(toChiUrl("/e2e/http-method"), func(w http.ResponseWriter, req *http.Request) {
+		// route start routes extension placeholder
+		authErr := authorize(
+			req,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(w, authErr, "Delete")
+			return
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(req)
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		opError := controller.Delete()
+		for key, value := range controller.GetHeaders() {
+			w.Header().Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, false, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'Delete'",
+				Status:     statusCode,
+				Instance:   "/controller/error/Delete",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			w.WriteHeader(statusCode)
+			json.NewEncoder(w).Encode(stdError)
+			return
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		w.WriteHeader(statusCode)
+		// route end routes extension placeholder
+	})
+	engine.Post(toChiUrl("/e2e/embedded-structs"), func(w http.ResponseWriter, req *http.Request) {
+		// route start routes extension placeholder
+		authErr := authorize(
+			req,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(w, authErr, "EmbeddedStructs")
+			return
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(req)
+		var conversionErr error
+		var dataRawPtr *Param133data.TheModel = nil
+		conversionErr = bindAndValidateBody(req, "application/json", "required", &dataRawPtr)
+		if conversionErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, conversionErr)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			validationError := runtime.Rfc7807Error{
+				Type: http.StatusText(http.StatusUnprocessableEntity),
+				Detail: fmt.Sprintf(
+					"A request was made to operation 'EmbeddedStructs' but body parameter '%s' did not pass validation of '%s' - %s",
+					"data",
+					"TheModel",
+					extractValidationErrorMessage(conversionErr, nil),
+				),
+				Status:   http.StatusUnprocessableEntity,
+				Instance: "/validation/error/EmbeddedStructs",
+			}
+			// json body validation error response extension placeholder
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			json.NewEncoder(w).Encode(validationError)
+			return
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.EmbeddedStructs(*dataRawPtr)
+		for key, value := range controller.GetHeaders() {
+			w.Header().Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'EmbeddedStructs'",
+				Status:     statusCode,
+				Instance:   "/controller/error/EmbeddedStructs",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			w.WriteHeader(statusCode)
+			json.NewEncoder(w).Encode(stdError)
+			return
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(statusCode)
+		json.NewEncoder(w).Encode(value)
+		// route end routes extension placeholder
+	})
+	engine.Get(toChiUrl("/e2e/503-error-code"), func(w http.ResponseWriter, req *http.Request) {
+		// route start routes extension placeholder
+		authErr := authorize(
+			req,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(w, authErr, "Error503")
+			return
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(req)
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		opError := controller.Error503()
+		for key, value := range controller.GetHeaders() {
+			w.Header().Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, false, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'Error503'",
+				Status:     statusCode,
+				Instance:   "/controller/error/Error503",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			w.WriteHeader(statusCode)
+			json.NewEncoder(w).Encode(stdError)
+			return
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		w.WriteHeader(statusCode)
+		// route end routes extension placeholder
+	})
+	engine.Post(toChiUrl("/e2e/external-packages"), func(w http.ResponseWriter, req *http.Request) {
+		// route start routes extension placeholder
+		authErr := authorize(
+			req,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(w, authErr, "ExternalPackages")
+			return
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(req)
+		var conversionErr error
+		var unitRawPtr *Param113unit.LengthUnits = nil
+		unitRaw := req.URL.Query().Get("unit")
+		isunitExists := req.URL.Query().Has("unit")
+		if isunitExists {
+			unit := unitRaw
+			unitVar := Param113unit.LengthUnits(unit)
+			unitRawPtr = &unitVar
+		}
+		var dataRawPtr *Param114data.LengthDto = nil
+		conversionErr = bindAndValidateBody(req, "application/json", "required", &dataRawPtr)
+		if conversionErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, conversionErr)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			validationError := runtime.Rfc7807Error{
+				Type: http.StatusText(http.StatusUnprocessableEntity),
+				Detail: fmt.Sprintf(
+					"A request was made to operation 'ExternalPackages' but body parameter '%s' did not pass validation of '%s' - %s",
+					"data",
+					"LengthDto",
+					extractValidationErrorMessage(conversionErr, nil),
+				),
+				Status:   http.StatusUnprocessableEntity,
+				Instance: "/validation/error/ExternalPackages",
+			}
+			// json body validation error response extension placeholder
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			json.NewEncoder(w).Encode(validationError)
+			return
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.ExternalPackages(unitRawPtr, *dataRawPtr)
+		for key, value := range controller.GetHeaders() {
+			w.Header().Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'ExternalPackages'",
+				Status:     statusCode,
+				Instance:   "/controller/error/ExternalPackages",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			w.WriteHeader(statusCode)
+			json.NewEncoder(w).Encode(stdError)
+			return
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(statusCode)
+		json.NewEncoder(w).Encode(value)
+		// route end routes extension placeholder
+	})
+	engine.Post(toChiUrl("/e2e/external-packages-unique-in-struct"), func(w http.ResponseWriter, req *http.Request) {
+		// route start routes extension placeholder
+		authErr := authorize(
+			req,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(w, authErr, "ExternalPackagesUniqueInStruct")
+			return
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(req)
+		var conversionErr error
+		var dataRawPtr *Param117data.UniqueExternalUsage = nil
+		conversionErr = bindAndValidateBody(req, "application/json", "required", &dataRawPtr)
+		if conversionErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, conversionErr)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			validationError := runtime.Rfc7807Error{
+				Type: http.StatusText(http.StatusUnprocessableEntity),
+				Detail: fmt.Sprintf(
+					"A request was made to operation 'ExternalPackagesUniqueInStruct' but body parameter '%s' did not pass validation of '%s' - %s",
+					"data",
+					"UniqueExternalUsage",
+					extractValidationErrorMessage(conversionErr, nil),
+				),
+				Status:   http.StatusUnprocessableEntity,
+				Instance: "/validation/error/ExternalPackagesUniqueInStruct",
+			}
+			// json body validation error response extension placeholder
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			json.NewEncoder(w).Encode(validationError)
+			return
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.ExternalPackagesUniqueInStruct(*dataRawPtr)
+		for key, value := range controller.GetHeaders() {
+			w.Header().Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'ExternalPackagesUniqueInStruct'",
+				Status:     statusCode,
+				Instance:   "/controller/error/ExternalPackagesUniqueInStruct",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			w.WriteHeader(statusCode)
+			json.NewEncoder(w).Encode(stdError)
+			return
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(statusCode)
+		json.NewEncoder(w).Encode(value)
+		// route end routes extension placeholder
+	})
+	engine.Post(toChiUrl("/e2e/external-packages-validation"), func(w http.ResponseWriter, req *http.Request) {
+		// route start routes extension placeholder
+		authErr := authorize(
+			req,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(w, authErr, "ExternalPackagesValidation")
+			return
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(req)
+		var conversionErr error
+		var unitRawPtr *Param120unit.LengthUnits = nil
+		unitRaw := req.URL.Query().Get("unit")
+		isunitExists := req.URL.Query().Has("unit")
+		if isunitExists {
+			unit := unitRaw
+			unitVar := Param120unit.LengthUnits(unit)
+			unitRawPtr = &unitVar
+		}
+		var dataRawPtr *Param121data.LengthDtoWithValidation = nil
+		conversionErr = bindAndValidateBody(req, "application/json", "required", &dataRawPtr)
+		if conversionErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, conversionErr)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			validationError := runtime.Rfc7807Error{
+				Type: http.StatusText(http.StatusUnprocessableEntity),
+				Detail: fmt.Sprintf(
+					"A request was made to operation 'ExternalPackagesValidation' but body parameter '%s' did not pass validation of '%s' - %s",
+					"data",
+					"LengthDtoWithValidation",
+					extractValidationErrorMessage(conversionErr, nil),
+				),
+				Status:   http.StatusUnprocessableEntity,
+				Instance: "/validation/error/ExternalPackagesValidation",
+			}
+			// json body validation error response extension placeholder
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			json.NewEncoder(w).Encode(validationError)
+			return
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.ExternalPackagesValidation(unitRawPtr, *dataRawPtr)
+		for key, value := range controller.GetHeaders() {
+			w.Header().Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'ExternalPackagesValidation'",
+				Status:     statusCode,
+				Instance:   "/controller/error/ExternalPackagesValidation",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			w.WriteHeader(statusCode)
+			json.NewEncoder(w).Encode(stdError)
+			return
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(statusCode)
+		json.NewEncoder(w).Encode(value)
+		// route end routes extension placeholder
+	})
+	engine.Get(toChiUrl("/e2e/http-method"), func(w http.ResponseWriter, req *http.Request) {
+		// route start routes extension placeholder
+		authErr := authorize(
+			req,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(w, authErr, "Get")
+			return
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(req)
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		opError := controller.Get()
+		for key, value := range controller.GetHeaders() {
+			w.Header().Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, false, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'Get'",
+				Status:     statusCode,
+				Instance:   "/controller/error/Get",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			w.WriteHeader(statusCode)
+			json.NewEncoder(w).Encode(stdError)
+			return
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		w.WriteHeader(statusCode)
+		// route end routes extension placeholder
+	})
+	engine.Get(toChiUrl("/e2e/get-header-start-with-letter"), func(w http.ResponseWriter, req *http.Request) {
+		// route start routes extension placeholder
+		authErr := authorize(
+			req,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(w, authErr, "GetHeaderStartWithLetter")
+			return
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(req)
+		var headerParamRawPtr *string = nil
+		headerParamRaw := req.Header.Get("headerParam")
+		_, isheaderParamExists := req.Header["headerParam"]
+		if !isheaderParamExists {
+			// In echo, the req..Header["key"] is not 100% reliable, so we need other check, but only if is was not found in the first method
+			headerValues := req.Header.Values("headerParam")
+			isheaderParamExists = len(headerValues) > 0
+		}
+		if isheaderParamExists {
+			headerParam := headerParamRaw
+			headerParamRawPtr = &headerParam
+		}
+		if validatorErr := validatorInstance.Var(headerParamRawPtr, "required,validate_starts_with_letter"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, validatorErr)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "headerParam"
+			validationError := wrapValidatorError(validatorErr, "GetHeaderStartWithLetter", fieldName)
+			// validation error response extension placeholder
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			json.NewEncoder(w).Encode(validationError)
+			return
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.GetHeaderStartWithLetter(*headerParamRawPtr)
+		for key, value := range controller.GetHeaders() {
+			w.Header().Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'GetHeaderStartWithLetter'",
+				Status:     statusCode,
+				Instance:   "/controller/error/GetHeaderStartWithLetter",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			w.WriteHeader(statusCode)
+			json.NewEncoder(w).Encode(stdError)
+			return
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(statusCode)
+		json.NewEncoder(w).Encode(value)
 		// route end routes extension placeholder
 	})
 	engine.Get(toChiUrl("/e2e/get-with-all-params/{pathParam}"), func(w http.ResponseWriter, req *http.Request) {
@@ -1692,6 +2667,158 @@ func RegisterRoutes(engine *chi.Mux) {
 		json.NewEncoder(w).Encode(value)
 		// route end routes extension placeholder
 	})
+	engine.Patch(toChiUrl("/e2e/http-method"), func(w http.ResponseWriter, req *http.Request) {
+		// route start routes extension placeholder
+		authErr := authorize(
+			req,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(w, authErr, "Patch")
+			return
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(req)
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		opError := controller.Patch()
+		for key, value := range controller.GetHeaders() {
+			w.Header().Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, false, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'Patch'",
+				Status:     statusCode,
+				Instance:   "/controller/error/Patch",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			w.WriteHeader(statusCode)
+			json.NewEncoder(w).Encode(stdError)
+			return
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		w.WriteHeader(statusCode)
+		// route end routes extension placeholder
+	})
+	engine.Post(toChiUrl("/e2e/http-method"), func(w http.ResponseWriter, req *http.Request) {
+		// route start routes extension placeholder
+		authErr := authorize(
+			req,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(w, authErr, "Post")
+			return
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(req)
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		opError := controller.Post()
+		for key, value := range controller.GetHeaders() {
+			w.Header().Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, false, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'Post'",
+				Status:     statusCode,
+				Instance:   "/controller/error/Post",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			w.WriteHeader(statusCode)
+			json.NewEncoder(w).Encode(stdError)
+			return
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		w.WriteHeader(statusCode)
+		// route end routes extension placeholder
+	})
 	engine.Post(toChiUrl("/e2e/post-with-all-params-body"), func(w http.ResponseWriter, req *http.Request) {
 		// route start routes extension placeholder
 		authErr := authorize(
@@ -2085,7 +3212,7 @@ func RegisterRoutes(engine *chi.Mux) {
 		json.NewEncoder(w).Encode(value)
 		// route end routes extension placeholder
 	})
-	engine.Get(toChiUrl("/e2e/get-header-start-with-letter"), func(w http.ResponseWriter, req *http.Request) {
+	engine.Get(toChiUrl("/e2e/primitive-alias-array-return-type"), func(w http.ResponseWriter, req *http.Request) {
 		// route start routes extension placeholder
 		authErr := authorize(
 			req,
@@ -2104,40 +3231,11 @@ func RegisterRoutes(engine *chi.Mux) {
 			},
 		)
 		if authErr != nil {
-			handleAuthorizationError(w, authErr, "GetHeaderStartWithLetter")
+			handleAuthorizationError(w, authErr, "PrimitiveAliasArrayReturnType")
 			return
 		}
 		controller := E2EControllerImport.E2EController{}
 		controller.InitController(req)
-		var headerParamRawPtr *string = nil
-		headerParamRaw := req.Header.Get("headerParam")
-		_, isheaderParamExists := req.Header["headerParam"]
-		if !isheaderParamExists {
-			// In echo, the req..Header["key"] is not 100% reliable, so we need other check, but only if is was not found in the first method
-			headerValues := req.Header.Values("headerParam")
-			isheaderParamExists = len(headerValues) > 0
-		}
-		if isheaderParamExists {
-			headerParam := headerParamRaw
-			headerParamRawPtr = &headerParam
-		}
-		if validatorErr := validatorInstance.Var(headerParamRawPtr, "required,validate_starts_with_letter"); validatorErr != nil {
-			// Middlewares onInputValidationMiddlewares section
-			for _, middleware := range onInputValidationMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, validatorErr)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onInputValidationMiddlewares section
-			fieldName := "headerParam"
-			validationError := wrapValidatorError(validatorErr, "GetHeaderStartWithLetter", fieldName)
-			// validation error response extension placeholder
-			w.WriteHeader(http.StatusUnprocessableEntity)
-			json.NewEncoder(w).Encode(validationError)
-			return
-		}
 		// Middlewares beforeOperationMiddlewares section
 		for _, middleware := range beforeOperationMiddlewares {
 			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
@@ -2148,7 +3246,7 @@ func RegisterRoutes(engine *chi.Mux) {
 		}
 		// End middlewares beforeOperationMiddlewares section
 		// before operation routes extension placeholder
-		value, opError := controller.GetHeaderStartWithLetter(*headerParamRawPtr)
+		value, opError := controller.PrimitiveAliasArrayReturnType()
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
@@ -2166,9 +3264,9 @@ func RegisterRoutes(engine *chi.Mux) {
 			// End middlewares onErrorMiddlewares section
 			stdError := runtime.Rfc7807Error{
 				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'GetHeaderStartWithLetter'",
+				Detail:     "Encountered an error during operation 'PrimitiveAliasArrayReturnType'",
 				Status:     statusCode,
-				Instance:   "/controller/error/GetHeaderStartWithLetter",
+				Instance:   "/controller/error/PrimitiveAliasArrayReturnType",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			// json error response extension placeholder
@@ -2192,7 +3290,7 @@ func RegisterRoutes(engine *chi.Mux) {
 		json.NewEncoder(w).Encode(value)
 		// route end routes extension placeholder
 	})
-	engine.Get(toChiUrl("/e2e/with-default-config-security"), func(w http.ResponseWriter, req *http.Request) {
+	engine.Get(toChiUrl("/e2e/primitive-alias-return-type"), func(w http.ResponseWriter, req *http.Request) {
 		// route start routes extension placeholder
 		authErr := authorize(
 			req,
@@ -2211,40 +3309,11 @@ func RegisterRoutes(engine *chi.Mux) {
 			},
 		)
 		if authErr != nil {
-			handleAuthorizationError(w, authErr, "WithDefaultConfigSecurity")
+			handleAuthorizationError(w, authErr, "PrimitiveAliasReturnType")
 			return
 		}
 		controller := E2EControllerImport.E2EController{}
 		controller.InitController(req)
-		var headerParamRawPtr *string = nil
-		headerParamRaw := req.Header.Get("x-test-scopes")
-		_, isheaderParamExists := req.Header["x-test-scopes"]
-		if !isheaderParamExists {
-			// In echo, the req..Header["key"] is not 100% reliable, so we need other check, but only if is was not found in the first method
-			headerValues := req.Header.Values("x-test-scopes")
-			isheaderParamExists = len(headerValues) > 0
-		}
-		if isheaderParamExists {
-			headerParam := headerParamRaw
-			headerParamRawPtr = &headerParam
-		}
-		if validatorErr := validatorInstance.Var(headerParamRawPtr, "required"); validatorErr != nil {
-			// Middlewares onInputValidationMiddlewares section
-			for _, middleware := range onInputValidationMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, validatorErr)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onInputValidationMiddlewares section
-			fieldName := "headerParam"
-			validationError := wrapValidatorError(validatorErr, "WithDefaultConfigSecurity", fieldName)
-			// validation error response extension placeholder
-			w.WriteHeader(http.StatusUnprocessableEntity)
-			json.NewEncoder(w).Encode(validationError)
-			return
-		}
 		// Middlewares beforeOperationMiddlewares section
 		for _, middleware := range beforeOperationMiddlewares {
 			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
@@ -2255,7 +3324,7 @@ func RegisterRoutes(engine *chi.Mux) {
 		}
 		// End middlewares beforeOperationMiddlewares section
 		// before operation routes extension placeholder
-		value, opError := controller.WithDefaultConfigSecurity(*headerParamRawPtr)
+		value, opError := controller.PrimitiveAliasReturnType()
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
@@ -2273,9 +3342,9 @@ func RegisterRoutes(engine *chi.Mux) {
 			// End middlewares onErrorMiddlewares section
 			stdError := runtime.Rfc7807Error{
 				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'WithDefaultConfigSecurity'",
+				Detail:     "Encountered an error during operation 'PrimitiveAliasReturnType'",
 				Status:     statusCode,
-				Instance:   "/controller/error/WithDefaultConfigSecurity",
+				Instance:   "/controller/error/PrimitiveAliasReturnType",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			// json error response extension placeholder
@@ -2299,7 +3368,7 @@ func RegisterRoutes(engine *chi.Mux) {
 		json.NewEncoder(w).Encode(value)
 		// route end routes extension placeholder
 	})
-	engine.Get(toChiUrl("/e2e/with-one-security"), func(w http.ResponseWriter, req *http.Request) {
+	engine.Get(toChiUrl("/e2e/primitive-array-return-type"), func(w http.ResponseWriter, req *http.Request) {
 		// route start routes extension placeholder
 		authErr := authorize(
 			req,
@@ -2308,9 +3377,9 @@ func RegisterRoutes(engine *chi.Mux) {
 					Relation: SecurityListRelationAnd,
 					Checks: []runtime.SecurityCheck{
 						{
-							SchemaName: "securitySchemaName",
+							SchemaName: "securitySchemaName2",
 							Scopes: []string{
-								"other",
+								"config",
 							},
 						},
 					},
@@ -2318,40 +3387,11 @@ func RegisterRoutes(engine *chi.Mux) {
 			},
 		)
 		if authErr != nil {
-			handleAuthorizationError(w, authErr, "WithOneSecurity")
+			handleAuthorizationError(w, authErr, "PrimitiveArrayReturnType")
 			return
 		}
 		controller := E2EControllerImport.E2EController{}
 		controller.InitController(req)
-		var headerParamRawPtr *string = nil
-		headerParamRaw := req.Header.Get("x-test-scopes")
-		_, isheaderParamExists := req.Header["x-test-scopes"]
-		if !isheaderParamExists {
-			// In echo, the req..Header["key"] is not 100% reliable, so we need other check, but only if is was not found in the first method
-			headerValues := req.Header.Values("x-test-scopes")
-			isheaderParamExists = len(headerValues) > 0
-		}
-		if isheaderParamExists {
-			headerParam := headerParamRaw
-			headerParamRawPtr = &headerParam
-		}
-		if validatorErr := validatorInstance.Var(headerParamRawPtr, "required"); validatorErr != nil {
-			// Middlewares onInputValidationMiddlewares section
-			for _, middleware := range onInputValidationMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, validatorErr)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onInputValidationMiddlewares section
-			fieldName := "headerParam"
-			validationError := wrapValidatorError(validatorErr, "WithOneSecurity", fieldName)
-			// validation error response extension placeholder
-			w.WriteHeader(http.StatusUnprocessableEntity)
-			json.NewEncoder(w).Encode(validationError)
-			return
-		}
 		// Middlewares beforeOperationMiddlewares section
 		for _, middleware := range beforeOperationMiddlewares {
 			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
@@ -2362,7 +3402,7 @@ func RegisterRoutes(engine *chi.Mux) {
 		}
 		// End middlewares beforeOperationMiddlewares section
 		// before operation routes extension placeholder
-		value, opError := controller.WithOneSecurity(*headerParamRawPtr)
+		value, opError := controller.PrimitiveArrayReturnType()
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
@@ -2380,9 +3420,9 @@ func RegisterRoutes(engine *chi.Mux) {
 			// End middlewares onErrorMiddlewares section
 			stdError := runtime.Rfc7807Error{
 				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'WithOneSecurity'",
+				Detail:     "Encountered an error during operation 'PrimitiveArrayReturnType'",
 				Status:     statusCode,
-				Instance:   "/controller/error/WithOneSecurity",
+				Instance:   "/controller/error/PrimitiveArrayReturnType",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			// json error response extension placeholder
@@ -2406,7 +3446,7 @@ func RegisterRoutes(engine *chi.Mux) {
 		json.NewEncoder(w).Encode(value)
 		// route end routes extension placeholder
 	})
-	engine.Get(toChiUrl("/e2e/with-two-security"), func(w http.ResponseWriter, req *http.Request) {
+	engine.Get(toChiUrl("/e2e/primitive-return-type"), func(w http.ResponseWriter, req *http.Request) {
 		// route start routes extension placeholder
 		authErr := authorize(
 			req,
@@ -2415,21 +3455,9 @@ func RegisterRoutes(engine *chi.Mux) {
 					Relation: SecurityListRelationAnd,
 					Checks: []runtime.SecurityCheck{
 						{
-							SchemaName: "securitySchemaName",
-							Scopes: []string{
-								"other",
-							},
-						},
-					},
-				},
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
 							SchemaName: "securitySchemaName2",
 							Scopes: []string{
-								"write",
-								"read",
+								"config",
 							},
 						},
 					},
@@ -2437,40 +3465,11 @@ func RegisterRoutes(engine *chi.Mux) {
 			},
 		)
 		if authErr != nil {
-			handleAuthorizationError(w, authErr, "WithTwoSecurity")
+			handleAuthorizationError(w, authErr, "PrimitiveReturnType")
 			return
 		}
 		controller := E2EControllerImport.E2EController{}
 		controller.InitController(req)
-		var headerParamRawPtr *string = nil
-		headerParamRaw := req.Header.Get("x-test-scopes")
-		_, isheaderParamExists := req.Header["x-test-scopes"]
-		if !isheaderParamExists {
-			// In echo, the req..Header["key"] is not 100% reliable, so we need other check, but only if is was not found in the first method
-			headerValues := req.Header.Values("x-test-scopes")
-			isheaderParamExists = len(headerValues) > 0
-		}
-		if isheaderParamExists {
-			headerParam := headerParamRaw
-			headerParamRawPtr = &headerParam
-		}
-		if validatorErr := validatorInstance.Var(headerParamRawPtr, "required"); validatorErr != nil {
-			// Middlewares onInputValidationMiddlewares section
-			for _, middleware := range onInputValidationMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, validatorErr)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onInputValidationMiddlewares section
-			fieldName := "headerParam"
-			validationError := wrapValidatorError(validatorErr, "WithTwoSecurity", fieldName)
-			// validation error response extension placeholder
-			w.WriteHeader(http.StatusUnprocessableEntity)
-			json.NewEncoder(w).Encode(validationError)
-			return
-		}
 		// Middlewares beforeOperationMiddlewares section
 		for _, middleware := range beforeOperationMiddlewares {
 			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
@@ -2481,7 +3480,7 @@ func RegisterRoutes(engine *chi.Mux) {
 		}
 		// End middlewares beforeOperationMiddlewares section
 		// before operation routes extension placeholder
-		value, opError := controller.WithTwoSecurity(*headerParamRawPtr)
+		value, opError := controller.PrimitiveReturnType()
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
@@ -2499,9 +3498,9 @@ func RegisterRoutes(engine *chi.Mux) {
 			// End middlewares onErrorMiddlewares section
 			stdError := runtime.Rfc7807Error{
 				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'WithTwoSecurity'",
+				Detail:     "Encountered an error during operation 'PrimitiveReturnType'",
 				Status:     statusCode,
-				Instance:   "/controller/error/WithTwoSecurity",
+				Instance:   "/controller/error/PrimitiveReturnType",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			// json error response extension placeholder
@@ -2523,789 +3522,6 @@ func RegisterRoutes(engine *chi.Mux) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(statusCode)
 		json.NewEncoder(w).Encode(value)
-		// route end routes extension placeholder
-	})
-	engine.Get(toChiUrl("/e2e/with-two-security-same-method"), func(w http.ResponseWriter, req *http.Request) {
-		// route start routes extension placeholder
-		authErr := authorize(
-			req,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName",
-							Scopes: []string{
-								"other",
-							},
-						},
-					},
-				},
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName",
-							Scopes: []string{
-								"write",
-								"read",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			handleAuthorizationError(w, authErr, "WithTwoSecuritySameMethod")
-			return
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(req)
-		var headerParamRawPtr *string = nil
-		headerParamRaw := req.Header.Get("x-test-scopes")
-		_, isheaderParamExists := req.Header["x-test-scopes"]
-		if !isheaderParamExists {
-			// In echo, the req..Header["key"] is not 100% reliable, so we need other check, but only if is was not found in the first method
-			headerValues := req.Header.Values("x-test-scopes")
-			isheaderParamExists = len(headerValues) > 0
-		}
-		if isheaderParamExists {
-			headerParam := headerParamRaw
-			headerParamRawPtr = &headerParam
-		}
-		if validatorErr := validatorInstance.Var(headerParamRawPtr, "required"); validatorErr != nil {
-			// Middlewares onInputValidationMiddlewares section
-			for _, middleware := range onInputValidationMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, validatorErr)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onInputValidationMiddlewares section
-			fieldName := "headerParam"
-			validationError := wrapValidatorError(validatorErr, "WithTwoSecuritySameMethod", fieldName)
-			// validation error response extension placeholder
-			w.WriteHeader(http.StatusUnprocessableEntity)
-			json.NewEncoder(w).Encode(validationError)
-			return
-		}
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		value, opError := controller.WithTwoSecuritySameMethod(*headerParamRawPtr)
-		for key, value := range controller.GetHeaders() {
-			w.Header().Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'WithTwoSecuritySameMethod'",
-				Status:     statusCode,
-				Instance:   "/controller/error/WithTwoSecuritySameMethod",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			w.WriteHeader(statusCode)
-			json.NewEncoder(w).Encode(stdError)
-			return
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(statusCode)
-		json.NewEncoder(w).Encode(value)
-		// route end routes extension placeholder
-	})
-	engine.Get(toChiUrl("/e2e/default-error"), func(w http.ResponseWriter, req *http.Request) {
-		// route start routes extension placeholder
-		authErr := authorize(
-			req,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			handleAuthorizationError(w, authErr, "DefaultError")
-			return
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(req)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		opError := controller.DefaultError()
-		for key, value := range controller.GetHeaders() {
-			w.Header().Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, false, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'DefaultError'",
-				Status:     statusCode,
-				Instance:   "/controller/error/DefaultError",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			w.WriteHeader(statusCode)
-			json.NewEncoder(w).Encode(stdError)
-			return
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		w.WriteHeader(statusCode)
-		// route end routes extension placeholder
-	})
-	engine.Get(toChiUrl("/e2e/default-error-with-payload"), func(w http.ResponseWriter, req *http.Request) {
-		// route start routes extension placeholder
-		authErr := authorize(
-			req,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			handleAuthorizationError(w, authErr, "DefaultErrorWithPayload")
-			return
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(req)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		value, opError := controller.DefaultErrorWithPayload()
-		for key, value := range controller.GetHeaders() {
-			w.Header().Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'DefaultErrorWithPayload'",
-				Status:     statusCode,
-				Instance:   "/controller/error/DefaultErrorWithPayload",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			w.WriteHeader(statusCode)
-			json.NewEncoder(w).Encode(stdError)
-			return
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(statusCode)
-		json.NewEncoder(w).Encode(value)
-		// route end routes extension placeholder
-	})
-	engine.Get(toChiUrl("/e2e/custom-error"), func(w http.ResponseWriter, req *http.Request) {
-		// route start routes extension placeholder
-		authErr := authorize(
-			req,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			handleAuthorizationError(w, authErr, "CustomError")
-			return
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(req)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		opError := controller.CustomError()
-		for key, value := range controller.GetHeaders() {
-			w.Header().Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, false, opError)
-		emptyErr := Response70CustomError.CustomError{}
-		if opError != emptyErr {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			w.WriteHeader(statusCode)
-			json.NewEncoder(w).Encode(opError)
-			return
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		w.WriteHeader(statusCode)
-		// route end routes extension placeholder
-	})
-	engine.Get(toChiUrl("/e2e/custom-error-ptr"), func(w http.ResponseWriter, req *http.Request) {
-		// route start routes extension placeholder
-		authErr := authorize(
-			req,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			handleAuthorizationError(w, authErr, "CustomPtrError")
-			return
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(req)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		opError := controller.CustomPtrError()
-		for key, value := range controller.GetHeaders() {
-			w.Header().Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, false, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			w.WriteHeader(statusCode)
-			json.NewEncoder(w).Encode(opError)
-			return
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		w.WriteHeader(statusCode)
-		// route end routes extension placeholder
-	})
-	engine.Get(toChiUrl("/e2e/503-error-code"), func(w http.ResponseWriter, req *http.Request) {
-		// route start routes extension placeholder
-		authErr := authorize(
-			req,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			handleAuthorizationError(w, authErr, "Error503")
-			return
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(req)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		opError := controller.Error503()
-		for key, value := range controller.GetHeaders() {
-			w.Header().Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, false, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'Error503'",
-				Status:     statusCode,
-				Instance:   "/controller/error/Error503",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			w.WriteHeader(statusCode)
-			json.NewEncoder(w).Encode(stdError)
-			return
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		w.WriteHeader(statusCode)
-		// route end routes extension placeholder
-	})
-	engine.Get(toChiUrl("/e2e/custom-error-503"), func(w http.ResponseWriter, req *http.Request) {
-		// route start routes extension placeholder
-		authErr := authorize(
-			req,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			handleAuthorizationError(w, authErr, "CustomError503")
-			return
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(req)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		opError := controller.CustomError503()
-		for key, value := range controller.GetHeaders() {
-			w.Header().Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, false, opError)
-		emptyErr := Response73CustomError.CustomError{}
-		if opError != emptyErr {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			w.WriteHeader(statusCode)
-			json.NewEncoder(w).Encode(opError)
-			return
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		w.WriteHeader(statusCode)
-		// route end routes extension placeholder
-	})
-	engine.Get(toChiUrl("/e2e/context-access"), func(w http.ResponseWriter, req *http.Request) {
-		// route start routes extension placeholder
-		authErr := authorize(
-			req,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			handleAuthorizationError(w, authErr, "ContextAccess")
-			return
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(req)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		opError := controller.ContextAccess()
-		for key, value := range controller.GetHeaders() {
-			w.Header().Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, false, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'ContextAccess'",
-				Status:     statusCode,
-				Instance:   "/controller/error/ContextAccess",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			w.WriteHeader(statusCode)
-			json.NewEncoder(w).Encode(stdError)
-			return
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		w.WriteHeader(statusCode)
-		// route end routes extension placeholder
-	})
-	engine.Get(toChiUrl("/e2e/http-method"), func(w http.ResponseWriter, req *http.Request) {
-		// route start routes extension placeholder
-		authErr := authorize(
-			req,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			handleAuthorizationError(w, authErr, "Get")
-			return
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(req)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		opError := controller.Get()
-		for key, value := range controller.GetHeaders() {
-			w.Header().Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, false, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'Get'",
-				Status:     statusCode,
-				Instance:   "/controller/error/Get",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			w.WriteHeader(statusCode)
-			json.NewEncoder(w).Encode(stdError)
-			return
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		w.WriteHeader(statusCode)
-		// route end routes extension placeholder
-	})
-	engine.Post(toChiUrl("/e2e/http-method"), func(w http.ResponseWriter, req *http.Request) {
-		// route start routes extension placeholder
-		authErr := authorize(
-			req,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			handleAuthorizationError(w, authErr, "Post")
-			return
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(req)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		opError := controller.Post()
-		for key, value := range controller.GetHeaders() {
-			w.Header().Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, false, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'Post'",
-				Status:     statusCode,
-				Instance:   "/controller/error/Post",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			w.WriteHeader(statusCode)
-			json.NewEncoder(w).Encode(stdError)
-			return
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		w.WriteHeader(statusCode)
 		// route end routes extension placeholder
 	})
 	engine.Put(toChiUrl("/e2e/http-method"), func(w http.ResponseWriter, req *http.Request) {
@@ -3384,7 +3600,7 @@ func RegisterRoutes(engine *chi.Mux) {
 		w.WriteHeader(statusCode)
 		// route end routes extension placeholder
 	})
-	engine.Delete(toChiUrl("/e2e/http-method"), func(w http.ResponseWriter, req *http.Request) {
+	engine.Get(toChiUrl("/e2e/simple-get"), func(w http.ResponseWriter, req *http.Request) {
 		// route start routes extension placeholder
 		authErr := authorize(
 			req,
@@ -3403,7 +3619,7 @@ func RegisterRoutes(engine *chi.Mux) {
 			},
 		)
 		if authErr != nil {
-			handleAuthorizationError(w, authErr, "Delete")
+			handleAuthorizationError(w, authErr, "SimpleGet")
 			return
 		}
 		controller := E2EControllerImport.E2EController{}
@@ -3418,7 +3634,109 @@ func RegisterRoutes(engine *chi.Mux) {
 		}
 		// End middlewares beforeOperationMiddlewares section
 		// before operation routes extension placeholder
-		opError := controller.Delete()
+		value, opError := controller.SimpleGet()
+		for key, value := range controller.GetHeaders() {
+			w.Header().Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'SimpleGet'",
+				Status:     statusCode,
+				Instance:   "/controller/error/SimpleGet",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			w.WriteHeader(statusCode)
+			json.NewEncoder(w).Encode(stdError)
+			return
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(statusCode)
+		json.NewEncoder(w).Encode(value)
+		// route end routes extension placeholder
+	})
+	engine.Get(toChiUrl("/e2e/simple-get-empty"), func(w http.ResponseWriter, req *http.Request) {
+		// route start routes extension placeholder
+		authErr := authorize(
+			req,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(w, authErr, "SimpleGetEmpty")
+			return
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(req)
+		var queryParamRawPtr *string = nil
+		queryParamRaw := req.URL.Query().Get("queryParam")
+		isqueryParamExists := req.URL.Query().Has("queryParam")
+		if isqueryParamExists {
+			queryParam := queryParamRaw
+			queryParamRawPtr = &queryParam
+		}
+		if validatorErr := validatorInstance.Var(queryParamRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, validatorErr)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "queryParam"
+			validationError := wrapValidatorError(validatorErr, "SimpleGetEmpty", fieldName)
+			// validation error response extension placeholder
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			json.NewEncoder(w).Encode(validationError)
+			return
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		opError := controller.SimpleGetEmpty(*queryParamRawPtr)
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
@@ -3436,9 +3754,9 @@ func RegisterRoutes(engine *chi.Mux) {
 			// End middlewares onErrorMiddlewares section
 			stdError := runtime.Rfc7807Error{
 				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'Delete'",
+				Detail:     "Encountered an error during operation 'SimpleGetEmpty'",
 				Status:     statusCode,
-				Instance:   "/controller/error/Delete",
+				Instance:   "/controller/error/SimpleGetEmpty",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			// json error response extension placeholder
@@ -3460,7 +3778,7 @@ func RegisterRoutes(engine *chi.Mux) {
 		w.WriteHeader(statusCode)
 		// route end routes extension placeholder
 	})
-	engine.Patch(toChiUrl("/e2e/http-method"), func(w http.ResponseWriter, req *http.Request) {
+	engine.Get(toChiUrl("/e2e/simple-get-empty-string"), func(w http.ResponseWriter, req *http.Request) {
 		// route start routes extension placeholder
 		authErr := authorize(
 			req,
@@ -3479,7 +3797,7 @@ func RegisterRoutes(engine *chi.Mux) {
 			},
 		)
 		if authErr != nil {
-			handleAuthorizationError(w, authErr, "Patch")
+			handleAuthorizationError(w, authErr, "SimpleGetEmptyString")
 			return
 		}
 		controller := E2EControllerImport.E2EController{}
@@ -3494,12 +3812,12 @@ func RegisterRoutes(engine *chi.Mux) {
 		}
 		// End middlewares beforeOperationMiddlewares section
 		// before operation routes extension placeholder
-		opError := controller.Patch()
+		value, opError := controller.SimpleGetEmptyString()
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
 		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, false, opError)
+		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
 			for _, middleware := range onErrorMiddlewares {
@@ -3512,9 +3830,9 @@ func RegisterRoutes(engine *chi.Mux) {
 			// End middlewares onErrorMiddlewares section
 			stdError := runtime.Rfc7807Error{
 				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'Patch'",
+				Detail:     "Encountered an error during operation 'SimpleGetEmptyString'",
 				Status:     statusCode,
-				Instance:   "/controller/error/Patch",
+				Instance:   "/controller/error/SimpleGetEmptyString",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			// json error response extension placeholder
@@ -3533,7 +3851,506 @@ func RegisterRoutes(engine *chi.Mux) {
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
 		// after operation routes extension placeholder
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(statusCode)
+		json.NewEncoder(w).Encode(value)
+		// route end routes extension placeholder
+	})
+	engine.Get(toChiUrl("/e2e/simple-get-null-string"), func(w http.ResponseWriter, req *http.Request) {
+		// route start routes extension placeholder
+		authErr := authorize(
+			req,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(w, authErr, "SimpleGetNullString")
+			return
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(req)
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.SimpleGetNullString()
+		for key, value := range controller.GetHeaders() {
+			w.Header().Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'SimpleGetNullString'",
+				Status:     statusCode,
+				Instance:   "/controller/error/SimpleGetNullString",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			w.WriteHeader(statusCode)
+			json.NewEncoder(w).Encode(stdError)
+			return
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(statusCode)
+		json.NewEncoder(w).Encode(value)
+		// route end routes extension placeholder
+	})
+	engine.Get(toChiUrl("/e2e/simple-get-object"), func(w http.ResponseWriter, req *http.Request) {
+		// route start routes extension placeholder
+		authErr := authorize(
+			req,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(w, authErr, "SimpleGetObject")
+			return
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(req)
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.SimpleGetObject()
+		for key, value := range controller.GetHeaders() {
+			w.Header().Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'SimpleGetObject'",
+				Status:     statusCode,
+				Instance:   "/controller/error/SimpleGetObject",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			w.WriteHeader(statusCode)
+			json.NewEncoder(w).Encode(stdError)
+			return
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(statusCode)
+		json.NewEncoder(w).Encode(value)
+		// route end routes extension placeholder
+	})
+	engine.Get(toChiUrl("/e2e/simple-get-object-null"), func(w http.ResponseWriter, req *http.Request) {
+		// route start routes extension placeholder
+		authErr := authorize(
+			req,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(w, authErr, "SimpleGetObjectNull")
+			return
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(req)
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.SimpleGetObjectNull()
+		for key, value := range controller.GetHeaders() {
+			w.Header().Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'SimpleGetObjectNull'",
+				Status:     statusCode,
+				Instance:   "/controller/error/SimpleGetObjectNull",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			w.WriteHeader(statusCode)
+			json.NewEncoder(w).Encode(stdError)
+			return
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(statusCode)
+		json.NewEncoder(w).Encode(value)
+		// route end routes extension placeholder
+	})
+	engine.Get(toChiUrl("/e2e/simple-get-object-ptr"), func(w http.ResponseWriter, req *http.Request) {
+		// route start routes extension placeholder
+		authErr := authorize(
+			req,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(w, authErr, "SimpleGetObjectPtr")
+			return
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(req)
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.SimpleGetObjectPtr()
+		for key, value := range controller.GetHeaders() {
+			w.Header().Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'SimpleGetObjectPtr'",
+				Status:     statusCode,
+				Instance:   "/controller/error/SimpleGetObjectPtr",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			w.WriteHeader(statusCode)
+			json.NewEncoder(w).Encode(stdError)
+			return
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(statusCode)
+		json.NewEncoder(w).Encode(value)
+		// route end routes extension placeholder
+	})
+	engine.Get(toChiUrl("/e2e/simple-get-ptr-string"), func(w http.ResponseWriter, req *http.Request) {
+		// route start routes extension placeholder
+		authErr := authorize(
+			req,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(w, authErr, "SimpleGetPtrString")
+			return
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(req)
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.SimpleGetPtrString()
+		for key, value := range controller.GetHeaders() {
+			w.Header().Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'SimpleGetPtrString'",
+				Status:     statusCode,
+				Instance:   "/controller/error/SimpleGetPtrString",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			w.WriteHeader(statusCode)
+			json.NewEncoder(w).Encode(stdError)
+			return
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(statusCode)
+		json.NewEncoder(w).Encode(value)
+		// route end routes extension placeholder
+	})
+	engine.Post(toChiUrl("/e2e/structs-with-inner-pointer"), func(w http.ResponseWriter, req *http.Request) {
+		// route start routes extension placeholder
+		authErr := authorize(
+			req,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(w, authErr, "StructsWithInnerPointer")
+			return
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(req)
+		var conversionErr error
+		var dataRawPtr *Param136data.TheModelWithInnerPointer = nil
+		conversionErr = bindAndValidateBody(req, "application/json", "required", &dataRawPtr)
+		if conversionErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, conversionErr)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			validationError := runtime.Rfc7807Error{
+				Type: http.StatusText(http.StatusUnprocessableEntity),
+				Detail: fmt.Sprintf(
+					"A request was made to operation 'StructsWithInnerPointer' but body parameter '%s' did not pass validation of '%s' - %s",
+					"data",
+					"TheModelWithInnerPointer",
+					extractValidationErrorMessage(conversionErr, nil),
+				),
+				Status:   http.StatusUnprocessableEntity,
+				Instance: "/validation/error/StructsWithInnerPointer",
+			}
+			// json body validation error response extension placeholder
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			json.NewEncoder(w).Encode(validationError)
+			return
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.StructsWithInnerPointer(*dataRawPtr)
+		for key, value := range controller.GetHeaders() {
+			w.Header().Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'StructsWithInnerPointer'",
+				Status:     statusCode,
+				Instance:   "/controller/error/StructsWithInnerPointer",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			w.WriteHeader(statusCode)
+			json.NewEncoder(w).Encode(stdError)
+			return
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(statusCode)
+		json.NewEncoder(w).Encode(value)
 		// route end routes extension placeholder
 	})
 	engine.Get(toChiUrl("/e2e/template-context-1"), func(w http.ResponseWriter, req *http.Request) {
@@ -3669,658 +4486,6 @@ func RegisterRoutes(engine *chi.Mux) {
 				Detail:     "Encountered an error during operation 'TemplateContext2'",
 				Status:     statusCode,
 				Instance:   "/controller/error/TemplateContext2",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			w.WriteHeader(statusCode)
-			json.NewEncoder(w).Encode(stdError)
-			return
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(statusCode)
-		json.NewEncoder(w).Encode(value)
-		// route end routes extension placeholder
-	})
-	engine.Post(toChiUrl("/e2e/form"), func(w http.ResponseWriter, req *http.Request) {
-		// route start routes extension placeholder
-		authErr := authorize(
-			req,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			handleAuthorizationError(w, authErr, "TestForm")
-			return
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(req)
-		req.ParseForm()
-		var item1RawPtr *string = nil
-		item1RawArr, isitem1Exists := req.PostForm["item1"]
-		item1Raw := ""
-		if isitem1Exists {
-			item1Raw = item1RawArr[0] // Get first value since form values are slices
-		}
-		if isitem1Exists {
-			item1 := item1Raw
-			item1RawPtr = &item1
-		}
-		if validatorErr := validatorInstance.Var(item1RawPtr, "required"); validatorErr != nil {
-			// Middlewares onInputValidationMiddlewares section
-			for _, middleware := range onInputValidationMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, validatorErr)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onInputValidationMiddlewares section
-			fieldName := "item1"
-			validationError := wrapValidatorError(validatorErr, "TestForm", fieldName)
-			// validation error response extension placeholder
-			w.WriteHeader(http.StatusUnprocessableEntity)
-			json.NewEncoder(w).Encode(validationError)
-			return
-		}
-		req.ParseForm()
-		var item2RawPtr *string = nil
-		item2RawArr, isitem2Exists := req.PostForm["item2"]
-		item2Raw := ""
-		if isitem2Exists {
-			item2Raw = item2RawArr[0] // Get first value since form values are slices
-		}
-		if isitem2Exists {
-			item2 := item2Raw
-			item2RawPtr = &item2
-		}
-		if validatorErr := validatorInstance.Var(item2RawPtr, "required"); validatorErr != nil {
-			// Middlewares onInputValidationMiddlewares section
-			for _, middleware := range onInputValidationMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, validatorErr)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onInputValidationMiddlewares section
-			fieldName := "item2"
-			validationError := wrapValidatorError(validatorErr, "TestForm", fieldName)
-			// validation error response extension placeholder
-			w.WriteHeader(http.StatusUnprocessableEntity)
-			json.NewEncoder(w).Encode(validationError)
-			return
-		}
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		value, opError := controller.TestForm(*item1RawPtr, *item2RawPtr)
-		for key, value := range controller.GetHeaders() {
-			w.Header().Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'TestForm'",
-				Status:     statusCode,
-				Instance:   "/controller/error/TestForm",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			w.WriteHeader(statusCode)
-			json.NewEncoder(w).Encode(stdError)
-			return
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(statusCode)
-		json.NewEncoder(w).Encode(value)
-		// route end routes extension placeholder
-	})
-	engine.Post(toChiUrl("/e2e/test-response-validation"), func(w http.ResponseWriter, req *http.Request) {
-		// route start routes extension placeholder
-		authErr := authorize(
-			req,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			handleAuthorizationError(w, authErr, "TestResponseValidation")
-			return
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(req)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		value, opError := controller.TestResponseValidation()
-		for key, value := range controller.GetHeaders() {
-			w.Header().Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'TestResponseValidation'",
-				Status:     statusCode,
-				Instance:   "/controller/error/TestResponseValidation",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			w.WriteHeader(statusCode)
-			json.NewEncoder(w).Encode(stdError)
-			return
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(statusCode)
-		json.NewEncoder(w).Encode(value)
-		// route end routes extension placeholder
-	})
-	engine.Post(toChiUrl("/e2e/test-response-validation-ptr"), func(w http.ResponseWriter, req *http.Request) {
-		// route start routes extension placeholder
-		authErr := authorize(
-			req,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			handleAuthorizationError(w, authErr, "TestResponseValidationPtr")
-			return
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(req)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		value, opError := controller.TestResponseValidationPtr()
-		for key, value := range controller.GetHeaders() {
-			w.Header().Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'TestResponseValidationPtr'",
-				Status:     statusCode,
-				Instance:   "/controller/error/TestResponseValidationPtr",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			w.WriteHeader(statusCode)
-			json.NewEncoder(w).Encode(stdError)
-			return
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(statusCode)
-		json.NewEncoder(w).Encode(value)
-		// route end routes extension placeholder
-	})
-	engine.Post(toChiUrl("/e2e/test-response-validation-null"), func(w http.ResponseWriter, req *http.Request) {
-		// route start routes extension placeholder
-		authErr := authorize(
-			req,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			handleAuthorizationError(w, authErr, "TestResponseValidationNull")
-			return
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(req)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		value, opError := controller.TestResponseValidationNull()
-		for key, value := range controller.GetHeaders() {
-			w.Header().Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'TestResponseValidationNull'",
-				Status:     statusCode,
-				Instance:   "/controller/error/TestResponseValidationNull",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			w.WriteHeader(statusCode)
-			json.NewEncoder(w).Encode(stdError)
-			return
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(statusCode)
-		json.NewEncoder(w).Encode(value)
-		// route end routes extension placeholder
-	})
-	engine.Post(toChiUrl("/e2e/test-primitive-conversions"), func(w http.ResponseWriter, req *http.Request) {
-		// route start routes extension placeholder
-		authErr := authorize(
-			req,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			handleAuthorizationError(w, authErr, "TestPrimitiveConversions")
-			return
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(req)
-		var value1RawPtr *int64 = nil
-		value1Raw := req.URL.Query().Get("value1")
-		isvalue1Exists := req.URL.Query().Has("value1")
-		if isvalue1Exists {
-			value1Uint64, conversionErr := strconv.ParseInt(value1Raw, 10, 64)
-			if conversionErr != nil {
-				// Middlewares onInputValidationMiddlewares section
-				for _, middleware := range onInputValidationMiddlewares {
-					middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, conversionErr)
-					setRequestContext(req, middlewareCtx)
-					if !continueOperation {
-						return
-					}
-				}
-				// End middlewares onInputValidationMiddlewares section
-				validationError := runtime.Rfc7807Error{
-					Type: http.StatusText(http.StatusUnprocessableEntity),
-					Detail: fmt.Sprintf(
-						"A request was made to operation 'TestPrimitiveConversions' but parameter '%s' was not properly sent - Expected %s but got %s",
-						"value1",
-						"int64",
-						reflect.TypeOf(value1Raw).String(),
-					),
-					Status:     http.StatusUnprocessableEntity,
-					Instance:   "/validation/error/TestPrimitiveConversions",
-					Extensions: map[string]string{"error": conversionErr.Error()},
-				}
-				// params validation error response extension placeholder
-				w.WriteHeader(http.StatusUnprocessableEntity)
-				json.NewEncoder(w).Encode(validationError)
-				return
-			}
-			value1 := int64(value1Uint64)
-			value1RawPtr = &value1
-		}
-		if validatorErr := validatorInstance.Var(value1RawPtr, "required"); validatorErr != nil {
-			// Middlewares onInputValidationMiddlewares section
-			for _, middleware := range onInputValidationMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, validatorErr)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onInputValidationMiddlewares section
-			fieldName := "value1"
-			validationError := wrapValidatorError(validatorErr, "TestPrimitiveConversions", fieldName)
-			// validation error response extension placeholder
-			w.WriteHeader(http.StatusUnprocessableEntity)
-			json.NewEncoder(w).Encode(validationError)
-			return
-		}
-		var value2RawPtr *bool = nil
-		value2Raw := req.URL.Query().Get("value2")
-		isvalue2Exists := req.URL.Query().Has("value2")
-		if isvalue2Exists {
-			value2, conversionErr := strconv.ParseBool(value2Raw)
-			if conversionErr != nil {
-				// Middlewares onInputValidationMiddlewares section
-				for _, middleware := range onInputValidationMiddlewares {
-					middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, conversionErr)
-					setRequestContext(req, middlewareCtx)
-					if !continueOperation {
-						return
-					}
-				}
-				// End middlewares onInputValidationMiddlewares section
-				validationError := runtime.Rfc7807Error{
-					Type: http.StatusText(http.StatusUnprocessableEntity),
-					Detail: fmt.Sprintf(
-						"A request was made to operation 'TestPrimitiveConversions' but parameter '%s' was not properly sent - Expected %s but got %s",
-						"value2",
-						"bool",
-						reflect.TypeOf(value2Raw).String(),
-					),
-					Status:     http.StatusUnprocessableEntity,
-					Instance:   "/validation/error/TestPrimitiveConversions",
-					Extensions: map[string]string{"error": conversionErr.Error()},
-				}
-				// params validation error response extension placeholder
-				w.WriteHeader(http.StatusUnprocessableEntity)
-				json.NewEncoder(w).Encode(validationError)
-				return
-			}
-			value2RawPtr = &value2
-		}
-		if validatorErr := validatorInstance.Var(value2RawPtr, "required"); validatorErr != nil {
-			// Middlewares onInputValidationMiddlewares section
-			for _, middleware := range onInputValidationMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, validatorErr)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onInputValidationMiddlewares section
-			fieldName := "value2"
-			validationError := wrapValidatorError(validatorErr, "TestPrimitiveConversions", fieldName)
-			// validation error response extension placeholder
-			w.WriteHeader(http.StatusUnprocessableEntity)
-			json.NewEncoder(w).Encode(validationError)
-			return
-		}
-		var value3RawPtr *int = nil
-		value3Raw := req.URL.Query().Get("value3")
-		isvalue3Exists := req.URL.Query().Has("value3")
-		if isvalue3Exists {
-			value3Uint64, conversionErr := strconv.Atoi(value3Raw)
-			if conversionErr != nil {
-				// Middlewares onInputValidationMiddlewares section
-				for _, middleware := range onInputValidationMiddlewares {
-					middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, conversionErr)
-					setRequestContext(req, middlewareCtx)
-					if !continueOperation {
-						return
-					}
-				}
-				// End middlewares onInputValidationMiddlewares section
-				validationError := runtime.Rfc7807Error{
-					Type: http.StatusText(http.StatusUnprocessableEntity),
-					Detail: fmt.Sprintf(
-						"A request was made to operation 'TestPrimitiveConversions' but parameter '%s' was not properly sent - Expected %s but got %s",
-						"value3",
-						"int",
-						reflect.TypeOf(value3Raw).String(),
-					),
-					Status:     http.StatusUnprocessableEntity,
-					Instance:   "/validation/error/TestPrimitiveConversions",
-					Extensions: map[string]string{"error": conversionErr.Error()},
-				}
-				// params validation error response extension placeholder
-				w.WriteHeader(http.StatusUnprocessableEntity)
-				json.NewEncoder(w).Encode(validationError)
-				return
-			}
-			value3 := int(value3Uint64)
-			value3RawPtr = &value3
-		}
-		if validatorErr := validatorInstance.Var(value3RawPtr, "required"); validatorErr != nil {
-			// Middlewares onInputValidationMiddlewares section
-			for _, middleware := range onInputValidationMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, validatorErr)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onInputValidationMiddlewares section
-			fieldName := "value3"
-			validationError := wrapValidatorError(validatorErr, "TestPrimitiveConversions", fieldName)
-			// validation error response extension placeholder
-			w.WriteHeader(http.StatusUnprocessableEntity)
-			json.NewEncoder(w).Encode(validationError)
-			return
-		}
-		var value4RawPtr *float64 = nil
-		value4Raw := req.URL.Query().Get("value4")
-		isvalue4Exists := req.URL.Query().Has("value4")
-		if isvalue4Exists {
-			value4, conversionErr := strconv.ParseFloat(value4Raw, 64)
-			if conversionErr != nil {
-				// Middlewares onInputValidationMiddlewares section
-				for _, middleware := range onInputValidationMiddlewares {
-					middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, conversionErr)
-					setRequestContext(req, middlewareCtx)
-					if !continueOperation {
-						return
-					}
-				}
-				// End middlewares onInputValidationMiddlewares section
-				validationError := runtime.Rfc7807Error{
-					Type: http.StatusText(http.StatusUnprocessableEntity),
-					Detail: fmt.Sprintf(
-						"A request was made to operation 'TestPrimitiveConversions' but parameter '%s' was not properly sent - Expected %s but got %s",
-						"value4",
-						"float64",
-						reflect.TypeOf(value4Raw).String(),
-					),
-					Status:     http.StatusUnprocessableEntity,
-					Instance:   "/validation/error/TestPrimitiveConversions",
-					Extensions: map[string]string{"error": conversionErr.Error()},
-				}
-				// params validation error response extension placeholder
-				w.WriteHeader(http.StatusUnprocessableEntity)
-				json.NewEncoder(w).Encode(validationError)
-				return
-			}
-			value4RawPtr = &value4
-		}
-		if validatorErr := validatorInstance.Var(value4RawPtr, "required"); validatorErr != nil {
-			// Middlewares onInputValidationMiddlewares section
-			for _, middleware := range onInputValidationMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, validatorErr)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onInputValidationMiddlewares section
-			fieldName := "value4"
-			validationError := wrapValidatorError(validatorErr, "TestPrimitiveConversions", fieldName)
-			// validation error response extension placeholder
-			w.WriteHeader(http.StatusUnprocessableEntity)
-			json.NewEncoder(w).Encode(validationError)
-			return
-		}
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		value, opError := controller.TestPrimitiveConversions(*value1RawPtr, *value2RawPtr, *value3RawPtr, *value4RawPtr)
-		for key, value := range controller.GetHeaders() {
-			w.Header().Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'TestPrimitiveConversions'",
-				Status:     statusCode,
-				Instance:   "/controller/error/TestPrimitiveConversions",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			// json error response extension placeholder
@@ -4810,7 +4975,7 @@ func RegisterRoutes(engine *chi.Mux) {
 		json.NewEncoder(w).Encode(value)
 		// route end routes extension placeholder
 	})
-	engine.Post(toChiUrl("/e2e/external-packages"), func(w http.ResponseWriter, req *http.Request) {
+	engine.Post(toChiUrl("/e2e/form"), func(w http.ResponseWriter, req *http.Request) {
 		// route start routes extension placeholder
 		authErr := authorize(
 			req,
@@ -4829,44 +4994,63 @@ func RegisterRoutes(engine *chi.Mux) {
 			},
 		)
 		if authErr != nil {
-			handleAuthorizationError(w, authErr, "ExternalPackages")
+			handleAuthorizationError(w, authErr, "TestForm")
 			return
 		}
 		controller := E2EControllerImport.E2EController{}
 		controller.InitController(req)
-		var conversionErr error
-		var unitRawPtr *Param113unit.LengthUnits = nil
-		unitRaw := req.URL.Query().Get("unit")
-		isunitExists := req.URL.Query().Has("unit")
-		if isunitExists {
-			unit := unitRaw
-			unitVar := Param113unit.LengthUnits(unit)
-			unitRawPtr = &unitVar
+		req.ParseForm()
+		var item1RawPtr *string = nil
+		item1RawArr, isitem1Exists := req.PostForm["item1"]
+		item1Raw := ""
+		if isitem1Exists {
+			item1Raw = item1RawArr[0] // Get first value since form values are slices
 		}
-		var dataRawPtr *Param114data.LengthDto = nil
-		conversionErr = bindAndValidateBody(req, "application/json", "required", &dataRawPtr)
-		if conversionErr != nil {
+		if isitem1Exists {
+			item1 := item1Raw
+			item1RawPtr = &item1
+		}
+		if validatorErr := validatorInstance.Var(item1RawPtr, "required"); validatorErr != nil {
 			// Middlewares onInputValidationMiddlewares section
 			for _, middleware := range onInputValidationMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, conversionErr)
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, validatorErr)
 				setRequestContext(req, middlewareCtx)
 				if !continueOperation {
 					return
 				}
 			}
 			// End middlewares onInputValidationMiddlewares section
-			validationError := runtime.Rfc7807Error{
-				Type: http.StatusText(http.StatusUnprocessableEntity),
-				Detail: fmt.Sprintf(
-					"A request was made to operation 'ExternalPackages' but body parameter '%s' did not pass validation of '%s' - %s",
-					"data",
-					"LengthDto",
-					extractValidationErrorMessage(conversionErr, nil),
-				),
-				Status:   http.StatusUnprocessableEntity,
-				Instance: "/validation/error/ExternalPackages",
+			fieldName := "item1"
+			validationError := wrapValidatorError(validatorErr, "TestForm", fieldName)
+			// validation error response extension placeholder
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			json.NewEncoder(w).Encode(validationError)
+			return
+		}
+		req.ParseForm()
+		var item2RawPtr *string = nil
+		item2RawArr, isitem2Exists := req.PostForm["item2"]
+		item2Raw := ""
+		if isitem2Exists {
+			item2Raw = item2RawArr[0] // Get first value since form values are slices
+		}
+		if isitem2Exists {
+			item2 := item2Raw
+			item2RawPtr = &item2
+		}
+		if validatorErr := validatorInstance.Var(item2RawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, validatorErr)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
 			}
-			// json body validation error response extension placeholder
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "item2"
+			validationError := wrapValidatorError(validatorErr, "TestForm", fieldName)
+			// validation error response extension placeholder
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			json.NewEncoder(w).Encode(validationError)
 			return
@@ -4881,7 +5065,7 @@ func RegisterRoutes(engine *chi.Mux) {
 		}
 		// End middlewares beforeOperationMiddlewares section
 		// before operation routes extension placeholder
-		value, opError := controller.ExternalPackages(unitRawPtr, *dataRawPtr)
+		value, opError := controller.TestForm(*item1RawPtr, *item2RawPtr)
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
@@ -4899,9 +5083,9 @@ func RegisterRoutes(engine *chi.Mux) {
 			// End middlewares onErrorMiddlewares section
 			stdError := runtime.Rfc7807Error{
 				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'ExternalPackages'",
+				Detail:     "Encountered an error during operation 'TestForm'",
 				Status:     statusCode,
-				Instance:   "/controller/error/ExternalPackages",
+				Instance:   "/controller/error/TestForm",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			// json error response extension placeholder
@@ -4925,7 +5109,7 @@ func RegisterRoutes(engine *chi.Mux) {
 		json.NewEncoder(w).Encode(value)
 		// route end routes extension placeholder
 	})
-	engine.Post(toChiUrl("/e2e/external-packages-unique-in-struct"), func(w http.ResponseWriter, req *http.Request) {
+	engine.Post(toChiUrl("/e2e/test-primitive-conversions"), func(w http.ResponseWriter, req *http.Request) {
 		// route start routes extension placeholder
 		authErr := authorize(
 			req,
@@ -4944,36 +5128,213 @@ func RegisterRoutes(engine *chi.Mux) {
 			},
 		)
 		if authErr != nil {
-			handleAuthorizationError(w, authErr, "ExternalPackagesUniqueInStruct")
+			handleAuthorizationError(w, authErr, "TestPrimitiveConversions")
 			return
 		}
 		controller := E2EControllerImport.E2EController{}
 		controller.InitController(req)
-		var conversionErr error
-		var dataRawPtr *Param117data.UniqueExternalUsage = nil
-		conversionErr = bindAndValidateBody(req, "application/json", "required", &dataRawPtr)
-		if conversionErr != nil {
+		var value1RawPtr *int64 = nil
+		value1Raw := req.URL.Query().Get("value1")
+		isvalue1Exists := req.URL.Query().Has("value1")
+		if isvalue1Exists {
+			value1Uint64, conversionErr := strconv.ParseInt(value1Raw, 10, 64)
+			if conversionErr != nil {
+				// Middlewares onInputValidationMiddlewares section
+				for _, middleware := range onInputValidationMiddlewares {
+					middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, conversionErr)
+					setRequestContext(req, middlewareCtx)
+					if !continueOperation {
+						return
+					}
+				}
+				// End middlewares onInputValidationMiddlewares section
+				validationError := runtime.Rfc7807Error{
+					Type: http.StatusText(http.StatusUnprocessableEntity),
+					Detail: fmt.Sprintf(
+						"A request was made to operation 'TestPrimitiveConversions' but parameter '%s' was not properly sent - Expected %s but got %s",
+						"value1",
+						"int64",
+						reflect.TypeOf(value1Raw).String(),
+					),
+					Status:     http.StatusUnprocessableEntity,
+					Instance:   "/validation/error/TestPrimitiveConversions",
+					Extensions: map[string]string{"error": conversionErr.Error()},
+				}
+				// params validation error response extension placeholder
+				w.WriteHeader(http.StatusUnprocessableEntity)
+				json.NewEncoder(w).Encode(validationError)
+				return
+			}
+			value1 := int64(value1Uint64)
+			value1RawPtr = &value1
+		}
+		if validatorErr := validatorInstance.Var(value1RawPtr, "required"); validatorErr != nil {
 			// Middlewares onInputValidationMiddlewares section
 			for _, middleware := range onInputValidationMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, conversionErr)
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, validatorErr)
 				setRequestContext(req, middlewareCtx)
 				if !continueOperation {
 					return
 				}
 			}
 			// End middlewares onInputValidationMiddlewares section
-			validationError := runtime.Rfc7807Error{
-				Type: http.StatusText(http.StatusUnprocessableEntity),
-				Detail: fmt.Sprintf(
-					"A request was made to operation 'ExternalPackagesUniqueInStruct' but body parameter '%s' did not pass validation of '%s' - %s",
-					"data",
-					"UniqueExternalUsage",
-					extractValidationErrorMessage(conversionErr, nil),
-				),
-				Status:   http.StatusUnprocessableEntity,
-				Instance: "/validation/error/ExternalPackagesUniqueInStruct",
+			fieldName := "value1"
+			validationError := wrapValidatorError(validatorErr, "TestPrimitiveConversions", fieldName)
+			// validation error response extension placeholder
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			json.NewEncoder(w).Encode(validationError)
+			return
+		}
+		var value2RawPtr *bool = nil
+		value2Raw := req.URL.Query().Get("value2")
+		isvalue2Exists := req.URL.Query().Has("value2")
+		if isvalue2Exists {
+			value2, conversionErr := strconv.ParseBool(value2Raw)
+			if conversionErr != nil {
+				// Middlewares onInputValidationMiddlewares section
+				for _, middleware := range onInputValidationMiddlewares {
+					middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, conversionErr)
+					setRequestContext(req, middlewareCtx)
+					if !continueOperation {
+						return
+					}
+				}
+				// End middlewares onInputValidationMiddlewares section
+				validationError := runtime.Rfc7807Error{
+					Type: http.StatusText(http.StatusUnprocessableEntity),
+					Detail: fmt.Sprintf(
+						"A request was made to operation 'TestPrimitiveConversions' but parameter '%s' was not properly sent - Expected %s but got %s",
+						"value2",
+						"bool",
+						reflect.TypeOf(value2Raw).String(),
+					),
+					Status:     http.StatusUnprocessableEntity,
+					Instance:   "/validation/error/TestPrimitiveConversions",
+					Extensions: map[string]string{"error": conversionErr.Error()},
+				}
+				// params validation error response extension placeholder
+				w.WriteHeader(http.StatusUnprocessableEntity)
+				json.NewEncoder(w).Encode(validationError)
+				return
 			}
-			// json body validation error response extension placeholder
+			value2RawPtr = &value2
+		}
+		if validatorErr := validatorInstance.Var(value2RawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, validatorErr)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "value2"
+			validationError := wrapValidatorError(validatorErr, "TestPrimitiveConversions", fieldName)
+			// validation error response extension placeholder
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			json.NewEncoder(w).Encode(validationError)
+			return
+		}
+		var value3RawPtr *int = nil
+		value3Raw := req.URL.Query().Get("value3")
+		isvalue3Exists := req.URL.Query().Has("value3")
+		if isvalue3Exists {
+			value3Uint64, conversionErr := strconv.Atoi(value3Raw)
+			if conversionErr != nil {
+				// Middlewares onInputValidationMiddlewares section
+				for _, middleware := range onInputValidationMiddlewares {
+					middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, conversionErr)
+					setRequestContext(req, middlewareCtx)
+					if !continueOperation {
+						return
+					}
+				}
+				// End middlewares onInputValidationMiddlewares section
+				validationError := runtime.Rfc7807Error{
+					Type: http.StatusText(http.StatusUnprocessableEntity),
+					Detail: fmt.Sprintf(
+						"A request was made to operation 'TestPrimitiveConversions' but parameter '%s' was not properly sent - Expected %s but got %s",
+						"value3",
+						"int",
+						reflect.TypeOf(value3Raw).String(),
+					),
+					Status:     http.StatusUnprocessableEntity,
+					Instance:   "/validation/error/TestPrimitiveConversions",
+					Extensions: map[string]string{"error": conversionErr.Error()},
+				}
+				// params validation error response extension placeholder
+				w.WriteHeader(http.StatusUnprocessableEntity)
+				json.NewEncoder(w).Encode(validationError)
+				return
+			}
+			value3 := int(value3Uint64)
+			value3RawPtr = &value3
+		}
+		if validatorErr := validatorInstance.Var(value3RawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, validatorErr)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "value3"
+			validationError := wrapValidatorError(validatorErr, "TestPrimitiveConversions", fieldName)
+			// validation error response extension placeholder
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			json.NewEncoder(w).Encode(validationError)
+			return
+		}
+		var value4RawPtr *float64 = nil
+		value4Raw := req.URL.Query().Get("value4")
+		isvalue4Exists := req.URL.Query().Has("value4")
+		if isvalue4Exists {
+			value4, conversionErr := strconv.ParseFloat(value4Raw, 64)
+			if conversionErr != nil {
+				// Middlewares onInputValidationMiddlewares section
+				for _, middleware := range onInputValidationMiddlewares {
+					middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, conversionErr)
+					setRequestContext(req, middlewareCtx)
+					if !continueOperation {
+						return
+					}
+				}
+				// End middlewares onInputValidationMiddlewares section
+				validationError := runtime.Rfc7807Error{
+					Type: http.StatusText(http.StatusUnprocessableEntity),
+					Detail: fmt.Sprintf(
+						"A request was made to operation 'TestPrimitiveConversions' but parameter '%s' was not properly sent - Expected %s but got %s",
+						"value4",
+						"float64",
+						reflect.TypeOf(value4Raw).String(),
+					),
+					Status:     http.StatusUnprocessableEntity,
+					Instance:   "/validation/error/TestPrimitiveConversions",
+					Extensions: map[string]string{"error": conversionErr.Error()},
+				}
+				// params validation error response extension placeholder
+				w.WriteHeader(http.StatusUnprocessableEntity)
+				json.NewEncoder(w).Encode(validationError)
+				return
+			}
+			value4RawPtr = &value4
+		}
+		if validatorErr := validatorInstance.Var(value4RawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, validatorErr)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "value4"
+			validationError := wrapValidatorError(validatorErr, "TestPrimitiveConversions", fieldName)
+			// validation error response extension placeholder
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			json.NewEncoder(w).Encode(validationError)
 			return
@@ -4988,7 +5349,7 @@ func RegisterRoutes(engine *chi.Mux) {
 		}
 		// End middlewares beforeOperationMiddlewares section
 		// before operation routes extension placeholder
-		value, opError := controller.ExternalPackagesUniqueInStruct(*dataRawPtr)
+		value, opError := controller.TestPrimitiveConversions(*value1RawPtr, *value2RawPtr, *value3RawPtr, *value4RawPtr)
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
@@ -5006,9 +5367,9 @@ func RegisterRoutes(engine *chi.Mux) {
 			// End middlewares onErrorMiddlewares section
 			stdError := runtime.Rfc7807Error{
 				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'ExternalPackagesUniqueInStruct'",
+				Detail:     "Encountered an error during operation 'TestPrimitiveConversions'",
 				Status:     statusCode,
-				Instance:   "/controller/error/ExternalPackagesUniqueInStruct",
+				Instance:   "/controller/error/TestPrimitiveConversions",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			// json error response extension placeholder
@@ -5032,7 +5393,7 @@ func RegisterRoutes(engine *chi.Mux) {
 		json.NewEncoder(w).Encode(value)
 		// route end routes extension placeholder
 	})
-	engine.Post(toChiUrl("/e2e/external-packages-validation"), func(w http.ResponseWriter, req *http.Request) {
+	engine.Post(toChiUrl("/e2e/test-response-validation"), func(w http.ResponseWriter, req *http.Request) {
 		// route start routes extension placeholder
 		authErr := authorize(
 			req,
@@ -5051,48 +5412,11 @@ func RegisterRoutes(engine *chi.Mux) {
 			},
 		)
 		if authErr != nil {
-			handleAuthorizationError(w, authErr, "ExternalPackagesValidation")
+			handleAuthorizationError(w, authErr, "TestResponseValidation")
 			return
 		}
 		controller := E2EControllerImport.E2EController{}
 		controller.InitController(req)
-		var conversionErr error
-		var unitRawPtr *Param120unit.LengthUnits = nil
-		unitRaw := req.URL.Query().Get("unit")
-		isunitExists := req.URL.Query().Has("unit")
-		if isunitExists {
-			unit := unitRaw
-			unitVar := Param120unit.LengthUnits(unit)
-			unitRawPtr = &unitVar
-		}
-		var dataRawPtr *Param121data.LengthDtoWithValidation = nil
-		conversionErr = bindAndValidateBody(req, "application/json", "required", &dataRawPtr)
-		if conversionErr != nil {
-			// Middlewares onInputValidationMiddlewares section
-			for _, middleware := range onInputValidationMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, conversionErr)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onInputValidationMiddlewares section
-			validationError := runtime.Rfc7807Error{
-				Type: http.StatusText(http.StatusUnprocessableEntity),
-				Detail: fmt.Sprintf(
-					"A request was made to operation 'ExternalPackagesValidation' but body parameter '%s' did not pass validation of '%s' - %s",
-					"data",
-					"LengthDtoWithValidation",
-					extractValidationErrorMessage(conversionErr, nil),
-				),
-				Status:   http.StatusUnprocessableEntity,
-				Instance: "/validation/error/ExternalPackagesValidation",
-			}
-			// json body validation error response extension placeholder
-			w.WriteHeader(http.StatusUnprocessableEntity)
-			json.NewEncoder(w).Encode(validationError)
-			return
-		}
 		// Middlewares beforeOperationMiddlewares section
 		for _, middleware := range beforeOperationMiddlewares {
 			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
@@ -5103,7 +5427,7 @@ func RegisterRoutes(engine *chi.Mux) {
 		}
 		// End middlewares beforeOperationMiddlewares section
 		// before operation routes extension placeholder
-		value, opError := controller.ExternalPackagesValidation(unitRawPtr, *dataRawPtr)
+		value, opError := controller.TestResponseValidation()
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
@@ -5121,9 +5445,9 @@ func RegisterRoutes(engine *chi.Mux) {
 			// End middlewares onErrorMiddlewares section
 			stdError := runtime.Rfc7807Error{
 				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'ExternalPackagesValidation'",
+				Detail:     "Encountered an error during operation 'TestResponseValidation'",
 				Status:     statusCode,
-				Instance:   "/controller/error/ExternalPackagesValidation",
+				Instance:   "/controller/error/TestResponseValidation",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			// json error response extension placeholder
@@ -5147,7 +5471,7 @@ func RegisterRoutes(engine *chi.Mux) {
 		json.NewEncoder(w).Encode(value)
 		// route end routes extension placeholder
 	})
-	engine.Post(toChiUrl("/e2e/arrays-in-body-and-res"), func(w http.ResponseWriter, req *http.Request) {
+	engine.Post(toChiUrl("/e2e/test-response-validation-null"), func(w http.ResponseWriter, req *http.Request) {
 		// route start routes extension placeholder
 		authErr := authorize(
 			req,
@@ -5166,40 +5490,11 @@ func RegisterRoutes(engine *chi.Mux) {
 			},
 		)
 		if authErr != nil {
-			handleAuthorizationError(w, authErr, "ArraysInBodyAndRes")
+			handleAuthorizationError(w, authErr, "TestResponseValidationNull")
 			return
 		}
 		controller := E2EControllerImport.E2EController{}
 		controller.InitController(req)
-		var conversionErr error
-		var dataRawPtr *[]Param124data.LengthDto = nil
-		conversionErr = bindAndValidateBody(req, "application/json", "required", &dataRawPtr)
-		if conversionErr != nil {
-			// Middlewares onInputValidationMiddlewares section
-			for _, middleware := range onInputValidationMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, conversionErr)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onInputValidationMiddlewares section
-			validationError := runtime.Rfc7807Error{
-				Type: http.StatusText(http.StatusUnprocessableEntity),
-				Detail: fmt.Sprintf(
-					"A request was made to operation 'ArraysInBodyAndRes' but body parameter '%s' did not pass validation of '%s' - %s",
-					"data",
-					"[]LengthDto",
-					extractValidationErrorMessage(conversionErr, nil),
-				),
-				Status:   http.StatusUnprocessableEntity,
-				Instance: "/validation/error/ArraysInBodyAndRes",
-			}
-			// json body validation error response extension placeholder
-			w.WriteHeader(http.StatusUnprocessableEntity)
-			json.NewEncoder(w).Encode(validationError)
-			return
-		}
 		// Middlewares beforeOperationMiddlewares section
 		for _, middleware := range beforeOperationMiddlewares {
 			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
@@ -5210,7 +5505,7 @@ func RegisterRoutes(engine *chi.Mux) {
 		}
 		// End middlewares beforeOperationMiddlewares section
 		// before operation routes extension placeholder
-		value, opError := controller.ArraysInBodyAndRes(*dataRawPtr)
+		value, opError := controller.TestResponseValidationNull()
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
@@ -5228,9 +5523,9 @@ func RegisterRoutes(engine *chi.Mux) {
 			// End middlewares onErrorMiddlewares section
 			stdError := runtime.Rfc7807Error{
 				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'ArraysInBodyAndRes'",
+				Detail:     "Encountered an error during operation 'TestResponseValidationNull'",
 				Status:     statusCode,
-				Instance:   "/controller/error/ArraysInBodyAndRes",
+				Instance:   "/controller/error/TestResponseValidationNull",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			// json error response extension placeholder
@@ -5254,7 +5549,7 @@ func RegisterRoutes(engine *chi.Mux) {
 		json.NewEncoder(w).Encode(value)
 		// route end routes extension placeholder
 	})
-	engine.Post(toChiUrl("/e2e/arrays-inside-body-and-res"), func(w http.ResponseWriter, req *http.Request) {
+	engine.Post(toChiUrl("/e2e/test-response-validation-ptr"), func(w http.ResponseWriter, req *http.Request) {
 		// route start routes extension placeholder
 		authErr := authorize(
 			req,
@@ -5273,40 +5568,11 @@ func RegisterRoutes(engine *chi.Mux) {
 			},
 		)
 		if authErr != nil {
-			handleAuthorizationError(w, authErr, "ArraysInsideBodyAndRes")
+			handleAuthorizationError(w, authErr, "TestResponseValidationPtr")
 			return
 		}
 		controller := E2EControllerImport.E2EController{}
 		controller.InitController(req)
-		var conversionErr error
-		var dataRawPtr *[]Param127data.BlaBla = nil
-		conversionErr = bindAndValidateBody(req, "application/json", "", &dataRawPtr)
-		if conversionErr != nil {
-			// Middlewares onInputValidationMiddlewares section
-			for _, middleware := range onInputValidationMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, conversionErr)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onInputValidationMiddlewares section
-			validationError := runtime.Rfc7807Error{
-				Type: http.StatusText(http.StatusUnprocessableEntity),
-				Detail: fmt.Sprintf(
-					"A request was made to operation 'ArraysInsideBodyAndRes' but body parameter '%s' did not pass validation of '%s' - %s",
-					"data",
-					"[]BlaBla",
-					extractValidationErrorMessage(conversionErr, nil),
-				),
-				Status:   http.StatusUnprocessableEntity,
-				Instance: "/validation/error/ArraysInsideBodyAndRes",
-			}
-			// json body validation error response extension placeholder
-			w.WriteHeader(http.StatusUnprocessableEntity)
-			json.NewEncoder(w).Encode(validationError)
-			return
-		}
 		// Middlewares beforeOperationMiddlewares section
 		for _, middleware := range beforeOperationMiddlewares {
 			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
@@ -5317,7 +5583,7 @@ func RegisterRoutes(engine *chi.Mux) {
 		}
 		// End middlewares beforeOperationMiddlewares section
 		// before operation routes extension placeholder
-		value, opError := controller.ArraysInsideBodyAndRes(dataRawPtr)
+		value, opError := controller.TestResponseValidationPtr()
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
@@ -5335,9 +5601,9 @@ func RegisterRoutes(engine *chi.Mux) {
 			// End middlewares onErrorMiddlewares section
 			stdError := runtime.Rfc7807Error{
 				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'ArraysInsideBodyAndRes'",
+				Detail:     "Encountered an error during operation 'TestResponseValidationPtr'",
 				Status:     statusCode,
-				Instance:   "/controller/error/ArraysInsideBodyAndRes",
+				Instance:   "/controller/error/TestResponseValidationPtr",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			// json error response extension placeholder
@@ -5361,7 +5627,7 @@ func RegisterRoutes(engine *chi.Mux) {
 		json.NewEncoder(w).Encode(value)
 		// route end routes extension placeholder
 	})
-	engine.Post(toChiUrl("/e2e/deep-arrays-with-validation"), func(w http.ResponseWriter, req *http.Request) {
+	engine.Get(toChiUrl("/e2e/with-default-config-security"), func(w http.ResponseWriter, req *http.Request) {
 		// route start routes extension placeholder
 		authErr := authorize(
 			req,
@@ -5380,406 +5646,10 @@ func RegisterRoutes(engine *chi.Mux) {
 			},
 		)
 		if authErr != nil {
-			handleAuthorizationError(w, authErr, "DeepArraysWithValidation")
+			handleAuthorizationError(w, authErr, "WithDefaultConfigSecurity")
 			return
 		}
 		controller := E2EControllerImport.E2EController{}
-		controller.InitController(req)
-		var conversionErr error
-		var dataRawPtr *[][]Param130data.BlaBla2 = nil
-		conversionErr = bindAndValidateBody(req, "application/json", "required", &dataRawPtr)
-		if conversionErr != nil {
-			// Middlewares onInputValidationMiddlewares section
-			for _, middleware := range onInputValidationMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, conversionErr)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onInputValidationMiddlewares section
-			validationError := runtime.Rfc7807Error{
-				Type: http.StatusText(http.StatusUnprocessableEntity),
-				Detail: fmt.Sprintf(
-					"A request was made to operation 'DeepArraysWithValidation' but body parameter '%s' did not pass validation of '%s' - %s",
-					"data",
-					"[][]BlaBla2",
-					extractValidationErrorMessage(conversionErr, nil),
-				),
-				Status:   http.StatusUnprocessableEntity,
-				Instance: "/validation/error/DeepArraysWithValidation",
-			}
-			// json body validation error response extension placeholder
-			w.WriteHeader(http.StatusUnprocessableEntity)
-			json.NewEncoder(w).Encode(validationError)
-			return
-		}
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		value, opError := controller.DeepArraysWithValidation(*dataRawPtr)
-		for key, value := range controller.GetHeaders() {
-			w.Header().Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'DeepArraysWithValidation'",
-				Status:     statusCode,
-				Instance:   "/controller/error/DeepArraysWithValidation",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			w.WriteHeader(statusCode)
-			json.NewEncoder(w).Encode(stdError)
-			return
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(statusCode)
-		json.NewEncoder(w).Encode(value)
-		// route end routes extension placeholder
-	})
-	engine.Post(toChiUrl("/e2e/embedded-structs"), func(w http.ResponseWriter, req *http.Request) {
-		// route start routes extension placeholder
-		authErr := authorize(
-			req,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			handleAuthorizationError(w, authErr, "EmbeddedStructs")
-			return
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(req)
-		var conversionErr error
-		var dataRawPtr *Param133data.TheModel = nil
-		conversionErr = bindAndValidateBody(req, "application/json", "required", &dataRawPtr)
-		if conversionErr != nil {
-			// Middlewares onInputValidationMiddlewares section
-			for _, middleware := range onInputValidationMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, conversionErr)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onInputValidationMiddlewares section
-			validationError := runtime.Rfc7807Error{
-				Type: http.StatusText(http.StatusUnprocessableEntity),
-				Detail: fmt.Sprintf(
-					"A request was made to operation 'EmbeddedStructs' but body parameter '%s' did not pass validation of '%s' - %s",
-					"data",
-					"TheModel",
-					extractValidationErrorMessage(conversionErr, nil),
-				),
-				Status:   http.StatusUnprocessableEntity,
-				Instance: "/validation/error/EmbeddedStructs",
-			}
-			// json body validation error response extension placeholder
-			w.WriteHeader(http.StatusUnprocessableEntity)
-			json.NewEncoder(w).Encode(validationError)
-			return
-		}
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		value, opError := controller.EmbeddedStructs(*dataRawPtr)
-		for key, value := range controller.GetHeaders() {
-			w.Header().Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'EmbeddedStructs'",
-				Status:     statusCode,
-				Instance:   "/controller/error/EmbeddedStructs",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			w.WriteHeader(statusCode)
-			json.NewEncoder(w).Encode(stdError)
-			return
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(statusCode)
-		json.NewEncoder(w).Encode(value)
-		// route end routes extension placeholder
-	})
-	engine.Post(toChiUrl("/e2e/context-injection-empty"), func(w http.ResponseWriter, req *http.Request) {
-		// route start routes extension placeholder
-		authErr := authorize(
-			req,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			handleAuthorizationError(w, authErr, "ContextInjectionEmpty")
-			return
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(req)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		opError := controller.ContextInjectionEmpty(getRequestContext(req))
-		for key, value := range controller.GetHeaders() {
-			w.Header().Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, false, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'ContextInjectionEmpty'",
-				Status:     statusCode,
-				Instance:   "/controller/error/ContextInjectionEmpty",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			w.WriteHeader(statusCode)
-			json.NewEncoder(w).Encode(stdError)
-			return
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		w.WriteHeader(statusCode)
-		// route end routes extension placeholder
-	})
-	engine.Post(toChiUrl("/e2e/context-injection"), func(w http.ResponseWriter, req *http.Request) {
-		// route start routes extension placeholder
-		authErr := authorize(
-			req,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			handleAuthorizationError(w, authErr, "ContextInjection")
-			return
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(req)
-		var conversionErr error
-		var dataRawPtr *Param137data.TheModel = nil
-		conversionErr = bindAndValidateBody(req, "application/json", "required", &dataRawPtr)
-		if conversionErr != nil {
-			// Middlewares onInputValidationMiddlewares section
-			for _, middleware := range onInputValidationMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, conversionErr)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onInputValidationMiddlewares section
-			validationError := runtime.Rfc7807Error{
-				Type: http.StatusText(http.StatusUnprocessableEntity),
-				Detail: fmt.Sprintf(
-					"A request was made to operation 'ContextInjection' but body parameter '%s' did not pass validation of '%s' - %s",
-					"data",
-					"TheModel",
-					extractValidationErrorMessage(conversionErr, nil),
-				),
-				Status:   http.StatusUnprocessableEntity,
-				Instance: "/validation/error/ContextInjection",
-			}
-			// json body validation error response extension placeholder
-			w.WriteHeader(http.StatusUnprocessableEntity)
-			json.NewEncoder(w).Encode(validationError)
-			return
-		}
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		opError := controller.ContextInjection(getRequestContext(req), *dataRawPtr)
-		for key, value := range controller.GetHeaders() {
-			w.Header().Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, false, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
-				setRequestContext(req, middlewareCtx)
-				if !continueOperation {
-					return
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'ContextInjection'",
-				Status:     statusCode,
-				Instance:   "/controller/error/ContextInjection",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			w.WriteHeader(statusCode)
-			json.NewEncoder(w).Encode(stdError)
-			return
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
-			setRequestContext(req, middlewareCtx)
-			if !continueOperation {
-				return
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		w.WriteHeader(statusCode)
-		// route end routes extension placeholder
-	})
-	// E2EClassSecController
-	engine.Get(toChiUrl("/e2e/with-default-class-security"), func(w http.ResponseWriter, req *http.Request) {
-		// route start routes extension placeholder
-		authErr := authorize(
-			req,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName",
-							Scopes: []string{
-								"class",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			handleAuthorizationError(w, authErr, "WithDefaultClassSecurity")
-			return
-		}
-		controller := E2EClassSecControllerImport.E2EClassSecController{}
 		controller.InitController(req)
 		var headerParamRawPtr *string = nil
 		headerParamRaw := req.Header.Get("x-test-scopes")
@@ -5804,7 +5674,7 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "headerParam"
-			validationError := wrapValidatorError(validatorErr, "WithDefaultClassSecurity", fieldName)
+			validationError := wrapValidatorError(validatorErr, "WithDefaultConfigSecurity", fieldName)
 			// validation error response extension placeholder
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			json.NewEncoder(w).Encode(validationError)
@@ -5820,7 +5690,7 @@ func RegisterRoutes(engine *chi.Mux) {
 		}
 		// End middlewares beforeOperationMiddlewares section
 		// before operation routes extension placeholder
-		value, opError := controller.WithDefaultClassSecurity(*headerParamRawPtr)
+		value, opError := controller.WithDefaultConfigSecurity(*headerParamRawPtr)
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
@@ -5838,9 +5708,9 @@ func RegisterRoutes(engine *chi.Mux) {
 			// End middlewares onErrorMiddlewares section
 			stdError := runtime.Rfc7807Error{
 				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'WithDefaultClassSecurity'",
+				Detail:     "Encountered an error during operation 'WithDefaultConfigSecurity'",
 				Status:     statusCode,
-				Instance:   "/controller/error/WithDefaultClassSecurity",
+				Instance:   "/controller/error/WithDefaultConfigSecurity",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			// json error response extension placeholder
@@ -5864,7 +5734,7 @@ func RegisterRoutes(engine *chi.Mux) {
 		json.NewEncoder(w).Encode(value)
 		// route end routes extension placeholder
 	})
-	engine.Get(toChiUrl("/e2e/with-default-override-class-security"), func(w http.ResponseWriter, req *http.Request) {
+	engine.Get(toChiUrl("/e2e/with-one-security"), func(w http.ResponseWriter, req *http.Request) {
 		// route start routes extension placeholder
 		authErr := authorize(
 			req,
@@ -5875,7 +5745,7 @@ func RegisterRoutes(engine *chi.Mux) {
 						{
 							SchemaName: "securitySchemaName",
 							Scopes: []string{
-								"method",
+								"other",
 							},
 						},
 					},
@@ -5883,10 +5753,10 @@ func RegisterRoutes(engine *chi.Mux) {
 			},
 		)
 		if authErr != nil {
-			handleAuthorizationError(w, authErr, "WithOverrideClassSecurity")
+			handleAuthorizationError(w, authErr, "WithOneSecurity")
 			return
 		}
-		controller := E2EClassSecControllerImport.E2EClassSecController{}
+		controller := E2EControllerImport.E2EController{}
 		controller.InitController(req)
 		var headerParamRawPtr *string = nil
 		headerParamRaw := req.Header.Get("x-test-scopes")
@@ -5911,7 +5781,7 @@ func RegisterRoutes(engine *chi.Mux) {
 			}
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "headerParam"
-			validationError := wrapValidatorError(validatorErr, "WithOverrideClassSecurity", fieldName)
+			validationError := wrapValidatorError(validatorErr, "WithOneSecurity", fieldName)
 			// validation error response extension placeholder
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			json.NewEncoder(w).Encode(validationError)
@@ -5927,7 +5797,7 @@ func RegisterRoutes(engine *chi.Mux) {
 		}
 		// End middlewares beforeOperationMiddlewares section
 		// before operation routes extension placeholder
-		value, opError := controller.WithOverrideClassSecurity(*headerParamRawPtr)
+		value, opError := controller.WithOneSecurity(*headerParamRawPtr)
 		for key, value := range controller.GetHeaders() {
 			w.Header().Set(key, value)
 		}
@@ -5945,9 +5815,247 @@ func RegisterRoutes(engine *chi.Mux) {
 			// End middlewares onErrorMiddlewares section
 			stdError := runtime.Rfc7807Error{
 				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'WithOverrideClassSecurity'",
+				Detail:     "Encountered an error during operation 'WithOneSecurity'",
 				Status:     statusCode,
-				Instance:   "/controller/error/WithOverrideClassSecurity",
+				Instance:   "/controller/error/WithOneSecurity",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			w.WriteHeader(statusCode)
+			json.NewEncoder(w).Encode(stdError)
+			return
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(statusCode)
+		json.NewEncoder(w).Encode(value)
+		// route end routes extension placeholder
+	})
+	engine.Get(toChiUrl("/e2e/with-two-security"), func(w http.ResponseWriter, req *http.Request) {
+		// route start routes extension placeholder
+		authErr := authorize(
+			req,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName",
+							Scopes: []string{
+								"other",
+							},
+						},
+					},
+				},
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"write",
+								"read",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(w, authErr, "WithTwoSecurity")
+			return
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(req)
+		var headerParamRawPtr *string = nil
+		headerParamRaw := req.Header.Get("x-test-scopes")
+		_, isheaderParamExists := req.Header["x-test-scopes"]
+		if !isheaderParamExists {
+			// In echo, the req..Header["key"] is not 100% reliable, so we need other check, but only if is was not found in the first method
+			headerValues := req.Header.Values("x-test-scopes")
+			isheaderParamExists = len(headerValues) > 0
+		}
+		if isheaderParamExists {
+			headerParam := headerParamRaw
+			headerParamRawPtr = &headerParam
+		}
+		if validatorErr := validatorInstance.Var(headerParamRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, validatorErr)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "headerParam"
+			validationError := wrapValidatorError(validatorErr, "WithTwoSecurity", fieldName)
+			// validation error response extension placeholder
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			json.NewEncoder(w).Encode(validationError)
+			return
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.WithTwoSecurity(*headerParamRawPtr)
+		for key, value := range controller.GetHeaders() {
+			w.Header().Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'WithTwoSecurity'",
+				Status:     statusCode,
+				Instance:   "/controller/error/WithTwoSecurity",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			w.WriteHeader(statusCode)
+			json.NewEncoder(w).Encode(stdError)
+			return
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(statusCode)
+		json.NewEncoder(w).Encode(value)
+		// route end routes extension placeholder
+	})
+	engine.Get(toChiUrl("/e2e/with-two-security-same-method"), func(w http.ResponseWriter, req *http.Request) {
+		// route start routes extension placeholder
+		authErr := authorize(
+			req,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName",
+							Scopes: []string{
+								"other",
+							},
+						},
+					},
+				},
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName",
+							Scopes: []string{
+								"write",
+								"read",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(w, authErr, "WithTwoSecuritySameMethod")
+			return
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(req)
+		var headerParamRawPtr *string = nil
+		headerParamRaw := req.Header.Get("x-test-scopes")
+		_, isheaderParamExists := req.Header["x-test-scopes"]
+		if !isheaderParamExists {
+			// In echo, the req..Header["key"] is not 100% reliable, so we need other check, but only if is was not found in the first method
+			headerValues := req.Header.Values("x-test-scopes")
+			isheaderParamExists = len(headerValues) > 0
+		}
+		if isheaderParamExists {
+			headerParam := headerParamRaw
+			headerParamRawPtr = &headerParam
+		}
+		if validatorErr := validatorInstance.Var(headerParamRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, validatorErr)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "headerParam"
+			validationError := wrapValidatorError(validatorErr, "WithTwoSecuritySameMethod", fieldName)
+			// validation error response extension placeholder
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			json.NewEncoder(w).Encode(validationError)
+			return
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req)
+			setRequestContext(req, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.WithTwoSecuritySameMethod(*headerParamRawPtr)
+		for key, value := range controller.GetHeaders() {
+			w.Header().Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(req), w, req, opError)
+				setRequestContext(req, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'WithTwoSecuritySameMethod'",
+				Status:     statusCode,
+				Instance:   "/controller/error/WithTwoSecuritySameMethod",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			// json error response extension placeholder

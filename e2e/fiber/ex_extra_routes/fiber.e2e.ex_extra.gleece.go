@@ -9,7 +9,7 @@ Generated Date: 2025-10-15
 Target Engine: Fiber v2 (https://github.com/gofiber/fiber)
 --
 Usage:
-Refer to the Gleece documentation for details on how to use the generated routes and handlers.
+Refer to the Gleece documentation https://docs.gleece.dev for details on how to use the generated routes and handlers.
 --
 Repository: https://github.com/gopher-fleece/gleece
 --
@@ -26,14 +26,26 @@ import (
 	"strings"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
-	E2EControllerImport "github.com/gopher-fleece/gleece/e2e/assets"
+	E2EClassSecControllerImport "github.com/gopher-fleece/gleece/e2e/assets"
 	RequestAuth "github.com/gopher-fleece/gleece/e2e/fiber/auth"
 	"github.com/gopher-fleece/runtime"
+	E2EControllerImport "github.com/gopher-fleece/gleece/e2e/assets"
+	Param124data "github.com/haimkastner/unitsnet-go/units"
+	Param127data "github.com/gopher-fleece/gleece/e2e/assets"
+	Param140data "github.com/gopher-fleece/gleece/e2e/assets"
+	Response70CustomError "github.com/gopher-fleece/gleece/e2e/assets"
+	Response73CustomError "github.com/gopher-fleece/gleece/e2e/assets"
+	Param130data "github.com/gopher-fleece/gleece/e2e/assets"
+	Param133data "github.com/gopher-fleece/gleece/e2e/assets"
+	Param113unit "github.com/haimkastner/unitsnet-go/units"
+	Param114data "github.com/haimkastner/unitsnet-go/units"
+	Param117data "github.com/gopher-fleece/gleece/e2e/assets"
+	Param121data "github.com/gopher-fleece/gleece/e2e/assets"
+	Param120unit "github.com/haimkastner/unitsnet-go/units"
 	Param41theBody "github.com/gopher-fleece/gleece/e2e/assets"
 	Param46theBody "github.com/gopher-fleece/gleece/e2e/assets"
 	Param49theBody "github.com/gopher-fleece/gleece/e2e/assets"
-	Response70CustomError "github.com/gopher-fleece/gleece/e2e/assets"
-	Response73CustomError "github.com/gopher-fleece/gleece/e2e/assets"
+	Param136data "github.com/gopher-fleece/gleece/e2e/assets"
 	Param100value1 "github.com/gopher-fleece/gleece/e2e/assets"
 	Param101value2 "github.com/gopher-fleece/gleece/e2e/assets"
 	Param102value3 "github.com/gopher-fleece/gleece/e2e/assets"
@@ -41,17 +53,6 @@ import (
 	Param106value2 "github.com/gopher-fleece/gleece/e2e/assets"
 	Param107value3 "github.com/gopher-fleece/gleece/e2e/assets"
 	Param110value1 "github.com/gopher-fleece/gleece/e2e/assets"
-	Param113unit "github.com/haimkastner/unitsnet-go/units"
-	Param114data "github.com/haimkastner/unitsnet-go/units"
-	Param117data "github.com/gopher-fleece/gleece/e2e/assets"
-	Param121data "github.com/gopher-fleece/gleece/e2e/assets"
-	Param120unit "github.com/haimkastner/unitsnet-go/units"
-	Param124data "github.com/haimkastner/unitsnet-go/units"
-	Param127data "github.com/gopher-fleece/gleece/e2e/assets"
-	Param130data "github.com/gopher-fleece/gleece/e2e/assets"
-	Param133data "github.com/gopher-fleece/gleece/e2e/assets"
-	Param137data "github.com/gopher-fleece/gleece/e2e/assets"
-	E2EClassSecControllerImport "github.com/gopher-fleece/gleece/e2e/assets"
 	// import extension placeholder
 )
 var validatorInstance = validator.New()
@@ -306,8 +307,8 @@ func RegisterCustomValidator(validateTagName string, validateFunc runtime.Valida
 func RegisterRoutes(engine *fiber.App) {
 	urlParamRegex = regexp.MustCompile(`\{([\w\d-_]+)\}`)
 	// register routes extension placeholder
-	// E2EController
-	engine.Get(toFiberUrl("/e2e/simple-get"), func(fiberCtx *fiber.Ctx) error {
+	// E2EClassSecController
+	engine.Get(toFiberUrl("/e2e/with-default-class-security"), func(fiberCtx *fiber.Ctx) error {
 		// route start routes extension placeholder
 		authErr := authorize(
 			fiberCtx,
@@ -316,9 +317,9 @@ func RegisterRoutes(engine *fiber.App) {
 					Relation: SecurityListRelationAnd,
 					Checks: []runtime.SecurityCheck{
 						{
-							SchemaName: "securitySchemaName2",
+							SchemaName: "securitySchemaName",
 							Scopes: []string{
-								"config",
+								"class",
 							},
 						},
 					},
@@ -326,832 +327,18 @@ func RegisterRoutes(engine *fiber.App) {
 			},
 		)
 		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "SimpleGet")
+			return handleAuthorizationError(fiberCtx, authErr, "WithDefaultClassSecurity")
 		}
-		controller := E2EControllerImport.E2EController{}
+		controller := E2EClassSecControllerImport.E2EClassSecController{}
 		controller.InitController(fiberCtx)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
+		var headerParamRawPtr *string = nil
+		headerParamRaw := fiberCtx.Get("x-test-scopes")
+		isheaderParamExists := len(fiberCtx.Request().Header.Peek("x-test-scopes")) > 0
+		if isheaderParamExists {
+			headerParam := headerParamRaw
+			headerParamRawPtr = &headerParam
 		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		value, opError := controller.SimpleGet()
-		for key, value := range controller.GetHeaders() {
-			fiberCtx.Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'SimpleGet'",
-				Status:     statusCode,
-				Instance:   "/controller/error/SimpleGet",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			return fiberCtx.Status(statusCode).JSON(stdError)
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		fiberCtx.Status(statusCode).JSON(value)
-		// route end routes extension placeholder
-		return nil
-	})
-	engine.Get(toFiberUrl("/e2e/simple-get-empty-string"), func(fiberCtx *fiber.Ctx) error {
-		// route start routes extension placeholder
-		authErr := authorize(
-			fiberCtx,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "SimpleGetEmptyString")
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(fiberCtx)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		value, opError := controller.SimpleGetEmptyString()
-		for key, value := range controller.GetHeaders() {
-			fiberCtx.Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'SimpleGetEmptyString'",
-				Status:     statusCode,
-				Instance:   "/controller/error/SimpleGetEmptyString",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			return fiberCtx.Status(statusCode).JSON(stdError)
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		fiberCtx.Status(statusCode).JSON(value)
-		// route end routes extension placeholder
-		return nil
-	})
-	engine.Get(toFiberUrl("/e2e/simple-get-ptr-string"), func(fiberCtx *fiber.Ctx) error {
-		// route start routes extension placeholder
-		authErr := authorize(
-			fiberCtx,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "SimpleGetPtrString")
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(fiberCtx)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		value, opError := controller.SimpleGetPtrString()
-		for key, value := range controller.GetHeaders() {
-			fiberCtx.Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'SimpleGetPtrString'",
-				Status:     statusCode,
-				Instance:   "/controller/error/SimpleGetPtrString",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			return fiberCtx.Status(statusCode).JSON(stdError)
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		fiberCtx.Status(statusCode).JSON(value)
-		// route end routes extension placeholder
-		return nil
-	})
-	engine.Get(toFiberUrl("/e2e/simple-get-null-string"), func(fiberCtx *fiber.Ctx) error {
-		// route start routes extension placeholder
-		authErr := authorize(
-			fiberCtx,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "SimpleGetNullString")
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(fiberCtx)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		value, opError := controller.SimpleGetNullString()
-		for key, value := range controller.GetHeaders() {
-			fiberCtx.Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'SimpleGetNullString'",
-				Status:     statusCode,
-				Instance:   "/controller/error/SimpleGetNullString",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			return fiberCtx.Status(statusCode).JSON(stdError)
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		fiberCtx.Status(statusCode).JSON(value)
-		// route end routes extension placeholder
-		return nil
-	})
-	engine.Get(toFiberUrl("/e2e/simple-get-object"), func(fiberCtx *fiber.Ctx) error {
-		// route start routes extension placeholder
-		authErr := authorize(
-			fiberCtx,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "SimpleGetObject")
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(fiberCtx)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		value, opError := controller.SimpleGetObject()
-		for key, value := range controller.GetHeaders() {
-			fiberCtx.Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'SimpleGetObject'",
-				Status:     statusCode,
-				Instance:   "/controller/error/SimpleGetObject",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			return fiberCtx.Status(statusCode).JSON(stdError)
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		fiberCtx.Status(statusCode).JSON(value)
-		// route end routes extension placeholder
-		return nil
-	})
-	engine.Get(toFiberUrl("/e2e/simple-get-object-ptr"), func(fiberCtx *fiber.Ctx) error {
-		// route start routes extension placeholder
-		authErr := authorize(
-			fiberCtx,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "SimpleGetObjectPtr")
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(fiberCtx)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		value, opError := controller.SimpleGetObjectPtr()
-		for key, value := range controller.GetHeaders() {
-			fiberCtx.Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'SimpleGetObjectPtr'",
-				Status:     statusCode,
-				Instance:   "/controller/error/SimpleGetObjectPtr",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			return fiberCtx.Status(statusCode).JSON(stdError)
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		fiberCtx.Status(statusCode).JSON(value)
-		// route end routes extension placeholder
-		return nil
-	})
-	engine.Get(toFiberUrl("/e2e/simple-get-object-null"), func(fiberCtx *fiber.Ctx) error {
-		// route start routes extension placeholder
-		authErr := authorize(
-			fiberCtx,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "SimpleGetObjectNull")
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(fiberCtx)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		value, opError := controller.SimpleGetObjectNull()
-		for key, value := range controller.GetHeaders() {
-			fiberCtx.Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'SimpleGetObjectNull'",
-				Status:     statusCode,
-				Instance:   "/controller/error/SimpleGetObjectNull",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			return fiberCtx.Status(statusCode).JSON(stdError)
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		fiberCtx.Status(statusCode).JSON(value)
-		// route end routes extension placeholder
-		return nil
-	})
-	engine.Get(toFiberUrl("/e2e/primitive-return-type"), func(fiberCtx *fiber.Ctx) error {
-		// route start routes extension placeholder
-		authErr := authorize(
-			fiberCtx,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "PrimitiveReturnType")
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(fiberCtx)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		value, opError := controller.PrimitiveReturnType()
-		for key, value := range controller.GetHeaders() {
-			fiberCtx.Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'PrimitiveReturnType'",
-				Status:     statusCode,
-				Instance:   "/controller/error/PrimitiveReturnType",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			return fiberCtx.Status(statusCode).JSON(stdError)
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		fiberCtx.Status(statusCode).JSON(value)
-		// route end routes extension placeholder
-		return nil
-	})
-	engine.Get(toFiberUrl("/e2e/primitive-array-return-type"), func(fiberCtx *fiber.Ctx) error {
-		// route start routes extension placeholder
-		authErr := authorize(
-			fiberCtx,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "PrimitiveArrayReturnType")
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(fiberCtx)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		value, opError := controller.PrimitiveArrayReturnType()
-		for key, value := range controller.GetHeaders() {
-			fiberCtx.Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'PrimitiveArrayReturnType'",
-				Status:     statusCode,
-				Instance:   "/controller/error/PrimitiveArrayReturnType",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			return fiberCtx.Status(statusCode).JSON(stdError)
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		fiberCtx.Status(statusCode).JSON(value)
-		// route end routes extension placeholder
-		return nil
-	})
-	engine.Get(toFiberUrl("/e2e/primitive-alias-return-type"), func(fiberCtx *fiber.Ctx) error {
-		// route start routes extension placeholder
-		authErr := authorize(
-			fiberCtx,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "PrimitiveAliasReturnType")
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(fiberCtx)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		value, opError := controller.PrimitiveAliasReturnType()
-		for key, value := range controller.GetHeaders() {
-			fiberCtx.Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'PrimitiveAliasReturnType'",
-				Status:     statusCode,
-				Instance:   "/controller/error/PrimitiveAliasReturnType",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			return fiberCtx.Status(statusCode).JSON(stdError)
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		fiberCtx.Status(statusCode).JSON(value)
-		// route end routes extension placeholder
-		return nil
-	})
-	engine.Get(toFiberUrl("/e2e/primitive-alias-array-return-type"), func(fiberCtx *fiber.Ctx) error {
-		// route start routes extension placeholder
-		authErr := authorize(
-			fiberCtx,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "PrimitiveAliasArrayReturnType")
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(fiberCtx)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		value, opError := controller.PrimitiveAliasArrayReturnType()
-		for key, value := range controller.GetHeaders() {
-			fiberCtx.Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'PrimitiveAliasArrayReturnType'",
-				Status:     statusCode,
-				Instance:   "/controller/error/PrimitiveAliasArrayReturnType",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			return fiberCtx.Status(statusCode).JSON(stdError)
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		fiberCtx.Status(statusCode).JSON(value)
-		// route end routes extension placeholder
-		return nil
-	})
-	engine.Get(toFiberUrl("/e2e/simple-get-empty"), func(fiberCtx *fiber.Ctx) error {
-		// route start routes extension placeholder
-		authErr := authorize(
-			fiberCtx,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "SimpleGetEmpty")
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(fiberCtx)
-		var queryParamRawPtr *string = nil
-		queryParamRaw := fiberCtx.Query("queryParam")
-		isqueryParamExists := fiberCtx.Context().QueryArgs().Has("queryParam")
-		if isqueryParamExists {
-			queryParam := queryParamRaw
-			queryParamRawPtr = &queryParam
-		}
-		if validatorErr := validatorInstance.Var(queryParamRawPtr, "required"); validatorErr != nil {
+		if validatorErr := validatorInstance.Var(headerParamRawPtr, "required"); validatorErr != nil {
 			// Middlewares onInputValidationMiddlewares section
 			for _, middleware := range onInputValidationMiddlewares {
 				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, validatorErr)
@@ -1161,8 +348,8 @@ func RegisterRoutes(engine *fiber.App) {
 				}
 			}
 			// End middlewares onInputValidationMiddlewares section
-			fieldName := "queryParam"
-			validationError := wrapValidatorError(validatorErr, "SimpleGetEmpty", fieldName)
+			fieldName := "headerParam"
+			validationError := wrapValidatorError(validatorErr, "WithDefaultClassSecurity", fieldName)
 			// validation error response extension placeholder
 			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
 		}
@@ -1176,7 +363,380 @@ func RegisterRoutes(engine *fiber.App) {
 		}
 		// End middlewares beforeOperationMiddlewares section
 		// before operation routes extension placeholder
-		opError := controller.SimpleGetEmpty(*queryParamRawPtr)
+		value, opError := controller.WithDefaultClassSecurity(*headerParamRawPtr)
+		for key, value := range controller.GetHeaders() {
+			fiberCtx.Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'WithDefaultClassSecurity'",
+				Status:     statusCode,
+				Instance:   "/controller/error/WithDefaultClassSecurity",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			return fiberCtx.Status(statusCode).JSON(stdError)
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		fiberCtx.Status(statusCode).JSON(value)
+		// route end routes extension placeholder
+		return nil
+	})
+	engine.Get(toFiberUrl("/e2e/with-default-override-class-security"), func(fiberCtx *fiber.Ctx) error {
+		// route start routes extension placeholder
+		authErr := authorize(
+			fiberCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName",
+							Scopes: []string{
+								"method",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(fiberCtx, authErr, "WithOverrideClassSecurity")
+		}
+		controller := E2EClassSecControllerImport.E2EClassSecController{}
+		controller.InitController(fiberCtx)
+		var headerParamRawPtr *string = nil
+		headerParamRaw := fiberCtx.Get("x-test-scopes")
+		isheaderParamExists := len(fiberCtx.Request().Header.Peek("x-test-scopes")) > 0
+		if isheaderParamExists {
+			headerParam := headerParamRaw
+			headerParamRawPtr = &headerParam
+		}
+		if validatorErr := validatorInstance.Var(headerParamRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, validatorErr)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "headerParam"
+			validationError := wrapValidatorError(validatorErr, "WithOverrideClassSecurity", fieldName)
+			// validation error response extension placeholder
+			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.WithOverrideClassSecurity(*headerParamRawPtr)
+		for key, value := range controller.GetHeaders() {
+			fiberCtx.Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'WithOverrideClassSecurity'",
+				Status:     statusCode,
+				Instance:   "/controller/error/WithOverrideClassSecurity",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			return fiberCtx.Status(statusCode).JSON(stdError)
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		fiberCtx.Status(statusCode).JSON(value)
+		// route end routes extension placeholder
+		return nil
+	})
+	// E2EController
+	engine.Post(toFiberUrl("/e2e/arrays-in-body-and-res"), func(fiberCtx *fiber.Ctx) error {
+		// route start routes extension placeholder
+		authErr := authorize(
+			fiberCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(fiberCtx, authErr, "ArraysInBodyAndRes")
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(fiberCtx)
+		var conversionErr error
+		var dataRawPtr *[]Param124data.LengthDto = nil
+		conversionErr = bindAndValidateBody(fiberCtx, "application/json", "required", &dataRawPtr)
+		if conversionErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, conversionErr)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			validationError := runtime.Rfc7807Error{
+				Type: http.StatusText(http.StatusUnprocessableEntity),
+				Detail: fmt.Sprintf(
+					"A request was made to operation 'ArraysInBodyAndRes' but body parameter '%s' did not pass validation of '%s' - %s",
+					"data",
+					"[]LengthDto",
+					extractValidationErrorMessage(conversionErr, nil),
+				),
+				Status:   http.StatusUnprocessableEntity,
+				Instance: "/validation/error/ArraysInBodyAndRes",
+			}
+			// json body validation error response extension placeholder
+			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.ArraysInBodyAndRes(*dataRawPtr)
+		for key, value := range controller.GetHeaders() {
+			fiberCtx.Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'ArraysInBodyAndRes'",
+				Status:     statusCode,
+				Instance:   "/controller/error/ArraysInBodyAndRes",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			return fiberCtx.Status(statusCode).JSON(stdError)
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		fiberCtx.Status(statusCode).JSON(value)
+		// route end routes extension placeholder
+		return nil
+	})
+	engine.Post(toFiberUrl("/e2e/arrays-inside-body-and-res"), func(fiberCtx *fiber.Ctx) error {
+		// route start routes extension placeholder
+		authErr := authorize(
+			fiberCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(fiberCtx, authErr, "ArraysInsideBodyAndRes")
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(fiberCtx)
+		var conversionErr error
+		var dataRawPtr *[]Param127data.BlaBla = nil
+		conversionErr = bindAndValidateBody(fiberCtx, "application/json", "", &dataRawPtr)
+		if conversionErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, conversionErr)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			validationError := runtime.Rfc7807Error{
+				Type: http.StatusText(http.StatusUnprocessableEntity),
+				Detail: fmt.Sprintf(
+					"A request was made to operation 'ArraysInsideBodyAndRes' but body parameter '%s' did not pass validation of '%s' - %s",
+					"data",
+					"[]BlaBla",
+					extractValidationErrorMessage(conversionErr, nil),
+				),
+				Status:   http.StatusUnprocessableEntity,
+				Instance: "/validation/error/ArraysInsideBodyAndRes",
+			}
+			// json body validation error response extension placeholder
+			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.ArraysInsideBodyAndRes(dataRawPtr)
+		for key, value := range controller.GetHeaders() {
+			fiberCtx.Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'ArraysInsideBodyAndRes'",
+				Status:     statusCode,
+				Instance:   "/controller/error/ArraysInsideBodyAndRes",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			return fiberCtx.Status(statusCode).JSON(stdError)
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		fiberCtx.Status(statusCode).JSON(value)
+		// route end routes extension placeholder
+		return nil
+	})
+	engine.Get(toFiberUrl("/e2e/context-access"), func(fiberCtx *fiber.Ctx) error {
+		// route start routes extension placeholder
+		authErr := authorize(
+			fiberCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(fiberCtx, authErr, "ContextAccess")
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(fiberCtx)
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		opError := controller.ContextAccess()
 		for key, value := range controller.GetHeaders() {
 			fiberCtx.Set(key, value)
 		}
@@ -1194,9 +754,9 @@ func RegisterRoutes(engine *fiber.App) {
 			// End middlewares onErrorMiddlewares section
 			stdError := runtime.Rfc7807Error{
 				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'SimpleGetEmpty'",
+				Detail:     "Encountered an error during operation 'ContextAccess'",
 				Status:     statusCode,
-				Instance:   "/controller/error/SimpleGetEmpty",
+				Instance:   "/controller/error/ContextAccess",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			// json error response extension placeholder
@@ -1214,6 +774,1368 @@ func RegisterRoutes(engine *fiber.App) {
 		// End middlewares afterOperationSuccessMiddlewares section
 		// after operation routes extension placeholder
 		fiberCtx.Status(statusCode)
+		// route end routes extension placeholder
+		return nil
+	})
+	engine.Post(toFiberUrl("/e2e/context-injection"), func(fiberCtx *fiber.Ctx) error {
+		// route start routes extension placeholder
+		authErr := authorize(
+			fiberCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(fiberCtx, authErr, "ContextInjection")
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(fiberCtx)
+		var conversionErr error
+		var dataRawPtr *Param140data.TheModel = nil
+		conversionErr = bindAndValidateBody(fiberCtx, "application/json", "required", &dataRawPtr)
+		if conversionErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, conversionErr)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			validationError := runtime.Rfc7807Error{
+				Type: http.StatusText(http.StatusUnprocessableEntity),
+				Detail: fmt.Sprintf(
+					"A request was made to operation 'ContextInjection' but body parameter '%s' did not pass validation of '%s' - %s",
+					"data",
+					"TheModel",
+					extractValidationErrorMessage(conversionErr, nil),
+				),
+				Status:   http.StatusUnprocessableEntity,
+				Instance: "/validation/error/ContextInjection",
+			}
+			// json body validation error response extension placeholder
+			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		opError := controller.ContextInjection(getRequestContext(fiberCtx), *dataRawPtr)
+		for key, value := range controller.GetHeaders() {
+			fiberCtx.Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, false, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'ContextInjection'",
+				Status:     statusCode,
+				Instance:   "/controller/error/ContextInjection",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			return fiberCtx.Status(statusCode).JSON(stdError)
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		fiberCtx.Status(statusCode)
+		// route end routes extension placeholder
+		return nil
+	})
+	engine.Post(toFiberUrl("/e2e/context-injection-empty"), func(fiberCtx *fiber.Ctx) error {
+		// route start routes extension placeholder
+		authErr := authorize(
+			fiberCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(fiberCtx, authErr, "ContextInjectionEmpty")
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(fiberCtx)
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		opError := controller.ContextInjectionEmpty(getRequestContext(fiberCtx))
+		for key, value := range controller.GetHeaders() {
+			fiberCtx.Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, false, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'ContextInjectionEmpty'",
+				Status:     statusCode,
+				Instance:   "/controller/error/ContextInjectionEmpty",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			return fiberCtx.Status(statusCode).JSON(stdError)
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		fiberCtx.Status(statusCode)
+		// route end routes extension placeholder
+		return nil
+	})
+	engine.Get(toFiberUrl("/e2e/custom-error"), func(fiberCtx *fiber.Ctx) error {
+		// route start routes extension placeholder
+		authErr := authorize(
+			fiberCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(fiberCtx, authErr, "CustomError")
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(fiberCtx)
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		opError := controller.CustomError()
+		for key, value := range controller.GetHeaders() {
+			fiberCtx.Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, false, opError)
+		emptyErr := Response70CustomError.CustomError{}
+		if opError != emptyErr {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			return fiberCtx.Status(statusCode).JSON(opError)
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		fiberCtx.Status(statusCode)
+		// route end routes extension placeholder
+		return nil
+	})
+	engine.Get(toFiberUrl("/e2e/custom-error-503"), func(fiberCtx *fiber.Ctx) error {
+		// route start routes extension placeholder
+		authErr := authorize(
+			fiberCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(fiberCtx, authErr, "CustomError503")
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(fiberCtx)
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		opError := controller.CustomError503()
+		for key, value := range controller.GetHeaders() {
+			fiberCtx.Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, false, opError)
+		emptyErr := Response73CustomError.CustomError{}
+		if opError != emptyErr {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			return fiberCtx.Status(statusCode).JSON(opError)
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		fiberCtx.Status(statusCode)
+		// route end routes extension placeholder
+		return nil
+	})
+	engine.Get(toFiberUrl("/e2e/custom-error-ptr"), func(fiberCtx *fiber.Ctx) error {
+		// route start routes extension placeholder
+		authErr := authorize(
+			fiberCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(fiberCtx, authErr, "CustomPtrError")
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(fiberCtx)
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		opError := controller.CustomPtrError()
+		for key, value := range controller.GetHeaders() {
+			fiberCtx.Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, false, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			return fiberCtx.Status(statusCode).JSON(opError)
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		fiberCtx.Status(statusCode)
+		// route end routes extension placeholder
+		return nil
+	})
+	engine.Post(toFiberUrl("/e2e/deep-arrays-with-validation"), func(fiberCtx *fiber.Ctx) error {
+		// route start routes extension placeholder
+		authErr := authorize(
+			fiberCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(fiberCtx, authErr, "DeepArraysWithValidation")
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(fiberCtx)
+		var conversionErr error
+		var dataRawPtr *[][]Param130data.BlaBla2 = nil
+		conversionErr = bindAndValidateBody(fiberCtx, "application/json", "required", &dataRawPtr)
+		if conversionErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, conversionErr)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			validationError := runtime.Rfc7807Error{
+				Type: http.StatusText(http.StatusUnprocessableEntity),
+				Detail: fmt.Sprintf(
+					"A request was made to operation 'DeepArraysWithValidation' but body parameter '%s' did not pass validation of '%s' - %s",
+					"data",
+					"[][]BlaBla2",
+					extractValidationErrorMessage(conversionErr, nil),
+				),
+				Status:   http.StatusUnprocessableEntity,
+				Instance: "/validation/error/DeepArraysWithValidation",
+			}
+			// json body validation error response extension placeholder
+			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.DeepArraysWithValidation(*dataRawPtr)
+		for key, value := range controller.GetHeaders() {
+			fiberCtx.Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'DeepArraysWithValidation'",
+				Status:     statusCode,
+				Instance:   "/controller/error/DeepArraysWithValidation",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			return fiberCtx.Status(statusCode).JSON(stdError)
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		fiberCtx.Status(statusCode).JSON(value)
+		// route end routes extension placeholder
+		return nil
+	})
+	engine.Get(toFiberUrl("/e2e/default-error"), func(fiberCtx *fiber.Ctx) error {
+		// route start routes extension placeholder
+		authErr := authorize(
+			fiberCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(fiberCtx, authErr, "DefaultError")
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(fiberCtx)
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		opError := controller.DefaultError()
+		for key, value := range controller.GetHeaders() {
+			fiberCtx.Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, false, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'DefaultError'",
+				Status:     statusCode,
+				Instance:   "/controller/error/DefaultError",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			return fiberCtx.Status(statusCode).JSON(stdError)
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		fiberCtx.Status(statusCode)
+		// route end routes extension placeholder
+		return nil
+	})
+	engine.Get(toFiberUrl("/e2e/default-error-with-payload"), func(fiberCtx *fiber.Ctx) error {
+		// route start routes extension placeholder
+		authErr := authorize(
+			fiberCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(fiberCtx, authErr, "DefaultErrorWithPayload")
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(fiberCtx)
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.DefaultErrorWithPayload()
+		for key, value := range controller.GetHeaders() {
+			fiberCtx.Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'DefaultErrorWithPayload'",
+				Status:     statusCode,
+				Instance:   "/controller/error/DefaultErrorWithPayload",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			return fiberCtx.Status(statusCode).JSON(stdError)
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		fiberCtx.Status(statusCode).JSON(value)
+		// route end routes extension placeholder
+		return nil
+	})
+	engine.Delete(toFiberUrl("/e2e/http-method"), func(fiberCtx *fiber.Ctx) error {
+		// route start routes extension placeholder
+		authErr := authorize(
+			fiberCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(fiberCtx, authErr, "Delete")
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(fiberCtx)
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		opError := controller.Delete()
+		for key, value := range controller.GetHeaders() {
+			fiberCtx.Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, false, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'Delete'",
+				Status:     statusCode,
+				Instance:   "/controller/error/Delete",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			return fiberCtx.Status(statusCode).JSON(stdError)
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		fiberCtx.Status(statusCode)
+		// route end routes extension placeholder
+		return nil
+	})
+	engine.Post(toFiberUrl("/e2e/embedded-structs"), func(fiberCtx *fiber.Ctx) error {
+		// route start routes extension placeholder
+		authErr := authorize(
+			fiberCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(fiberCtx, authErr, "EmbeddedStructs")
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(fiberCtx)
+		var conversionErr error
+		var dataRawPtr *Param133data.TheModel = nil
+		conversionErr = bindAndValidateBody(fiberCtx, "application/json", "required", &dataRawPtr)
+		if conversionErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, conversionErr)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			validationError := runtime.Rfc7807Error{
+				Type: http.StatusText(http.StatusUnprocessableEntity),
+				Detail: fmt.Sprintf(
+					"A request was made to operation 'EmbeddedStructs' but body parameter '%s' did not pass validation of '%s' - %s",
+					"data",
+					"TheModel",
+					extractValidationErrorMessage(conversionErr, nil),
+				),
+				Status:   http.StatusUnprocessableEntity,
+				Instance: "/validation/error/EmbeddedStructs",
+			}
+			// json body validation error response extension placeholder
+			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.EmbeddedStructs(*dataRawPtr)
+		for key, value := range controller.GetHeaders() {
+			fiberCtx.Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'EmbeddedStructs'",
+				Status:     statusCode,
+				Instance:   "/controller/error/EmbeddedStructs",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			return fiberCtx.Status(statusCode).JSON(stdError)
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		fiberCtx.Status(statusCode).JSON(value)
+		// route end routes extension placeholder
+		return nil
+	})
+	engine.Get(toFiberUrl("/e2e/503-error-code"), func(fiberCtx *fiber.Ctx) error {
+		// route start routes extension placeholder
+		authErr := authorize(
+			fiberCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(fiberCtx, authErr, "Error503")
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(fiberCtx)
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		opError := controller.Error503()
+		for key, value := range controller.GetHeaders() {
+			fiberCtx.Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, false, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'Error503'",
+				Status:     statusCode,
+				Instance:   "/controller/error/Error503",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			return fiberCtx.Status(statusCode).JSON(stdError)
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		fiberCtx.Status(statusCode)
+		// route end routes extension placeholder
+		return nil
+	})
+	engine.Post(toFiberUrl("/e2e/external-packages"), func(fiberCtx *fiber.Ctx) error {
+		// route start routes extension placeholder
+		authErr := authorize(
+			fiberCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(fiberCtx, authErr, "ExternalPackages")
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(fiberCtx)
+		var conversionErr error
+		var unitRawPtr *Param113unit.LengthUnits = nil
+		unitRaw := fiberCtx.Query("unit")
+		isunitExists := fiberCtx.Context().QueryArgs().Has("unit")
+		if isunitExists {
+			unit := unitRaw
+			unitVar := Param113unit.LengthUnits(unit)
+			unitRawPtr = &unitVar
+		}
+		var dataRawPtr *Param114data.LengthDto = nil
+		conversionErr = bindAndValidateBody(fiberCtx, "application/json", "required", &dataRawPtr)
+		if conversionErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, conversionErr)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			validationError := runtime.Rfc7807Error{
+				Type: http.StatusText(http.StatusUnprocessableEntity),
+				Detail: fmt.Sprintf(
+					"A request was made to operation 'ExternalPackages' but body parameter '%s' did not pass validation of '%s' - %s",
+					"data",
+					"LengthDto",
+					extractValidationErrorMessage(conversionErr, nil),
+				),
+				Status:   http.StatusUnprocessableEntity,
+				Instance: "/validation/error/ExternalPackages",
+			}
+			// json body validation error response extension placeholder
+			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.ExternalPackages(unitRawPtr, *dataRawPtr)
+		for key, value := range controller.GetHeaders() {
+			fiberCtx.Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'ExternalPackages'",
+				Status:     statusCode,
+				Instance:   "/controller/error/ExternalPackages",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			return fiberCtx.Status(statusCode).JSON(stdError)
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		fiberCtx.Status(statusCode).JSON(value)
+		// route end routes extension placeholder
+		return nil
+	})
+	engine.Post(toFiberUrl("/e2e/external-packages-unique-in-struct"), func(fiberCtx *fiber.Ctx) error {
+		// route start routes extension placeholder
+		authErr := authorize(
+			fiberCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(fiberCtx, authErr, "ExternalPackagesUniqueInStruct")
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(fiberCtx)
+		var conversionErr error
+		var dataRawPtr *Param117data.UniqueExternalUsage = nil
+		conversionErr = bindAndValidateBody(fiberCtx, "application/json", "required", &dataRawPtr)
+		if conversionErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, conversionErr)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			validationError := runtime.Rfc7807Error{
+				Type: http.StatusText(http.StatusUnprocessableEntity),
+				Detail: fmt.Sprintf(
+					"A request was made to operation 'ExternalPackagesUniqueInStruct' but body parameter '%s' did not pass validation of '%s' - %s",
+					"data",
+					"UniqueExternalUsage",
+					extractValidationErrorMessage(conversionErr, nil),
+				),
+				Status:   http.StatusUnprocessableEntity,
+				Instance: "/validation/error/ExternalPackagesUniqueInStruct",
+			}
+			// json body validation error response extension placeholder
+			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.ExternalPackagesUniqueInStruct(*dataRawPtr)
+		for key, value := range controller.GetHeaders() {
+			fiberCtx.Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'ExternalPackagesUniqueInStruct'",
+				Status:     statusCode,
+				Instance:   "/controller/error/ExternalPackagesUniqueInStruct",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			return fiberCtx.Status(statusCode).JSON(stdError)
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		fiberCtx.Status(statusCode).JSON(value)
+		// route end routes extension placeholder
+		return nil
+	})
+	engine.Post(toFiberUrl("/e2e/external-packages-validation"), func(fiberCtx *fiber.Ctx) error {
+		// route start routes extension placeholder
+		authErr := authorize(
+			fiberCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(fiberCtx, authErr, "ExternalPackagesValidation")
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(fiberCtx)
+		var conversionErr error
+		var unitRawPtr *Param120unit.LengthUnits = nil
+		unitRaw := fiberCtx.Query("unit")
+		isunitExists := fiberCtx.Context().QueryArgs().Has("unit")
+		if isunitExists {
+			unit := unitRaw
+			unitVar := Param120unit.LengthUnits(unit)
+			unitRawPtr = &unitVar
+		}
+		var dataRawPtr *Param121data.LengthDtoWithValidation = nil
+		conversionErr = bindAndValidateBody(fiberCtx, "application/json", "required", &dataRawPtr)
+		if conversionErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, conversionErr)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			validationError := runtime.Rfc7807Error{
+				Type: http.StatusText(http.StatusUnprocessableEntity),
+				Detail: fmt.Sprintf(
+					"A request was made to operation 'ExternalPackagesValidation' but body parameter '%s' did not pass validation of '%s' - %s",
+					"data",
+					"LengthDtoWithValidation",
+					extractValidationErrorMessage(conversionErr, nil),
+				),
+				Status:   http.StatusUnprocessableEntity,
+				Instance: "/validation/error/ExternalPackagesValidation",
+			}
+			// json body validation error response extension placeholder
+			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.ExternalPackagesValidation(unitRawPtr, *dataRawPtr)
+		for key, value := range controller.GetHeaders() {
+			fiberCtx.Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'ExternalPackagesValidation'",
+				Status:     statusCode,
+				Instance:   "/controller/error/ExternalPackagesValidation",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			return fiberCtx.Status(statusCode).JSON(stdError)
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		fiberCtx.Status(statusCode).JSON(value)
+		// route end routes extension placeholder
+		return nil
+	})
+	engine.Get(toFiberUrl("/e2e/http-method"), func(fiberCtx *fiber.Ctx) error {
+		// route start routes extension placeholder
+		authErr := authorize(
+			fiberCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(fiberCtx, authErr, "Get")
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(fiberCtx)
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		opError := controller.Get()
+		for key, value := range controller.GetHeaders() {
+			fiberCtx.Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, false, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'Get'",
+				Status:     statusCode,
+				Instance:   "/controller/error/Get",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			return fiberCtx.Status(statusCode).JSON(stdError)
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		fiberCtx.Status(statusCode)
+		// route end routes extension placeholder
+		return nil
+	})
+	engine.Get(toFiberUrl("/e2e/get-header-start-with-letter"), func(fiberCtx *fiber.Ctx) error {
+		// route start routes extension placeholder
+		authErr := authorize(
+			fiberCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(fiberCtx, authErr, "GetHeaderStartWithLetter")
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(fiberCtx)
+		var headerParamRawPtr *string = nil
+		headerParamRaw := fiberCtx.Get("headerParam")
+		isheaderParamExists := len(fiberCtx.Request().Header.Peek("headerParam")) > 0
+		if isheaderParamExists {
+			headerParam := headerParamRaw
+			headerParamRawPtr = &headerParam
+		}
+		if validatorErr := validatorInstance.Var(headerParamRawPtr, "required,validate_starts_with_letter"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, validatorErr)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "headerParam"
+			validationError := wrapValidatorError(validatorErr, "GetHeaderStartWithLetter", fieldName)
+			// validation error response extension placeholder
+			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.GetHeaderStartWithLetter(*headerParamRawPtr)
+		for key, value := range controller.GetHeaders() {
+			fiberCtx.Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'GetHeaderStartWithLetter'",
+				Status:     statusCode,
+				Instance:   "/controller/error/GetHeaderStartWithLetter",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			return fiberCtx.Status(statusCode).JSON(stdError)
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		fiberCtx.Status(statusCode).JSON(value)
 		// route end routes extension placeholder
 		return nil
 	})
@@ -1607,6 +2529,154 @@ func RegisterRoutes(engine *fiber.App) {
 		// route end routes extension placeholder
 		return nil
 	})
+	engine.Patch(toFiberUrl("/e2e/http-method"), func(fiberCtx *fiber.Ctx) error {
+		// route start routes extension placeholder
+		authErr := authorize(
+			fiberCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(fiberCtx, authErr, "Patch")
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(fiberCtx)
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		opError := controller.Patch()
+		for key, value := range controller.GetHeaders() {
+			fiberCtx.Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, false, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'Patch'",
+				Status:     statusCode,
+				Instance:   "/controller/error/Patch",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			return fiberCtx.Status(statusCode).JSON(stdError)
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		fiberCtx.Status(statusCode)
+		// route end routes extension placeholder
+		return nil
+	})
+	engine.Post(toFiberUrl("/e2e/http-method"), func(fiberCtx *fiber.Ctx) error {
+		// route start routes extension placeholder
+		authErr := authorize(
+			fiberCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(fiberCtx, authErr, "Post")
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(fiberCtx)
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		opError := controller.Post()
+		for key, value := range controller.GetHeaders() {
+			fiberCtx.Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, false, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'Post'",
+				Status:     statusCode,
+				Instance:   "/controller/error/Post",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			return fiberCtx.Status(statusCode).JSON(stdError)
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		fiberCtx.Status(statusCode)
+		// route end routes extension placeholder
+		return nil
+	})
 	engine.Post(toFiberUrl("/e2e/post-with-all-params-body"), func(fiberCtx *fiber.Ctx) error {
 		// route start routes extension placeholder
 		authErr := authorize(
@@ -1968,7 +3038,7 @@ func RegisterRoutes(engine *fiber.App) {
 		// route end routes extension placeholder
 		return nil
 	})
-	engine.Get(toFiberUrl("/e2e/get-header-start-with-letter"), func(fiberCtx *fiber.Ctx) error {
+	engine.Get(toFiberUrl("/e2e/primitive-alias-array-return-type"), func(fiberCtx *fiber.Ctx) error {
 		// route start routes extension placeholder
 		authErr := authorize(
 			fiberCtx,
@@ -1987,32 +3057,10 @@ func RegisterRoutes(engine *fiber.App) {
 			},
 		)
 		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "GetHeaderStartWithLetter")
+			return handleAuthorizationError(fiberCtx, authErr, "PrimitiveAliasArrayReturnType")
 		}
 		controller := E2EControllerImport.E2EController{}
 		controller.InitController(fiberCtx)
-		var headerParamRawPtr *string = nil
-		headerParamRaw := fiberCtx.Get("headerParam")
-		isheaderParamExists := len(fiberCtx.Request().Header.Peek("headerParam")) > 0
-		if isheaderParamExists {
-			headerParam := headerParamRaw
-			headerParamRawPtr = &headerParam
-		}
-		if validatorErr := validatorInstance.Var(headerParamRawPtr, "required,validate_starts_with_letter"); validatorErr != nil {
-			// Middlewares onInputValidationMiddlewares section
-			for _, middleware := range onInputValidationMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, validatorErr)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onInputValidationMiddlewares section
-			fieldName := "headerParam"
-			validationError := wrapValidatorError(validatorErr, "GetHeaderStartWithLetter", fieldName)
-			// validation error response extension placeholder
-			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
-		}
 		// Middlewares beforeOperationMiddlewares section
 		for _, middleware := range beforeOperationMiddlewares {
 			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
@@ -2023,7 +3071,7 @@ func RegisterRoutes(engine *fiber.App) {
 		}
 		// End middlewares beforeOperationMiddlewares section
 		// before operation routes extension placeholder
-		value, opError := controller.GetHeaderStartWithLetter(*headerParamRawPtr)
+		value, opError := controller.PrimitiveAliasArrayReturnType()
 		for key, value := range controller.GetHeaders() {
 			fiberCtx.Set(key, value)
 		}
@@ -2041,9 +3089,9 @@ func RegisterRoutes(engine *fiber.App) {
 			// End middlewares onErrorMiddlewares section
 			stdError := runtime.Rfc7807Error{
 				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'GetHeaderStartWithLetter'",
+				Detail:     "Encountered an error during operation 'PrimitiveAliasArrayReturnType'",
 				Status:     statusCode,
-				Instance:   "/controller/error/GetHeaderStartWithLetter",
+				Instance:   "/controller/error/PrimitiveAliasArrayReturnType",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			// json error response extension placeholder
@@ -2064,7 +3112,7 @@ func RegisterRoutes(engine *fiber.App) {
 		// route end routes extension placeholder
 		return nil
 	})
-	engine.Get(toFiberUrl("/e2e/with-default-config-security"), func(fiberCtx *fiber.Ctx) error {
+	engine.Get(toFiberUrl("/e2e/primitive-alias-return-type"), func(fiberCtx *fiber.Ctx) error {
 		// route start routes extension placeholder
 		authErr := authorize(
 			fiberCtx,
@@ -2083,32 +3131,10 @@ func RegisterRoutes(engine *fiber.App) {
 			},
 		)
 		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "WithDefaultConfigSecurity")
+			return handleAuthorizationError(fiberCtx, authErr, "PrimitiveAliasReturnType")
 		}
 		controller := E2EControllerImport.E2EController{}
 		controller.InitController(fiberCtx)
-		var headerParamRawPtr *string = nil
-		headerParamRaw := fiberCtx.Get("x-test-scopes")
-		isheaderParamExists := len(fiberCtx.Request().Header.Peek("x-test-scopes")) > 0
-		if isheaderParamExists {
-			headerParam := headerParamRaw
-			headerParamRawPtr = &headerParam
-		}
-		if validatorErr := validatorInstance.Var(headerParamRawPtr, "required"); validatorErr != nil {
-			// Middlewares onInputValidationMiddlewares section
-			for _, middleware := range onInputValidationMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, validatorErr)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onInputValidationMiddlewares section
-			fieldName := "headerParam"
-			validationError := wrapValidatorError(validatorErr, "WithDefaultConfigSecurity", fieldName)
-			// validation error response extension placeholder
-			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
-		}
 		// Middlewares beforeOperationMiddlewares section
 		for _, middleware := range beforeOperationMiddlewares {
 			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
@@ -2119,7 +3145,7 @@ func RegisterRoutes(engine *fiber.App) {
 		}
 		// End middlewares beforeOperationMiddlewares section
 		// before operation routes extension placeholder
-		value, opError := controller.WithDefaultConfigSecurity(*headerParamRawPtr)
+		value, opError := controller.PrimitiveAliasReturnType()
 		for key, value := range controller.GetHeaders() {
 			fiberCtx.Set(key, value)
 		}
@@ -2137,9 +3163,9 @@ func RegisterRoutes(engine *fiber.App) {
 			// End middlewares onErrorMiddlewares section
 			stdError := runtime.Rfc7807Error{
 				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'WithDefaultConfigSecurity'",
+				Detail:     "Encountered an error during operation 'PrimitiveAliasReturnType'",
 				Status:     statusCode,
-				Instance:   "/controller/error/WithDefaultConfigSecurity",
+				Instance:   "/controller/error/PrimitiveAliasReturnType",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			// json error response extension placeholder
@@ -2160,7 +3186,7 @@ func RegisterRoutes(engine *fiber.App) {
 		// route end routes extension placeholder
 		return nil
 	})
-	engine.Get(toFiberUrl("/e2e/with-one-security"), func(fiberCtx *fiber.Ctx) error {
+	engine.Get(toFiberUrl("/e2e/primitive-array-return-type"), func(fiberCtx *fiber.Ctx) error {
 		// route start routes extension placeholder
 		authErr := authorize(
 			fiberCtx,
@@ -2169,9 +3195,9 @@ func RegisterRoutes(engine *fiber.App) {
 					Relation: SecurityListRelationAnd,
 					Checks: []runtime.SecurityCheck{
 						{
-							SchemaName: "securitySchemaName",
+							SchemaName: "securitySchemaName2",
 							Scopes: []string{
-								"other",
+								"config",
 							},
 						},
 					},
@@ -2179,32 +3205,10 @@ func RegisterRoutes(engine *fiber.App) {
 			},
 		)
 		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "WithOneSecurity")
+			return handleAuthorizationError(fiberCtx, authErr, "PrimitiveArrayReturnType")
 		}
 		controller := E2EControllerImport.E2EController{}
 		controller.InitController(fiberCtx)
-		var headerParamRawPtr *string = nil
-		headerParamRaw := fiberCtx.Get("x-test-scopes")
-		isheaderParamExists := len(fiberCtx.Request().Header.Peek("x-test-scopes")) > 0
-		if isheaderParamExists {
-			headerParam := headerParamRaw
-			headerParamRawPtr = &headerParam
-		}
-		if validatorErr := validatorInstance.Var(headerParamRawPtr, "required"); validatorErr != nil {
-			// Middlewares onInputValidationMiddlewares section
-			for _, middleware := range onInputValidationMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, validatorErr)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onInputValidationMiddlewares section
-			fieldName := "headerParam"
-			validationError := wrapValidatorError(validatorErr, "WithOneSecurity", fieldName)
-			// validation error response extension placeholder
-			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
-		}
 		// Middlewares beforeOperationMiddlewares section
 		for _, middleware := range beforeOperationMiddlewares {
 			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
@@ -2215,7 +3219,7 @@ func RegisterRoutes(engine *fiber.App) {
 		}
 		// End middlewares beforeOperationMiddlewares section
 		// before operation routes extension placeholder
-		value, opError := controller.WithOneSecurity(*headerParamRawPtr)
+		value, opError := controller.PrimitiveArrayReturnType()
 		for key, value := range controller.GetHeaders() {
 			fiberCtx.Set(key, value)
 		}
@@ -2233,9 +3237,9 @@ func RegisterRoutes(engine *fiber.App) {
 			// End middlewares onErrorMiddlewares section
 			stdError := runtime.Rfc7807Error{
 				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'WithOneSecurity'",
+				Detail:     "Encountered an error during operation 'PrimitiveArrayReturnType'",
 				Status:     statusCode,
-				Instance:   "/controller/error/WithOneSecurity",
+				Instance:   "/controller/error/PrimitiveArrayReturnType",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			// json error response extension placeholder
@@ -2256,7 +3260,7 @@ func RegisterRoutes(engine *fiber.App) {
 		// route end routes extension placeholder
 		return nil
 	})
-	engine.Get(toFiberUrl("/e2e/with-two-security"), func(fiberCtx *fiber.Ctx) error {
+	engine.Get(toFiberUrl("/e2e/primitive-return-type"), func(fiberCtx *fiber.Ctx) error {
 		// route start routes extension placeholder
 		authErr := authorize(
 			fiberCtx,
@@ -2265,21 +3269,9 @@ func RegisterRoutes(engine *fiber.App) {
 					Relation: SecurityListRelationAnd,
 					Checks: []runtime.SecurityCheck{
 						{
-							SchemaName: "securitySchemaName",
-							Scopes: []string{
-								"other",
-							},
-						},
-					},
-				},
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
 							SchemaName: "securitySchemaName2",
 							Scopes: []string{
-								"write",
-								"read",
+								"config",
 							},
 						},
 					},
@@ -2287,32 +3279,10 @@ func RegisterRoutes(engine *fiber.App) {
 			},
 		)
 		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "WithTwoSecurity")
+			return handleAuthorizationError(fiberCtx, authErr, "PrimitiveReturnType")
 		}
 		controller := E2EControllerImport.E2EController{}
 		controller.InitController(fiberCtx)
-		var headerParamRawPtr *string = nil
-		headerParamRaw := fiberCtx.Get("x-test-scopes")
-		isheaderParamExists := len(fiberCtx.Request().Header.Peek("x-test-scopes")) > 0
-		if isheaderParamExists {
-			headerParam := headerParamRaw
-			headerParamRawPtr = &headerParam
-		}
-		if validatorErr := validatorInstance.Var(headerParamRawPtr, "required"); validatorErr != nil {
-			// Middlewares onInputValidationMiddlewares section
-			for _, middleware := range onInputValidationMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, validatorErr)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onInputValidationMiddlewares section
-			fieldName := "headerParam"
-			validationError := wrapValidatorError(validatorErr, "WithTwoSecurity", fieldName)
-			// validation error response extension placeholder
-			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
-		}
 		// Middlewares beforeOperationMiddlewares section
 		for _, middleware := range beforeOperationMiddlewares {
 			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
@@ -2323,7 +3293,7 @@ func RegisterRoutes(engine *fiber.App) {
 		}
 		// End middlewares beforeOperationMiddlewares section
 		// before operation routes extension placeholder
-		value, opError := controller.WithTwoSecurity(*headerParamRawPtr)
+		value, opError := controller.PrimitiveReturnType()
 		for key, value := range controller.GetHeaders() {
 			fiberCtx.Set(key, value)
 		}
@@ -2341,9 +3311,9 @@ func RegisterRoutes(engine *fiber.App) {
 			// End middlewares onErrorMiddlewares section
 			stdError := runtime.Rfc7807Error{
 				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'WithTwoSecurity'",
+				Detail:     "Encountered an error during operation 'PrimitiveReturnType'",
 				Status:     statusCode,
-				Instance:   "/controller/error/WithTwoSecurity",
+				Instance:   "/controller/error/PrimitiveReturnType",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			// json error response extension placeholder
@@ -2361,758 +3331,6 @@ func RegisterRoutes(engine *fiber.App) {
 		// End middlewares afterOperationSuccessMiddlewares section
 		// after operation routes extension placeholder
 		fiberCtx.Status(statusCode).JSON(value)
-		// route end routes extension placeholder
-		return nil
-	})
-	engine.Get(toFiberUrl("/e2e/with-two-security-same-method"), func(fiberCtx *fiber.Ctx) error {
-		// route start routes extension placeholder
-		authErr := authorize(
-			fiberCtx,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName",
-							Scopes: []string{
-								"other",
-							},
-						},
-					},
-				},
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName",
-							Scopes: []string{
-								"write",
-								"read",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "WithTwoSecuritySameMethod")
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(fiberCtx)
-		var headerParamRawPtr *string = nil
-		headerParamRaw := fiberCtx.Get("x-test-scopes")
-		isheaderParamExists := len(fiberCtx.Request().Header.Peek("x-test-scopes")) > 0
-		if isheaderParamExists {
-			headerParam := headerParamRaw
-			headerParamRawPtr = &headerParam
-		}
-		if validatorErr := validatorInstance.Var(headerParamRawPtr, "required"); validatorErr != nil {
-			// Middlewares onInputValidationMiddlewares section
-			for _, middleware := range onInputValidationMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, validatorErr)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onInputValidationMiddlewares section
-			fieldName := "headerParam"
-			validationError := wrapValidatorError(validatorErr, "WithTwoSecuritySameMethod", fieldName)
-			// validation error response extension placeholder
-			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
-		}
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		value, opError := controller.WithTwoSecuritySameMethod(*headerParamRawPtr)
-		for key, value := range controller.GetHeaders() {
-			fiberCtx.Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'WithTwoSecuritySameMethod'",
-				Status:     statusCode,
-				Instance:   "/controller/error/WithTwoSecuritySameMethod",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			return fiberCtx.Status(statusCode).JSON(stdError)
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		fiberCtx.Status(statusCode).JSON(value)
-		// route end routes extension placeholder
-		return nil
-	})
-	engine.Get(toFiberUrl("/e2e/default-error"), func(fiberCtx *fiber.Ctx) error {
-		// route start routes extension placeholder
-		authErr := authorize(
-			fiberCtx,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "DefaultError")
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(fiberCtx)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		opError := controller.DefaultError()
-		for key, value := range controller.GetHeaders() {
-			fiberCtx.Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, false, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'DefaultError'",
-				Status:     statusCode,
-				Instance:   "/controller/error/DefaultError",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			return fiberCtx.Status(statusCode).JSON(stdError)
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		fiberCtx.Status(statusCode)
-		// route end routes extension placeholder
-		return nil
-	})
-	engine.Get(toFiberUrl("/e2e/default-error-with-payload"), func(fiberCtx *fiber.Ctx) error {
-		// route start routes extension placeholder
-		authErr := authorize(
-			fiberCtx,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "DefaultErrorWithPayload")
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(fiberCtx)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		value, opError := controller.DefaultErrorWithPayload()
-		for key, value := range controller.GetHeaders() {
-			fiberCtx.Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'DefaultErrorWithPayload'",
-				Status:     statusCode,
-				Instance:   "/controller/error/DefaultErrorWithPayload",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			return fiberCtx.Status(statusCode).JSON(stdError)
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		fiberCtx.Status(statusCode).JSON(value)
-		// route end routes extension placeholder
-		return nil
-	})
-	engine.Get(toFiberUrl("/e2e/custom-error"), func(fiberCtx *fiber.Ctx) error {
-		// route start routes extension placeholder
-		authErr := authorize(
-			fiberCtx,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "CustomError")
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(fiberCtx)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		opError := controller.CustomError()
-		for key, value := range controller.GetHeaders() {
-			fiberCtx.Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, false, opError)
-		emptyErr := Response70CustomError.CustomError{}
-		if opError != emptyErr {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			return fiberCtx.Status(statusCode).JSON(opError)
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		fiberCtx.Status(statusCode)
-		// route end routes extension placeholder
-		return nil
-	})
-	engine.Get(toFiberUrl("/e2e/custom-error-ptr"), func(fiberCtx *fiber.Ctx) error {
-		// route start routes extension placeholder
-		authErr := authorize(
-			fiberCtx,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "CustomPtrError")
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(fiberCtx)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		opError := controller.CustomPtrError()
-		for key, value := range controller.GetHeaders() {
-			fiberCtx.Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, false, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			return fiberCtx.Status(statusCode).JSON(opError)
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		fiberCtx.Status(statusCode)
-		// route end routes extension placeholder
-		return nil
-	})
-	engine.Get(toFiberUrl("/e2e/503-error-code"), func(fiberCtx *fiber.Ctx) error {
-		// route start routes extension placeholder
-		authErr := authorize(
-			fiberCtx,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "Error503")
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(fiberCtx)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		opError := controller.Error503()
-		for key, value := range controller.GetHeaders() {
-			fiberCtx.Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, false, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'Error503'",
-				Status:     statusCode,
-				Instance:   "/controller/error/Error503",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			return fiberCtx.Status(statusCode).JSON(stdError)
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		fiberCtx.Status(statusCode)
-		// route end routes extension placeholder
-		return nil
-	})
-	engine.Get(toFiberUrl("/e2e/custom-error-503"), func(fiberCtx *fiber.Ctx) error {
-		// route start routes extension placeholder
-		authErr := authorize(
-			fiberCtx,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "CustomError503")
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(fiberCtx)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		opError := controller.CustomError503()
-		for key, value := range controller.GetHeaders() {
-			fiberCtx.Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, false, opError)
-		emptyErr := Response73CustomError.CustomError{}
-		if opError != emptyErr {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			return fiberCtx.Status(statusCode).JSON(opError)
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		fiberCtx.Status(statusCode)
-		// route end routes extension placeholder
-		return nil
-	})
-	engine.Get(toFiberUrl("/e2e/context-access"), func(fiberCtx *fiber.Ctx) error {
-		// route start routes extension placeholder
-		authErr := authorize(
-			fiberCtx,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "ContextAccess")
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(fiberCtx)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		opError := controller.ContextAccess()
-		for key, value := range controller.GetHeaders() {
-			fiberCtx.Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, false, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'ContextAccess'",
-				Status:     statusCode,
-				Instance:   "/controller/error/ContextAccess",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			return fiberCtx.Status(statusCode).JSON(stdError)
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		fiberCtx.Status(statusCode)
-		// route end routes extension placeholder
-		return nil
-	})
-	engine.Get(toFiberUrl("/e2e/http-method"), func(fiberCtx *fiber.Ctx) error {
-		// route start routes extension placeholder
-		authErr := authorize(
-			fiberCtx,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "Get")
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(fiberCtx)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		opError := controller.Get()
-		for key, value := range controller.GetHeaders() {
-			fiberCtx.Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, false, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'Get'",
-				Status:     statusCode,
-				Instance:   "/controller/error/Get",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			return fiberCtx.Status(statusCode).JSON(stdError)
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		fiberCtx.Status(statusCode)
-		// route end routes extension placeholder
-		return nil
-	})
-	engine.Post(toFiberUrl("/e2e/http-method"), func(fiberCtx *fiber.Ctx) error {
-		// route start routes extension placeholder
-		authErr := authorize(
-			fiberCtx,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "Post")
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(fiberCtx)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		opError := controller.Post()
-		for key, value := range controller.GetHeaders() {
-			fiberCtx.Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, false, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'Post'",
-				Status:     statusCode,
-				Instance:   "/controller/error/Post",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			return fiberCtx.Status(statusCode).JSON(stdError)
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		fiberCtx.Status(statusCode)
 		// route end routes extension placeholder
 		return nil
 	})
@@ -3190,7 +3408,7 @@ func RegisterRoutes(engine *fiber.App) {
 		// route end routes extension placeholder
 		return nil
 	})
-	engine.Delete(toFiberUrl("/e2e/http-method"), func(fiberCtx *fiber.Ctx) error {
+	engine.Get(toFiberUrl("/e2e/simple-get"), func(fiberCtx *fiber.Ctx) error {
 		// route start routes extension placeholder
 		authErr := authorize(
 			fiberCtx,
@@ -3209,7 +3427,7 @@ func RegisterRoutes(engine *fiber.App) {
 			},
 		)
 		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "Delete")
+			return handleAuthorizationError(fiberCtx, authErr, "SimpleGet")
 		}
 		controller := E2EControllerImport.E2EController{}
 		controller.InitController(fiberCtx)
@@ -3223,7 +3441,103 @@ func RegisterRoutes(engine *fiber.App) {
 		}
 		// End middlewares beforeOperationMiddlewares section
 		// before operation routes extension placeholder
-		opError := controller.Delete()
+		value, opError := controller.SimpleGet()
+		for key, value := range controller.GetHeaders() {
+			fiberCtx.Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'SimpleGet'",
+				Status:     statusCode,
+				Instance:   "/controller/error/SimpleGet",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			return fiberCtx.Status(statusCode).JSON(stdError)
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		fiberCtx.Status(statusCode).JSON(value)
+		// route end routes extension placeholder
+		return nil
+	})
+	engine.Get(toFiberUrl("/e2e/simple-get-empty"), func(fiberCtx *fiber.Ctx) error {
+		// route start routes extension placeholder
+		authErr := authorize(
+			fiberCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(fiberCtx, authErr, "SimpleGetEmpty")
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(fiberCtx)
+		var queryParamRawPtr *string = nil
+		queryParamRaw := fiberCtx.Query("queryParam")
+		isqueryParamExists := fiberCtx.Context().QueryArgs().Has("queryParam")
+		if isqueryParamExists {
+			queryParam := queryParamRaw
+			queryParamRawPtr = &queryParam
+		}
+		if validatorErr := validatorInstance.Var(queryParamRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, validatorErr)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "queryParam"
+			validationError := wrapValidatorError(validatorErr, "SimpleGetEmpty", fieldName)
+			// validation error response extension placeholder
+			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		opError := controller.SimpleGetEmpty(*queryParamRawPtr)
 		for key, value := range controller.GetHeaders() {
 			fiberCtx.Set(key, value)
 		}
@@ -3241,9 +3555,9 @@ func RegisterRoutes(engine *fiber.App) {
 			// End middlewares onErrorMiddlewares section
 			stdError := runtime.Rfc7807Error{
 				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'Delete'",
+				Detail:     "Encountered an error during operation 'SimpleGetEmpty'",
 				Status:     statusCode,
-				Instance:   "/controller/error/Delete",
+				Instance:   "/controller/error/SimpleGetEmpty",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			// json error response extension placeholder
@@ -3264,7 +3578,7 @@ func RegisterRoutes(engine *fiber.App) {
 		// route end routes extension placeholder
 		return nil
 	})
-	engine.Patch(toFiberUrl("/e2e/http-method"), func(fiberCtx *fiber.Ctx) error {
+	engine.Get(toFiberUrl("/e2e/simple-get-empty-string"), func(fiberCtx *fiber.Ctx) error {
 		// route start routes extension placeholder
 		authErr := authorize(
 			fiberCtx,
@@ -3283,7 +3597,7 @@ func RegisterRoutes(engine *fiber.App) {
 			},
 		)
 		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "Patch")
+			return handleAuthorizationError(fiberCtx, authErr, "SimpleGetEmptyString")
 		}
 		controller := E2EControllerImport.E2EController{}
 		controller.InitController(fiberCtx)
@@ -3297,12 +3611,12 @@ func RegisterRoutes(engine *fiber.App) {
 		}
 		// End middlewares beforeOperationMiddlewares section
 		// before operation routes extension placeholder
-		opError := controller.Patch()
+		value, opError := controller.SimpleGetEmptyString()
 		for key, value := range controller.GetHeaders() {
 			fiberCtx.Set(key, value)
 		}
 		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, false, opError)
+		statusCode := getStatusCode(&controller, true, opError)
 		if opError != nil {
 			// Middlewares onErrorMiddlewares section
 			for _, middleware := range onErrorMiddlewares {
@@ -3315,9 +3629,9 @@ func RegisterRoutes(engine *fiber.App) {
 			// End middlewares onErrorMiddlewares section
 			stdError := runtime.Rfc7807Error{
 				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'Patch'",
+				Detail:     "Encountered an error during operation 'SimpleGetEmptyString'",
 				Status:     statusCode,
-				Instance:   "/controller/error/Patch",
+				Instance:   "/controller/error/SimpleGetEmptyString",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			// json error response extension placeholder
@@ -3334,7 +3648,478 @@ func RegisterRoutes(engine *fiber.App) {
 		}
 		// End middlewares afterOperationSuccessMiddlewares section
 		// after operation routes extension placeholder
-		fiberCtx.Status(statusCode)
+		fiberCtx.Status(statusCode).JSON(value)
+		// route end routes extension placeholder
+		return nil
+	})
+	engine.Get(toFiberUrl("/e2e/simple-get-null-string"), func(fiberCtx *fiber.Ctx) error {
+		// route start routes extension placeholder
+		authErr := authorize(
+			fiberCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(fiberCtx, authErr, "SimpleGetNullString")
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(fiberCtx)
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.SimpleGetNullString()
+		for key, value := range controller.GetHeaders() {
+			fiberCtx.Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'SimpleGetNullString'",
+				Status:     statusCode,
+				Instance:   "/controller/error/SimpleGetNullString",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			return fiberCtx.Status(statusCode).JSON(stdError)
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		fiberCtx.Status(statusCode).JSON(value)
+		// route end routes extension placeholder
+		return nil
+	})
+	engine.Get(toFiberUrl("/e2e/simple-get-object"), func(fiberCtx *fiber.Ctx) error {
+		// route start routes extension placeholder
+		authErr := authorize(
+			fiberCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(fiberCtx, authErr, "SimpleGetObject")
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(fiberCtx)
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.SimpleGetObject()
+		for key, value := range controller.GetHeaders() {
+			fiberCtx.Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'SimpleGetObject'",
+				Status:     statusCode,
+				Instance:   "/controller/error/SimpleGetObject",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			return fiberCtx.Status(statusCode).JSON(stdError)
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		fiberCtx.Status(statusCode).JSON(value)
+		// route end routes extension placeholder
+		return nil
+	})
+	engine.Get(toFiberUrl("/e2e/simple-get-object-null"), func(fiberCtx *fiber.Ctx) error {
+		// route start routes extension placeholder
+		authErr := authorize(
+			fiberCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(fiberCtx, authErr, "SimpleGetObjectNull")
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(fiberCtx)
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.SimpleGetObjectNull()
+		for key, value := range controller.GetHeaders() {
+			fiberCtx.Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'SimpleGetObjectNull'",
+				Status:     statusCode,
+				Instance:   "/controller/error/SimpleGetObjectNull",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			return fiberCtx.Status(statusCode).JSON(stdError)
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		fiberCtx.Status(statusCode).JSON(value)
+		// route end routes extension placeholder
+		return nil
+	})
+	engine.Get(toFiberUrl("/e2e/simple-get-object-ptr"), func(fiberCtx *fiber.Ctx) error {
+		// route start routes extension placeholder
+		authErr := authorize(
+			fiberCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(fiberCtx, authErr, "SimpleGetObjectPtr")
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(fiberCtx)
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.SimpleGetObjectPtr()
+		for key, value := range controller.GetHeaders() {
+			fiberCtx.Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'SimpleGetObjectPtr'",
+				Status:     statusCode,
+				Instance:   "/controller/error/SimpleGetObjectPtr",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			return fiberCtx.Status(statusCode).JSON(stdError)
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		fiberCtx.Status(statusCode).JSON(value)
+		// route end routes extension placeholder
+		return nil
+	})
+	engine.Get(toFiberUrl("/e2e/simple-get-ptr-string"), func(fiberCtx *fiber.Ctx) error {
+		// route start routes extension placeholder
+		authErr := authorize(
+			fiberCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(fiberCtx, authErr, "SimpleGetPtrString")
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(fiberCtx)
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.SimpleGetPtrString()
+		for key, value := range controller.GetHeaders() {
+			fiberCtx.Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'SimpleGetPtrString'",
+				Status:     statusCode,
+				Instance:   "/controller/error/SimpleGetPtrString",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			return fiberCtx.Status(statusCode).JSON(stdError)
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		fiberCtx.Status(statusCode).JSON(value)
+		// route end routes extension placeholder
+		return nil
+	})
+	engine.Post(toFiberUrl("/e2e/structs-with-inner-pointer"), func(fiberCtx *fiber.Ctx) error {
+		// route start routes extension placeholder
+		authErr := authorize(
+			fiberCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(fiberCtx, authErr, "StructsWithInnerPointer")
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(fiberCtx)
+		var conversionErr error
+		var dataRawPtr *Param136data.TheModelWithInnerPointer = nil
+		conversionErr = bindAndValidateBody(fiberCtx, "application/json", "required", &dataRawPtr)
+		if conversionErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, conversionErr)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			validationError := runtime.Rfc7807Error{
+				Type: http.StatusText(http.StatusUnprocessableEntity),
+				Detail: fmt.Sprintf(
+					"A request was made to operation 'StructsWithInnerPointer' but body parameter '%s' did not pass validation of '%s' - %s",
+					"data",
+					"TheModelWithInnerPointer",
+					extractValidationErrorMessage(conversionErr, nil),
+				),
+				Status:   http.StatusUnprocessableEntity,
+				Instance: "/validation/error/StructsWithInnerPointer",
+			}
+			// json body validation error response extension placeholder
+			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.StructsWithInnerPointer(*dataRawPtr)
+		for key, value := range controller.GetHeaders() {
+			fiberCtx.Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'StructsWithInnerPointer'",
+				Status:     statusCode,
+				Instance:   "/controller/error/StructsWithInnerPointer",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			return fiberCtx.Status(statusCode).JSON(stdError)
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		fiberCtx.Status(statusCode).JSON(value)
 		// route end routes extension placeholder
 		return nil
 	})
@@ -3466,610 +4251,6 @@ func RegisterRoutes(engine *fiber.App) {
 				Detail:     "Encountered an error during operation 'TemplateContext2'",
 				Status:     statusCode,
 				Instance:   "/controller/error/TemplateContext2",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			return fiberCtx.Status(statusCode).JSON(stdError)
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		fiberCtx.Status(statusCode).JSON(value)
-		// route end routes extension placeholder
-		return nil
-	})
-	engine.Post(toFiberUrl("/e2e/form"), func(fiberCtx *fiber.Ctx) error {
-		// route start routes extension placeholder
-		authErr := authorize(
-			fiberCtx,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "TestForm")
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(fiberCtx)
-		var item1RawPtr *string = nil
-		item1Raw := fiberCtx.FormValue("item1")
-		isitem1Exists := fiberCtx.Context().PostArgs().Has("item1")
-		if isitem1Exists {
-			item1 := item1Raw
-			item1RawPtr = &item1
-		}
-		if validatorErr := validatorInstance.Var(item1RawPtr, "required"); validatorErr != nil {
-			// Middlewares onInputValidationMiddlewares section
-			for _, middleware := range onInputValidationMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, validatorErr)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onInputValidationMiddlewares section
-			fieldName := "item1"
-			validationError := wrapValidatorError(validatorErr, "TestForm", fieldName)
-			// validation error response extension placeholder
-			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
-		}
-		var item2RawPtr *string = nil
-		item2Raw := fiberCtx.FormValue("item2")
-		isitem2Exists := fiberCtx.Context().PostArgs().Has("item2")
-		if isitem2Exists {
-			item2 := item2Raw
-			item2RawPtr = &item2
-		}
-		if validatorErr := validatorInstance.Var(item2RawPtr, "required"); validatorErr != nil {
-			// Middlewares onInputValidationMiddlewares section
-			for _, middleware := range onInputValidationMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, validatorErr)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onInputValidationMiddlewares section
-			fieldName := "item2"
-			validationError := wrapValidatorError(validatorErr, "TestForm", fieldName)
-			// validation error response extension placeholder
-			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
-		}
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		value, opError := controller.TestForm(*item1RawPtr, *item2RawPtr)
-		for key, value := range controller.GetHeaders() {
-			fiberCtx.Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'TestForm'",
-				Status:     statusCode,
-				Instance:   "/controller/error/TestForm",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			return fiberCtx.Status(statusCode).JSON(stdError)
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		fiberCtx.Status(statusCode).JSON(value)
-		// route end routes extension placeholder
-		return nil
-	})
-	engine.Post(toFiberUrl("/e2e/test-response-validation"), func(fiberCtx *fiber.Ctx) error {
-		// route start routes extension placeholder
-		authErr := authorize(
-			fiberCtx,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "TestResponseValidation")
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(fiberCtx)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		value, opError := controller.TestResponseValidation()
-		for key, value := range controller.GetHeaders() {
-			fiberCtx.Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'TestResponseValidation'",
-				Status:     statusCode,
-				Instance:   "/controller/error/TestResponseValidation",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			return fiberCtx.Status(statusCode).JSON(stdError)
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		fiberCtx.Status(statusCode).JSON(value)
-		// route end routes extension placeholder
-		return nil
-	})
-	engine.Post(toFiberUrl("/e2e/test-response-validation-ptr"), func(fiberCtx *fiber.Ctx) error {
-		// route start routes extension placeholder
-		authErr := authorize(
-			fiberCtx,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "TestResponseValidationPtr")
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(fiberCtx)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		value, opError := controller.TestResponseValidationPtr()
-		for key, value := range controller.GetHeaders() {
-			fiberCtx.Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'TestResponseValidationPtr'",
-				Status:     statusCode,
-				Instance:   "/controller/error/TestResponseValidationPtr",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			return fiberCtx.Status(statusCode).JSON(stdError)
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		fiberCtx.Status(statusCode).JSON(value)
-		// route end routes extension placeholder
-		return nil
-	})
-	engine.Post(toFiberUrl("/e2e/test-response-validation-null"), func(fiberCtx *fiber.Ctx) error {
-		// route start routes extension placeholder
-		authErr := authorize(
-			fiberCtx,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "TestResponseValidationNull")
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(fiberCtx)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		value, opError := controller.TestResponseValidationNull()
-		for key, value := range controller.GetHeaders() {
-			fiberCtx.Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'TestResponseValidationNull'",
-				Status:     statusCode,
-				Instance:   "/controller/error/TestResponseValidationNull",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			return fiberCtx.Status(statusCode).JSON(stdError)
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		fiberCtx.Status(statusCode).JSON(value)
-		// route end routes extension placeholder
-		return nil
-	})
-	engine.Post(toFiberUrl("/e2e/test-primitive-conversions"), func(fiberCtx *fiber.Ctx) error {
-		// route start routes extension placeholder
-		authErr := authorize(
-			fiberCtx,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "TestPrimitiveConversions")
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(fiberCtx)
-		var value1RawPtr *int64 = nil
-		value1Raw := fiberCtx.Query("value1")
-		isvalue1Exists := fiberCtx.Context().QueryArgs().Has("value1")
-		if isvalue1Exists {
-			value1Uint64, conversionErr := strconv.ParseInt(value1Raw, 10, 64)
-			if conversionErr != nil {
-				// Middlewares onInputValidationMiddlewares section
-				for _, middleware := range onInputValidationMiddlewares {
-					middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, conversionErr)
-					setRequestContext(fiberCtx, middlewareCtx)
-					if !continueOperation {
-						return nil
-					}
-				}
-				// End middlewares onInputValidationMiddlewares section
-				validationError := runtime.Rfc7807Error{
-					Type: http.StatusText(http.StatusUnprocessableEntity),
-					Detail: fmt.Sprintf(
-						"A request was made to operation 'TestPrimitiveConversions' but parameter '%s' was not properly sent - Expected %s but got %s",
-						"value1",
-						"int64",
-						reflect.TypeOf(value1Raw).String(),
-					),
-					Status:     http.StatusUnprocessableEntity,
-					Instance:   "/validation/error/TestPrimitiveConversions",
-					Extensions: map[string]string{"error": conversionErr.Error()},
-				}
-				// params validation error response extension placeholder
-				return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
-			}
-			value1 := int64(value1Uint64)
-			value1RawPtr = &value1
-		}
-		if validatorErr := validatorInstance.Var(value1RawPtr, "required"); validatorErr != nil {
-			// Middlewares onInputValidationMiddlewares section
-			for _, middleware := range onInputValidationMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, validatorErr)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onInputValidationMiddlewares section
-			fieldName := "value1"
-			validationError := wrapValidatorError(validatorErr, "TestPrimitiveConversions", fieldName)
-			// validation error response extension placeholder
-			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
-		}
-		var value2RawPtr *bool = nil
-		value2Raw := fiberCtx.Query("value2")
-		isvalue2Exists := fiberCtx.Context().QueryArgs().Has("value2")
-		if isvalue2Exists {
-			value2, conversionErr := strconv.ParseBool(value2Raw)
-			if conversionErr != nil {
-				// Middlewares onInputValidationMiddlewares section
-				for _, middleware := range onInputValidationMiddlewares {
-					middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, conversionErr)
-					setRequestContext(fiberCtx, middlewareCtx)
-					if !continueOperation {
-						return nil
-					}
-				}
-				// End middlewares onInputValidationMiddlewares section
-				validationError := runtime.Rfc7807Error{
-					Type: http.StatusText(http.StatusUnprocessableEntity),
-					Detail: fmt.Sprintf(
-						"A request was made to operation 'TestPrimitiveConversions' but parameter '%s' was not properly sent - Expected %s but got %s",
-						"value2",
-						"bool",
-						reflect.TypeOf(value2Raw).String(),
-					),
-					Status:     http.StatusUnprocessableEntity,
-					Instance:   "/validation/error/TestPrimitiveConversions",
-					Extensions: map[string]string{"error": conversionErr.Error()},
-				}
-				// params validation error response extension placeholder
-				return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
-			}
-			value2RawPtr = &value2
-		}
-		if validatorErr := validatorInstance.Var(value2RawPtr, "required"); validatorErr != nil {
-			// Middlewares onInputValidationMiddlewares section
-			for _, middleware := range onInputValidationMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, validatorErr)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onInputValidationMiddlewares section
-			fieldName := "value2"
-			validationError := wrapValidatorError(validatorErr, "TestPrimitiveConversions", fieldName)
-			// validation error response extension placeholder
-			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
-		}
-		var value3RawPtr *int = nil
-		value3Raw := fiberCtx.Query("value3")
-		isvalue3Exists := fiberCtx.Context().QueryArgs().Has("value3")
-		if isvalue3Exists {
-			value3Uint64, conversionErr := strconv.Atoi(value3Raw)
-			if conversionErr != nil {
-				// Middlewares onInputValidationMiddlewares section
-				for _, middleware := range onInputValidationMiddlewares {
-					middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, conversionErr)
-					setRequestContext(fiberCtx, middlewareCtx)
-					if !continueOperation {
-						return nil
-					}
-				}
-				// End middlewares onInputValidationMiddlewares section
-				validationError := runtime.Rfc7807Error{
-					Type: http.StatusText(http.StatusUnprocessableEntity),
-					Detail: fmt.Sprintf(
-						"A request was made to operation 'TestPrimitiveConversions' but parameter '%s' was not properly sent - Expected %s but got %s",
-						"value3",
-						"int",
-						reflect.TypeOf(value3Raw).String(),
-					),
-					Status:     http.StatusUnprocessableEntity,
-					Instance:   "/validation/error/TestPrimitiveConversions",
-					Extensions: map[string]string{"error": conversionErr.Error()},
-				}
-				// params validation error response extension placeholder
-				return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
-			}
-			value3 := int(value3Uint64)
-			value3RawPtr = &value3
-		}
-		if validatorErr := validatorInstance.Var(value3RawPtr, "required"); validatorErr != nil {
-			// Middlewares onInputValidationMiddlewares section
-			for _, middleware := range onInputValidationMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, validatorErr)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onInputValidationMiddlewares section
-			fieldName := "value3"
-			validationError := wrapValidatorError(validatorErr, "TestPrimitiveConversions", fieldName)
-			// validation error response extension placeholder
-			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
-		}
-		var value4RawPtr *float64 = nil
-		value4Raw := fiberCtx.Query("value4")
-		isvalue4Exists := fiberCtx.Context().QueryArgs().Has("value4")
-		if isvalue4Exists {
-			value4, conversionErr := strconv.ParseFloat(value4Raw, 64)
-			if conversionErr != nil {
-				// Middlewares onInputValidationMiddlewares section
-				for _, middleware := range onInputValidationMiddlewares {
-					middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, conversionErr)
-					setRequestContext(fiberCtx, middlewareCtx)
-					if !continueOperation {
-						return nil
-					}
-				}
-				// End middlewares onInputValidationMiddlewares section
-				validationError := runtime.Rfc7807Error{
-					Type: http.StatusText(http.StatusUnprocessableEntity),
-					Detail: fmt.Sprintf(
-						"A request was made to operation 'TestPrimitiveConversions' but parameter '%s' was not properly sent - Expected %s but got %s",
-						"value4",
-						"float64",
-						reflect.TypeOf(value4Raw).String(),
-					),
-					Status:     http.StatusUnprocessableEntity,
-					Instance:   "/validation/error/TestPrimitiveConversions",
-					Extensions: map[string]string{"error": conversionErr.Error()},
-				}
-				// params validation error response extension placeholder
-				return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
-			}
-			value4RawPtr = &value4
-		}
-		if validatorErr := validatorInstance.Var(value4RawPtr, "required"); validatorErr != nil {
-			// Middlewares onInputValidationMiddlewares section
-			for _, middleware := range onInputValidationMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, validatorErr)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onInputValidationMiddlewares section
-			fieldName := "value4"
-			validationError := wrapValidatorError(validatorErr, "TestPrimitiveConversions", fieldName)
-			// validation error response extension placeholder
-			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
-		}
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		value, opError := controller.TestPrimitiveConversions(*value1RawPtr, *value2RawPtr, *value3RawPtr, *value4RawPtr)
-		for key, value := range controller.GetHeaders() {
-			fiberCtx.Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'TestPrimitiveConversions'",
-				Status:     statusCode,
-				Instance:   "/controller/error/TestPrimitiveConversions",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			// json error response extension placeholder
@@ -4514,7 +4695,7 @@ func RegisterRoutes(engine *fiber.App) {
 		// route end routes extension placeholder
 		return nil
 	})
-	engine.Post(toFiberUrl("/e2e/external-packages"), func(fiberCtx *fiber.Ctx) error {
+	engine.Post(toFiberUrl("/e2e/form"), func(fiberCtx *fiber.Ctx) error {
 		// route start routes extension placeholder
 		authErr := authorize(
 			fiberCtx,
@@ -4533,43 +4714,52 @@ func RegisterRoutes(engine *fiber.App) {
 			},
 		)
 		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "ExternalPackages")
+			return handleAuthorizationError(fiberCtx, authErr, "TestForm")
 		}
 		controller := E2EControllerImport.E2EController{}
 		controller.InitController(fiberCtx)
-		var conversionErr error
-		var unitRawPtr *Param113unit.LengthUnits = nil
-		unitRaw := fiberCtx.Query("unit")
-		isunitExists := fiberCtx.Context().QueryArgs().Has("unit")
-		if isunitExists {
-			unit := unitRaw
-			unitVar := Param113unit.LengthUnits(unit)
-			unitRawPtr = &unitVar
+		var item1RawPtr *string = nil
+		item1Raw := fiberCtx.FormValue("item1")
+		isitem1Exists := fiberCtx.Context().PostArgs().Has("item1")
+		if isitem1Exists {
+			item1 := item1Raw
+			item1RawPtr = &item1
 		}
-		var dataRawPtr *Param114data.LengthDto = nil
-		conversionErr = bindAndValidateBody(fiberCtx, "application/json", "required", &dataRawPtr)
-		if conversionErr != nil {
+		if validatorErr := validatorInstance.Var(item1RawPtr, "required"); validatorErr != nil {
 			// Middlewares onInputValidationMiddlewares section
 			for _, middleware := range onInputValidationMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, conversionErr)
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, validatorErr)
 				setRequestContext(fiberCtx, middlewareCtx)
 				if !continueOperation {
 					return nil
 				}
 			}
 			// End middlewares onInputValidationMiddlewares section
-			validationError := runtime.Rfc7807Error{
-				Type: http.StatusText(http.StatusUnprocessableEntity),
-				Detail: fmt.Sprintf(
-					"A request was made to operation 'ExternalPackages' but body parameter '%s' did not pass validation of '%s' - %s",
-					"data",
-					"LengthDto",
-					extractValidationErrorMessage(conversionErr, nil),
-				),
-				Status:   http.StatusUnprocessableEntity,
-				Instance: "/validation/error/ExternalPackages",
+			fieldName := "item1"
+			validationError := wrapValidatorError(validatorErr, "TestForm", fieldName)
+			// validation error response extension placeholder
+			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+		}
+		var item2RawPtr *string = nil
+		item2Raw := fiberCtx.FormValue("item2")
+		isitem2Exists := fiberCtx.Context().PostArgs().Has("item2")
+		if isitem2Exists {
+			item2 := item2Raw
+			item2RawPtr = &item2
+		}
+		if validatorErr := validatorInstance.Var(item2RawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, validatorErr)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
 			}
-			// json body validation error response extension placeholder
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "item2"
+			validationError := wrapValidatorError(validatorErr, "TestForm", fieldName)
+			// validation error response extension placeholder
 			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
 		}
 		// Middlewares beforeOperationMiddlewares section
@@ -4582,7 +4772,7 @@ func RegisterRoutes(engine *fiber.App) {
 		}
 		// End middlewares beforeOperationMiddlewares section
 		// before operation routes extension placeholder
-		value, opError := controller.ExternalPackages(unitRawPtr, *dataRawPtr)
+		value, opError := controller.TestForm(*item1RawPtr, *item2RawPtr)
 		for key, value := range controller.GetHeaders() {
 			fiberCtx.Set(key, value)
 		}
@@ -4600,9 +4790,9 @@ func RegisterRoutes(engine *fiber.App) {
 			// End middlewares onErrorMiddlewares section
 			stdError := runtime.Rfc7807Error{
 				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'ExternalPackages'",
+				Detail:     "Encountered an error during operation 'TestForm'",
 				Status:     statusCode,
-				Instance:   "/controller/error/ExternalPackages",
+				Instance:   "/controller/error/TestForm",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			// json error response extension placeholder
@@ -4623,7 +4813,7 @@ func RegisterRoutes(engine *fiber.App) {
 		// route end routes extension placeholder
 		return nil
 	})
-	engine.Post(toFiberUrl("/e2e/external-packages-unique-in-struct"), func(fiberCtx *fiber.Ctx) error {
+	engine.Post(toFiberUrl("/e2e/test-primitive-conversions"), func(fiberCtx *fiber.Ctx) error {
 		// route start routes extension placeholder
 		authErr := authorize(
 			fiberCtx,
@@ -4642,35 +4832,198 @@ func RegisterRoutes(engine *fiber.App) {
 			},
 		)
 		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "ExternalPackagesUniqueInStruct")
+			return handleAuthorizationError(fiberCtx, authErr, "TestPrimitiveConversions")
 		}
 		controller := E2EControllerImport.E2EController{}
 		controller.InitController(fiberCtx)
-		var conversionErr error
-		var dataRawPtr *Param117data.UniqueExternalUsage = nil
-		conversionErr = bindAndValidateBody(fiberCtx, "application/json", "required", &dataRawPtr)
-		if conversionErr != nil {
+		var value1RawPtr *int64 = nil
+		value1Raw := fiberCtx.Query("value1")
+		isvalue1Exists := fiberCtx.Context().QueryArgs().Has("value1")
+		if isvalue1Exists {
+			value1Uint64, conversionErr := strconv.ParseInt(value1Raw, 10, 64)
+			if conversionErr != nil {
+				// Middlewares onInputValidationMiddlewares section
+				for _, middleware := range onInputValidationMiddlewares {
+					middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, conversionErr)
+					setRequestContext(fiberCtx, middlewareCtx)
+					if !continueOperation {
+						return nil
+					}
+				}
+				// End middlewares onInputValidationMiddlewares section
+				validationError := runtime.Rfc7807Error{
+					Type: http.StatusText(http.StatusUnprocessableEntity),
+					Detail: fmt.Sprintf(
+						"A request was made to operation 'TestPrimitiveConversions' but parameter '%s' was not properly sent - Expected %s but got %s",
+						"value1",
+						"int64",
+						reflect.TypeOf(value1Raw).String(),
+					),
+					Status:     http.StatusUnprocessableEntity,
+					Instance:   "/validation/error/TestPrimitiveConversions",
+					Extensions: map[string]string{"error": conversionErr.Error()},
+				}
+				// params validation error response extension placeholder
+				return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+			}
+			value1 := int64(value1Uint64)
+			value1RawPtr = &value1
+		}
+		if validatorErr := validatorInstance.Var(value1RawPtr, "required"); validatorErr != nil {
 			// Middlewares onInputValidationMiddlewares section
 			for _, middleware := range onInputValidationMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, conversionErr)
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, validatorErr)
 				setRequestContext(fiberCtx, middlewareCtx)
 				if !continueOperation {
 					return nil
 				}
 			}
 			// End middlewares onInputValidationMiddlewares section
-			validationError := runtime.Rfc7807Error{
-				Type: http.StatusText(http.StatusUnprocessableEntity),
-				Detail: fmt.Sprintf(
-					"A request was made to operation 'ExternalPackagesUniqueInStruct' but body parameter '%s' did not pass validation of '%s' - %s",
-					"data",
-					"UniqueExternalUsage",
-					extractValidationErrorMessage(conversionErr, nil),
-				),
-				Status:   http.StatusUnprocessableEntity,
-				Instance: "/validation/error/ExternalPackagesUniqueInStruct",
+			fieldName := "value1"
+			validationError := wrapValidatorError(validatorErr, "TestPrimitiveConversions", fieldName)
+			// validation error response extension placeholder
+			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+		}
+		var value2RawPtr *bool = nil
+		value2Raw := fiberCtx.Query("value2")
+		isvalue2Exists := fiberCtx.Context().QueryArgs().Has("value2")
+		if isvalue2Exists {
+			value2, conversionErr := strconv.ParseBool(value2Raw)
+			if conversionErr != nil {
+				// Middlewares onInputValidationMiddlewares section
+				for _, middleware := range onInputValidationMiddlewares {
+					middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, conversionErr)
+					setRequestContext(fiberCtx, middlewareCtx)
+					if !continueOperation {
+						return nil
+					}
+				}
+				// End middlewares onInputValidationMiddlewares section
+				validationError := runtime.Rfc7807Error{
+					Type: http.StatusText(http.StatusUnprocessableEntity),
+					Detail: fmt.Sprintf(
+						"A request was made to operation 'TestPrimitiveConversions' but parameter '%s' was not properly sent - Expected %s but got %s",
+						"value2",
+						"bool",
+						reflect.TypeOf(value2Raw).String(),
+					),
+					Status:     http.StatusUnprocessableEntity,
+					Instance:   "/validation/error/TestPrimitiveConversions",
+					Extensions: map[string]string{"error": conversionErr.Error()},
+				}
+				// params validation error response extension placeholder
+				return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
 			}
-			// json body validation error response extension placeholder
+			value2RawPtr = &value2
+		}
+		if validatorErr := validatorInstance.Var(value2RawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, validatorErr)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "value2"
+			validationError := wrapValidatorError(validatorErr, "TestPrimitiveConversions", fieldName)
+			// validation error response extension placeholder
+			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+		}
+		var value3RawPtr *int = nil
+		value3Raw := fiberCtx.Query("value3")
+		isvalue3Exists := fiberCtx.Context().QueryArgs().Has("value3")
+		if isvalue3Exists {
+			value3Uint64, conversionErr := strconv.Atoi(value3Raw)
+			if conversionErr != nil {
+				// Middlewares onInputValidationMiddlewares section
+				for _, middleware := range onInputValidationMiddlewares {
+					middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, conversionErr)
+					setRequestContext(fiberCtx, middlewareCtx)
+					if !continueOperation {
+						return nil
+					}
+				}
+				// End middlewares onInputValidationMiddlewares section
+				validationError := runtime.Rfc7807Error{
+					Type: http.StatusText(http.StatusUnprocessableEntity),
+					Detail: fmt.Sprintf(
+						"A request was made to operation 'TestPrimitiveConversions' but parameter '%s' was not properly sent - Expected %s but got %s",
+						"value3",
+						"int",
+						reflect.TypeOf(value3Raw).String(),
+					),
+					Status:     http.StatusUnprocessableEntity,
+					Instance:   "/validation/error/TestPrimitiveConversions",
+					Extensions: map[string]string{"error": conversionErr.Error()},
+				}
+				// params validation error response extension placeholder
+				return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+			}
+			value3 := int(value3Uint64)
+			value3RawPtr = &value3
+		}
+		if validatorErr := validatorInstance.Var(value3RawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, validatorErr)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "value3"
+			validationError := wrapValidatorError(validatorErr, "TestPrimitiveConversions", fieldName)
+			// validation error response extension placeholder
+			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+		}
+		var value4RawPtr *float64 = nil
+		value4Raw := fiberCtx.Query("value4")
+		isvalue4Exists := fiberCtx.Context().QueryArgs().Has("value4")
+		if isvalue4Exists {
+			value4, conversionErr := strconv.ParseFloat(value4Raw, 64)
+			if conversionErr != nil {
+				// Middlewares onInputValidationMiddlewares section
+				for _, middleware := range onInputValidationMiddlewares {
+					middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, conversionErr)
+					setRequestContext(fiberCtx, middlewareCtx)
+					if !continueOperation {
+						return nil
+					}
+				}
+				// End middlewares onInputValidationMiddlewares section
+				validationError := runtime.Rfc7807Error{
+					Type: http.StatusText(http.StatusUnprocessableEntity),
+					Detail: fmt.Sprintf(
+						"A request was made to operation 'TestPrimitiveConversions' but parameter '%s' was not properly sent - Expected %s but got %s",
+						"value4",
+						"float64",
+						reflect.TypeOf(value4Raw).String(),
+					),
+					Status:     http.StatusUnprocessableEntity,
+					Instance:   "/validation/error/TestPrimitiveConversions",
+					Extensions: map[string]string{"error": conversionErr.Error()},
+				}
+				// params validation error response extension placeholder
+				return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+			}
+			value4RawPtr = &value4
+		}
+		if validatorErr := validatorInstance.Var(value4RawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, validatorErr)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "value4"
+			validationError := wrapValidatorError(validatorErr, "TestPrimitiveConversions", fieldName)
+			// validation error response extension placeholder
 			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
 		}
 		// Middlewares beforeOperationMiddlewares section
@@ -4683,7 +5036,7 @@ func RegisterRoutes(engine *fiber.App) {
 		}
 		// End middlewares beforeOperationMiddlewares section
 		// before operation routes extension placeholder
-		value, opError := controller.ExternalPackagesUniqueInStruct(*dataRawPtr)
+		value, opError := controller.TestPrimitiveConversions(*value1RawPtr, *value2RawPtr, *value3RawPtr, *value4RawPtr)
 		for key, value := range controller.GetHeaders() {
 			fiberCtx.Set(key, value)
 		}
@@ -4701,9 +5054,9 @@ func RegisterRoutes(engine *fiber.App) {
 			// End middlewares onErrorMiddlewares section
 			stdError := runtime.Rfc7807Error{
 				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'ExternalPackagesUniqueInStruct'",
+				Detail:     "Encountered an error during operation 'TestPrimitiveConversions'",
 				Status:     statusCode,
-				Instance:   "/controller/error/ExternalPackagesUniqueInStruct",
+				Instance:   "/controller/error/TestPrimitiveConversions",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			// json error response extension placeholder
@@ -4724,7 +5077,7 @@ func RegisterRoutes(engine *fiber.App) {
 		// route end routes extension placeholder
 		return nil
 	})
-	engine.Post(toFiberUrl("/e2e/external-packages-validation"), func(fiberCtx *fiber.Ctx) error {
+	engine.Post(toFiberUrl("/e2e/test-response-validation"), func(fiberCtx *fiber.Ctx) error {
 		// route start routes extension placeholder
 		authErr := authorize(
 			fiberCtx,
@@ -4743,45 +5096,10 @@ func RegisterRoutes(engine *fiber.App) {
 			},
 		)
 		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "ExternalPackagesValidation")
+			return handleAuthorizationError(fiberCtx, authErr, "TestResponseValidation")
 		}
 		controller := E2EControllerImport.E2EController{}
 		controller.InitController(fiberCtx)
-		var conversionErr error
-		var unitRawPtr *Param120unit.LengthUnits = nil
-		unitRaw := fiberCtx.Query("unit")
-		isunitExists := fiberCtx.Context().QueryArgs().Has("unit")
-		if isunitExists {
-			unit := unitRaw
-			unitVar := Param120unit.LengthUnits(unit)
-			unitRawPtr = &unitVar
-		}
-		var dataRawPtr *Param121data.LengthDtoWithValidation = nil
-		conversionErr = bindAndValidateBody(fiberCtx, "application/json", "required", &dataRawPtr)
-		if conversionErr != nil {
-			// Middlewares onInputValidationMiddlewares section
-			for _, middleware := range onInputValidationMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, conversionErr)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onInputValidationMiddlewares section
-			validationError := runtime.Rfc7807Error{
-				Type: http.StatusText(http.StatusUnprocessableEntity),
-				Detail: fmt.Sprintf(
-					"A request was made to operation 'ExternalPackagesValidation' but body parameter '%s' did not pass validation of '%s' - %s",
-					"data",
-					"LengthDtoWithValidation",
-					extractValidationErrorMessage(conversionErr, nil),
-				),
-				Status:   http.StatusUnprocessableEntity,
-				Instance: "/validation/error/ExternalPackagesValidation",
-			}
-			// json body validation error response extension placeholder
-			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
-		}
 		// Middlewares beforeOperationMiddlewares section
 		for _, middleware := range beforeOperationMiddlewares {
 			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
@@ -4792,7 +5110,7 @@ func RegisterRoutes(engine *fiber.App) {
 		}
 		// End middlewares beforeOperationMiddlewares section
 		// before operation routes extension placeholder
-		value, opError := controller.ExternalPackagesValidation(unitRawPtr, *dataRawPtr)
+		value, opError := controller.TestResponseValidation()
 		for key, value := range controller.GetHeaders() {
 			fiberCtx.Set(key, value)
 		}
@@ -4810,9 +5128,9 @@ func RegisterRoutes(engine *fiber.App) {
 			// End middlewares onErrorMiddlewares section
 			stdError := runtime.Rfc7807Error{
 				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'ExternalPackagesValidation'",
+				Detail:     "Encountered an error during operation 'TestResponseValidation'",
 				Status:     statusCode,
-				Instance:   "/controller/error/ExternalPackagesValidation",
+				Instance:   "/controller/error/TestResponseValidation",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			// json error response extension placeholder
@@ -4833,7 +5151,7 @@ func RegisterRoutes(engine *fiber.App) {
 		// route end routes extension placeholder
 		return nil
 	})
-	engine.Post(toFiberUrl("/e2e/arrays-in-body-and-res"), func(fiberCtx *fiber.Ctx) error {
+	engine.Post(toFiberUrl("/e2e/test-response-validation-null"), func(fiberCtx *fiber.Ctx) error {
 		// route start routes extension placeholder
 		authErr := authorize(
 			fiberCtx,
@@ -4852,37 +5170,10 @@ func RegisterRoutes(engine *fiber.App) {
 			},
 		)
 		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "ArraysInBodyAndRes")
+			return handleAuthorizationError(fiberCtx, authErr, "TestResponseValidationNull")
 		}
 		controller := E2EControllerImport.E2EController{}
 		controller.InitController(fiberCtx)
-		var conversionErr error
-		var dataRawPtr *[]Param124data.LengthDto = nil
-		conversionErr = bindAndValidateBody(fiberCtx, "application/json", "required", &dataRawPtr)
-		if conversionErr != nil {
-			// Middlewares onInputValidationMiddlewares section
-			for _, middleware := range onInputValidationMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, conversionErr)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onInputValidationMiddlewares section
-			validationError := runtime.Rfc7807Error{
-				Type: http.StatusText(http.StatusUnprocessableEntity),
-				Detail: fmt.Sprintf(
-					"A request was made to operation 'ArraysInBodyAndRes' but body parameter '%s' did not pass validation of '%s' - %s",
-					"data",
-					"[]LengthDto",
-					extractValidationErrorMessage(conversionErr, nil),
-				),
-				Status:   http.StatusUnprocessableEntity,
-				Instance: "/validation/error/ArraysInBodyAndRes",
-			}
-			// json body validation error response extension placeholder
-			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
-		}
 		// Middlewares beforeOperationMiddlewares section
 		for _, middleware := range beforeOperationMiddlewares {
 			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
@@ -4893,7 +5184,7 @@ func RegisterRoutes(engine *fiber.App) {
 		}
 		// End middlewares beforeOperationMiddlewares section
 		// before operation routes extension placeholder
-		value, opError := controller.ArraysInBodyAndRes(*dataRawPtr)
+		value, opError := controller.TestResponseValidationNull()
 		for key, value := range controller.GetHeaders() {
 			fiberCtx.Set(key, value)
 		}
@@ -4911,9 +5202,9 @@ func RegisterRoutes(engine *fiber.App) {
 			// End middlewares onErrorMiddlewares section
 			stdError := runtime.Rfc7807Error{
 				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'ArraysInBodyAndRes'",
+				Detail:     "Encountered an error during operation 'TestResponseValidationNull'",
 				Status:     statusCode,
-				Instance:   "/controller/error/ArraysInBodyAndRes",
+				Instance:   "/controller/error/TestResponseValidationNull",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			// json error response extension placeholder
@@ -4934,7 +5225,7 @@ func RegisterRoutes(engine *fiber.App) {
 		// route end routes extension placeholder
 		return nil
 	})
-	engine.Post(toFiberUrl("/e2e/arrays-inside-body-and-res"), func(fiberCtx *fiber.Ctx) error {
+	engine.Post(toFiberUrl("/e2e/test-response-validation-ptr"), func(fiberCtx *fiber.Ctx) error {
 		// route start routes extension placeholder
 		authErr := authorize(
 			fiberCtx,
@@ -4953,37 +5244,10 @@ func RegisterRoutes(engine *fiber.App) {
 			},
 		)
 		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "ArraysInsideBodyAndRes")
+			return handleAuthorizationError(fiberCtx, authErr, "TestResponseValidationPtr")
 		}
 		controller := E2EControllerImport.E2EController{}
 		controller.InitController(fiberCtx)
-		var conversionErr error
-		var dataRawPtr *[]Param127data.BlaBla = nil
-		conversionErr = bindAndValidateBody(fiberCtx, "application/json", "", &dataRawPtr)
-		if conversionErr != nil {
-			// Middlewares onInputValidationMiddlewares section
-			for _, middleware := range onInputValidationMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, conversionErr)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onInputValidationMiddlewares section
-			validationError := runtime.Rfc7807Error{
-				Type: http.StatusText(http.StatusUnprocessableEntity),
-				Detail: fmt.Sprintf(
-					"A request was made to operation 'ArraysInsideBodyAndRes' but body parameter '%s' did not pass validation of '%s' - %s",
-					"data",
-					"[]BlaBla",
-					extractValidationErrorMessage(conversionErr, nil),
-				),
-				Status:   http.StatusUnprocessableEntity,
-				Instance: "/validation/error/ArraysInsideBodyAndRes",
-			}
-			// json body validation error response extension placeholder
-			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
-		}
 		// Middlewares beforeOperationMiddlewares section
 		for _, middleware := range beforeOperationMiddlewares {
 			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
@@ -4994,7 +5258,7 @@ func RegisterRoutes(engine *fiber.App) {
 		}
 		// End middlewares beforeOperationMiddlewares section
 		// before operation routes extension placeholder
-		value, opError := controller.ArraysInsideBodyAndRes(dataRawPtr)
+		value, opError := controller.TestResponseValidationPtr()
 		for key, value := range controller.GetHeaders() {
 			fiberCtx.Set(key, value)
 		}
@@ -5012,9 +5276,9 @@ func RegisterRoutes(engine *fiber.App) {
 			// End middlewares onErrorMiddlewares section
 			stdError := runtime.Rfc7807Error{
 				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'ArraysInsideBodyAndRes'",
+				Detail:     "Encountered an error during operation 'TestResponseValidationPtr'",
 				Status:     statusCode,
-				Instance:   "/controller/error/ArraysInsideBodyAndRes",
+				Instance:   "/controller/error/TestResponseValidationPtr",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			// json error response extension placeholder
@@ -5035,7 +5299,7 @@ func RegisterRoutes(engine *fiber.App) {
 		// route end routes extension placeholder
 		return nil
 	})
-	engine.Post(toFiberUrl("/e2e/deep-arrays-with-validation"), func(fiberCtx *fiber.Ctx) error {
+	engine.Get(toFiberUrl("/e2e/with-default-config-security"), func(fiberCtx *fiber.Ctx) error {
 		// route start routes extension placeholder
 		authErr := authorize(
 			fiberCtx,
@@ -5054,387 +5318,9 @@ func RegisterRoutes(engine *fiber.App) {
 			},
 		)
 		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "DeepArraysWithValidation")
+			return handleAuthorizationError(fiberCtx, authErr, "WithDefaultConfigSecurity")
 		}
 		controller := E2EControllerImport.E2EController{}
-		controller.InitController(fiberCtx)
-		var conversionErr error
-		var dataRawPtr *[][]Param130data.BlaBla2 = nil
-		conversionErr = bindAndValidateBody(fiberCtx, "application/json", "required", &dataRawPtr)
-		if conversionErr != nil {
-			// Middlewares onInputValidationMiddlewares section
-			for _, middleware := range onInputValidationMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, conversionErr)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onInputValidationMiddlewares section
-			validationError := runtime.Rfc7807Error{
-				Type: http.StatusText(http.StatusUnprocessableEntity),
-				Detail: fmt.Sprintf(
-					"A request was made to operation 'DeepArraysWithValidation' but body parameter '%s' did not pass validation of '%s' - %s",
-					"data",
-					"[][]BlaBla2",
-					extractValidationErrorMessage(conversionErr, nil),
-				),
-				Status:   http.StatusUnprocessableEntity,
-				Instance: "/validation/error/DeepArraysWithValidation",
-			}
-			// json body validation error response extension placeholder
-			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
-		}
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		value, opError := controller.DeepArraysWithValidation(*dataRawPtr)
-		for key, value := range controller.GetHeaders() {
-			fiberCtx.Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'DeepArraysWithValidation'",
-				Status:     statusCode,
-				Instance:   "/controller/error/DeepArraysWithValidation",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			return fiberCtx.Status(statusCode).JSON(stdError)
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		fiberCtx.Status(statusCode).JSON(value)
-		// route end routes extension placeholder
-		return nil
-	})
-	engine.Post(toFiberUrl("/e2e/embedded-structs"), func(fiberCtx *fiber.Ctx) error {
-		// route start routes extension placeholder
-		authErr := authorize(
-			fiberCtx,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "EmbeddedStructs")
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(fiberCtx)
-		var conversionErr error
-		var dataRawPtr *Param133data.TheModel = nil
-		conversionErr = bindAndValidateBody(fiberCtx, "application/json", "required", &dataRawPtr)
-		if conversionErr != nil {
-			// Middlewares onInputValidationMiddlewares section
-			for _, middleware := range onInputValidationMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, conversionErr)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onInputValidationMiddlewares section
-			validationError := runtime.Rfc7807Error{
-				Type: http.StatusText(http.StatusUnprocessableEntity),
-				Detail: fmt.Sprintf(
-					"A request was made to operation 'EmbeddedStructs' but body parameter '%s' did not pass validation of '%s' - %s",
-					"data",
-					"TheModel",
-					extractValidationErrorMessage(conversionErr, nil),
-				),
-				Status:   http.StatusUnprocessableEntity,
-				Instance: "/validation/error/EmbeddedStructs",
-			}
-			// json body validation error response extension placeholder
-			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
-		}
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		value, opError := controller.EmbeddedStructs(*dataRawPtr)
-		for key, value := range controller.GetHeaders() {
-			fiberCtx.Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, true, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'EmbeddedStructs'",
-				Status:     statusCode,
-				Instance:   "/controller/error/EmbeddedStructs",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			return fiberCtx.Status(statusCode).JSON(stdError)
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		fiberCtx.Status(statusCode).JSON(value)
-		// route end routes extension placeholder
-		return nil
-	})
-	engine.Post(toFiberUrl("/e2e/context-injection-empty"), func(fiberCtx *fiber.Ctx) error {
-		// route start routes extension placeholder
-		authErr := authorize(
-			fiberCtx,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "ContextInjectionEmpty")
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(fiberCtx)
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		opError := controller.ContextInjectionEmpty(getRequestContext(fiberCtx))
-		for key, value := range controller.GetHeaders() {
-			fiberCtx.Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, false, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'ContextInjectionEmpty'",
-				Status:     statusCode,
-				Instance:   "/controller/error/ContextInjectionEmpty",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			return fiberCtx.Status(statusCode).JSON(stdError)
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		fiberCtx.Status(statusCode)
-		// route end routes extension placeholder
-		return nil
-	})
-	engine.Post(toFiberUrl("/e2e/context-injection"), func(fiberCtx *fiber.Ctx) error {
-		// route start routes extension placeholder
-		authErr := authorize(
-			fiberCtx,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName2",
-							Scopes: []string{
-								"config",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "ContextInjection")
-		}
-		controller := E2EControllerImport.E2EController{}
-		controller.InitController(fiberCtx)
-		var conversionErr error
-		var dataRawPtr *Param137data.TheModel = nil
-		conversionErr = bindAndValidateBody(fiberCtx, "application/json", "required", &dataRawPtr)
-		if conversionErr != nil {
-			// Middlewares onInputValidationMiddlewares section
-			for _, middleware := range onInputValidationMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, conversionErr)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onInputValidationMiddlewares section
-			validationError := runtime.Rfc7807Error{
-				Type: http.StatusText(http.StatusUnprocessableEntity),
-				Detail: fmt.Sprintf(
-					"A request was made to operation 'ContextInjection' but body parameter '%s' did not pass validation of '%s' - %s",
-					"data",
-					"TheModel",
-					extractValidationErrorMessage(conversionErr, nil),
-				),
-				Status:   http.StatusUnprocessableEntity,
-				Instance: "/validation/error/ContextInjection",
-			}
-			// json body validation error response extension placeholder
-			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
-		}
-		// Middlewares beforeOperationMiddlewares section
-		for _, middleware := range beforeOperationMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares beforeOperationMiddlewares section
-		// before operation routes extension placeholder
-		opError := controller.ContextInjection(getRequestContext(fiberCtx), *dataRawPtr)
-		for key, value := range controller.GetHeaders() {
-			fiberCtx.Set(key, value)
-		}
-		// response headers extension placeholder
-		statusCode := getStatusCode(&controller, false, opError)
-		if opError != nil {
-			// Middlewares onErrorMiddlewares section
-			for _, middleware := range onErrorMiddlewares {
-				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
-				setRequestContext(fiberCtx, middlewareCtx)
-				if !continueOperation {
-					return nil
-				}
-			}
-			// End middlewares onErrorMiddlewares section
-			stdError := runtime.Rfc7807Error{
-				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'ContextInjection'",
-				Status:     statusCode,
-				Instance:   "/controller/error/ContextInjection",
-				Extensions: map[string]string{"error": opError.Error()},
-			}
-			// json error response extension placeholder
-			return fiberCtx.Status(statusCode).JSON(stdError)
-		}
-		// json response extension placeholder
-		// Middlewares afterOperationSuccessMiddlewares section
-		for _, middleware := range afterOperationSuccessMiddlewares {
-			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
-			setRequestContext(fiberCtx, middlewareCtx)
-			if !continueOperation {
-				return nil
-			}
-		}
-		// End middlewares afterOperationSuccessMiddlewares section
-		// after operation routes extension placeholder
-		fiberCtx.Status(statusCode)
-		// route end routes extension placeholder
-		return nil
-	})
-	// E2EClassSecController
-	engine.Get(toFiberUrl("/e2e/with-default-class-security"), func(fiberCtx *fiber.Ctx) error {
-		// route start routes extension placeholder
-		authErr := authorize(
-			fiberCtx,
-			[]SecurityCheckList{
-				{
-					Relation: SecurityListRelationAnd,
-					Checks: []runtime.SecurityCheck{
-						{
-							SchemaName: "securitySchemaName",
-							Scopes: []string{
-								"class",
-							},
-						},
-					},
-				},
-			},
-		)
-		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "WithDefaultClassSecurity")
-		}
-		controller := E2EClassSecControllerImport.E2EClassSecController{}
 		controller.InitController(fiberCtx)
 		var headerParamRawPtr *string = nil
 		headerParamRaw := fiberCtx.Get("x-test-scopes")
@@ -5454,7 +5340,7 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "headerParam"
-			validationError := wrapValidatorError(validatorErr, "WithDefaultClassSecurity", fieldName)
+			validationError := wrapValidatorError(validatorErr, "WithDefaultConfigSecurity", fieldName)
 			// validation error response extension placeholder
 			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
 		}
@@ -5468,7 +5354,7 @@ func RegisterRoutes(engine *fiber.App) {
 		}
 		// End middlewares beforeOperationMiddlewares section
 		// before operation routes extension placeholder
-		value, opError := controller.WithDefaultClassSecurity(*headerParamRawPtr)
+		value, opError := controller.WithDefaultConfigSecurity(*headerParamRawPtr)
 		for key, value := range controller.GetHeaders() {
 			fiberCtx.Set(key, value)
 		}
@@ -5486,9 +5372,9 @@ func RegisterRoutes(engine *fiber.App) {
 			// End middlewares onErrorMiddlewares section
 			stdError := runtime.Rfc7807Error{
 				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'WithDefaultClassSecurity'",
+				Detail:     "Encountered an error during operation 'WithDefaultConfigSecurity'",
 				Status:     statusCode,
-				Instance:   "/controller/error/WithDefaultClassSecurity",
+				Instance:   "/controller/error/WithDefaultConfigSecurity",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			// json error response extension placeholder
@@ -5509,7 +5395,7 @@ func RegisterRoutes(engine *fiber.App) {
 		// route end routes extension placeholder
 		return nil
 	})
-	engine.Get(toFiberUrl("/e2e/with-default-override-class-security"), func(fiberCtx *fiber.Ctx) error {
+	engine.Get(toFiberUrl("/e2e/with-one-security"), func(fiberCtx *fiber.Ctx) error {
 		// route start routes extension placeholder
 		authErr := authorize(
 			fiberCtx,
@@ -5520,7 +5406,7 @@ func RegisterRoutes(engine *fiber.App) {
 						{
 							SchemaName: "securitySchemaName",
 							Scopes: []string{
-								"method",
+								"other",
 							},
 						},
 					},
@@ -5528,9 +5414,9 @@ func RegisterRoutes(engine *fiber.App) {
 			},
 		)
 		if authErr != nil {
-			return handleAuthorizationError(fiberCtx, authErr, "WithOverrideClassSecurity")
+			return handleAuthorizationError(fiberCtx, authErr, "WithOneSecurity")
 		}
-		controller := E2EClassSecControllerImport.E2EClassSecController{}
+		controller := E2EControllerImport.E2EController{}
 		controller.InitController(fiberCtx)
 		var headerParamRawPtr *string = nil
 		headerParamRaw := fiberCtx.Get("x-test-scopes")
@@ -5550,7 +5436,7 @@ func RegisterRoutes(engine *fiber.App) {
 			}
 			// End middlewares onInputValidationMiddlewares section
 			fieldName := "headerParam"
-			validationError := wrapValidatorError(validatorErr, "WithOverrideClassSecurity", fieldName)
+			validationError := wrapValidatorError(validatorErr, "WithOneSecurity", fieldName)
 			// validation error response extension placeholder
 			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
 		}
@@ -5564,7 +5450,7 @@ func RegisterRoutes(engine *fiber.App) {
 		}
 		// End middlewares beforeOperationMiddlewares section
 		// before operation routes extension placeholder
-		value, opError := controller.WithOverrideClassSecurity(*headerParamRawPtr)
+		value, opError := controller.WithOneSecurity(*headerParamRawPtr)
 		for key, value := range controller.GetHeaders() {
 			fiberCtx.Set(key, value)
 		}
@@ -5582,9 +5468,225 @@ func RegisterRoutes(engine *fiber.App) {
 			// End middlewares onErrorMiddlewares section
 			stdError := runtime.Rfc7807Error{
 				Type:       http.StatusText(statusCode),
-				Detail:     "Encountered an error during operation 'WithOverrideClassSecurity'",
+				Detail:     "Encountered an error during operation 'WithOneSecurity'",
 				Status:     statusCode,
-				Instance:   "/controller/error/WithOverrideClassSecurity",
+				Instance:   "/controller/error/WithOneSecurity",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			return fiberCtx.Status(statusCode).JSON(stdError)
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		fiberCtx.Status(statusCode).JSON(value)
+		// route end routes extension placeholder
+		return nil
+	})
+	engine.Get(toFiberUrl("/e2e/with-two-security"), func(fiberCtx *fiber.Ctx) error {
+		// route start routes extension placeholder
+		authErr := authorize(
+			fiberCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName",
+							Scopes: []string{
+								"other",
+							},
+						},
+					},
+				},
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"write",
+								"read",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(fiberCtx, authErr, "WithTwoSecurity")
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(fiberCtx)
+		var headerParamRawPtr *string = nil
+		headerParamRaw := fiberCtx.Get("x-test-scopes")
+		isheaderParamExists := len(fiberCtx.Request().Header.Peek("x-test-scopes")) > 0
+		if isheaderParamExists {
+			headerParam := headerParamRaw
+			headerParamRawPtr = &headerParam
+		}
+		if validatorErr := validatorInstance.Var(headerParamRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, validatorErr)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "headerParam"
+			validationError := wrapValidatorError(validatorErr, "WithTwoSecurity", fieldName)
+			// validation error response extension placeholder
+			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.WithTwoSecurity(*headerParamRawPtr)
+		for key, value := range controller.GetHeaders() {
+			fiberCtx.Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'WithTwoSecurity'",
+				Status:     statusCode,
+				Instance:   "/controller/error/WithTwoSecurity",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			// json error response extension placeholder
+			return fiberCtx.Status(statusCode).JSON(stdError)
+		}
+		// json response extension placeholder
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		// after operation routes extension placeholder
+		fiberCtx.Status(statusCode).JSON(value)
+		// route end routes extension placeholder
+		return nil
+	})
+	engine.Get(toFiberUrl("/e2e/with-two-security-same-method"), func(fiberCtx *fiber.Ctx) error {
+		// route start routes extension placeholder
+		authErr := authorize(
+			fiberCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName",
+							Scopes: []string{
+								"other",
+							},
+						},
+					},
+				},
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName",
+							Scopes: []string{
+								"write",
+								"read",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(fiberCtx, authErr, "WithTwoSecuritySameMethod")
+		}
+		controller := E2EControllerImport.E2EController{}
+		controller.InitController(fiberCtx)
+		var headerParamRawPtr *string = nil
+		headerParamRaw := fiberCtx.Get("x-test-scopes")
+		isheaderParamExists := len(fiberCtx.Request().Header.Peek("x-test-scopes")) > 0
+		if isheaderParamExists {
+			headerParam := headerParamRaw
+			headerParamRawPtr = &headerParam
+		}
+		if validatorErr := validatorInstance.Var(headerParamRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, validatorErr)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "headerParam"
+			validationError := wrapValidatorError(validatorErr, "WithTwoSecuritySameMethod", fieldName)
+			// validation error response extension placeholder
+			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		// before operation routes extension placeholder
+		value, opError := controller.WithTwoSecuritySameMethod(*headerParamRawPtr)
+		for key, value := range controller.GetHeaders() {
+			fiberCtx.Set(key, value)
+		}
+		// response headers extension placeholder
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'WithTwoSecuritySameMethod'",
+				Status:     statusCode,
+				Instance:   "/controller/error/WithTwoSecuritySameMethod",
 				Extensions: map[string]string{"error": opError.Error()},
 			}
 			// json error response extension placeholder

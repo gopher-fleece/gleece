@@ -5,6 +5,7 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"go/types"
 	"os"
 	"path/filepath"
 	"testing"
@@ -296,6 +297,142 @@ var _ = Describe("Unit Tests - AST", func() {
 
 			result := extractor.GetFieldTypeString(arrayExpr)
 			Expect(result).To(Equal("[?]int"))
+		})
+	})
+
+	Context("Given a non-pointer type", func() {
+		It("should return the same type", func() {
+			// Test with basic types
+			intType := types.Typ[types.Int]
+			result := extractor.UnwrapPointerType(intType)
+			Expect(result).To(Equal(intType))
+
+			stringType := types.Typ[types.String]
+			result = extractor.UnwrapPointerType(stringType)
+			Expect(result).To(Equal(stringType))
+
+			boolType := types.Typ[types.Bool]
+			result = extractor.UnwrapPointerType(boolType)
+			Expect(result).To(Equal(boolType))
+		})
+
+		It("should return the same type for complex non-pointer types", func() {
+			// Test with slice type
+			sliceType := types.NewSlice(types.Typ[types.Int])
+			result := extractor.UnwrapPointerType(sliceType)
+			Expect(result).To(Equal(sliceType))
+
+			// Test with array type
+			arrayType := types.NewArray(types.Typ[types.String], 10)
+			result = extractor.UnwrapPointerType(arrayType)
+			Expect(result).To(Equal(arrayType))
+
+			// Test with map type
+			mapType := types.NewMap(types.Typ[types.String], types.Typ[types.Int])
+			result = extractor.UnwrapPointerType(mapType)
+			Expect(result).To(Equal(mapType))
+		})
+	})
+
+	Context("Given a single-level pointer type", func() {
+		It("should return the underlying type", func() {
+			// Test with pointer to int
+			intType := types.Typ[types.Int]
+			ptrToInt := types.NewPointer(intType)
+			result := extractor.UnwrapPointerType(ptrToInt)
+			Expect(result).To(Equal(intType))
+
+			// Test with pointer to string
+			stringType := types.Typ[types.String]
+			ptrToString := types.NewPointer(stringType)
+			result = extractor.UnwrapPointerType(ptrToString)
+			Expect(result).To(Equal(stringType))
+
+			// Test with pointer to bool
+			boolType := types.Typ[types.Bool]
+			ptrToBool := types.NewPointer(boolType)
+			result = extractor.UnwrapPointerType(ptrToBool)
+			Expect(result).To(Equal(boolType))
+		})
+
+		It("should return the underlying type for complex pointer types", func() {
+			// Test with pointer to slice
+			sliceType := types.NewSlice(types.Typ[types.Int])
+			ptrToSlice := types.NewPointer(sliceType)
+			result := extractor.UnwrapPointerType(ptrToSlice)
+			Expect(result).To(Equal(sliceType))
+
+			// Test with pointer to array
+			arrayType := types.NewArray(types.Typ[types.String], 5)
+			ptrToArray := types.NewPointer(arrayType)
+			result = extractor.UnwrapPointerType(ptrToArray)
+			Expect(result).To(Equal(arrayType))
+
+			// Test with pointer to map
+			mapType := types.NewMap(types.Typ[types.String], types.Typ[types.Int])
+			ptrToMap := types.NewPointer(mapType)
+			result = extractor.UnwrapPointerType(ptrToMap)
+			Expect(result).To(Equal(mapType))
+		})
+	})
+
+	Context("Given a multi-level pointer type", func() {
+		It("should recursively unwrap to the underlying type", func() {
+			// Test with double pointer to int (**int)
+			intType := types.Typ[types.Int]
+			ptrToInt := types.NewPointer(intType)
+			ptrToPtrToInt := types.NewPointer(ptrToInt)
+			result := extractor.UnwrapPointerType(ptrToPtrToInt)
+			Expect(result).To(Equal(intType))
+
+			// Test with triple pointer to string (***string)
+			stringType := types.Typ[types.String]
+			ptrToString := types.NewPointer(stringType)
+			ptrToPtrToString := types.NewPointer(ptrToString)
+			ptrToPtrToPtrToString := types.NewPointer(ptrToPtrToString)
+			result = extractor.UnwrapPointerType(ptrToPtrToPtrToString)
+			Expect(result).To(Equal(stringType))
+		})
+
+		It("should handle deeply nested pointer types", func() {
+			// Test with 5-level pointer nesting
+			baseType := types.Typ[types.Float64]
+			currentType := types.Type(baseType)
+
+			// Create 5 levels of pointers
+			for i := 0; i < 5; i++ {
+				currentType = types.NewPointer(currentType)
+			}
+
+			result := extractor.UnwrapPointerType(currentType)
+			Expect(result).To(Equal(baseType))
+		})
+
+		It("should handle multi-level pointers to complex types", func() {
+			// Test with double pointer to slice (**[]int)
+			sliceType := types.NewSlice(types.Typ[types.Int])
+			ptrToSlice := types.NewPointer(sliceType)
+			ptrToPtrToSlice := types.NewPointer(ptrToSlice)
+			result := extractor.UnwrapPointerType(ptrToPtrToSlice)
+			Expect(result).To(Equal(sliceType))
+
+			// Test with triple pointer to map (***map[string]int)
+			mapType := types.NewMap(types.Typ[types.String], types.Typ[types.Int])
+			ptrToMap := types.NewPointer(mapType)
+			ptrToPtrToMap := types.NewPointer(ptrToMap)
+			ptrToPtrToPtrToMap := types.NewPointer(ptrToPtrToMap)
+			result = extractor.UnwrapPointerType(ptrToPtrToPtrToMap)
+			Expect(result).To(Equal(mapType))
+		})
+	})
+
+	Context("Edge cases", func() {
+		It("should handle nil type gracefully", func() {
+			// While this might not be a realistic scenario in practice,
+			// the function should handle nil input without panicking
+			var nilType types.Type
+			result := extractor.UnwrapPointerType(nilType)
+			Expect(result).To(BeNil())
 		})
 	})
 })

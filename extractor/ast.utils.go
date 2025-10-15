@@ -525,3 +525,17 @@ func MapDocListToStrings(docList []*ast.Comment) []string {
 	}
 	return result
 }
+
+// UnwrapPointerType recursively unwraps pointer types to get the underlying non-pointer type
+func UnwrapPointerType(t types.Type) types.Type {
+	elemType := t
+	// Recursively unwrap if there are multiple levels of pointers
+	for {
+		ptrType, isPtr := elemType.(*types.Pointer)
+		if !isPtr {
+			break
+		}
+		elemType = ptrType.Elem()
+	}
+	return elemType
+}

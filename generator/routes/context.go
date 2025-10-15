@@ -1,6 +1,8 @@
 package routes
 
 import (
+	"fmt"
+	"sort"
 	"time"
 
 	"github.com/gopher-fleece/gleece/definitions"
@@ -48,6 +50,21 @@ func GetTemplateContext(
 		}
 	}
 
+	// Sort template data arrays, so each generate will produce the same code.
+	// It useful when the generated code is managed by source-control (e.g. git) and needs to avoid diffs without logic change.
+
+	// Sort controllers by Name property
+	sort.Slice(controllers, func(i, j int) bool {
+		return controllers[i].Name < controllers[j].Name
+	})
+
+	// Sort Routes inside each controller by OperationId
+	for i := range controllers {
+		sort.Slice(controllers[i].Routes, func(a, b int) bool {
+			return controllers[i].Routes[a].OperationId < controllers[i].Routes[b].OperationId
+		})
+	}
+
 	ctx := RoutesContext{
 		Controllers:             controllers,
 		AuthConfig:              config.RoutesConfig.AuthorizationConfig,
@@ -61,7 +78,9 @@ func GetTemplateContext(
 		ctx.PackageName = "routes"
 	}
 
-	ctx.GenerationDate = time.Now().Format(time.DateOnly)
+	if !config.RoutesConfig.SkipGenerateDateComment {
+		ctx.GenerationDate = fmt.Sprintf("Generated Date: %s", time.Now().Format(time.DateOnly))
+	}
 
 	return ctx, nil
 }

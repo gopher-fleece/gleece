@@ -31,7 +31,8 @@
 			"JsonErrorResponseExtension": "./chi/assets/JsonErrorResponseExtension.hbs",
 			"ResponseHeadersExtension": "./chi/assets/ResponseHeadersExtension.hbs"
 		},
-		"validateResponsePayload": true
+		"validateResponsePayload": true,
+		"skipGenerateDateComment": true
 	},
 	"openapiGeneratorConfig": {
 		"openapi": "3.0.0",

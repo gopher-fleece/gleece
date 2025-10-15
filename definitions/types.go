@@ -399,6 +399,7 @@ type RoutesConfig struct {
 	TemplateOverrides       map[string]string   `json:"templateOverrides"`
 	TemplateExtensions      map[string]string   `json:"templateExtensions"`
 	ValidateResponsePayload bool                `json:"validateResponsePayload"`
+	SkipGenerateDateComment bool                `json:"skipGenerateDateComment"`
 }
 
 type AuthorizationConfig struct {
