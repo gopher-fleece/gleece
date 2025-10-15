@@ -305,6 +305,7 @@ const (
 type SecuritySchemeIn string
 
 const (
+	Empty    SecuritySchemeIn = ""
 	InQuery  SecuritySchemeIn = "query"
 	InHeader SecuritySchemeIn = "header"
 	InCookie SecuritySchemeIn = "cookie"
@@ -336,9 +337,9 @@ type SecuritySchemeConfig struct {
 	SecurityName     string             `json:"name" validate:"required,starts_with_letter"`
 	Scheme           HttpAuthScheme     `json:"scheme" validate:"omitempty,oneof=basic bearer digest hoba mutual negotiate oauth scram-sha-1 scram-sha-256 vapid"`
 	Flows            *OAuthFlows        `json:"flows"`
-	FieldName        string             `json:"fieldName" validate:"required,starts_with_letter"`
+	FieldName        string             `json:"fieldName" validate:"starts_with_letter"`
 	Type             SecuritySchemeType `json:"type" validate:"required,security_schema_type"` // see SecuritySchemeType
-	In               SecuritySchemeIn   `json:"in" validate:"required,security_schema_in"`     // see SecuritySchemeIn
+	In               SecuritySchemeIn   `json:"in" validate:"security_schema_in"`              // see SecuritySchemeIn
 	OpenIdConnectUrl string             `json:"openIdConnectUrl" validate:"omitempty,url"`
 }
 

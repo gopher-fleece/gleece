@@ -65,6 +65,12 @@
 				"fieldName": "x-header-name",
 				"type": "apiKey",
 				"in": "header"
+			},
+			{
+				"description": "Bearer authentication for the API",
+				"name": "securitySchemaName3",
+				"scheme": "bearer",
+				"type": "http"
 			}
 		],
 		"defaultSecurity": {
