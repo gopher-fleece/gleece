@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go/ast"
 	"os"
+	"runtime"
 	"testing"
 	"time"
 
@@ -228,9 +229,11 @@ var _ = Describe("RouteVisitor", func() {
 			defer os.Chmod(tempFile, 0644)
 
 			// Call VisitMethod, should hit os.Stat failure inside FileVersion creation
-			_, err = thisCtx.routeVisitor.VisitMethod(thisCtx.receiver1Decl, thisCtx.controllerAstFile)
-			Expect(err).ToNot(BeNil())
-			Expect(err).To(MatchError(ContainSubstring("failed to compute hash for file")))
+			if runtime.GOOS != "windows" {
+				_, err = thisCtx.routeVisitor.VisitMethod(thisCtx.receiver1Decl, thisCtx.controllerAstFile)
+				Expect(err).ToNot(BeNil())
+				Expect(err).To(MatchError(ContainSubstring("failed to compute hash for file")))
+			}
 		})
 
 		It("Returns a proper error if a receiver parameter has an invalid type", func() {
