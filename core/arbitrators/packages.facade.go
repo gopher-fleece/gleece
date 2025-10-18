@@ -5,7 +5,6 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"path"
 	"path/filepath"
 
 	"github.com/bmatcuk/doublestar/v4"
@@ -94,7 +93,7 @@ func (facade *PackagesFacade) initWithGlobs(globs []string) error {
 				return fmt.Errorf("could not determine PkgPath for file %v", file.Name.Name)
 			}
 
-			pkgPathsToLoad.Add(path.Dir(pkgPath))
+			pkgPathsToLoad.Add(filepath.Dir(pkgPath))
 		}
 	}
 

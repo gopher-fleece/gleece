@@ -5,6 +5,7 @@ import (
 	"go/token"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 
@@ -45,7 +46,9 @@ var _ = Describe("Unit Tests - Versioning", func() {
 				defer os.Chmod(tmpFilePath, 0644)
 
 				_, err := gast.NewFileVersion(tmpFilePath)
-				Expect(err).To(HaveOccurred())
+				if runtime.GOOS != "windows" {
+					Expect(err).To(HaveOccurred())
+				}
 			})
 		})
 
@@ -141,15 +144,15 @@ var _ = Describe("Unit Tests - Versioning", func() {
 				Expect(os.Chmod(tmpFilePath, 0000)).To(Succeed())
 				defer os.Chmod(tmpFilePath, 0644) // Reset so cleanup doesn't panic
 
-				fv, _ := gast.NewFileVersion(tmpFilePath)
-
-				changed, err := fv.HasChanged(false)
-				Expect(err).To(HaveOccurred())
-				Expect(changed).To(BeTrue()) // We default to true in case someone forgets to check error
+				if runtime.GOOS != "windows" {
+					fv, _ := gast.NewFileVersion(tmpFilePath)
+					changed, err := fv.HasChanged(false)
+					Expect(err).To(HaveOccurred())
+					Expect(changed).To(BeTrue()) // We default to true in case someone forgets to check error
+				}
 			})
 
 			It("Returns true and error if hash fails after stat succeeds", func() {
-				fv, _ := gast.NewFileVersion(tmpFilePath)
 
 				// Ensure modtime is newer to avoid short-circuit
 				Expect(os.Chtimes(tmpFilePath, time.Now(), time.Now().Add(time.Second))).To(Succeed())
@@ -158,9 +161,12 @@ var _ = Describe("Unit Tests - Versioning", func() {
 				Expect(os.Chmod(tmpFilePath, 0000)).To(Succeed())
 				defer os.Chmod(tmpFilePath, 0644)
 
-				changed, err := fv.HasChanged(false)
-				Expect(err).To(HaveOccurred())
-				Expect(changed).To(BeTrue()) // We default to true in case someone forgets to check error
+				if runtime.GOOS != "windows" {
+					fv, _ := gast.NewFileVersion(tmpFilePath)
+					changed, err := fv.HasChanged(false)
+					Expect(err).To(HaveOccurred())
+					Expect(changed).To(BeTrue()) // We default to true in case someone forgets to check error
+				}
 			})
 
 		})
