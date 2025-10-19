@@ -6,8 +6,12 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest]
+        include:
+          - os: windows-latest
+            run_on_main: true
     runs-on: ${{ matrix.os }}
+    if: ${{ matrix.run_on_main != true || github.ref == 'refs/heads/main' }}
 
     steps:
       - name: 1️⃣ Checkout repository 🛎️
