@@ -4,14 +4,22 @@ on: [push, workflow_dispatch]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            run_on_main: false
+          - os: windows-latest
+            run_on_main: true # Windows runs much slower (6 min vs 1.5 min on Linux), and in 99% of cases there's no OS difference - run it only on the main branch.
+    runs-on: ${{ matrix.os }}
 
     steps:
       - name: 1️⃣ Checkout repository 🛎️
+        if: ${{ !matrix.run_on_main || github.ref == 'refs/heads/main' }}
         uses: actions/checkout@v4
 
-      # Cache Go modules
       - name: Cache Go modules 🗄️
+        if: ${{ !matrix.run_on_main || github.ref == 'refs/heads/main' }}
         uses: actions/cache@v3
         with:
           path: |
@@ -23,11 +31,13 @@ jobs:
             ${{ runner.os }}-go-
 
       - name: 2️⃣ Set up Go 🚀
+        if: ${{ !matrix.run_on_main || github.ref == 'refs/heads/main' }}
         uses: actions/setup-go@v5
         with:
           go-version: '1.23.3'
 
       - name: 3️⃣ Install dependencies 📦
+        if: ${{ !matrix.run_on_main || github.ref == 'refs/heads/main' }}
         run: |
           go mod download
           go install github.com/onsi/ginkgo/v2/ginkgo@v2.27.2
@@ -47,4 +57,3 @@ jobs:
           mkdir dist
           go test -covermode atomic -coverpkg=$(go list ./... | grep -vE "/test/|/e2e/" | tr '\n' ',') -coverprofile=dist/covprofile ./...
           goveralls -coverprofile=dist/covprofile -service=github
-
