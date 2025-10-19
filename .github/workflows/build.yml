@@ -14,17 +14,12 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - name: 🧩 Skip Windows on non-main branches
-        if: ${{ matrix.run_on_main && github.ref != 'refs/heads/main' }}
-        run: |
-          echo "Skipping Windows build on non-main branch."
-          exit 78
-
       - name: 1️⃣ Checkout repository 🛎️
+        if: ${{ !matrix.run_on_main || github.ref == 'refs/heads/main' }}
         uses: actions/checkout@v4
 
-      # Cache Go modules
       - name: Cache Go modules 🗄️
+        if: ${{ !matrix.run_on_main || github.ref == 'refs/heads/main' }}
         uses: actions/cache@v3
         with:
           path: |
@@ -36,23 +31,24 @@ jobs:
             ${{ runner.os }}-go-
 
       - name: 2️⃣ Set up Go 🚀
+        if: ${{ !matrix.run_on_main || github.ref == 'refs/heads/main' }}
         uses: actions/setup-go@v5
         with:
           go-version: '1.23.3'
 
       - name: 3️⃣ Install dependencies 📦
+        if: ${{ !matrix.run_on_main || github.ref == 'refs/heads/main' }}
         run: |
           go mod download
           go install github.com/onsi/ginkgo/v2/ginkgo@v2.22.2
           go install github.com/mattn/goveralls@latest
 
       - name: 4️⃣ Run tests 🧪
-        if: github.ref != 'refs/heads/main'
-        run: |
-          ginkgo ./...
+        if: ${{ (!matrix.run_on_main || github.ref == 'refs/heads/main') && github.ref != 'refs/heads/main' }}
+        run: ginkgo ./...
 
       - name: 5️⃣ Send coverage 📊
-        if: github.ref == 'refs/heads/main'
+        if: ${{ (!matrix.run_on_main || github.ref == 'refs/heads/main') && github.ref == 'refs/heads/main' }}
         env:
           COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
