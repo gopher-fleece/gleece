@@ -34,12 +34,13 @@ jobs:
           go install github.com/mattn/goveralls@latest
 
       - name: 4️⃣ Run tests 🧪
-        if: github.ref != 'refs/heads/main'
-        run: |
-          ginkgo ./...
+        # In Windows run tests (not coverage) on main only, for Linux run tests but skip it on main, to run the coverage
+        if: ${{ (matrix.run_on_main && github.ref == 'refs/heads/main') || (!matrix.run_on_main && github.ref != 'refs/heads/main') }}
+        run: ginkgo ./...
 
       - name: 5️⃣ Send coverage 📊
-        if: github.ref == 'refs/heads/main'
+        # run coverage only for Linux only on main
+        if: ${{ !matrix.run_on_main && github.ref == 'refs/heads/main' }}
         env:
           COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
