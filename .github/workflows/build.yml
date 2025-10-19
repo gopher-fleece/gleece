@@ -44,11 +44,11 @@ jobs:
           go install github.com/mattn/goveralls@latest
 
       - name: 4️⃣ Run tests 🧪
-        if: ${{ (!matrix.run_on_main || github.ref == 'refs/heads/main') && github.ref != 'refs/heads/main' }}
+        if: ${{ (matrix.run_on_main && github.ref == 'refs/heads/main') || (!matrix.run_on_main && github.ref != 'refs/heads/main') }}
         run: ginkgo ./...
 
       - name: 5️⃣ Send coverage 📊
-        if: ${{ (!matrix.run_on_main || github.ref == 'refs/heads/main') && github.ref == 'refs/heads/main' }}
+        if: ${{ !matrix.run_on_main && github.ref == 'refs/heads/main' }}
         env:
           COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
