@@ -10,7 +10,7 @@ jobs:
           - os: ubuntu-latest
             run_on_main: false
           - os: windows-latest
-            run_on_main: true
+            run_on_main: true # Windows runs much slower (6 min vs 1.5 min on Linux), and in 99% of cases there's no OS difference - run it only on the main branch.
     runs-on: ${{ matrix.os }}
 
     steps:
