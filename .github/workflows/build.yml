@@ -6,14 +6,20 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest]
         include:
+          - os: ubuntu-latest
+            run_on_main: false
           - os: windows-latest
             run_on_main: true
     runs-on: ${{ matrix.os }}
-    if: ${{ matrix.run_on_main != true || github.ref == 'refs/heads/main' }}
 
     steps:
+      - name: 🧩 Skip Windows on non-main branches
+        if: ${{ matrix.run_on_main && github.ref != 'refs/heads/main' }}
+        run: |
+          echo "Skipping Windows build on non-main branch."
+          exit 0
+
       - name: 1️⃣ Checkout repository 🛎️
         uses: actions/checkout@v4
 
