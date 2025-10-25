@@ -9,7 +9,8 @@ import (
 
 type StructMeta struct {
 	SymNodeMeta
-	Fields []FieldMeta
+	TypeParams []TypeParamDecl
+	Fields     []FieldMeta
 }
 
 func (s StructMeta) Reduce(ctx ReductionContext) (definitions.StructMetadata, error) {

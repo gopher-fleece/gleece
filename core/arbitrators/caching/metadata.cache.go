@@ -16,8 +16,9 @@ type MetadataCache struct {
 	structs     map[graphs.SymbolKey]*metadata.StructMeta
 	enums       map[graphs.SymbolKey]*metadata.EnumMeta
 	visited     map[graphs.SymbolKey]struct{}
+	inProgress  map[graphs.SymbolKey]struct{}
 
-	FileVersions map[*ast.File]*gast.FileVersion
+	fileVersions map[*ast.File]*gast.FileVersion
 }
 
 func NewMetadataCache() *MetadataCache {
@@ -27,7 +28,8 @@ func NewMetadataCache() *MetadataCache {
 		structs:      make(map[graphs.SymbolKey]*metadata.StructMeta),
 		enums:        make(map[graphs.SymbolKey]*metadata.EnumMeta),
 		visited:      make(map[graphs.SymbolKey]struct{}),
-		FileVersions: map[*ast.File]*gast.FileVersion{},
+		inProgress:   make(map[graphs.SymbolKey]struct{}),
+		fileVersions: map[*ast.File]*gast.FileVersion{},
 	}
 }
 
@@ -66,7 +68,7 @@ func (c *MetadataCache) HasVisited(key graphs.SymbolKey) bool {
 }
 
 func (c *MetadataCache) GetFileVersion(file *ast.File, fileSet *token.FileSet) (*gast.FileVersion, error) {
-	fVersion := c.FileVersions[file]
+	fVersion := c.fileVersions[file]
 	if fVersion != nil {
 		return fVersion, nil
 	}
@@ -76,7 +78,7 @@ func (c *MetadataCache) GetFileVersion(file *ast.File, fileSet *token.FileSet) (
 		return nil, err
 	}
 
-	c.FileVersions[file] = &version
+	c.fileVersions[file] = &version
 	return &version, nil
 
 }
@@ -99,6 +101,27 @@ func (c *MetadataCache) AddStruct(meta *metadata.StructMeta) error {
 func (c *MetadataCache) AddEnum(meta *metadata.EnumMeta) error {
 	key := graphs.NewSymbolKey(meta.Node, meta.FVersion)
 	return addEntity(key, c.enums, c.visited, meta)
+}
+
+// StartMaterializing claims the key for materialization.
+// Returns true if the caller should proceed (not visited, not already in-progress).
+func (c *MetadataCache) StartMaterializing(key graphs.SymbolKey) bool {
+	if _, seen := c.visited[key]; seen {
+		return false // already done
+	}
+	if _, doing := c.inProgress[key]; doing {
+		return false // someone else is already working on it
+	}
+	c.inProgress[key] = struct{}{}
+	return true
+}
+
+// FinishMaterializing clears in-progress. If success==true, also mark visited.
+func (c *MetadataCache) FinishMaterializing(key graphs.SymbolKey, success bool) {
+	delete(c.inProgress, key)
+	if success {
+		c.visited[key] = struct{}{}
+	}
 }
 
 func addEntity[TMeta any](

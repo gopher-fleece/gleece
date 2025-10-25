@@ -1,7 +1,7 @@
 package dot
 
 import (
-	"sort"
+	"slices"
 
 	"github.com/gopher-fleece/gleece/common"
 )
@@ -45,9 +45,7 @@ func (t DotTheme) NodeStylesOrdered() []OrderedNodeStyle {
 	}
 
 	// Sort the kinds alphabetically (or by some other stable order)
-	sort.Slice(kinds, func(i, j int) bool {
-		return kinds[i] < kinds[j]
-	})
+	slices.Sort(kinds)
 
 	// Build ordered slice
 	ordered := make([]OrderedNodeStyle, len(kinds))
@@ -71,6 +69,7 @@ var DefaultDotTheme = DotTheme{
 		common.SymKindParameter:  {Color: "khaki", Shape: "parallelogram"},
 		common.SymKindReturnType: {Color: "lightgrey", Shape: "diamond"},
 		common.SymKindAlias:      {Color: "palegreen", Shape: "note"},
+		common.SymKindComposite:  {Color: "lightcoral", Shape: "component"},
 		common.SymKindConstant:   {Color: "plum", Shape: "egg"},
 		common.SymKindBuiltin:    {Color: "gray80", Shape: "box"},
 		common.SymKindUnknown:    {Color: "lightcoral", Shape: "triangle"},
@@ -80,14 +79,15 @@ var DefaultDotTheme = DotTheme{
 		common.SymKindVariable:   {Color: "lightsteelblue", Shape: "circle"},
 	},
 	EdgeLabels: map[string]string{
-		"ty":    "Type",
-		"ret":   "Return Value",
-		"param": "Parameter",
-		"fld":   "Field",
-		"recv":  "Receiver",
-		"val":   "Value",
-		"init":  "Initialize",
-		"ref":   "Reference",
+		"ty":      "Type",
+		"typaram": "Type Parameter",
+		"ret":     "Return Value",
+		"param":   "Parameter",
+		"fld":     "Field",
+		"recv":    "Receiver",
+		"val":     "Value",
+		"init":    "Initialize",
+		"ref":     "Reference",
 	},
 	EdgeStyles: map[string]DotStyle{
 		"ty":    {EdgeColor: "black", EdgeStyle: "solid", ArrowHead: "vee"},

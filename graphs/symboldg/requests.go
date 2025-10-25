@@ -22,7 +22,7 @@ func (k KeyableNodeMeta) SymbolKey() graphs.SymbolKey {
 }
 
 type CreateControllerNode struct {
-	Data        metadata.StructMeta
+	Data        metadata.ControllerMeta
 	Annotations *annotations.AnnotationHolder
 }
 
@@ -60,4 +60,18 @@ type CreateFieldNode struct {
 type CreateConstNode struct {
 	Data        metadata.ConstMeta
 	Annotations *annotations.AnnotationHolder
+}
+
+// CompositeMeta holds minimal metadata for composite-type nodes.
+// Stored in SymbolNode.Data when creating composite nodes.
+type CompositeMeta struct {
+	Canonical string
+	Operands  []graphs.SymbolKey
+}
+
+// CreateCompositeNode is the request used to add a canonical composite node.
+type CreateCompositeNode struct {
+	Key       graphs.SymbolKey
+	Canonical string
+	Operands  []graphs.SymbolKey
 }

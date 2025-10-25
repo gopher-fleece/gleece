@@ -25,7 +25,7 @@ func NewAstArbitrator(pkgFacade *PackagesFacade) AstArbitrator {
 }
 
 func (arb *AstArbitrator) GetFuncParametersMeta(
-	typeVisitor TypeVisitor,
+	typeVisitor FieldVisitor,
 	pkg *packages.Package,
 	file *ast.File,
 	funcDecl *ast.FuncDecl,
@@ -38,7 +38,7 @@ func (arb *AstArbitrator) GetFuncParametersMeta(
 	}
 
 	for paramOrdinal, field := range funcDecl.Type.Params.List {
-		fields, err := typeVisitor.VisitField(pkg, file, field)
+		fields, err := typeVisitor.VisitField(pkg, file, field, common.SymKindParameter)
 		if err != nil {
 			return nil, err
 		}
@@ -67,7 +67,7 @@ func (arb *AstArbitrator) GetFuncParametersMeta(
 }
 
 func (arb *AstArbitrator) GetFuncRetValMeta(
-	typeVisitor TypeVisitor,
+	fieldVisitor FieldVisitor,
 	pkg *packages.Package,
 	file *ast.File,
 	funcDecl *ast.FuncDecl,
@@ -80,7 +80,7 @@ func (arb *AstArbitrator) GetFuncRetValMeta(
 	}
 
 	for index, field := range funcDecl.Type.Results.List {
-		fields, err := typeVisitor.VisitField(pkg, file, field)
+		fields, err := fieldVisitor.VisitField(pkg, file, field, common.SymKindReturnType)
 		if err != nil {
 			return nil, err
 		}
@@ -108,7 +108,7 @@ func (arb *AstArbitrator) GetFuncRetValMeta(
 				SymNodeMeta: metadata.SymNodeMeta{
 					Name:        retValField.Name,
 					Node:        retValField.Node,
-					SymbolKind:  common.SymKindParameter,
+					SymbolKind:  common.SymKindReturnType,
 					PkgPath:     retValField.PkgPath,
 					Annotations: funcAnnotations,
 					FVersion:    retValField.FVersion,

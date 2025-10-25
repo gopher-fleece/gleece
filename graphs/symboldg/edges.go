@@ -12,9 +12,10 @@ const (
 	EdgeKindEmbed    SymbolEdgeKind = "embed" // Struct → embedded type (anonymous field)
 
 	// Type and usage relationships
-	EdgeKindReference SymbolEdgeKind = "ref"   // General type reference (param → type)
-	EdgeKindType      SymbolEdgeKind = "ty"    // Specific "has type" relationship
-	EdgeKindAlias     SymbolEdgeKind = "alias" // Symbol → aliased symbol
+	EdgeKindReference     SymbolEdgeKind = "ref"     // General type reference (param → type)
+	EdgeKindType          SymbolEdgeKind = "ty"      // Specific "has type" relationship
+	EdgeKindTypeParameter SymbolEdgeKind = "typaram" // An instantiation type parameter like 'string' and int in 'map[string]int'
+	EdgeKindAlias         SymbolEdgeKind = "alias"   // Symbol → aliased symbol
 
 	// Code behavior
 	EdgeKindCall SymbolEdgeKind = "call" // Func → called func

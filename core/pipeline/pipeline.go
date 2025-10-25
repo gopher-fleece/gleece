@@ -8,6 +8,7 @@ import (
 
 	MapSet "github.com/deckarep/golang-set/v2"
 	"github.com/gopher-fleece/gleece/common"
+	"github.com/gopher-fleece/gleece/common/linq"
 	"github.com/gopher-fleece/gleece/core/arbitrators/caching"
 	"github.com/gopher-fleece/gleece/core/metadata"
 	"github.com/gopher-fleece/gleece/core/validators"
@@ -32,8 +33,8 @@ type GleecePipeline struct {
 	arbitrationProvider providers.ArbitrationProvider
 	syncedProvider      providers.SyncedProvider
 
-	symGraph    symboldg.SymbolGraphBuilder
-	rootVisitor *visitors.ControllerVisitor
+	symGraph            symboldg.SymbolGraphBuilder
+	visitorOrchestrator *visitors.VisitorOrchestrator
 }
 
 func NewGleecePipeline(gleeceConfig *definitions.GleeceConfig) (GleecePipeline, error) {
@@ -51,24 +52,28 @@ func NewGleecePipeline(gleeceConfig *definitions.GleeceConfig) (GleecePipeline, 
 
 	metaCache := caching.NewMetadataCache()
 	symGraph := symboldg.NewSymbolGraph()
+	syncedProvider := providers.NewSyncedProvider()
 
-	visitor, err := visitors.NewControllerVisitor(&visitors.VisitContext{
+	visitCtx := &visitors.VisitContext{
 		GleeceConfig:        gleeceConfig,
 		ArbitrationProvider: arbProvider,
 		MetadataCache:       metaCache,
 		GraphBuilder:        &symGraph,
-	})
+		SyncedProvider:      &syncedProvider,
+	}
+
+	visitorOrchestrator, err := visitors.NewVisitorOrchestrator(visitCtx)
 	if err != nil {
-		return GleecePipeline{}, err
+		return GleecePipeline{}, fmt.Errorf("the GleecePipeline could not construct an instance of VisitorOrchestrator - %v", err)
 	}
 
 	return GleecePipeline{
-		rootVisitor:         visitor,
+		visitorOrchestrator: visitorOrchestrator,
 		symGraph:            &symGraph,
 		gleeceConfig:        gleeceConfig,
 		metadataCache:       metaCache,
 		arbitrationProvider: *arbProvider,
-		syncedProvider:      providers.NewSyncedProvider(),
+		syncedProvider:      syncedProvider,
 	}, nil
 }
 
@@ -106,13 +111,17 @@ func (p *GleecePipeline) Run() (GleeceFlattenedMetadata, error) {
 }
 
 func (p *GleecePipeline) GenerateGraph() error {
-	for _, file := range p.rootVisitor.GetAllSourceFiles() {
-		ast.Walk(p.rootVisitor, file)
+	for _, file := range p.arbitrationProvider.GetAllSourceFiles() {
+		ast.Walk(p.visitorOrchestrator, file)
 	}
 
-	lastErr := p.rootVisitor.GetLastError()
+	lastErr := p.visitorOrchestrator.GetLastError()
 	if lastErr != nil {
-		logger.Error("Visitor encountered at-least one error. Last error:\n%v\n\t%s", lastErr, p.rootVisitor.GetFormattedDiagnosticStack())
+		logger.Error(
+			"Visitor encountered at-least one error. Last error:\n%v\n\t%s",
+			lastErr,
+			p.visitorOrchestrator.GetFormattedDiagnosticStack(),
+		)
 		return lastErr
 	}
 
@@ -141,7 +150,7 @@ func (p *GleecePipeline) GenerateIntermediate() (GleeceFlattenedMetadata, error)
 }
 
 func (p *GleecePipeline) getReducedControllers() ([]definitions.ControllerMetadata, error) {
-	controllers, err := p.reduceControllers(p.rootVisitor.GetControllers())
+	controllers, err := p.reduceControllers(p.getControllers())
 	if err != nil {
 		logger.Error("Failed to reduce controller tree to flat form: %w", err)
 		return []definitions.ControllerMetadata{}, err
@@ -220,7 +229,7 @@ func (p *GleecePipeline) appendRouteImports(imports map[string]MapSet.Set[string
 func (p *GleecePipeline) Validate() ([]diagnostics.EntityDiagnostic, error) {
 	allDiags := []diagnostics.EntityDiagnostic{}
 
-	for _, ctrl := range p.rootVisitor.GetControllers() {
+	for _, ctrl := range p.getControllers() {
 		validator := validators.NewControllerValidator(p.gleeceConfig, p.arbitrationProvider.Pkg(), &ctrl)
 		ctrlDiag, err := validator.Validate()
 		if err != nil {
@@ -233,6 +242,13 @@ func (p *GleecePipeline) Validate() ([]diagnostics.EntityDiagnostic, error) {
 	}
 
 	return allDiags, nil
+}
+
+func (p *GleecePipeline) getControllers() []metadata.ControllerMeta {
+	controllerNodes := p.symGraph.FindByKind(common.SymKindController)
+	return linq.Map(controllerNodes, func(node *symboldg.SymbolNode) metadata.ControllerMeta {
+		return node.Data.(metadata.ControllerMeta)
+	})
 }
 
 func (p *GleecePipeline) reduceControllers(controllers []metadata.ControllerMeta) ([]definitions.ControllerMetadata, error) {

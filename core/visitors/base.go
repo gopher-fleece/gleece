@@ -8,8 +8,10 @@ import (
 	"strings"
 
 	"github.com/gopher-fleece/gleece/common"
+	"github.com/gopher-fleece/gleece/core/annotations"
 	"github.com/gopher-fleece/gleece/core/arbitrators/caching"
 	"github.com/gopher-fleece/gleece/core/visitors/providers"
+	"github.com/gopher-fleece/gleece/gast"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
 )
 
@@ -189,6 +191,31 @@ func (v *BaseVisitor) GetAllSourceFiles() []*ast.File {
 func (v *BaseVisitor) setLastError(err error) {
 	v.lastError = err
 	v.stackFrozen = true
+}
+
+func (v *BaseVisitor) getAnnotations(
+	onNodeDoc *ast.CommentGroup,
+	nodeGenDecl *ast.GenDecl,
+) (*annotations.AnnotationHolder, error) {
+	v.enter("Obtaining annotations for comment group")
+	defer v.exit()
+
+	var commentSource *ast.CommentGroup
+	if onNodeDoc != nil {
+		commentSource = onNodeDoc
+	} else {
+		if nodeGenDecl != nil {
+			commentSource = nodeGenDecl.Doc
+		}
+	}
+
+	if commentSource != nil {
+		comments := gast.MapDocListToCommentBlock(commentSource.List, v.context.ArbitrationProvider.Pkg().FSet())
+		holder, err := annotations.NewAnnotationHolder(comments, annotations.CommentSourceController)
+		return &holder, err
+	}
+
+	return nil, nil
 }
 
 func contextInitGuard(context *VisitContext) error {

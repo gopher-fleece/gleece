@@ -28,7 +28,8 @@ func (f FieldMeta) Reduce(_ ReductionContext) (definitions.FieldMetadata, error)
 		tag = strings.Trim(fieldNode.Tag.Value, "`")
 	}
 
-	decoratedType := f.Type.GetArrayLayersString() + f.Type.Name
+	// TMP
+	decoratedType := "" // f.Type.GetArrayLayersString() + f.Type.Name
 	return definitions.FieldMetadata{
 		Name:        f.Name,
 		Type:        decoratedType,

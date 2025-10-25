@@ -14,14 +14,17 @@ func (v FuncReturnValue) Reduce(ctx ReductionContext) (definitions.FuncReturnVal
 		return definitions.FuncReturnValue{}, err
 	}
 
-	typeRef, err := v.Type.GetBaseTypeRefKey()
-	if err != nil {
-		return definitions.FuncReturnValue{}, err
-	}
+	/*
+		TMP
+		typeRef, err := v.Type.GetBaseTypeRefKey()
+		if err != nil {
+			return definitions.FuncReturnValue{}, err
+		}
+	*/
 
 	return definitions.FuncReturnValue{
-		Ordinal:            v.Ordinal,
-		UniqueImportSerial: ctx.SyncedProvider.GetIdForKey(typeRef),
-		TypeMetadata:       typeMeta,
+		Ordinal: v.Ordinal,
+		// UniqueImportSerial: ctx.SyncedProvider.GetIdForKey(typeRef),
+		TypeMetadata: typeMeta,
 	}, nil
 }

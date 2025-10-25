@@ -51,22 +51,36 @@ func (db *DotBuilder) AddNode(key graphs.SymbolKey, kind common.SymKind, label s
 	}
 	db.sb.WriteString(fmt.Sprintf(
 		"  %s [label=\"%s (%s)\", shape=%s, style=filled, fillcolor=\"%s\", fontcolor=\"%s\"];\n",
-		id, label, kind, style.Shape, style.Color, style.FontColor))
+		id,
+		label,
+		kind,
+		style.Shape,
+		style.Color,
+		style.FontColor,
+	))
 }
 
-func (db *DotBuilder) AddEdge(from, to graphs.SymbolKey, kind string) {
-	fromID := db.getId(from)
+func (db *DotBuilder) AddEdge(
+	from, to graphs.SymbolKey,
+	kind string,
+	suffix *string,
+) {
+	fromId := db.getId(from)
 
-	toID, ok := db.idMap[to]
+	toId, ok := db.idMap[to]
 	if !ok {
 		db.addErrorNodeOnce()
-		toID = errorNodeId
+		toId = errorNodeId
 		kind = "error"
 	}
 
 	label := db.theme.EdgeLabels[kind]
 	if label == "" {
 		label = kind
+	}
+
+	if suffix != nil {
+		label = label + *suffix
 	}
 
 	style, ok := db.theme.EdgeStyles[kind]
@@ -85,7 +99,13 @@ func (db *DotBuilder) AddEdge(from, to graphs.SymbolKey, kind string) {
 
 	db.sb.WriteString(fmt.Sprintf(
 		"  %s -> %s [label=\"%s\", color=\"%s\", style=\"%s\", arrowhead=\"%s\"];\n",
-		fromID, toID, label, style.EdgeColor, style.EdgeStyle, style.ArrowHead))
+		fromId,
+		toId,
+		label,
+		style.EdgeColor,
+		style.EdgeStyle,
+		style.ArrowHead,
+	))
 }
 
 func (db *DotBuilder) RenderLegend() {

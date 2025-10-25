@@ -9,6 +9,7 @@ const (
 	SymKindController     SymKind = "Controller"
 	SymKindInterface      SymKind = "Interface"
 	SymKindAlias          SymKind = "Alias"
+	SymKindComposite      SymKind = "Composite"
 	SymKindEnum           SymKind = "Enum"
 	SymKindEnumValue      SymKind = "EnumValue"
 	SymKindFunction       SymKind = "Function"

@@ -44,7 +44,7 @@ type RouteVisitor struct {
 
 	parent RouteParentContext
 
-	typeVisitor *RecursiveTypeVisitor
+	fieldVisitor *FieldVisitor
 }
 
 func NewRouteVisitor(
@@ -58,13 +58,11 @@ func NewRouteVisitor(
 		return &visitor, err
 	}
 
-	typeVisitor, err := NewRecursiveTypeVisitor(visitor.context)
-	if err != nil {
-		return &visitor, err
-	}
-
-	visitor.typeVisitor = typeVisitor
 	return &visitor, err
+}
+
+func (v *RouteVisitor) setFieldVisitor(visitor *FieldVisitor) {
+	v.fieldVisitor = visitor
 }
 
 // visitMethod Visits a controller route given as a FuncDecl and returns its metadata and whether it is an API endpoint
@@ -225,7 +223,7 @@ func (v *RouteVisitor) getFuncParams(ctx executionContext) ([]metadata.FuncParam
 	defer v.exit()
 
 	paramTypes, err := v.context.ArbitrationProvider.Ast().GetFuncParametersMeta(
-		v.typeVisitor,
+		v.fieldVisitor,
 		ctx.CurrentPkg,
 		ctx.SourceFile,
 		ctx.FuncDecl,
@@ -240,7 +238,7 @@ func (v *RouteVisitor) getFuncRetVals(ctx executionContext) ([]metadata.FuncRetu
 	defer v.exit()
 
 	retVals, err := v.context.ArbitrationProvider.Ast().GetFuncRetValMeta(
-		v.typeVisitor,
+		v.fieldVisitor,
 		ctx.CurrentPkg,
 		ctx.SourceFile,
 		ctx.FuncDecl,

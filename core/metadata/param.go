@@ -37,10 +37,13 @@ func (v FuncParam) Reduce(ctx ReductionContext) (definitions.FuncParam, error) {
 		}
 	}
 
+	/*
+	TMP
 	typeRef, err := v.Type.GetBaseTypeRefKey()
 	if err != nil {
 		return definitions.FuncParam{}, err
 	}
+	*/
 
 	// Find the parameter's attribute in the receiver's annotations
 	var paramDescription string
@@ -60,7 +63,7 @@ func (v FuncParam) Reduce(ctx ReductionContext) (definitions.FuncParam, error) {
 		PassedIn:           passedIn,
 		NameInSchema:       nameInSchema,
 		Description:        paramDescription,
-		UniqueImportSerial: ctx.SyncedProvider.GetIdForKey(typeRef),
+		// UniqueImportSerial: ctx.SyncedProvider.GetIdForKey(typeRef),
 		Validator:          validator,
 		Deprecation:        GetDeprecationOpts(v.Annotations),
 	}, nil
