@@ -124,50 +124,53 @@ func (arb *AstArbitrator) GetFuncRetValMeta(
 	return params, nil
 }
 
+// GetImportType returns the import classification for an expression.
+// Policy summary:
+//   - For Base[T] and Base[T1,...] -> return import type of Base.
+//   - For pointer/slice/array/paren/chan -> return import type of the element/base.
+//   - For map[K]V -> ImportTypeNone (K and V may differ).
+//   - For selector -> ImportTypeAlias.
+//   - For ident -> dot-import detection or ImportTypeNone.
+//   - For func / struct (and other multi-origin/no-single-base) -> ImportTypeNone.
 func (arb *AstArbitrator) GetImportType(file *ast.File, expr ast.Expr) (common.ImportType, error) {
 	switch e := expr.(type) {
-
 	case *ast.Ident:
-		// Check for universe type first
 		if gast.IsUniverseType(e.Name) {
 			return common.ImportTypeNone, nil
 		}
-
-		// Try to detect dot-import
-		relevantPkg, err := arb.GetPackageFromDotImportedIdent(file, e)
+		pkg, err := arb.GetPackageFromDotImportedIdent(file, e)
 		if err != nil {
 			return common.ImportTypeNone, err
 		}
-		if relevantPkg != nil {
+		if pkg != nil {
 			return common.ImportTypeDot, nil
 		}
-
-		// If not dot, and not selector, assume it's local
 		return common.ImportTypeNone, nil
 
 	case *ast.SelectorExpr:
-		// If it's a selector, assume it's an aliased import (either default or custom alias)
 		return common.ImportTypeAlias, nil
 
+	// single-operand composites: defer to operand's import type
 	case *ast.StarExpr:
-		// Dereference and recurse
 		return arb.GetImportType(file, e.X)
-
+	case *ast.ParenExpr:
+		return arb.GetImportType(file, e.X)
 	case *ast.ArrayType:
 		return arb.GetImportType(file, e.Elt)
-
-	case *ast.MapType:
-		// IMPORTANT NOTE: Maps CAN have two separate import types! (Key & Value)
-		// Currently, we're making a pretty ugly assumption that the key is a universe type and not an imported one!
-		//
-		// Return the import type of the value type
-		return arb.GetImportType(file, e.Value)
-
+	case *ast.IndexExpr:
+		// Base[Index] -> base determines import
+		return arb.GetImportType(file, e.X)
+	case *ast.IndexListExpr:
+		return arb.GetImportType(file, e.X)
 	case *ast.ChanType:
 		return arb.GetImportType(file, e.Value)
 
+	// Maps, funcs and structs are always 'not imported' - map is a universe type and Func/StructTypes are local declarations
+	case *ast.MapType, *ast.FuncType, *ast.StructType:
+		return common.ImportTypeNone, nil
+
 	default:
-		return common.ImportTypeNone, fmt.Errorf("unsupported expression type: %T", expr)
+		return common.ImportTypeNone, fmt.Errorf("unsupported expression type for import detection: %T", expr)
 	}
 }
 

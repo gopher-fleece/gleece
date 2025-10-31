@@ -72,6 +72,7 @@ type CompositeMeta struct {
 // CreateCompositeNode is the request used to add a canonical composite node.
 type CreateCompositeNode struct {
 	Key       graphs.SymbolKey
+	Base      graphs.SymbolKey // optional: declared base for instantiations (empty == none)
 	Canonical string
 	Operands  []graphs.SymbolKey
 }

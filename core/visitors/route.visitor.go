@@ -172,8 +172,8 @@ func (v *RouteVisitor) constructRouteMetadata(ctx executionContext) (*metadata.R
 			PkgPath:     ctx.CurrentPkg.PkgPath,
 			Annotations: ctx.Annotations,
 			FVersion:    ctx.FVersion,
-			Range:       common.ResolveNodeRange(ctx.CurrentPkg.Fset, ctx.FuncDecl),
 			// Range here encapsulates the entire function, from "func" to closing brace
+			Range: common.ResolveNodeRange(ctx.CurrentPkg.Fset, ctx.FuncDecl),
 		},
 		Params:  params,
 		RetVals: retVals,

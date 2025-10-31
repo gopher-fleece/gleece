@@ -71,49 +71,34 @@ func (sk SymbolKey) ShortLabel() string {
 		return attach(sk.Name)
 	}
 
-	// composite nodes have special pretty rendering
-	if strings.HasPrefix(sk.Name, "comp:") {
+	// type param like "typeparam:TA#0"
+	if isTypeParamName(sk.Name) {
+		return attach(formatTypeParam(sk.Name))
+	}
+
+	// instantiated named type like "inst:Foo@...[...]"
+	if isInstName(sk.Name) {
+		return attach(instLabelFromName(sk.Name))
+	}
+
+	// composite nodes (slice/map/ptr/func/array)
+	if isCompositeName(sk.Name) {
 		return attach(compositeLabelFromName(sk.Name))
 	}
 
-	// default: name + file info
+	// default: show the raw name (trim to left of '@' to keep short)
 	if sk.Name != "" {
-		return attach(sk.Name)
+		return attach(trimAt(sk.Name))
 	}
 
-	// fallback to file info only
+	// fallback: file info only
 	if fileBase != "" {
 		if shortHash != "" {
 			return fmt.Sprintf("%s|%s", fileBase, shortHash)
 		}
 		return fileBase
 	}
-
 	return "?"
-}
-
-// ---------------------- small helpers ----------------------
-
-// extractFileInfo extracts file basename and short hash from FileId or FilePath.
-// FileId expected format: "path|mod|hash". Returns possibly-empty strings.
-func extractFileInfo(sk SymbolKey) (fileBase, shortHash string) {
-	if sk.FileId != "" {
-		parts := strings.Split(sk.FileId, "|")
-		if len(parts) >= 1 {
-			fileBase = filepath.Base(parts[0])
-		}
-		if len(parts) >= 3 {
-			shortHash = parts[2]
-			if len(shortHash) > 7 {
-				shortHash = shortHash[:7]
-			}
-		}
-		return fileBase, shortHash
-	}
-	if sk.FilePath != "" {
-		return filepath.Base(sk.FilePath), ""
-	}
-	return "", ""
 }
 
 func (sk SymbolKey) PrettyPrint() string {
@@ -226,10 +211,10 @@ const (
 // The returned key uses the base's FileId so instantiated keys for the same base
 // are dedupable and stable across usage sites.
 func NewInstSymbolKey(base SymbolKey, argKeys []SymbolKey) SymbolKey {
-	argIds := make([]string, 0, len(argKeys))
-	for i := range argKeys {
-		argIds[i] = argKeys[i].Id()
-	}
+	argIds := linq.Map(argKeys, func(key SymbolKey) string {
+		return key.Id()
+	})
+
 	// Build canonical name using base.Id() and arg ids.
 	name := "inst:" + base.Id() + "[" + strings.Join(argIds, ",") + "]"
 
@@ -280,8 +265,96 @@ func NewParamSymbolKey(fileVersion *gast.FileVersion, paramName string, index in
 	}
 }
 
-// compositeLabelFromName pretty-prints composite symbol names produced by your canonicalizer.
-// Expected input examples:
+// ----------------- small helpers -----------------
+
+// extractFileInfo returns the file base and a short hash part from FileId (if present).
+func extractFileInfo(sk SymbolKey) (fileBase, shortHash string) {
+	if sk.FileId == "" {
+		return "", ""
+	}
+	parts := strings.Split(sk.FileId, "|")
+	if len(parts) > 0 {
+		fileBase = filepath.Base(parts[0])
+	}
+	if len(parts) > 2 && parts[2] != "" {
+		shortHash = parts[2]
+		if len(shortHash) > 7 {
+			shortHash = shortHash[:7]
+		}
+	}
+	return fileBase, shortHash
+}
+
+func isCompositeName(n string) bool {
+	return strings.HasPrefix(n, "comp:")
+}
+
+func isInstName(n string) bool {
+	return strings.HasPrefix(n, "inst:")
+}
+
+func isTypeParamName(n string) bool {
+	return strings.HasPrefix(n, "typeparam:") || strings.HasPrefix(n, "typeparam:")
+}
+
+func trimAt(s string) string {
+	if at := strings.Index(s, "@"); at >= 0 {
+		return s[:at]
+	}
+	return s
+}
+
+// formatTypeParam converts "typeparam:TA#0" -> "TA#0"
+func formatTypeParam(n string) string {
+	// accept either exact prefix or slight variants
+	n = strings.TrimPrefix(n, "typeparam:")
+	n = strings.TrimPrefix(n, "typeparam:")
+	return trimAt(n)
+}
+
+// ----------------- instantiated name pretty-print -----------------
+
+// instLabelFromName handles strings like:
+//
+//	"inst:MultiGenericStruct@...|... [UniverseType:string,UniverseType:int]"
+//
+// and returns "MultiGenericStruct[string,int]".
+func instLabelFromName(inst string) string {
+	// remove prefix
+	body := strings.TrimPrefix(inst, "inst:")
+
+	// find args portion (inside square brackets)
+	brStart := strings.Index(body, "[")
+	brEnd := strings.LastIndex(body, "]")
+	basePart := body
+	argsPart := ""
+	if brStart >= 0 && brEnd > brStart {
+		basePart = strings.TrimSpace(body[:brStart])
+		argsPart = strings.TrimSpace(body[brStart+1 : brEnd])
+	}
+
+	base := trimAt(basePart) // leftmost token before '@'
+
+	// parse args (comma separated); remove common prefixes like "UniverseType:"
+	argParts := splitArgs(argsPart, 0)
+	for i := range argParts {
+		// remove known prefixes and trim at '@'
+		arg := strings.TrimPrefix(argParts[i], "UniverseType:")
+		arg = strings.TrimSpace(arg)
+		arg = trimAt(arg)
+		argParts[i] = arg
+	}
+
+	if len(argParts) == 0 || (len(argParts) == 1 && argParts[0] == "") {
+		return base
+	}
+	return fmt.Sprintf("%s[%s]", base, strings.Join(argParts, ","))
+}
+
+// ----------------- composite pretty-print -----------------
+
+// compositeLabelFromName pretty-prints composite symbol names produced by canonicalizer.
+// Input examples:
 //
 //	"comp:slice[SimpleStruct@...]" -> "[]SimpleStruct"
 //	"comp:map[Key@... , Val@...]" -> "map[Key]Val"
@@ -290,37 +363,34 @@ func compositeLabelFromName(comp string) string {
 	kind, args := parseCompositeName(inner)
 
 	trim := func(s string) string {
-		// keep the leftmost token up to '@' if present
-		if at := strings.Index(s, "@"); at >= 0 {
-			return s[:at]
-		}
-		return s
+		// strip "UniverseType:" and anything after '@'
+		s = strings.TrimPrefix(s, "UniverseType:")
+		return trimAt(strings.TrimSpace(s))
 	}
 
 	switch kind {
 	case "slice":
 		return "[]" + trim(args)
 	case "array":
-		// args might encode length or inner type; show compactly
+		// args may encode length or inner type; show compactly
 		return "[" + trim(args) + "]"
 	case "ptr":
 		return "*" + trim(args)
 	case "map":
-		// args expected "Key,Val" (or "Key@... , Val@...") -> compact "map[Key]Val"
+		// args expected "Key,Val"
 		parts := splitArgs(args, 2)
 		if len(parts) == 2 {
 			return fmt.Sprintf("map[%s]%s", trim(parts[0]), trim(parts[1]))
 		}
 		return "map[" + trim(args) + "]"
 	case "func":
-		// show compact func signature (not fully pretty for complex cases)
 		parts := splitArgs(args, 2)
 		if len(parts) == 2 {
 			return fmt.Sprintf("func(%s)(%s)", trim(parts[0]), trim(parts[1]))
 		}
 		return "func(" + trim(args) + ")"
 	default:
-		// unknown composite kind: return short inner
+		// unknown composite kind: return compact inner
 		return trim(args)
 	}
 }
@@ -333,16 +403,23 @@ func parseCompositeName(name string) (kind string, args string) {
 	}
 	kind = name[:br]
 	args = name[br+1:]
-	args = strings.ReplaceAll(args, "UniverseType:", "")
 	args = strings.TrimSuffix(args, "]")
 	return kind, args
 }
 
-// splitArgs splits a comma-separated argument list but only up to n parts.
-// It is permissive about spaces.
+// splitArgs splits a comma-separated argument list but optionally up to n parts.
+// n == 0 -> unlimited.
 func splitArgs(s string, n int) []string {
+	s = strings.TrimSpace(s)
 	if s == "" {
 		return nil
+	}
+	if n <= 0 {
+		parts := strings.Split(s, ",")
+		for i := range parts {
+			parts[i] = strings.TrimSpace(parts[i])
+		}
+		return parts
 	}
 	parts := strings.SplitN(s, ",", n)
 	for i := range parts {

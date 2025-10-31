@@ -15,6 +15,7 @@ const (
 	EdgeKindReference     SymbolEdgeKind = "ref"     // General type reference (param → type)
 	EdgeKindType          SymbolEdgeKind = "ty"      // Specific "has type" relationship
 	EdgeKindTypeParameter SymbolEdgeKind = "typaram" // An instantiation type parameter like 'string' and int in 'map[string]int'
+	EdgeKindInstantiates  SymbolEdgeKind = "inst"    // A generic type instantiation like "SomeStruct[string]"
 	EdgeKindAlias         SymbolEdgeKind = "alias"   // Symbol → aliased symbol
 
 	// Code behavior

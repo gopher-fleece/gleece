@@ -10,6 +10,7 @@ const (
 	SymKindInterface      SymKind = "Interface"
 	SymKindAlias          SymKind = "Alias"
 	SymKindComposite      SymKind = "Composite"
+	SymKindTypeParam      SymKind = "TypeParam"
 	SymKindEnum           SymKind = "Enum"
 	SymKindEnumValue      SymKind = "EnumValue"
 	SymKindFunction       SymKind = "Function"

@@ -188,14 +188,13 @@ func (v *TypeUsageVisitor) resolveGenericNamedType(
 	expr ast.Expr,
 	root metadata.TypeRef,
 ) (*topLevelMeta, common.ImportType, error) {
-	usageName := canonicalNameForUsage(root)
-
 	resolution, ok, resolveErr := gast.ResolveNamedType(
 		pkg,
 		file,
 		expr,
 		v.context.ArbitrationProvider.Pkg().GetPackage,
 	)
+
 	if resolveErr != nil {
 		return nil, common.ImportTypeNone, v.getFrozenError(
 			"ResolveNamedType error for instantiated base %T: %v", expr, resolveErr,
@@ -205,7 +204,9 @@ func (v *TypeUsageVisitor) resolveGenericNamedType(
 	// If resolver says it could not find a named base -> strict error.
 	if !ok {
 		return nil, common.ImportTypeNone, v.getFrozenError(
-			"could not resolve base identifier for instantiated type '%s' (%T)", usageName, expr,
+			"could not resolve base identifier for instantiated type '%s' (%T)",
+			canonicalNameForUsage(root),
+			expr,
 		)
 	}
 
@@ -227,13 +228,65 @@ func (v *TypeUsageVisitor) resolveGenericNamedType(
 		return usageMeta, common.ImportTypeNone, err
 	}
 
-	// Base resolved to declared type -> attach declaring package & FileVersion and materialize
-	if !resolution.IsUniverse {
-		// ... (unchanged rest of function)
-		// note: when returning a top for declared base we use the derived meta (already contains fileVersion)
+	return v.resolveNonUniverseGenericNamed(pkg, file, expr, root, resolution)
+}
+
+func (v *TypeUsageVisitor) resolveNonUniverseGenericNamed(
+	pkg *packages.Package,
+	file *ast.File,
+	expr ast.Expr,
+	root metadata.TypeRef,
+	resolution gast.TypeSpecResolution,
+) (*topLevelMeta, common.ImportType, error) {
+	usageName := canonicalNameForUsage(root)
+
+	if resolution.DeclaringPackage == nil || resolution.DeclaringAstFile == nil || resolution.TypeSpec == nil {
+		return nil, common.ImportTypeNone, v.getFrozenError(
+			"incomplete resolution for declared instantiated base %s (canonical name %s)",
+			resolution.TypeName,
+			usageName,
+		)
 	}
-	// unreachable, but keep compiler happy
-	return nil, common.ImportTypeNone, v.getFrozenError("unhandled resolveGenericNamedType case for %T", expr)
+
+	// Get the declaring file version (strict)
+	fv, fvErr := v.context.MetadataCache.GetFileVersion(
+		resolution.DeclaringAstFile,
+		resolution.DeclaringPackage.Fset,
+	)
+
+	if fvErr != nil {
+		return nil, common.ImportTypeNone, fvErr
+	}
+
+	if fv == nil {
+		return nil, common.ImportTypeNone, v.getFrozenError(
+			"file version missing for declaring file of instantiated base %s",
+			usageName,
+		)
+	}
+
+	// Ensure the declared type has been materialized (decl visitor will parse and insert the decl).
+	if err := v.ensureDeclMaterialized(resolution, fv); err != nil {
+		return nil, common.ImportTypeNone, err
+	}
+
+	// Build usage-centric top-level meta for the instantiated usage.
+	top := &topLevelMeta{
+		SymName:     usageName,
+		PackagePath: resolution.DeclaringPackage.PkgPath,     // origin package of the base
+		NodeRange:   common.ResolveNodeRange(pkg.Fset, expr), // usage range (not decl range)
+		Annotations: nil,                                     // keep annotations exclusive to decl visitor
+		FileVersion: fv,                                      // declaring file version (useful for canonicalization)
+		SymbolKind:  chooseSymKind(resolution, pkg),          // conservative choice based on declaration
+	}
+
+	// Resolve whether the usage imports from another package (import type)
+	it, itErr := v.context.ArbitrationProvider.Ast().GetImportType(file, expr)
+	if itErr != nil {
+		return nil, common.ImportTypeNone, itErr
+	}
+
+	return top, it, nil
 }
 
 func (v *TypeUsageVisitor) resolveCompositeType(
