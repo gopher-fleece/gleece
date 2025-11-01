@@ -382,6 +382,14 @@ func GetIdentNameFromExpr(expr ast.Expr) *string {
 	return nil
 }
 
+func GetIdentNameOrFallback(ident *ast.Ident, fallback string) string {
+	if ident != nil {
+		return ident.Name
+	}
+
+	return fallback
+}
+
 type TypeSpecResolution struct {
 	IsUniverse       bool
 	TypeName         string

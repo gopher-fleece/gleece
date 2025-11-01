@@ -133,6 +133,10 @@ func (sk SymbolKey) Equals(other SymbolKey) bool {
 	return sk.Name == other.Name && sk.Position == other.Position && sk.FileId == other.FileId
 }
 
+func (sk SymbolKey) Empty() bool {
+	return sk == SymbolKey{}
+}
+
 func NewSymbolKey(node ast.Node, version *gast.FileVersion) SymbolKey {
 	if node == nil || version == nil {
 		return SymbolKey{}
@@ -294,7 +298,7 @@ func isInstName(n string) bool {
 }
 
 func isTypeParamName(n string) bool {
-	return strings.HasPrefix(n, "typeparam:") || strings.HasPrefix(n, "typeparam:")
+	return strings.HasPrefix(n, "typeparam:")
 }
 
 func trimAt(s string) string {

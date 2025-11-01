@@ -16,6 +16,16 @@ type NamedTypeRef struct {
 	TypeArgs []metadata.TypeRef
 }
 
+// NewNamedTypeRef creates a new named type reference.
+// Serves mostly as a single point of reference for easier code lookups
+func NewNamedTypeRef(key *graphs.SymbolKey, typeArgs []metadata.TypeRef) NamedTypeRef {
+	ref := NamedTypeRef{TypeArgs: typeArgs}
+	if key != nil {
+		ref.Key = *key
+	}
+	return ref
+}
+
 func (n *NamedTypeRef) Kind() metadata.TypeRefKind { return metadata.TypeRefKindNamed }
 
 func (n *NamedTypeRef) CanonicalString() string {
@@ -32,7 +42,7 @@ func (n *NamedTypeRef) CanonicalString() string {
 
 func (n *NamedTypeRef) ToSymKey(fileVersion *gast.FileVersion) (graphs.SymbolKey, error) {
 	// if Key present (declared/universe), use it
-	if !n.Key.Equals(graphs.SymbolKey{}) {
+	if !n.Key.Empty() {
 		// Instantiation case: combine base key with type args (if any).
 		if len(n.TypeArgs) == 0 {
 			return n.Key, nil

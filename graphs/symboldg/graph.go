@@ -813,9 +813,6 @@ func (g *SymbolGraph) ToDot(theme *dot.DotTheme) string {
 		}
 	}
 
-	// Add legend if theme requests it
-	builder.RenderLegend()
-
 	return builder.Finish()
 }
 
@@ -890,13 +887,16 @@ func (g *SymbolGraph) ensureTypeNode(root metadata.TypeRef, fileVersion *gast.Fi
 	// derive key for this usage
 	key, err := root.ToSymKey(fileVersion)
 	if err != nil {
-		return graphs.SymbolKey{}, fmt.Errorf("ensureTypeNode: ToSymKey failed for '%s': %w",
-			root.CanonicalString(), err)
+		return graphs.SymbolKey{}, fmt.Errorf(
+			"ensureTypeNode: ToSymKey failed for '%s': %w",
+			root.CanonicalString(),
+			err,
+		)
 	}
 
 	// 1) Universe / builtin -> ensure primitive/special node and return that key immediately.
 	if key.IsUniverse || key.IsBuiltIn {
-		if err := g.conditionalEnsureUniverseNode(key); err != nil {
+		if err := g.conditionalEnsureBuiltInNode(key); err != nil {
 			return graphs.SymbolKey{}, fmt.Errorf("ensureTypeNode: ensureUniverseNode failed '%s': %w",
 				key.Name, err)
 		}
@@ -904,16 +904,19 @@ func (g *SymbolGraph) ensureTypeNode(root metadata.TypeRef, fileVersion *gast.Fi
 	}
 
 	// 2) Named (plain) that points to a declared base: prefer the declared base node.
-	//    This prevents creating a zero-operand composite node for plain named types.
-	if named, ok := root.(*typeref.NamedTypeRef); ok && len(named.TypeArgs) == 0 && !named.Key.Equals(graphs.SymbolKey{}) {
+	//    This prevents creating a zero-operand composite node for plain namedRef types.
+	namedRef, isNamedRef := root.(*typeref.NamedTypeRef)
+
+	if isNamedRef && len(namedRef.TypeArgs) == 0 && !namedRef.Key.Empty() {
 		// If declared base exists in graph - return it (preserve declared identity).
-		if g.Exists(named.Key) {
-			return named.Key, nil
+		if g.Exists(namedRef.Key) {
+			return namedRef.Key, nil
 		}
 		// Declared base missing -> that's a policy error (we don't auto-materialize).
 		return graphs.SymbolKey{}, fmt.Errorf(
 			"ensureTypeNode: declared base not present for named type usage %s -> base %s",
-			root.CanonicalString(), named.Key.Id(),
+			root.CanonicalString(),
+			namedRef.Key.Id(),
 		)
 	}
 
@@ -1013,8 +1016,8 @@ func (g *SymbolGraph) conditionalEnsureInstantiatedBase(root metadata.TypeRef) e
 	return nil
 }
 
-// conditionalEnsureUniverseNode creates primitives/special nodes (idempotent).
-func (g *SymbolGraph) conditionalEnsureUniverseNode(key graphs.SymbolKey) error {
+// conditionalEnsureBuiltInNode creates primitives/special nodes (idempotent).
+func (g *SymbolGraph) conditionalEnsureBuiltInNode(key graphs.SymbolKey) error {
 	if prim, ok := ToPrimitiveType(key.Name); ok {
 		g.AddPrimitive(prim)
 		return nil

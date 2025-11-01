@@ -23,14 +23,24 @@ func NewVisitorOrchestrator(ctx *VisitContext) (*VisitorOrchestrator, error) {
 		return nil, err
 	}
 
+	aliasVisitor, err := NewAliasVisitor(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to construct an AliasVisitor instance - %v", err)
+	}
+
 	typeDeclVisitor, err := NewTypeDeclVisitor(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to construct a TypeDeclVisitor instance - %v", err)
 	}
 
-	typeUsageVisitor, err := NewTypeUsageVisitor(ctx)
+	typeUsageVisitor, err := NewTypeUsageVisitor(ctx, true)
 	if err != nil {
 		return nil, fmt.Errorf("failed to construct a TypeUsageVisitor instance - %v", err)
+	}
+
+	nonMaterializingTypeUsageVisitor, err := NewTypeUsageVisitor(ctx, false)
+	if err != nil {
+		return nil, fmt.Errorf("failed to construct a non-materializing TypeUsageVisitor instance - %v", err)
 	}
 
 	structVisitor, err := NewStructVisitor(ctx)
@@ -53,12 +63,16 @@ func NewVisitorOrchestrator(ctx *VisitContext) (*VisitorOrchestrator, error) {
 		return nil, fmt.Errorf("failed to construct a ControllerVisitor instance - %v", err)
 	}
 
+	// Need to re-think this whole thing. Maybe use the orchestrator itself for DI?
+
 	typeDeclVisitor.setStructVisitor(structVisitor)
 	typeDeclVisitor.setEnumVisitor(enumVisitor)
+	typeDeclVisitor.setAliasVisitor(aliasVisitor)
 
 	typeUsageVisitor.setDeclVisitor(typeDeclVisitor)
 
 	structVisitor.setTypeUsageVisitor(typeUsageVisitor)
+	structVisitor.setNonMaterializingTypeUsageVisitor(nonMaterializingTypeUsageVisitor)
 
 	fieldVisitor.setTypeUsageVisitor(typeUsageVisitor)
 

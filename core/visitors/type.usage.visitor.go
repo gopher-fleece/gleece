@@ -30,11 +30,13 @@ type topLevelMeta struct {
 type TypeUsageVisitor struct {
 	BaseVisitor
 	declVisitor *TypeDeclVisitor // optional; set via setDeclVisitor after wiring
+
+	materializing bool
 }
 
 // NewTypeUsageVisitor constructs a new TypeUsageVisitor.
-func NewTypeUsageVisitor(context *VisitContext) (*TypeUsageVisitor, error) {
-	v := &TypeUsageVisitor{}
+func NewTypeUsageVisitor(context *VisitContext, materializing bool) (*TypeUsageVisitor, error) {
+	v := &TypeUsageVisitor{materializing: materializing}
 	if err := v.initialize(context); err != nil {
 		return nil, err
 	}
@@ -108,14 +110,12 @@ func (v *TypeUsageVisitor) deriveTopMetaFromRoot(
 
 	if isNamed && named != nil {
 		// Case 1: plain named reference without type args -> resolve declaration or universe
-		if len(named.TypeArgs) == 0 {
+		if len(named.TypeArgs) <= 0 {
 			return v.resolveNamedType(pkg, file, expr)
 		}
 
 		// Case 2: instantiated named usage T[A,...] -> usage-centric canonical name, attempt to resolve base
-		if len(named.TypeArgs) > 0 {
-			return v.resolveGenericNamedType(pkg, file, expr, root)
-		}
+		return v.resolveGenericNamedType(pkg, file, expr, root)
 	}
 
 	// Case 3: composite types (maps, funcs, pointers), param types, etc. Create usage-centric meta.
@@ -362,6 +362,10 @@ func (v *TypeUsageVisitor) ensureDeclMaterialized(
 	resolution gast.TypeSpecResolution,
 	fileVersion *gast.FileVersion,
 ) error {
+	// Check if the visitor is meant to materialize nodes - this may be false for type-constraint analysis
+	if !v.materializing {
+		return nil
+	}
 
 	// No-op for universe types
 	if resolution.IsUniverse {
@@ -378,11 +382,7 @@ func (v *TypeUsageVisitor) ensureDeclMaterialized(
 	if v.context.MetadataCache.HasVisited(key) {
 		return nil
 	}
-
-	if v.declVisitor == nil {
-		return v.getFrozenError("declaration for %s not materialized and no materializer provided", resolution.TypeName)
-	}
-
+	
 	_, err := v.declVisitor.EnsureDeclMaterialized(
 		resolution.DeclaringPackage,
 		resolution.DeclaringAstFile,
@@ -394,6 +394,10 @@ func (v *TypeUsageVisitor) ensureDeclMaterialized(
 
 // ensureUniverseTypeInGraph inserts primitives/specials into the graph so later edges can reference them.
 func (v *TypeUsageVisitor) ensureUniverseTypeInGraph(typeName string) error {
+	if !v.materializing {
+		return nil
+	}
+
 	v.enterFmt("ensureUniverseTypeInGraph %s", typeName)
 	defer v.exit()
 
@@ -541,7 +545,7 @@ func (v *TypeUsageVisitor) buildIndexExprRef(
 		named.TypeArgs = append(named.TypeArgs, argRef)
 		return named, nil
 	}
-	return &typeref.NamedTypeRef{TypeArgs: []metadata.TypeRef{argRef}}, nil
+	return common.Ptr(typeref.NewNamedTypeRef(nil, []metadata.TypeRef{argRef})), nil
 }
 
 func (v *TypeUsageVisitor) buildIndexListExprRef(
@@ -566,7 +570,7 @@ func (v *TypeUsageVisitor) buildIndexListExprRef(
 		named.TypeArgs = append(named.TypeArgs, args...)
 		return named, nil
 	}
-	return &typeref.NamedTypeRef{TypeArgs: args}, nil
+	return common.Ptr(typeref.NewNamedTypeRef(nil, args)), nil
 }
 
 // buildInlineStructRef builds an InlineStructTypeRef for inline struct literals.
@@ -655,12 +659,25 @@ func (v *TypeUsageVisitor) buildIdentOrSelectorRef(
 		if err := v.ensureUniverseTypeInGraph(resolution.TypeName); err != nil {
 			return nil, err
 		}
-		return &typeref.NamedTypeRef{Key: graphs.NewUniverseSymbolKey(resolution.TypeName)}, nil
+
+		key := graphs.NewUniverseSymbolKey(resolution.TypeName)
+		return common.Ptr(typeref.NewNamedTypeRef(&key, nil)), nil
 	}
 
 	// declared -> must have contextual information
 	if resolution.TypeSpec == nil || resolution.DeclaringPackage == nil || resolution.DeclaringAstFile == nil {
 		return nil, fmt.Errorf("incomplete declaration context for type %s", resolution.TypeName)
+	}
+
+	// Handles specials like 'time.Time' or 'context.Context'
+	specialKey := v.tryGetSymKeyForSpecial(
+		resolution.DeclaringPackage,
+		resolution.TypeSpec,
+		resolution.TypeName,
+	)
+
+	if specialKey != nil {
+		return common.Ptr(typeref.NewNamedTypeRef(specialKey, nil)), nil
 	}
 
 	fileVersion, err := v.context.MetadataCache.GetFileVersion(
@@ -693,7 +710,7 @@ func (v *TypeUsageVisitor) buildIdentOrSelectorRef(
 		}
 	}
 
-	return &typeref.NamedTypeRef{Key: key}, nil
+	return common.Ptr(typeref.NewNamedTypeRef(&key, nil)), nil
 }
 
 // ------------------------- type param helpers -------------------------
@@ -804,7 +821,9 @@ func chooseSymKind(resolution gast.TypeSpecResolution, pkg *packages.Package) co
 		_ = t
 		return common.SymKindStruct
 	case *ast.InterfaceType:
-		if resolution.TypeSpec.Name != nil && resolution.TypeSpec.Name.Name == "Context" && pkg != nil && pkg.PkgPath == "context" {
+		if resolution.TypeSpec.Name != nil &&
+			resolution.TypeSpec.Name.Name == "Context" &&
+			pkg != nil && pkg.PkgPath == "context" {
 			return common.SymKindSpecialBuiltin
 		}
 		return common.SymKindInterface

@@ -90,12 +90,23 @@ func (v *EnumVisitor) extractEnumAliasType(
 	// Underlying must be a basic type (string/int/...)
 	basic, ok := typeName.Type().Underlying().(*types.Basic)
 	if !ok {
-		return metadata.EnumMeta{}, v.getFrozenError("type %s is not a basic type", typeName.Name())
+		return metadata.EnumMeta{}, NewUnexpectedEntityError(
+			common.SymKindEnum,
+			common.SymKindUnknown,
+			"type '%s' is not a basic type and therefore not an enum",
+			typeName.Name(),
+		)
 	}
 
 	kind, err := metadata.NewEnumValueKind(basic.Kind())
 	if err != nil {
-		return metadata.EnumMeta{}, err
+		return metadata.EnumMeta{}, NewUnexpectedEntityError(
+			common.SymKindEnum,
+			common.SymKindUnknown,
+			"type '%s' has an underlying basic kind '%v' that is not enum-compatible and is therefore not an enum",
+			typeName.Name(),
+			basic.Kind(),
+		)
 	}
 
 	// Annotations (from TypeSpec doc or parent GenDecl)
@@ -108,6 +119,15 @@ func (v *EnumVisitor) extractEnumAliasType(
 	enumValues, err := v.getEnumValueDefinitions(enumFVersion, enumPkg, typeName, basic)
 	if err != nil {
 		return metadata.EnumMeta{}, err
+	}
+
+	if len(enumValues) <= 0 {
+		return metadata.EnumMeta{}, NewUnexpectedEntityError(
+			common.SymKindEnum,
+			common.SymKindUnknown,
+			"type '%s' does not appear to have 'values' in the same file and is therefore not an enum",
+			typeName.Name(),
+		)
 	}
 
 	enum := metadata.EnumMeta{

@@ -41,6 +41,10 @@ func (v *TypeDeclVisitor) setEnumVisitor(visitor *EnumVisitor) {
 	v.enumVisitor = visitor
 }
 
+func (v *TypeDeclVisitor) setAliasVisitor(visitor *AliasVisitor) {
+	v.aliasVisitor = visitor
+}
+
 // VisitTypeDecl inspects the TypeSpec and routes to the appropriate decl visitor.
 // Returns the resulting symbol key for the type (graph node id) or an error.
 func (v *TypeDeclVisitor) VisitTypeDecl(
@@ -61,11 +65,7 @@ func (v *TypeDeclVisitor) VisitTypeDecl(
 
 	// Alias: `type Foo = Bar`
 	if typeSpec.Assign != 0 {
-		if v.aliasVisitor != nil {
-			return v.aliasVisitor.VisitAlias(pkg, file, genDecl, typeSpec)
-		}
-		// AliasVisitor not present: return the stable SymbolKey for this TypeSpec
-		return graphs.NewSymbolKey(typeSpec, fileVersion), nil
+		return v.visitAssignedType(pkg, file, fileVersion, genDecl, typeSpec)
 	}
 
 	// Dispatch by syntactic type
@@ -92,6 +92,36 @@ func (v *TypeDeclVisitor) VisitTypeDecl(
 		// Other types (interface, func types, maps, etc.) — don't attempt to materialize here.
 		return graphs.NewSymbolKey(typeSpec, fileVersion), nil
 	}
+}
+
+func (v *TypeDeclVisitor) visitAssignedType(
+	pkg *packages.Package,
+	file *ast.File,
+	fileVersion *gast.FileVersion,
+	genDecl *ast.GenDecl,
+	typeSpec *ast.TypeSpec,
+) (graphs.SymbolKey, error) {
+	_, enumKey, err := v.enumVisitor.VisitEnumType(pkg, file, fileVersion, genDecl, typeSpec)
+	if err == nil {
+		return enumKey, nil
+	}
+
+	if _, isUnexpectedEntity := err.(UnexpectedEntityError); isUnexpectedEntity {
+		return v.aliasVisitor.VisitAlias(pkg, file, genDecl, typeSpec)
+	}
+
+	var tsName string
+	if typeSpec.Name != nil {
+		tsName = typeSpec.Name.Name
+	} else {
+		tsName = "Unknown"
+	}
+
+	return graphs.SymbolKey{}, fmt.Errorf(
+		"enum visitor for type %s yielded an error - %v",
+		tsName,
+		err,
+	)
 }
 
 // EnsureDeclMaterialized guarantees the given TypeSpec is materialized (cached + inserted in graph).

@@ -20,6 +20,8 @@ type StructVisitor struct {
 
 	// typeUsageVisitor must be wired so the StructVisitor can parse field types.
 	typeUsageVisitor *TypeUsageVisitor
+
+	nonMaterializingTypeUsageVisitor *TypeUsageVisitor
 }
 
 // NewStructVisitor constructs a StructVisitor.
@@ -36,6 +38,10 @@ func (v *StructVisitor) setTypeUsageVisitor(visitor *TypeUsageVisitor) {
 	v.typeUsageVisitor = visitor
 }
 
+func (v *StructVisitor) setNonMaterializingTypeUsageVisitor(visitor *TypeUsageVisitor) {
+	v.nonMaterializingTypeUsageVisitor = visitor
+}
+
 // VisitStructType builds metadata.StructMeta for a declaration TypeSpec.
 // It does not mutate the graph; the caller is responsible for inserting the struct node.
 func (v *StructVisitor) VisitStructType(
@@ -44,12 +50,21 @@ func (v *StructVisitor) VisitStructType(
 	genDecl *ast.GenDecl,
 	typeSpec *ast.TypeSpec,
 ) (metadata.StructMeta, graphs.SymbolKey, error) {
+	tsName := "unknown"
+	if typeSpec != nil && typeSpec.Name != nil {
+		tsName = typeSpec.Name.Name
+	}
 
-	v.enterFmt("VisitStructType %s", typeSpec.Name.Name)
+	v.enterFmt("Visiting '%s'", tsName)
 	defer v.exit()
 
 	// First, check whether this is a 'special' and short-circuit if it is.
-	specialSymKey := getSymKeyForSpecial(file, typeSpec)
+	var specName string
+	if typeSpec != nil && typeSpec.Name != nil {
+		specName = typeSpec.Name.Name
+	}
+
+	specialSymKey := v.typeUsageVisitor.tryGetSymKeyForSpecial(pkg, typeSpec, specName)
 	if specialSymKey != nil {
 		return metadata.StructMeta{}, *specialSymKey, nil
 	}
@@ -184,6 +199,7 @@ func (v *StructVisitor) buildDeclTypeParamEnv(
 
 	env := map[string]int{}
 	decls := []metadata.TypeParamDecl{}
+
 	if params == nil {
 		return env, decls, nil
 	}
@@ -203,40 +219,25 @@ func (v *StructVisitor) buildDeclTypeParamEnv(
 
 	// Second pass: parse constraints (if any) and attach to decls
 	idx = 0
-	for _, fld := range params.List {
+	for _, field := range params.List {
 		var constraintRef metadata.TypeRef
-		if fld.Type != nil {
-			// parse constraint using same env (constraints can refer to earlier params)
-			tuMeta, err := v.typeUsageVisitor.VisitExpr(pkg, file, fld.Type, env)
+		if field.Type != nil {
+			// Parse constraint using same env (constraints can refer to earlier params)
+			// Note we're using a distinct, non-materializing usage visitor here to avoid polluting the HIR.
+			// The rationale for not having this as a mutable flag is to preserve forward compatibility with threading.
+			typeUsage, err := v.nonMaterializingTypeUsageVisitor.VisitExpr(pkg, file, field.Type, env)
 			if err != nil {
 				return nil, nil, err
 			}
-			constraintRef = tuMeta.Root
+			constraintRef = typeUsage.Root
 		}
 		// assign constraint to every name in this field (usually single)
-		for range fld.Names {
+		for range field.Names {
 			decls[idx].Constraint = constraintRef
 			idx++
 		}
 	}
 
 	return env, decls, nil
-}
 
-// getSymKeyForSpecial gets a SymbolKey for the given spec, if it's a 'special', otherwise returns nil
-func getSymKeyForSpecial(file *ast.File, spec *ast.TypeSpec) *graphs.SymbolKey {
-	if file == nil || file.Name == nil || spec == nil || spec.Name == nil {
-		// A nameless entity cannot be a 'special'
-		return nil
-	}
-
-	fName := file.Name.Name
-	specName := spec.Name.Name
-
-	if specName == "Time" && fName == "time" || specName == "Context" && fName == "context" {
-		return common.Ptr(graphs.NewNonUniverseBuiltInSymbolKey(fmt.Sprintf("%s.%s", fName, specName)))
-	}
-
-	// Not a standard special
-	return nil
 }

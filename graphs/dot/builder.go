@@ -2,8 +2,10 @@ package dot
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
+	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/graphs"
 )
@@ -19,6 +21,8 @@ type DotBuilder struct {
 	theme   DotTheme
 	idMap   map[graphs.SymbolKey]string
 	counter int
+
+	usedNodeTypes mapset.Set[common.SymKind]
 }
 
 func NewDotBuilder(theme *DotTheme) *DotBuilder {
@@ -27,14 +31,22 @@ func NewDotBuilder(theme *DotTheme) *DotBuilder {
 		themeToUse = *theme
 	}
 	db := &DotBuilder{
-		theme: themeToUse,
-		idMap: make(map[graphs.SymbolKey]string),
+		theme:         themeToUse,
+		idMap:         make(map[graphs.SymbolKey]string),
+		usedNodeTypes: mapset.NewSet[common.SymKind](),
 	}
 	db.sb.WriteString("digraph SymbolGraph {\n")
 	db.sb.WriteString(fmt.Sprintf("  rankdir=%s;\n", themeToUse.Direction))
 	return db
 }
+
+func (db *DotBuilder) LegendEnabled() bool {
+	return db.theme.LegendEnabled
+}
+
 func (db *DotBuilder) AddNode(key graphs.SymbolKey, kind common.SymKind, label string) {
+	db.usedNodeTypes.Add(kind)
+
 	id := db.getId(key)
 	style, ok := db.theme.NodeStyles[kind]
 	if !ok {
@@ -109,28 +121,42 @@ func (db *DotBuilder) AddEdge(
 }
 
 func (db *DotBuilder) RenderLegend() {
+	if db.usedNodeTypes.IsEmpty() {
+		// Empty graph - no need to render legend
+		return
+	}
+
 	db.sb.WriteString("  subgraph cluster_legend {\n")
 	db.sb.WriteString("    label = \"Legend\";\n    style = dashed;\n")
 	i := 0
 
-	for _, nodeStyle := range db.theme.NodeStylesOrdered() {
-		color := nodeStyle.Style.Color
+	usedNodeTypes := db.usedNodeTypes.ToSlice()
+	slices.Sort(usedNodeTypes)
+
+	for _, kind := range usedNodeTypes {
+		nodeStyle := db.theme.NodeStyles[kind]
+
+		color := nodeStyle.Color
 		if color == "" {
 			color = "gray90"
 		}
-		shape := nodeStyle.Style.Shape
+		shape := nodeStyle.Shape
 		if shape == "" {
 			shape = "ellipse"
 		}
 		db.sb.WriteString(fmt.Sprintf(
 			"    L%d [label=\"%s\", style=filled, shape=%s, fillcolor=\"%s\"];\n",
-			i, nodeStyle.Kind, shape, color))
+			i, kind, shape, color))
 		i++
 	}
 	db.sb.WriteString("  }\n")
 }
 
 func (db *DotBuilder) Finish() string {
+	if db.LegendEnabled() {
+		db.RenderLegend()
+	}
+
 	db.sb.WriteString("}\n")
 	return db.sb.String()
 }

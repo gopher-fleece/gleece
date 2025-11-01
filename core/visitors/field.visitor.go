@@ -94,13 +94,12 @@ func (v *FieldVisitor) buildFieldsMeta(
 	typeUsage metadata.TypeUsageMeta,
 	fileVersion *gast.FileVersion,
 ) ([]metadata.FieldMeta, error) {
+	// *ast.Field here can be a parameter, return value, a named field or an embedded field.
 	isEmbedded := kind == common.SymKindField && gast.IsEmbeddedOrAnonymousField(field)
 
-	// PROBLEM - this will make retvals behave like normal 'fields'
-	
 	out := make([]metadata.FieldMeta, 0, len(names))
 	for _, name := range names {
-		fm := metadata.FieldMeta{
+		fieldMeta := metadata.FieldMeta{
 			SymNodeMeta: metadata.SymNodeMeta{
 				Name:        name,
 				Node:        field,
@@ -116,14 +115,14 @@ func (v *FieldVisitor) buildFieldsMeta(
 
 		// Graph insertion (GraphBuilder expected to de-dupe)
 		req := symboldg.CreateFieldNode{
-			Data:        fm,
+			Data:        fieldMeta,
 			Annotations: annotationsHolder,
 		}
 		if _, err := v.context.GraphBuilder.AddField(req); err != nil {
 			return nil, v.frozenError(err)
 		}
 
-		out = append(out, fm)
+		out = append(out, fieldMeta)
 	}
 
 	return out, nil

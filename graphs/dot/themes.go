@@ -1,8 +1,6 @@
 package dot
 
 import (
-	"slices"
-
 	"github.com/gopher-fleece/gleece/common"
 )
 
@@ -31,6 +29,7 @@ type OrderedNodeStyle struct {
 }
 
 type DotTheme struct {
+	LegendEnabled  bool
 	NodeStyles     map[common.SymKind]DotStyle
 	EdgeStyles     map[string]DotStyle
 	EdgeLabels     map[string]string
@@ -38,27 +37,8 @@ type DotTheme struct {
 	Direction      RankDir
 }
 
-func (t DotTheme) NodeStylesOrdered() []OrderedNodeStyle {
-	var kinds []common.SymKind
-	for k := range t.NodeStyles {
-		kinds = append(kinds, k)
-	}
-
-	// Sort the kinds alphabetically (or by some other stable order)
-	slices.Sort(kinds)
-
-	// Build ordered slice
-	ordered := make([]OrderedNodeStyle, len(kinds))
-	for i, k := range kinds {
-		ordered[i] = OrderedNodeStyle{
-			Kind:  k,
-			Style: t.NodeStyles[k],
-		}
-	}
-	return ordered
-}
-
 var DefaultDotTheme = DotTheme{
+	LegendEnabled: true,
 	NodeStyles: map[common.SymKind]DotStyle{
 		common.SymKindStruct:         {Color: "lightblue", Shape: "box"},
 		common.SymKindField:          {Color: "gold", Shape: "ellipse"},
