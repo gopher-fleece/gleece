@@ -24,6 +24,11 @@ func (p *ParamTypeRef) CanonicalString() string {
 	return fmt.Sprintf("P{%s}", p.Name)
 }
 
+func (p *ParamTypeRef) SimpleTypeString() string {
+	// This should not actually be used - we should filter out type param nodes from the graph during reduction
+	return p.CanonicalString()
+}
+
 func (p *ParamTypeRef) ToSymKey(fileVersion *gast.FileVersion) (graphs.SymbolKey, error) {
 	if fileVersion == nil {
 		return graphs.SymbolKey{}, fmt.Errorf("fileVersion required for ParamTypeRef key")

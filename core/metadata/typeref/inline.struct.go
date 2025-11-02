@@ -22,14 +22,28 @@ type InlineStructTypeRef struct {
 func (i *InlineStructTypeRef) Kind() metadata.TypeRefKind { return metadata.TypeRefKindInlineStruct }
 
 func (i *InlineStructTypeRef) CanonicalString() string {
+	return i.stringRepresentation(true)
+}
+
+func (i *InlineStructTypeRef) SimpleTypeString() string {
+	return i.stringRepresentation(false)
+}
+
+func (i *InlineStructTypeRef) stringRepresentation(canonical bool) string {
 	// Build canonical from fields (short, deterministic).
 	parts := make([]string, 0, len(i.Fields))
 	for _, f := range i.Fields {
 		// include name if present, otherwise just type
-		if f.Name != "" {
-			parts = append(parts, fmt.Sprintf("%s:%s", f.Name, f.Type.Root.CanonicalString()))
+		var typeName string
+		if canonical {
+			typeName = f.Type.Root.CanonicalString()
 		} else {
-			parts = append(parts, f.Type.Root.CanonicalString())
+			typeName = f.Type.Root.SimpleTypeString()
+		}
+		if f.Name != "" {
+			parts = append(parts, fmt.Sprintf("%s:%s", f.Name, typeName))
+		} else {
+			parts = append(parts, typeName)
 		}
 	}
 	base := fmt.Sprintf("inline{%s}", strings.Join(parts, ","))

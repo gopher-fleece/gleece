@@ -28,11 +28,9 @@ func (f FieldMeta) Reduce(_ ReductionContext) (definitions.FieldMetadata, error)
 		tag = strings.Trim(fieldNode.Tag.Value, "`")
 	}
 
-	// TMP
-	decoratedType := "" // f.Type.GetArrayLayersString() + f.Type.Name
 	return definitions.FieldMetadata{
 		Name:        f.Name,
-		Type:        decoratedType,
+		Type:        f.Type.Root.SimpleTypeString(),
 		Description: annotations.GetDescription(f.Annotations),
 		Tag:         tag,
 		IsEmbedded:  f.IsEmbedded,

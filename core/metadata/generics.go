@@ -24,6 +24,14 @@ type TypeRef interface {
 	// Deterministic structural representation used for interning/canonicalization.
 	CanonicalString() string
 
+	// SimpleTypeString returns a simplified representation of the reference.
+	// An example could be as follows:
+	// A MapTypeRef has a string key and an imported value module.SomeStruct.
+	// Simple string will return a 'schema-compatible' type string map[string]SomeStruct
+	//
+	// This can be used to feed the spec generator as it does not require any package/language level information
+	SimpleTypeString() string
+
 	ToSymKey(fileVersion *gast.FileVersion) (graphs.SymbolKey, error)
 	Flatten() []TypeRef
 }

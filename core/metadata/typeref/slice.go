@@ -15,6 +15,11 @@ func (s *SliceTypeRef) CanonicalString() string {
 	return "[]" + s.Elem.CanonicalString()
 }
 
+
+func (s *SliceTypeRef) SimpleTypeString() string {
+	return "[]" + s.Elem.SimpleTypeString()
+}
+
 func (s *SliceTypeRef) ToSymKey(fileVersion *gast.FileVersion) (graphs.SymbolKey, error) {
 	elemKey, err := s.Elem.ToSymKey(fileVersion)
 	if err != nil {

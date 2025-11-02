@@ -23,6 +23,10 @@ func (a *ArrayTypeRef) CanonicalString() string {
 	return fmt.Sprintf("[%d]%s", *a.Len, a.Elem.CanonicalString())
 }
 
+func (a *ArrayTypeRef) SimpleTypeString() string {
+	return "[]" + a.Elem.SimpleTypeString()
+}
+
 func (a *ArrayTypeRef) ToSymKey(fileVersion *gast.FileVersion) (graphs.SymbolKey, error) {
 	elemKey, err := a.Elem.ToSymKey(fileVersion)
 	if err != nil {

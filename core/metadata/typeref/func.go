@@ -19,15 +19,34 @@ type FuncTypeRef struct {
 func (f *FuncTypeRef) Kind() metadata.TypeRefKind { return metadata.TypeRefKindFunc }
 
 func (f *FuncTypeRef) CanonicalString() string {
-	ps := make([]string, 0, len(f.Params))
+	return f.stringRepresentation(true)
+}
+
+func (f *FuncTypeRef) SimpleTypeString() string {
+	return f.stringRepresentation(false)
+}
+
+func (f *FuncTypeRef) stringRepresentation(canonical bool) string {
+	params := make([]string, 0, len(f.Params))
+
 	for _, p := range f.Params {
-		ps = append(ps, p.CanonicalString())
+		if canonical {
+			params = append(params, p.CanonicalString())
+		} else {
+			params = append(params, p.SimpleTypeString())
+		}
 	}
+
 	rs := make([]string, 0, len(f.Results))
 	for _, r := range f.Results {
-		rs = append(rs, r.CanonicalString())
+		if canonical {
+			rs = append(rs, r.CanonicalString())
+		} else {
+			rs = append(rs, r.SimpleTypeString())
+		}
 	}
-	return fmt.Sprintf("func(%s)(%s)", strings.Join(ps, ","), strings.Join(rs, ","))
+
+	return fmt.Sprintf("func(%s)(%s)", strings.Join(params, ","), strings.Join(rs, ","))
 }
 
 func (f *FuncTypeRef) ToSymKey(fileVersion *gast.FileVersion) (graphs.SymbolKey, error) {

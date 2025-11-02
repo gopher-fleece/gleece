@@ -26,10 +26,6 @@ func NewTypeDeclVisitor(ctx *VisitContext) (*TypeDeclVisitor, error) {
 		return nil, err
 	}
 
-	// alias visitor is optional: construct only if you want alias behavior
-	// av, _ := NewAliasVisitor(ctx) // uncomment if/when you implement AliasVisitor
-	// v.aliasVisitor = av
-
 	return v, nil
 }
 
@@ -77,15 +73,11 @@ func (v *TypeDeclVisitor) VisitTypeDecl(
 
 	case *ast.Ident:
 		// Could be an enum-like alias to a basic type (e.g., type X string)
-		if gast.IsEnumLike(pkg, typeSpec) && v.enumVisitor != nil {
+		if gast.IsEnumLike(pkg, typeSpec) {
 			_, enumSymKey, err := v.enumVisitor.VisitEnumType(pkg, file, fileVersion, genDecl, typeSpec)
 			return enumSymKey, err
 		}
 		// Not enum-like (or no enumVisitor): return stable key but don't materialize
-		return graphs.NewSymbolKey(typeSpec, fileVersion), nil
-
-	case *ast.SelectorExpr:
-		// selector (possibly referencing external type) — not a declaration we can expand here.
 		return graphs.NewSymbolKey(typeSpec, fileVersion), nil
 
 	default:

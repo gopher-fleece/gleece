@@ -19,6 +19,10 @@ func (m *MapTypeRef) CanonicalString() string {
 	return fmt.Sprintf("map[%s]%s", m.Key.CanonicalString(), m.Value.CanonicalString())
 }
 
+func (m *MapTypeRef) SimpleTypeString() string {
+	return fmt.Sprintf("map[%s]%s", m.Key.SimpleTypeString(), m.Value.SimpleTypeString())
+}
+
 func (m *MapTypeRef) ToSymKey(fileVersion *gast.FileVersion) (graphs.SymbolKey, error) {
 	keyK, err := m.Key.ToSymKey(fileVersion)
 	if err != nil {

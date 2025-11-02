@@ -33,11 +33,26 @@ func (n *NamedTypeRef) CanonicalString() string {
 	if len(n.TypeArgs) == 0 {
 		return base
 	}
+
 	argStrings := make([]string, 0, len(n.TypeArgs))
 	for _, a := range n.TypeArgs {
 		argStrings = append(argStrings, a.CanonicalString())
 	}
+
 	return fmt.Sprintf("%s[%s]", base, strings.Join(argStrings, ","))
+}
+
+func (n *NamedTypeRef) SimpleTypeString() string {
+	if len(n.TypeArgs) == 0 {
+		return n.Key.Name
+	}
+
+	argStrings := make([]string, 0, len(n.TypeArgs))
+	for _, a := range n.TypeArgs {
+		argStrings = append(argStrings, a.SimpleTypeString())
+	}
+
+	return fmt.Sprintf("%s[%s]", n.Key.Name, strings.Join(argStrings, ","))
 }
 
 func (n *NamedTypeRef) ToSymKey(fileVersion *gast.FileVersion) (graphs.SymbolKey, error) {
