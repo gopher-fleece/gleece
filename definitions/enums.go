@@ -91,6 +91,7 @@ const (
 type SecuritySchemeIn string
 
 const (
+	Empty    SecuritySchemeIn = ""
 	InQuery  SecuritySchemeIn = "query"
 	InHeader SecuritySchemeIn = "header"
 	InCookie SecuritySchemeIn = "cookie"
