@@ -61,6 +61,60 @@ var _ = Describe("Spec Common", func() {
 			schemaRef := InterfaceToSchemaRef(openapi, "[]testObject")
 			Expect(schemaRef.Value.Items.Ref).To(Equal("#/components/schemas/testObject"))
 		})
+
+		Context("Map types", func() {
+			It("should handle map[string]string", func() {
+				schemaRef := InterfaceToSchemaRef(openapi, "map[string]string")
+				Expect(schemaRef.Value.Type).To(Equal(&openapi3.Types{"object"}))
+				Expect(schemaRef.Value.AdditionalProperties.Schema).ToNot(BeNil())
+				Expect(schemaRef.Value.AdditionalProperties.Schema.Value).To(Equal(openapi3.NewStringSchema()))
+			})
+
+			It("should handle map[string]int", func() {
+				schemaRef := InterfaceToSchemaRef(openapi, "map[string]int")
+				Expect(schemaRef.Value.Type).To(Equal(&openapi3.Types{"object"}))
+				Expect(schemaRef.Value.AdditionalProperties.Schema).ToNot(BeNil())
+				Expect(schemaRef.Value.AdditionalProperties.Schema.Value).To(Equal(openapi3.NewIntegerSchema()))
+			})
+
+			It("should handle map[int]string", func() {
+				schemaRef := InterfaceToSchemaRef(openapi, "map[int]string")
+				Expect(schemaRef.Value.Type).To(Equal(&openapi3.Types{"object"}))
+				Expect(schemaRef.Value.AdditionalProperties.Schema).ToNot(BeNil())
+				Expect(schemaRef.Value.AdditionalProperties.Schema.Value).To(Equal(openapi3.NewStringSchema()))
+			})
+
+			It("should handle map[string]bool", func() {
+				schemaRef := InterfaceToSchemaRef(openapi, "map[string]bool")
+				Expect(schemaRef.Value.Type).To(Equal(&openapi3.Types{"object"}))
+				Expect(schemaRef.Value.AdditionalProperties.Schema).ToNot(BeNil())
+				Expect(schemaRef.Value.AdditionalProperties.Schema.Value).To(Equal(openapi3.NewBoolSchema()))
+			})
+
+			It("should handle map[string][]string (map with array values)", func() {
+				schemaRef := InterfaceToSchemaRef(openapi, "map[string][]string")
+				Expect(schemaRef.Value.Type).To(Equal(&openapi3.Types{"object"}))
+				Expect(schemaRef.Value.AdditionalProperties.Schema).ToNot(BeNil())
+				Expect(schemaRef.Value.AdditionalProperties.Schema.Value.Type).To(Equal(&openapi3.Types{"array"}))
+				Expect(schemaRef.Value.AdditionalProperties.Schema.Value.Items.Value).To(Equal(openapi3.NewStringSchema()))
+			})
+
+			It("should handle map[string]testObject (map with object values)", func() {
+				openapi.Components.Schemas["testObject"] = &openapi3.SchemaRef{Value: openapi3.NewObjectSchema()}
+				schemaRef := InterfaceToSchemaRef(openapi, "map[string]testObject")
+				Expect(schemaRef.Value.Type).To(Equal(&openapi3.Types{"object"}))
+				Expect(schemaRef.Value.AdditionalProperties.Schema).ToNot(BeNil())
+				Expect(schemaRef.Value.AdditionalProperties.Schema.Ref).To(Equal("#/components/schemas/testObject"))
+			})
+
+			It("should handle map[int][]int (map with int key and array values)", func() {
+				schemaRef := InterfaceToSchemaRef(openapi, "map[int][]int")
+				Expect(schemaRef.Value.Type).To(Equal(&openapi3.Types{"object"}))
+				Expect(schemaRef.Value.AdditionalProperties.Schema).ToNot(BeNil())
+				Expect(schemaRef.Value.AdditionalProperties.Schema.Value.Type).To(Equal(&openapi3.Types{"array"}))
+				Expect(schemaRef.Value.AdditionalProperties.Schema.Value.Items.Value).To(Equal(openapi3.NewIntegerSchema()))
+			})
+		})
 	})
 
 	Describe("ToOpenApiSchema", func() {
