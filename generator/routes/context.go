@@ -56,7 +56,7 @@ func GetTemplateContext(
 		ctx.PackageName = "routes"
 	}
 
-	ctx.GenerationDate = time.Now().Format(time.DateOnly)
+	ctx.GenerationDate = "" // In case the generated date is marked to be skipped, output only empty string
 	if !config.RoutesConfig.SkipGenerateDateComment {
 		ctx.GenerationDate = fmt.Sprintf("Generated Date: %s", time.Now().Format(time.DateOnly))
 	}
