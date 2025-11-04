@@ -378,6 +378,70 @@ var _ = Describe("Spec Generator", func() {
 					},
 					HttpVerb: "POST",
 					RestMetadata: definitions.RestMetadata{
+						Path: "/post-map",
+					},
+					Description: "Example map route",
+					OperationId: "exampleMapRoute",
+					ErrorResponses: []definitions.ErrorResponse{
+						{
+							Description:    "Internal server error",
+							HttpStatusCode: 500,
+						},
+					},
+					ResponseSuccessCode: 200,
+					Responses: []definitions.FuncReturnValue{
+						{
+							TypeMetadata: definitions.TypeMetadata{
+								Name:    "map[string]ExampleSchemaWithEnum",
+								PkgPath: "example",
+							},
+						},
+						{
+							TypeMetadata: definitions.TypeMetadata{
+								Name: "error",
+							},
+						},
+					},
+					FuncParams: []definitions.FuncParam{
+						{
+							ParamMeta: definitions.ParamMeta{
+								Name: "the_map_content",
+								TypeMeta: definitions.TypeMetadata{
+									Name: "map[int]string",
+								},
+							},
+							NameInSchema: "the_map_content",
+							PassedIn:     definitions.PassedInBody,
+							Description:  "Example Map Body param",
+							Validator:    "required",
+						},
+					},
+				},
+				{
+					Security: []definitions.RouteSecurity{
+						{
+							SecurityAnnotation: []definitions.SecurityAnnotationComponent{
+								{
+									SchemaName: "ApiKeyAuth",
+									Scopes:     []string{"read", "write"},
+								},
+								{
+									SchemaName: "ApiKeyAuth2",
+									Scopes:     []string{"write"},
+								},
+							},
+						},
+						{
+							SecurityAnnotation: []definitions.SecurityAnnotationComponent{
+								{
+									SchemaName: "ApiKeyAuth",
+									Scopes:     []string{"read"},
+								},
+							},
+						},
+					},
+					HttpVerb: "POST",
+					RestMetadata: definitions.RestMetadata{
 						Path: "/post-alias",
 					},
 					Description: "Example alias route",
@@ -504,6 +568,54 @@ var _ = Describe("Spec Generator", func() {
 						Name:        "ExampleArrStringField",
 						Type:        "[][][][]ExampleSchema222",
 						Description: "Example int arr field",
+						Tag:         "",
+					},
+				},
+			},
+			{
+				Name:        "ExampleSchemaWithMap",
+				Description: "Example schema with map",
+				Fields: []definitions.FieldMetadata{
+					{
+						Name:        "ExampleMapWithPrimitiveValue",
+						Type:        "map[string]int",
+						Description: "Example map with primitive value",
+						Tag:         "",
+					},
+					{
+						Name:        "ExampleMapWithStringValue",
+						Type:        "map[string]string",
+						Description: "Example map with string value",
+						Tag:         "",
+					},
+					{
+						Name:        "ExampleMapWithStructValue",
+						Type:        "map[string]ExampleSchema222",
+						Description: "Example map with struct value",
+						Tag:         "",
+					},
+					{
+						Name:        "ExampleMapWithArrayStructValue",
+						Type:        "map[string][]ExampleSchema222",
+						Description: "Example map with array struct value",
+						Tag:         "",
+					},
+					{
+						Name:        "ExampleMapWithNonStringKey",
+						Type:        "map[int]string",
+						Description: "Example map with non-string key",
+						Tag:         "",
+					},
+					{
+						Name:        "ExampleMapOfMapValue",
+						Type:        "map[int]map[string]ExampleSchema222",
+						Description: "Example map of map value",
+						Tag:         "",
+					},
+					{
+						Name:        "ExampleMapWithAnyValue",
+						Type:        "map[string]any",
+						Description: "Example map with any value",
 						Tag:         "",
 					},
 				},

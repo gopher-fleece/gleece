@@ -45,6 +45,16 @@ var _ = Describe("Spec Helpers", func() {
 			Expect(ToOpenApiType("[]byte")).To(Equal("binary"))
 			Expect(ToOpenApiType("customType")).To(Equal("object"))
 		})
+
+		It("should convert map types to 'map'", func() {
+			Expect(ToOpenApiType("map[string]int")).To(Equal("map"))
+			Expect(ToOpenApiType("map[string]string")).To(Equal("map"))
+			Expect(ToOpenApiType("map[int]bool")).To(Equal("map"))
+			Expect(ToOpenApiType("map[string][]int")).To(Equal("map"))
+			Expect(ToOpenApiType("map[string]User")).To(Equal("map"))
+			Expect(ToOpenApiType("map[string]interface{}")).To(Equal("map"))
+			Expect(ToOpenApiType("map[int]map[string]bool")).To(Equal("map"))
+		})
 	})
 
 	Describe("IsSecurityNameInSecuritySchemes", func() {
@@ -147,10 +157,11 @@ var _ = Describe("Spec Helpers", func() {
 	})
 
 	Describe("IsGenericObject", func() {
-		It("should return true for map types", func() {
-			Expect(IsGenericObject("map[string]int")).To(BeTrue())
-			Expect(IsGenericObject("map[string]interface{}")).To(BeTrue())
-			Expect(IsGenericObject("map[int]string")).To(BeTrue())
+		It("should return false for map types", func() {
+			Expect(IsGenericObject("map[string]int")).To(BeFalse())
+			Expect(IsGenericObject("map[string]interface{}")).To(BeFalse())
+			Expect(IsGenericObject("map[int]string")).To(BeFalse())
+			Expect(IsGenericObject("map[string]any")).To(BeFalse())
 		})
 
 		It("should return false for non-generic types", func() {
@@ -169,7 +180,6 @@ var _ = Describe("Spec Helpers", func() {
 		It("should return true for generic types", func() {
 			Expect(IsGenericObject("any")).To(BeTrue())
 			Expect(IsGenericObject("interface{}")).To(BeTrue())
-			Expect(IsGenericObject("map[string]any")).To(BeTrue())
 			Expect(IsGenericObject("")).To(BeTrue())
 		})
 	})
@@ -194,6 +204,42 @@ var _ = Describe("Spec Helpers", func() {
 		It("should return the sub array item type of an array", func() {
 			Expect(GetArrayItemType("[][]string")).To(Equal("[]string"))
 			Expect(GetArrayItemType("[][][]abc")).To(Equal("[][]abc"))
+		})
+	})
+
+	Describe("GetMapItemType", func() {
+		It("should return the value type of a map with string keys", func() {
+			Expect(GetMapItemType("map[string]int")).To(Equal("int"))
+			Expect(GetMapItemType("map[string]string")).To(Equal("string"))
+			Expect(GetMapItemType("map[string]bool")).To(Equal("bool"))
+		})
+
+		It("should return the value type of a map with int keys", func() {
+			Expect(GetMapItemType("map[int]string")).To(Equal("string"))
+			Expect(GetMapItemType("map[int64]bool")).To(Equal("bool"))
+			Expect(GetMapItemType("map[uint]float64")).To(Equal("float64"))
+		})
+
+		It("should return the value type for maps with complex values", func() {
+			Expect(GetMapItemType("map[string][]int")).To(Equal("[]int"))
+			Expect(GetMapItemType("map[string][]string")).To(Equal("[]string"))
+			Expect(GetMapItemType("map[int][]bool")).To(Equal("[]bool"))
+		})
+
+		It("should return the value type for maps with custom object values", func() {
+			Expect(GetMapItemType("map[string]User")).To(Equal("User"))
+			Expect(GetMapItemType("map[int]CustomType")).To(Equal("CustomType"))
+			Expect(GetMapItemType("map[string]models.Product")).To(Equal("models.Product"))
+		})
+
+		It("should handle nested map types", func() {
+			Expect(GetMapItemType("map[string]map[int]string")).To(Equal("map[int]string"))
+			Expect(GetMapItemType("map[int]map[string]bool")).To(Equal("map[string]bool"))
+		})
+
+		It("should handle maps with interface{} values", func() {
+			Expect(GetMapItemType("map[string]interface{}")).To(Equal("interface{}"))
+			Expect(GetMapItemType("map[string]any")).To(Equal("any"))
 		})
 	})
 

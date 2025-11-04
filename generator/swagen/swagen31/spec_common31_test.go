@@ -76,6 +76,86 @@ var _ = Describe("Spec V3.1 Common", func() {
 			Expect(arraySchema.Type).To(Equal([]string{"array"}))
 			Expect(arraySchema.Items.A.GetReference()).To(Equal("#/components/schemas/testObject"))
 		})
+
+		Context("Map types", func() {
+			It("should handle map[string]string", func() {
+				schemaProxy := InterfaceToSchemaV3(doc, "map[string]string")
+				mapSchema := schemaProxy.Schema()
+				Expect(mapSchema.Type).To(Equal([]string{"object"}))
+				Expect(mapSchema.AdditionalProperties).ToNot(BeNil())
+				Expect(mapSchema.AdditionalProperties.A).ToNot(BeNil())
+				Expect(mapSchema.AdditionalProperties.A.Schema().Type).To(Equal([]string{"string"}))
+			})
+
+			It("should handle map[string]int", func() {
+				schemaProxy := InterfaceToSchemaV3(doc, "map[string]int")
+				mapSchema := schemaProxy.Schema()
+				Expect(mapSchema.Type).To(Equal([]string{"object"}))
+				Expect(mapSchema.AdditionalProperties).ToNot(BeNil())
+				Expect(mapSchema.AdditionalProperties.A).ToNot(BeNil())
+				Expect(mapSchema.AdditionalProperties.A.Schema().Type).To(Equal([]string{"integer"}))
+			})
+
+			It("should handle map[int]string", func() {
+				schemaProxy := InterfaceToSchemaV3(doc, "map[int]string")
+				mapSchema := schemaProxy.Schema()
+				Expect(mapSchema.Type).To(Equal([]string{"object"}))
+				Expect(mapSchema.AdditionalProperties).ToNot(BeNil())
+				Expect(mapSchema.AdditionalProperties.A).ToNot(BeNil())
+				Expect(mapSchema.AdditionalProperties.A.Schema().Type).To(Equal([]string{"string"}))
+			})
+
+			It("should handle map[string]bool", func() {
+				schemaProxy := InterfaceToSchemaV3(doc, "map[string]bool")
+				mapSchema := schemaProxy.Schema()
+				Expect(mapSchema.Type).To(Equal([]string{"object"}))
+				Expect(mapSchema.AdditionalProperties).ToNot(BeNil())
+				Expect(mapSchema.AdditionalProperties.A).ToNot(BeNil())
+				Expect(mapSchema.AdditionalProperties.A.Schema().Type).To(Equal([]string{"boolean"}))
+			})
+
+			It("should handle map[string][]string (map with array values)", func() {
+				schemaProxy := InterfaceToSchemaV3(doc, "map[string][]string")
+				mapSchema := schemaProxy.Schema()
+				Expect(mapSchema.Type).To(Equal([]string{"object"}))
+				Expect(mapSchema.AdditionalProperties).ToNot(BeNil())
+				Expect(mapSchema.AdditionalProperties.A).ToNot(BeNil())
+				valueSchema := mapSchema.AdditionalProperties.A.Schema()
+				Expect(valueSchema.Type).To(Equal([]string{"array"}))
+				Expect(valueSchema.Items.A.Schema().Type).To(Equal([]string{"string"}))
+			})
+
+			It("should handle map[string]testObject (map with object values)", func() {
+				schemaProxy := InterfaceToSchemaV3(doc, "map[string]testObject")
+				mapSchema := schemaProxy.Schema()
+				Expect(mapSchema.Type).To(Equal([]string{"object"}))
+				Expect(mapSchema.AdditionalProperties).ToNot(BeNil())
+				Expect(mapSchema.AdditionalProperties.A).ToNot(BeNil())
+				Expect(mapSchema.AdditionalProperties.A.GetReference()).To(Equal("#/components/schemas/testObject"))
+			})
+
+			It("should handle map[int][]int (map with int key and array values)", func() {
+				schemaProxy := InterfaceToSchemaV3(doc, "map[int][]int")
+				mapSchema := schemaProxy.Schema()
+				Expect(mapSchema.Type).To(Equal([]string{"object"}))
+				Expect(mapSchema.AdditionalProperties).ToNot(BeNil())
+				Expect(mapSchema.AdditionalProperties.A).ToNot(BeNil())
+				valueSchema := mapSchema.AdditionalProperties.A.Schema()
+				Expect(valueSchema.Type).To(Equal([]string{"array"}))
+				Expect(valueSchema.Items.A.Schema().Type).To(Equal([]string{"integer"}))
+			})
+
+			It("should handle nested map types", func() {
+				schemaProxy := InterfaceToSchemaV3(doc, "map[string]map[int]bool")
+				mapSchema := schemaProxy.Schema()
+				Expect(mapSchema.Type).To(Equal([]string{"object"}))
+				Expect(mapSchema.AdditionalProperties).ToNot(BeNil())
+				Expect(mapSchema.AdditionalProperties.A).ToNot(BeNil())
+				nestedMapSchema := mapSchema.AdditionalProperties.A.Schema()
+				Expect(nestedMapSchema.Type).To(Equal([]string{"object"}))
+				Expect(nestedMapSchema.AdditionalProperties.A.Schema().Type).To(Equal([]string{"boolean"}))
+			})
+		})
 	})
 
 	Describe("ToResponseDescription", func() {

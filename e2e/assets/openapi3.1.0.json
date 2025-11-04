@@ -331,6 +331,9 @@
             "type": "string"
           },
           "extensions": {
+            "additionalProperties": {
+              "type": "object"
+            },
             "description": "Additional metadata about the error.",
             "type": "object"
           },

@@ -43,6 +43,20 @@ func InterfaceToSchemaRef(openapi *openapi3.T, interfaceType string) *openapi3.S
 			},
 		}
 	}
+
+	if openapiType == "map" {
+		// Handle map types
+		itemType := swagtool.GetMapItemType(interfaceType)
+		valueSchemaRef := InterfaceToSchemaRef(openapi, itemType)
+
+		// Create a map schema using additionalProperties
+		mapSchema := openapi3.NewObjectSchema()
+		mapSchema.AdditionalProperties = openapi3.AdditionalProperties{Schema: valueSchemaRef}
+		fieldSchemaRef = &openapi3.SchemaRef{
+			Value: mapSchema,
+		}
+	}
+
 	return fieldSchemaRef
 }
 
