@@ -83,6 +83,9 @@ func ToOpenApiType(typeName string) string {
 		if strings.HasPrefix(typeName, "[]") {
 			return "array"
 		}
+		if strings.HasPrefix(typeName, "map[") {
+			return "map"
+		}
 		return "object"
 	}
 }
@@ -171,7 +174,7 @@ func IsGenericObject(typeName string) bool {
 	case "interface{}", "any", "":
 		return true
 	default:
-		return strings.HasPrefix(typeName, "map[")
+		return false
 	}
 }
 
@@ -190,4 +193,16 @@ func GetArrayItemType(fieldType string) string {
 	// Implement logic to extract the item type from the array type
 	// For example, if fieldType is "[]string", return "string"
 	return strings.TrimPrefix(fieldType, "[]")
+}
+
+func GetMapItemType(fieldType string) string {
+	// Implement logic to extract the key and value types from the map type
+	// For example, if fieldType is "map[string]int", return "string", "int"
+	trimmed := strings.TrimPrefix(fieldType, "map[")
+	trimmed = strings.TrimSuffix(trimmed, "]")
+	parts := strings.SplitN(trimmed, "]", 2)
+	if len(parts) != 2 {
+		return "any"
+	}
+	return parts[1]
 }

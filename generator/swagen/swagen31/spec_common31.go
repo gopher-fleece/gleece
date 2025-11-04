@@ -45,6 +45,20 @@ func InterfaceToSchemaV3(doc *v3.Document, interfaceType string) *highbase.Schem
 			A: itemSchemaRef,
 		}
 	}
+	if openapiType == "map" {
+		// Handle map types
+		itemType := swagtool.GetMapItemType(interfaceType)
+		valueSchemaRef := InterfaceToSchemaV3(doc, itemType)
+
+		// Create a map schema using additionalProperties
+		mapSchema := &highbase.Schema{
+			Type: []string{"object"},
+			AdditionalProperties: &highbase.DynamicValue[*highbase.SchemaProxy, bool]{
+				A: valueSchemaRef,
+			},
+		}
+		return highbase.CreateSchemaProxy(mapSchema)
+	}
 	return highbase.CreateSchemaProxy(fieldSchema)
 }
 

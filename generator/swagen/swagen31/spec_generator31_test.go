@@ -13,9 +13,9 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var fullyFeaturesSpec = []byte(`{"openapi":"3.1.0","info":{"title":"My API","description":"This is a simple API?","contact":{"name":"John Doe"},"license":{"name":"Apache 2.0","url":"https://www.apache.org/licenses/LICENSE-2.0.html"},"version":"1.0.0"},"servers":[{"url":"http://localhost:8080"}],"paths":{"/example-base/example-route/{my_path}":{"get":{"tags":["Example"],"summary":"Example route","description":"Example route","operationId":"exampleRoute","parameters":[{"name":"my_name","in":"query","description":"Example query param","required":true,"deprecated":true,"schema":{"type":"string","format":"email"}},{"name":"my_names","in":"query","description":"Example query ARR param","required":true,"schema":{"type":"array","items":{"$ref":"#/components/schemas/ExampleSchema"}}},{"name":"my_header","in":"header","description":"Example Header param","required":true,"schema":{"type":"boolean"}},{"name":"my_number","in":"header","description":"Example Header num param","required":true,"schema":{"exclusiveMaximum":100,"type":"number","minimum":18}},{"name":"my_path","in":"path","description":"Example Path param","required":true,"schema":{"type":"integer","enum":[1,2,3,4]}}],"requestBody":{"description":"Example Body param","content":{"application/json":{"schema":{"type":"string","format":"email"}}},"required":true},"responses":{"200":{"description":" ","content":{"application/json":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/ExampleSchema"}}}}},"500":{"description":"Internal server error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/Rfc7807Error"}}}}},"security":[{"ApiKeyAuth":["read","write"],"ApiKeyAuth2":["write"]},{"ApiKeyAuth":["read"]}]}},"/example-base/example-route":{"post":{"tags":["Example"],"summary":"Example route","description":"Example route","operationId":"exampleRoute45","parameters":[],"responses":{"200":{"description":"Example response OK","content":{"application/json":{"schema":{"type":"integer"}}}},"500":{"description":"Internal server error","content":{"application/json":{"schema":{"type":"string"}}}}},"security":[{"ApiKeyAuth":["read"]}]},"delete":{"tags":["Example"],"summary":"Example route","description":"Example route","operationId":"exampleRouteDel","parameters":[],"responses":{"204":{"description":"Example response OK for 204"},"500":{"description":"Internal server error","content":{"application/json":{"schema":{"type":"string"}}}}},"deprecated":true,"security":[{"ApiKeyAuth":["read"]}]}},"/example-base/post-enum":{"post":{"tags":["Example"],"summary":"Example enum route","description":"Example enum route","operationId":"exampleEnumRoute","parameters":[{"name":"my_enum","in":"query","description":"Example enum num param","required":true,"schema":{"$ref":"#/components/schemas/Status"}}],"requestBody":{"description":"Example Struct with Enum","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ExampleSchemaWithEnum"}}},"required":true},"responses":{"200":{"description":" ","content":{"application/json":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/ExampleSchemaWithEnum"}}}}},"500":{"description":"Internal server error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/Rfc7807Error"}}}}},"security":[{"ApiKeyAuth":["read","write"],"ApiKeyAuth2":["write"]},{"ApiKeyAuth":["read"]}]}}},"components":{"schemas":{"Status":{"type":"string","title":"Status","enum":["ACTIVE","INACTIVE","SUSPENDED"],"description":"User status enum"},"Status2":{"type":"string","title":"Status2","enum":["ACTIVE2","INACTIVE2","SUSPENDED2"],"description":"User status enum"},"ExampleSchema222":{"type":"object","properties":{"MaxValue":{"type":"integer","maximum":100,"minimum":1,"description":"MaxValue DESCRIPTION"},"TheName":{"type":"string","format":"email","description":"TheName DESCRIPTION"}},"title":"ExampleSchema222","required":["TheName"],"description":"Example schema 222","deprecated":true},"ExampleSchemaWithEnum":{"type":"object","properties":{"TheStatus":{"$ref":"#/components/schemas/Status"},"TheStatus2":{"$ref":"#/components/schemas/Status2"}},"title":"ExampleSchemaWithEnum","required":["TheStatus"],"description":"Example enum schema"},"ExampleSchema":{"type":"object","properties":{"ExampleField":{"type":"string","enum":["one","two","three"],"description":"Example field","deprecated":true},"ExampleObjField":{"$ref":"#/components/schemas/ExampleSchema222"},"ExampleArrField":{"type":"array","items":{"$ref":"#/components/schemas/ExampleSchema222"},"description":"Example array field"},"ExampleArrStringField":{"type":"array","items":{"type":"array","items":{"type":"array","items":{"type":"array","items":{"$ref":"#/components/schemas/ExampleSchema222"}}}},"description":"Example int arr field"}},"title":"ExampleSchema","required":["ExampleField","ExampleObjField","ExampleArrField"],"description":"Example schema"},"Rfc7807Error":{"type":"object","properties":{"type":{"type":"string","description":"A URI reference that identifies the problem type."},"title":{"type":"string","description":"A short, human-readable summary of the problem type."},"status":{"type":"integer","description":"The HTTP status code generated by the origin server for this occurrence of the problem."},"detail":{"type":"string","description":"A human-readable explanation specific to this occurrence of the problem."},"instance":{"type":"string","description":"A URI reference that identifies the specific occurrence of the problem."},"error":{"type":"string","description":"Error message"},"extensions":{"type":"object","description":"Additional metadata about the error."}},"title":"Rfc7807Error","required":["type","title","status"],"description":"A standard RFC-7807 error"}},"securitySchemes":{"ApiKeyAuth":{"type":"apiKey","description":"API Key","name":"X-API-Key2","in":"header"},"ApiKeyAuth2":{"type":"http","description":"API Key","scheme":"bearer"},"ApiKeyAuth3":{"type":"openIdConnect","description":"API Key","openIdConnectUrl":"https://example.com/auth"},"ApiKeyAuth4":{"type":"oauth2","description":"API Key","flows":{"implicit":{"authorizationUrl":"https://example.com/auth","refreshUrl":"https://example.com/refresh","scopes":{"write":"Write access","read":"Read access"}},"password":{"tokenUrl":"https://example.com/token","refreshUrl":"https://example.com/refresh","scopes":{"read":"Read access","write":"Write access"}},"clientCredentials":{"tokenUrl":"https://example.com/token","refreshUrl":"https://example.com/refresh","scopes":{"read":"Read access","write":"Write access"}},"authorizationCode":{"authorizationUrl":"https://example.com/auth","tokenUrl":"https://example.com/token","refreshUrl":"https://example.com/refresh","scopes":{"read":"Read access","write":"Write access"}}}}}}}`)
-var formSpec = []byte(`{"openapi":"3.1.0","info":{"title":"My API","description":"This is a simple API?","contact":{"name":"John Doe"},"license":{"name":"Apache 2.0","url":"https://www.apache.org/licenses/LICENSE-2.0.html"},"version":"1.0.0"},"servers":[{"url":"http://localhost:8080"}],"paths":{"/example-base/example-route":{"post":{"tags":["Example"],"summary":"Example form route","description":"Example form route","operationId":"exampleRoute","parameters":[],"requestBody":{"description":"Example my_form param","content":{"application/x-www-form-urlencoded":{"schema":{"type":"object","properties":{"my_form":{"type":"string"},"my_form_number":{"exclusiveMaximum":100,"type":"integer","minimum":1},"my_form_option":{"type":"boolean"}},"required":["my_form","my_form_number"]}}}},"responses":{"200":{"description":" "},"500":{"description":"Internal server error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/Rfc7807Error"}}}}},"security":[{"ApiKeyAuth":["read"]}]}}},"components":{"schemas":{"Rfc7807Error":{"type":"object","properties":{"type":{"type":"string","description":"A URI reference that identifies the problem type."},"title":{"type":"string","description":"A short, human-readable summary of the problem type."},"status":{"type":"integer","description":"The HTTP status code generated by the origin server for this occurrence of the problem."},"detail":{"type":"string","description":"A human-readable explanation specific to this occurrence of the problem."},"instance":{"type":"string","description":"A URI reference that identifies the specific occurrence of the problem."},"error":{"type":"string","description":"Error message"},"extensions":{"type":"object","description":"Additional metadata about the error."}},"title":"Rfc7807Error","required":["type","title","status"],"description":"A standard RFC-7807 error"}},"securitySchemes":{"ApiKeyAuth":{"type":"apiKey","description":"API Key","name":"X-API-Key2","in":"header"}}}}`)
-var allOfSpecV31 = []byte(`{"openapi":"3.1.0","info":{"title":"AllOf API","description":"API with schema composition using allOf","contact":{"name":"API Support"},"license":{"name":"MIT"},"version":"1.0.0"},"servers":[{"url":"http://localhost:8080"}],"paths":{},"components":{"schemas":{"BaseModel":{"type":"object","properties":{"id":{"type":"string","description":"Unique identifier"},"created_at":{"type":"integer","description":"Creation timestamp"}},"title":"BaseModel","required":["id"],"description":"Base model with common fields"},"TaggableModel":{"type":"object","properties":{"tags":{"type":"array","items":{"type":"string"},"description":"Tags for categorization"}},"title":"TaggableModel","required":[],"description":"Model with tagging functionality"},"ChildModel":{"allOf":[{"type":"object","properties":{"name":{"type":"string","description":"Child name field"}},"title":"ChildModel","required":["name"],"description":"Child model that extends BaseModel"},{"$ref":"#/components/schemas/BaseModel"}]},"CompositeModel":{"allOf":[{"type":"object","properties":{"description":{"type":"string","description":"Model description"}},"title":"CompositeModel","required":[],"description":"Model with multiple embedded types"},{"$ref":"#/components/schemas/BaseModel"},{"$ref":"#/components/schemas/TaggableModel"}]},"Rfc7807Error":{"type":"object","properties":{"type":{"type":"string","description":"A URI reference that identifies the problem type."},"title":{"type":"string","description":"A short, human-readable summary of the problem type."},"status":{"type":"integer","description":"The HTTP status code generated by the origin server for this occurrence of the problem."},"detail":{"type":"string","description":"A human-readable explanation specific to this occurrence of the problem."},"instance":{"type":"string","description":"A URI reference that identifies the specific occurrence of the problem."},"error":{"type":"string","description":"Error message"},"extensions":{"type":"object","description":"Additional metadata about the error."}},"title":"Rfc7807Error","required":["type","title","status"],"description":"A standard RFC-7807 error"}}}}`)
+var fullyFeaturesSpec = []byte(`{"openapi":"3.1.0","info":{"title":"My API","description":"This is a simple API?","contact":{"name":"John Doe"},"license":{"name":"Apache 2.0","url":"https://www.apache.org/licenses/LICENSE-2.0.html"},"version":"1.0.0"},"servers":[{"url":"http://localhost:8080"}],"paths":{"/example-base/example-route/{my_path}":{"get":{"tags":["Example"],"summary":"Example route","description":"Example route","operationId":"exampleRoute","parameters":[{"name":"my_name","in":"query","description":"Example query param","required":true,"deprecated":true,"schema":{"type":"string","format":"email"}},{"name":"my_names","in":"query","description":"Example query ARR param","required":true,"schema":{"type":"array","items":{"$ref":"#/components/schemas/ExampleSchema"}}},{"name":"my_header","in":"header","description":"Example Header param","required":true,"schema":{"type":"boolean"}},{"name":"my_number","in":"header","description":"Example Header num param","required":true,"schema":{"exclusiveMaximum":100,"type":"number","minimum":18}},{"name":"my_path","in":"path","description":"Example Path param","required":true,"schema":{"type":"integer","enum":[1,2,3,4]}}],"requestBody":{"description":"Example Body param","content":{"application/json":{"schema":{"type":"string","format":"email"}}},"required":true},"responses":{"200":{"description":" ","content":{"application/json":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/ExampleSchema"}}}}},"500":{"description":"Internal server error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/Rfc7807Error"}}}}},"security":[{"ApiKeyAuth":["read","write"],"ApiKeyAuth2":["write"]},{"ApiKeyAuth":["read"]}]}},"/example-base/example-route":{"post":{"tags":["Example"],"summary":"Example route","description":"Example route","operationId":"exampleRoute45","parameters":[],"responses":{"200":{"description":"Example response OK","content":{"application/json":{"schema":{"type":"integer"}}}},"500":{"description":"Internal server error","content":{"application/json":{"schema":{"type":"string"}}}}},"security":[{"ApiKeyAuth":["read"]}]},"delete":{"tags":["Example"],"summary":"Example route","description":"Example route","operationId":"exampleRouteDel","parameters":[],"responses":{"204":{"description":"Example response OK for 204"},"500":{"description":"Internal server error","content":{"application/json":{"schema":{"type":"string"}}}}},"deprecated":true,"security":[{"ApiKeyAuth":["read"]}]}},"/example-base/post-enum":{"post":{"tags":["Example"],"summary":"Example enum route","description":"Example enum route","operationId":"exampleEnumRoute","parameters":[{"name":"my_enum","in":"query","description":"Example enum num param","required":true,"schema":{"$ref":"#/components/schemas/Status"}}],"requestBody":{"description":"Example Struct with Enum","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ExampleSchemaWithEnum"}}},"required":true},"responses":{"200":{"description":" ","content":{"application/json":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/ExampleSchemaWithEnum"}}}}},"500":{"description":"Internal server error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/Rfc7807Error"}}}}},"security":[{"ApiKeyAuth":["read","write"],"ApiKeyAuth2":["write"]},{"ApiKeyAuth":["read"]}]}},"/example-base/post-map":{"post":{"tags":["Example"],"summary":"Example map route","description":"Example map route","operationId":"exampleMapRoute","parameters":[],"requestBody":{"description":"Example Map Body param","content":{"application/json":{"schema":{"type":"object","additionalProperties":{"type":"string"}}}},"required":true},"responses":{"200":{"description":" ","content":{"application/json":{"schema":{"type":"object","additionalProperties":{"$ref":"#/components/schemas/ExampleSchemaWithEnum"}}}}},"500":{"description":"Internal server error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/Rfc7807Error"}}}}},"security":[{"ApiKeyAuth":["read","write"],"ApiKeyAuth2":["write"]},{"ApiKeyAuth":["read"]}]}}},"components":{"schemas":{"Status":{"type":"string","title":"Status","enum":["ACTIVE","INACTIVE","SUSPENDED"],"description":"User status enum"},"Status2":{"type":"string","title":"Status2","enum":["ACTIVE2","INACTIVE2","SUSPENDED2"],"description":"User status enum"},"ExampleSchema222":{"type":"object","properties":{"MaxValue":{"type":"integer","maximum":100,"minimum":1,"description":"MaxValue DESCRIPTION"},"TheName":{"type":"string","format":"email","description":"TheName DESCRIPTION"}},"title":"ExampleSchema222","required":["TheName"],"description":"Example schema 222","deprecated":true},"ExampleSchemaWithEnum":{"type":"object","properties":{"TheStatus":{"$ref":"#/components/schemas/Status"},"TheStatus2":{"$ref":"#/components/schemas/Status2"}},"title":"ExampleSchemaWithEnum","required":["TheStatus"],"description":"Example enum schema"},"ExampleSchema":{"type":"object","properties":{"ExampleField":{"type":"string","enum":["one","two","three"],"description":"Example field","deprecated":true},"ExampleObjField":{"$ref":"#/components/schemas/ExampleSchema222"},"ExampleArrField":{"type":"array","items":{"$ref":"#/components/schemas/ExampleSchema222"},"description":"Example array field"},"ExampleArrStringField":{"type":"array","items":{"type":"array","items":{"type":"array","items":{"type":"array","items":{"$ref":"#/components/schemas/ExampleSchema222"}}}},"description":"Example int arr field"}},"title":"ExampleSchema","required":["ExampleField","ExampleObjField","ExampleArrField"],"description":"Example schema"},"ExampleSchemaWithMap":{"type":"object","properties":{"ExampleMapWithPrimitiveValue":{"type":"object","additionalProperties":{"type":"integer"},"description":"Example map with primitive value"},"ExampleMapWithStringValue":{"type":"object","additionalProperties":{"type":"string"},"description":"Example map with string value"},"ExampleMapWithStructValue":{"type":"object","additionalProperties":{"$ref":"#/components/schemas/ExampleSchema222"},"description":"Example map with struct value"},"ExampleMapWithArrayStructValue":{"type":"object","additionalProperties":{"type":"array","items":{"$ref":"#/components/schemas/ExampleSchema222"}},"description":"Example map with array struct value"},"ExampleMapWithNonStringKey":{"type":"object","additionalProperties":{"type":"string"},"description":"Example map with non-string key"},"ExampleMapOfMapValue":{"type":"object","additionalProperties":{"type":"object","additionalProperties":{"$ref":"#/components/schemas/ExampleSchema222"}},"description":"Example map of map value"},"ExampleMapWithAnyValue":{"type":"object","additionalProperties":{"type":"object"},"description":"Example map with any value"}},"title":"ExampleSchemaWithMap","required":[],"description":"Example schema with map"},"Rfc7807Error":{"type":"object","properties":{"type":{"type":"string","description":"A URI reference that identifies the problem type."},"title":{"type":"string","description":"A short, human-readable summary of the problem type."},"status":{"type":"integer","description":"The HTTP status code generated by the origin server for this occurrence of the problem."},"detail":{"type":"string","description":"A human-readable explanation specific to this occurrence of the problem."},"instance":{"type":"string","description":"A URI reference that identifies the specific occurrence of the problem."},"error":{"type":"string","description":"Error message"},"extensions":{"type":"object","additionalProperties":{"type":"object"},"description":"Additional metadata about the error."}},"title":"Rfc7807Error","required":["type","title","status"],"description":"A standard RFC-7807 error"}},"securitySchemes":{"ApiKeyAuth":{"type":"apiKey","description":"API Key","name":"X-API-Key2","in":"header"},"ApiKeyAuth2":{"type":"http","description":"API Key","scheme":"bearer"},"ApiKeyAuth3":{"type":"openIdConnect","description":"API Key","openIdConnectUrl":"https://example.com/auth"},"ApiKeyAuth4":{"type":"oauth2","description":"API Key","flows":{"implicit":{"authorizationUrl":"https://example.com/auth","refreshUrl":"https://example.com/refresh","scopes":{"read":"Read access","write":"Write access"}},"password":{"tokenUrl":"https://example.com/token","refreshUrl":"https://example.com/refresh","scopes":{"read":"Read access","write":"Write access"}},"clientCredentials":{"tokenUrl":"https://example.com/token","refreshUrl":"https://example.com/refresh","scopes":{"read":"Read access","write":"Write access"}},"authorizationCode":{"authorizationUrl":"https://example.com/auth","tokenUrl":"https://example.com/token","refreshUrl":"https://example.com/refresh","scopes":{"read":"Read access","write":"Write access"}}}}}}}`)
+var formSpec = []byte(`{"openapi":"3.1.0","info":{"title":"My API","description":"This is a simple API?","contact":{"name":"John Doe"},"license":{"name":"Apache 2.0","url":"https://www.apache.org/licenses/LICENSE-2.0.html"},"version":"1.0.0"},"servers":[{"url":"http://localhost:8080"}],"paths":{"/example-base/example-route":{"post":{"tags":["Example"],"summary":"Example form route","description":"Example form route","operationId":"exampleRoute","parameters":[],"requestBody":{"description":"Example my_form param","content":{"application/x-www-form-urlencoded":{"schema":{"type":"object","properties":{"my_form":{"type":"string"},"my_form_number":{"exclusiveMaximum":100,"type":"integer","minimum":1},"my_form_option":{"type":"boolean"}},"required":["my_form","my_form_number"]}}}},"responses":{"200":{"description":" "},"500":{"description":"Internal server error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/Rfc7807Error"}}}}},"security":[{"ApiKeyAuth":["read"]}]}}},"components":{"schemas":{"Rfc7807Error":{"type":"object","properties":{"type":{"type":"string","description":"A URI reference that identifies the problem type."},"title":{"type":"string","description":"A short, human-readable summary of the problem type."},"status":{"type":"integer","description":"The HTTP status code generated by the origin server for this occurrence of the problem."},"detail":{"type":"string","description":"A human-readable explanation specific to this occurrence of the problem."},"instance":{"type":"string","description":"A URI reference that identifies the specific occurrence of the problem."},"error":{"type":"string","description":"Error message"},"extensions":{"type":"object","additionalProperties":{"type":"object"},"description":"Additional metadata about the error."}},"title":"Rfc7807Error","required":["type","title","status"],"description":"A standard RFC-7807 error"}},"securitySchemes":{"ApiKeyAuth":{"type":"apiKey","description":"API Key","name":"X-API-Key2","in":"header"}}}}`)
+var allOfSpecV31 = []byte(`{"openapi":"3.1.0","info":{"title":"AllOf API","description":"API with schema composition using allOf","contact":{"name":"API Support"},"license":{"name":"MIT"},"version":"1.0.0"},"servers":[{"url":"http://localhost:8080"}],"paths":{},"components":{"schemas":{"BaseModel":{"type":"object","properties":{"id":{"type":"string","description":"Unique identifier"},"created_at":{"type":"integer","description":"Creation timestamp"}},"title":"BaseModel","required":["id"],"description":"Base model with common fields"},"TaggableModel":{"type":"object","properties":{"tags":{"type":"array","items":{"type":"string"},"description":"Tags for categorization"}},"title":"TaggableModel","required":[],"description":"Model with tagging functionality"},"ChildModel":{"allOf":[{"type":"object","properties":{"name":{"type":"string","description":"Child name field"}},"title":"ChildModel","required":["name"],"description":"Child model that extends BaseModel"},{"$ref":"#/components/schemas/BaseModel"}]},"CompositeModel":{"allOf":[{"type":"object","properties":{"description":{"type":"string","description":"Model description"}},"title":"CompositeModel","required":[],"description":"Model with multiple embedded types"},{"$ref":"#/components/schemas/BaseModel"},{"$ref":"#/components/schemas/TaggableModel"}]},"Rfc7807Error":{"type":"object","properties":{"type":{"type":"string","description":"A URI reference that identifies the problem type."},"title":{"type":"string","description":"A short, human-readable summary of the problem type."},"status":{"type":"integer","description":"The HTTP status code generated by the origin server for this occurrence of the problem."},"detail":{"type":"string","description":"A human-readable explanation specific to this occurrence of the problem."},"instance":{"type":"string","description":"A URI reference that identifies the specific occurrence of the problem."},"error":{"type":"string","description":"Error message"},"extensions":{"type":"object","additionalProperties":{"type":"object"},"description":"Additional metadata about the error."}},"title":"Rfc7807Error","required":["type","title","status"],"description":"A standard RFC-7807 error"}}}}`)
 
 var _ = Describe("Spec v3.1 Generator", func() {
 
@@ -340,6 +340,70 @@ var _ = Describe("Spec v3.1 Generator", func() {
 						},
 					},
 				},
+				{
+					Security: []definitions.RouteSecurity{
+						{
+							SecurityAnnotation: []definitions.SecurityAnnotationComponent{
+								{
+									SchemaName: "ApiKeyAuth",
+									Scopes:     []string{"read", "write"},
+								},
+								{
+									SchemaName: "ApiKeyAuth2",
+									Scopes:     []string{"write"},
+								},
+							},
+						},
+						{
+							SecurityAnnotation: []definitions.SecurityAnnotationComponent{
+								{
+									SchemaName: "ApiKeyAuth",
+									Scopes:     []string{"read"},
+								},
+							},
+						},
+					},
+					HttpVerb: "POST",
+					RestMetadata: definitions.RestMetadata{
+						Path: "/post-map",
+					},
+					Description: "Example map route",
+					OperationId: "exampleMapRoute",
+					ErrorResponses: []definitions.ErrorResponse{
+						{
+							Description:    "Internal server error",
+							HttpStatusCode: 500,
+						},
+					},
+					ResponseSuccessCode: 200,
+					Responses: []definitions.FuncReturnValue{
+						{
+							TypeMetadata: definitions.TypeMetadata{
+								Name:    "map[string]ExampleSchemaWithEnum",
+								PkgPath: "example",
+							},
+						},
+						{
+							TypeMetadata: definitions.TypeMetadata{
+								Name: "error",
+							},
+						},
+					},
+					FuncParams: []definitions.FuncParam{
+						{
+							ParamMeta: definitions.ParamMeta{
+								Name: "the_map_content",
+								TypeMeta: definitions.TypeMetadata{
+									Name: "map[int]string",
+								},
+							},
+							NameInSchema: "the_map_content",
+							PassedIn:     definitions.PassedInBody,
+							Description:  "Example Map Body param",
+							Validator:    "required",
+						},
+					},
+				},
 			},
 		})
 
@@ -415,6 +479,54 @@ var _ = Describe("Spec v3.1 Generator", func() {
 						Name:        "ExampleArrStringField",
 						Type:        "[][][][]ExampleSchema222",
 						Description: "Example int arr field",
+						Tag:         "",
+					},
+				},
+			},
+			{
+				Name:        "ExampleSchemaWithMap",
+				Description: "Example schema with map",
+				Fields: []definitions.FieldMetadata{
+					{
+						Name:        "ExampleMapWithPrimitiveValue",
+						Type:        "map[string]int",
+						Description: "Example map with primitive value",
+						Tag:         "",
+					},
+					{
+						Name:        "ExampleMapWithStringValue",
+						Type:        "map[string]string",
+						Description: "Example map with string value",
+						Tag:         "",
+					},
+					{
+						Name:        "ExampleMapWithStructValue",
+						Type:        "map[string]ExampleSchema222",
+						Description: "Example map with struct value",
+						Tag:         "",
+					},
+					{
+						Name:        "ExampleMapWithArrayStructValue",
+						Type:        "map[string][]ExampleSchema222",
+						Description: "Example map with array struct value",
+						Tag:         "",
+					},
+					{
+						Name:        "ExampleMapWithNonStringKey",
+						Type:        "map[int]string",
+						Description: "Example map with non-string key",
+						Tag:         "",
+					},
+					{
+						Name:        "ExampleMapOfMapValue",
+						Type:        "map[int]map[string]ExampleSchema222",
+						Description: "Example map of map value",
+						Tag:         "",
+					},
+					{
+						Name:        "ExampleMapWithAnyValue",
+						Type:        "map[string]any",
+						Description: "Example map with any value",
 						Tag:         "",
 					},
 				},
