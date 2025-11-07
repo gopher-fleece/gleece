@@ -16,9 +16,10 @@ func (p *PtrTypeRef) CanonicalString() string {
 }
 
 func (p *PtrTypeRef) SimpleTypeString() string {
-	return "*" + p.Elem.SimpleTypeString()
+	// Currently, this is a bit of a mess. The models list expects arrays to appear with '[]'
+	// but pointers are omitted, i.e., the lack of '*' in the output here is intentional.
+	return p.Elem.SimpleTypeString()
 }
-
 
 func (p *PtrTypeRef) ToSymKey(fileVersion *gast.FileVersion) (graphs.SymbolKey, error) {
 	elemKey, err := p.Elem.ToSymKey(fileVersion)

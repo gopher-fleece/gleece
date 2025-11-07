@@ -28,7 +28,7 @@ const (
 	EdgeKindDocument SymbolEdgeKind = "doc"   // Symbol → doc/annotation node
 
 	// Misc
-	EdgeKindInit SymbolEdgeKind = "init" // Struct → init function (e.g., for defaults)
+	EdgeKindInitialize SymbolEdgeKind = "init" // Struct → init function (e.g., for defaults)
 )
 
 type SymbolEdge struct {

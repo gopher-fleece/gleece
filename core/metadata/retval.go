@@ -1,6 +1,10 @@
 package metadata
 
-import "github.com/gopher-fleece/gleece/definitions"
+import (
+	"fmt"
+
+	"github.com/gopher-fleece/gleece/definitions"
+)
 
 type FuncReturnValue struct {
 	SymNodeMeta
@@ -14,17 +18,14 @@ func (v FuncReturnValue) Reduce(ctx ReductionContext) (definitions.FuncReturnVal
 		return definitions.FuncReturnValue{}, err
 	}
 
-	/*
-		TMP
-		typeRef, err := v.Type.GetBaseTypeRefKey()
-		if err != nil {
-			return definitions.FuncReturnValue{}, err
-		}
-	*/
+	symKey, err := v.Type.Root.ToSymKey(v.FVersion)
+	if err != nil {
+		return definitions.FuncReturnValue{}, fmt.Errorf("failed to derive a symbol key for field '%s' - %v", v.Name, err)
+	}
 
 	return definitions.FuncReturnValue{
-		Ordinal: v.Ordinal,
-		// UniqueImportSerial: ctx.SyncedProvider.GetIdForKey(typeRef),
-		TypeMetadata: typeMeta,
+		Ordinal:            v.Ordinal,
+		UniqueImportSerial: ctx.SyncedProvider.GetIdForKey(symKey),
+		TypeMetadata:       typeMeta,
 	}, nil
 }

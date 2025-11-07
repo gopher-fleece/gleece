@@ -268,13 +268,9 @@ func (p *GleecePipeline) reduceControllers(controllers []metadata.ControllerMeta
 func (p *GleecePipeline) getModels() (definitions.Models, error) {
 	ctx := p.getReductionContext()
 
-	reducedStructs := []definitions.StructMetadata{}
-	for _, structEntity := range p.symGraph.Structs() {
-		reduced, err := structEntity.Reduce(ctx)
-		if err != nil {
-			return definitions.Models{}, fmt.Errorf("failed during reduction of struct '%s' - %v", structEntity.Name, err)
-		}
-		reducedStructs = append(reducedStructs, reduced)
+	reducedStructs, err := symboldg.ComposeModels(p.getReductionContext(), p.Graph(), nil)
+	if err != nil {
+		return definitions.Models{}, err
 	}
 
 	reducedEnums := []definitions.EnumMetadata{}

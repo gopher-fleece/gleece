@@ -1,7 +1,6 @@
 package visitors
 
 import (
-	"fmt"
 	"go/ast"
 	"strings"
 
@@ -73,15 +72,17 @@ func (v *StructVisitor) VisitStructType(
 	fileVersion, fvErr := v.context.MetadataCache.GetFileVersion(file, pkg.Fset)
 	if fvErr != nil || fileVersion == nil {
 		return metadata.StructMeta{}, graphs.SymbolKey{},
-			fmt.Errorf("could not obtain file version for struct %s: %w",
-				typeSpec.Name.Name, fvErr)
+			v.getFrozenError(
+				"could not obtain file version for struct %s: %w",
+				typeSpec.Name.Name,
+				fvErr,
+			)
 	}
 
 	// Ensure the type is a struct
 	structType, ok := typeSpec.Type.(*ast.StructType)
 	if !ok {
-		return metadata.StructMeta{}, graphs.SymbolKey{},
-			fmt.Errorf("type spec %s is not a struct", typeSpec.Name.Name)
+		return metadata.StructMeta{}, graphs.SymbolKey{}, v.getFrozenError("type spec %s is not a struct", typeSpec.Name.Name)
 	}
 
 	typeParamEnv, typeParamDecls, err := v.buildDeclTypeParamEnv(pkg, file, typeSpec.TypeParams)
@@ -89,12 +90,17 @@ func (v *StructVisitor) VisitStructType(
 		return metadata.StructMeta{}, graphs.SymbolKey{}, err
 	}
 
+	holder, err := v.getAnnotations(typeSpec.Doc, genDecl)
+	if err != nil {
+		return metadata.StructMeta{}, graphs.SymbolKey{}, v.getFrozenError("failed to obtain notifications for struct '%s' - %v", tsName, err)
+	}
+
 	// Build FieldMeta entries (no graph mutations)
 	allFieldsMeta := make([]metadata.FieldMeta, 0)
 	for _, field := range structType.Fields.List {
 		fieldMetadata, err := v.getFieldMeta(pkg, file, fileVersion, field, typeParamEnv)
 		if err != nil {
-			return metadata.StructMeta{}, graphs.SymbolKey{}, fmt.Errorf(
+			return metadata.StructMeta{}, graphs.SymbolKey{}, v.getFrozenError(
 				"failed to obtain metadata for field '%s' - %v",
 				strings.Join(gast.GetFieldNames(field), ", "),
 				err,
@@ -110,7 +116,7 @@ func (v *StructVisitor) VisitStructType(
 			Node:        typeSpec,
 			SymbolKind:  common.SymKindStruct,
 			PkgPath:     pkg.PkgPath,
-			Annotations: nil,
+			Annotations: holder,
 			FVersion:    fileVersion,
 			Range:       common.ResolveNodeRange(pkg.Fset, typeSpec),
 		},
@@ -130,14 +136,20 @@ func (v *StructVisitor) getFieldMeta(
 	field *ast.Field,
 	typeParamEnv map[string]int,
 ) ([]metadata.FieldMeta, error) {
+	names := gast.GetFieldNames(field)
+
 	// build a usage-side TypeUsageMeta for the field type (delegated)
 	typeUsage, err := v.typeUsageVisitor.VisitExpr(pkg, file, field.Type, typeParamEnv)
 	if err != nil {
-		return []metadata.FieldMeta{}, err
+		return nil, v.getFrozenError("failed to visit expression for field/s [%v] - %v", names, err)
 	}
 
-	names := gast.GetFieldNames(field)
 	isEmbedded := gast.IsEmbeddedOrAnonymousField(field)
+
+	holder, err := v.getAnnotations(field.Doc, nil)
+	if err != nil {
+		return nil, v.getFrozenError("failed to obtain annotations for field/s [%v] - %v", names, err)
+	}
 
 	meta := []metadata.FieldMeta{}
 	for _, name := range names {
@@ -147,7 +159,7 @@ func (v *StructVisitor) getFieldMeta(
 				Node:        field,
 				SymbolKind:  common.SymKindField,
 				PkgPath:     pkg.PkgPath,
-				Annotations: nil,
+				Annotations: holder,
 				FVersion:    fileVersion,
 				Range:       common.ResolveNodeRange(pkg.Fset, field),
 			},

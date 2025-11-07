@@ -76,9 +76,6 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 				SymNodeMeta: metadata.SymNodeMeta{Node: utils.MakeIdent("Child"), FVersion: fVersion},
 				Type: metadata.TypeUsageMeta{
 					SymNodeMeta: metadata.SymNodeMeta{Name: "int", FVersion: fVersion},
-					Layers: []metadata.TypeLayer{
-						metadata.NewBaseLayer(common.Ptr(graphs.NewUniverseSymbolKey("int"))),
-					},
 				},
 			}
 			fieldNode, _ = graph.AddField(symboldg.CreateFieldNode{Data: fieldMeta})
@@ -90,7 +87,7 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 			It("Returns only children matching the filter", func() {
 				filter := &symboldg.TraversalBehavior{
 					Filtering: symboldg.TraversalFilter{
-						EdgeKind: common.Ptr(symboldg.EdgeKindField),
+						EdgeKinds: []symboldg.SymbolEdgeKind{symboldg.EdgeKindField},
 					},
 				}
 				result := graph.Children(structNode, filter)
@@ -101,7 +98,7 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 			It("Skips edges that do not match a given filter", func() {
 				filter := &symboldg.TraversalBehavior{
 					Filtering: symboldg.TraversalFilter{
-						EdgeKind: common.Ptr(symboldg.EdgeKindCall), // This should drop the edge
+						EdgeKinds: []symboldg.SymbolEdgeKind{symboldg.EdgeKindCall}, // This should drop the edge
 					},
 				}
 				result := graph.Children(structNode, filter)
@@ -122,9 +119,6 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 					SymNodeMeta: metadata.SymNodeMeta{Node: utils.MakeIdent("AnotherChild"), FVersion: fVersion},
 					Type: metadata.TypeUsageMeta{
 						SymNodeMeta: metadata.SymNodeMeta{Name: "int", FVersion: fVersion},
-						Layers: []metadata.TypeLayer{
-							metadata.NewBaseLayer(common.Ptr(graphs.NewUniverseSymbolKey("int"))),
-						},
 					},
 				}
 				fieldNode, _ = graph.AddField(symboldg.CreateFieldNode{Data: fieldMeta})
@@ -159,7 +153,7 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 				filter := &symboldg.TraversalBehavior{
 					Sorting: symboldg.TraversalSortingOrdinalDesc,
 					Filtering: symboldg.TraversalFilter{
-						EdgeKind: common.Ptr(symboldg.EdgeKindCall),
+						EdgeKinds: []symboldg.SymbolEdgeKind{symboldg.EdgeKindCall},
 					},
 				}
 				result := graph.Children(structNode, filter)
@@ -170,8 +164,8 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 				filter := &symboldg.TraversalBehavior{
 					Sorting: symboldg.TraversalSortingOrdinalDesc,
 					Filtering: symboldg.TraversalFilter{
-						EdgeKind: common.Ptr(symboldg.EdgeKindField),
-						NodeKind: common.Ptr(common.SymKindSpecialBuiltin),
+						EdgeKinds: []symboldg.SymbolEdgeKind{symboldg.EdgeKindField},
+						NodeKinds: []common.SymKind{common.SymKindSpecialBuiltin},
 					},
 				}
 				result := graph.Children(structNode, filter)
@@ -200,9 +194,6 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 					SymNodeMeta: metadata.SymNodeMeta{Node: utils.MakeIdent("Child"), FVersion: fVersion},
 					Type: metadata.TypeUsageMeta{
 						SymNodeMeta: metadata.SymNodeMeta{Name: "int", FVersion: fVersion},
-						Layers: []metadata.TypeLayer{
-							metadata.NewBaseLayer(common.Ptr(graphs.NewUniverseSymbolKey("int"))),
-						},
 					},
 				},
 			})
@@ -212,9 +203,6 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 					SymNodeMeta: metadata.SymNodeMeta{Node: utils.MakeIdent("OtherChild"), FVersion: fVersion},
 					Type: metadata.TypeUsageMeta{
 						SymNodeMeta: metadata.SymNodeMeta{Name: "string", FVersion: fVersion},
-						Layers: []metadata.TypeLayer{
-							metadata.NewBaseLayer(common.Ptr(graphs.NewUniverseSymbolKey("string"))),
-						},
 					},
 				},
 			})
@@ -258,7 +246,7 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 				// We set filter EdgeKind to a different kind, so shouldIncludeEdge returns false
 				filter := &symboldg.TraversalBehavior{
 					Filtering: symboldg.TraversalFilter{
-						EdgeKind: common.Ptr(symboldg.EdgeKindValue), // deliberately a different edge kind
+						EdgeKinds: []symboldg.SymbolEdgeKind{symboldg.EdgeKindValue}, // deliberately a different edge kind
 					},
 				}
 
@@ -320,7 +308,7 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 				filter := &symboldg.TraversalBehavior{
 					Sorting: symboldg.TraversalSortingOrdinalAsc,
 					Filtering: symboldg.TraversalFilter{
-						EdgeKind: common.Ptr(symboldg.EdgeKindValue), // deliberately a different edge kind
+						EdgeKinds: []symboldg.SymbolEdgeKind{symboldg.EdgeKindValue}, // deliberately a different edge kind
 					},
 				}
 
@@ -346,9 +334,6 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 					SymNodeMeta: metadata.SymNodeMeta{Node: utils.MakeIdent("Child"), FVersion: fVersion},
 					Type: metadata.TypeUsageMeta{
 						SymNodeMeta: metadata.SymNodeMeta{Name: "int", FVersion: fVersion},
-						Layers: []metadata.TypeLayer{
-							metadata.NewBaseLayer(common.Ptr(graphs.NewUniverseSymbolKey("int"))),
-						},
 					},
 				},
 			})
@@ -357,9 +342,6 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 					SymNodeMeta: metadata.SymNodeMeta{Node: utils.MakeIdent("GrandChild"), FVersion: fVersion},
 					Type: metadata.TypeUsageMeta{
 						SymNodeMeta: metadata.SymNodeMeta{Name: "int", FVersion: fVersion},
-						Layers: []metadata.TypeLayer{
-							metadata.NewBaseLayer(common.Ptr(graphs.NewUniverseSymbolKey("int"))),
-						},
 					},
 				},
 			})
@@ -392,7 +374,7 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 			// Create a filter that excludes the grandChildNode by NodeKind mismatch
 			filter := &symboldg.TraversalBehavior{
 				Filtering: symboldg.TraversalFilter{
-					NodeKind: common.Ptr(common.SymKindSpecialBuiltin),
+					NodeKinds: []common.SymKind{common.SymKindSpecialBuiltin},
 				},
 			}
 

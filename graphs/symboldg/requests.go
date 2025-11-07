@@ -76,3 +76,8 @@ type CreateCompositeNode struct {
 	Canonical string
 	Operands  []graphs.SymbolKey
 }
+
+type TypeParamMeta struct {
+	Name string
+	Index int
+}

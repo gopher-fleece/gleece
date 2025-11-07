@@ -1,6 +1,8 @@
 package metadata
 
 import (
+	"fmt"
+
 	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/gast"
@@ -16,42 +18,36 @@ type TypeUsageMeta struct {
 }
 
 func (t TypeUsageMeta) Resolve(ctx ReductionContext) (definitions.TypeMetadata, error) {
-	t.Root.CanonicalString()
-	/*
-		TMP
-		typeRef, err := t.GetBaseTypeRefKey()
-		if err != nil {
-			return definitions.TypeMetadata{}, err
+	symKey, err := t.Root.ToSymKey(t.FVersion)
+	if err != nil {
+		return definitions.TypeMetadata{}, fmt.Errorf(
+			"failed to derive symbol key for type usage '%s' - %v",
+			t.Name,
+			err,
+		)
+	}
+
+	underlyingEnum := ctx.MetaCache.GetEnum(symKey)
+
+	alias := definitions.AliasMetadata{}
+	if underlyingEnum != nil {
+		alias.Name = underlyingEnum.Name
+		alias.AliasType = string(underlyingEnum.ValueKind)
+
+		values := []string{}
+		for _, v := range underlyingEnum.Values {
+			values = append(values, fmt.Sprintf("%v", v.Value))
 		}
-	*/
-
-	/*
-		underlyingEnum := ctx.MetaCache.GetEnum(typeRef)
-
-		alias := definitions.AliasMetadata{}
-		if underlyingEnum != nil {
-			alias.Name = underlyingEnum.Name
-			alias.AliasType = string(underlyingEnum.ValueKind)
-
-			values := []string{}
-			for _, v := range underlyingEnum.Values {
-				values = append(values, fmt.Sprintf("%v", v.Value))
-			}
-			alias.Values = values
-		}
-	*/
+		alias.Values = values
+	}
 
 	description := ""
 	if t.Annotations != nil {
 		description = t.Annotations.GetDescription()
 	}
 
-	// Join the actual type name with its "[]" prefixes, as necessary.
-	// Ugly, but the spec generator uses that - for now.
-	// name := t.GetArrayLayersString() + t.Name
-
 	return definitions.TypeMetadata{
-		// Name:                name,
+		Name:                t.Root.SimpleTypeString(),
 		PkgPath:             t.PkgPath,
 		DefaultPackageAlias: gast.GetDefaultPkgAliasByName(t.PkgPath),
 		Description:         description,
@@ -59,7 +55,7 @@ func (t TypeUsageMeta) Resolve(ctx ReductionContext) (definitions.TypeMetadata, 
 		IsUniverseType:      t.PkgPath == "" && gast.IsUniverseType(t.Name),
 		IsByAddress:         t.IsByAddress(),
 		SymbolKind:          t.SymbolKind,
-		//AliasMetadata:       &alias,
+		AliasMetadata:       &alias,
 	}, nil
 }
 

@@ -7,6 +7,7 @@ import (
 	"slices"
 	"strings"
 
+	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/common/linq"
 	"github.com/gopher-fleece/gleece/core/annotations"
@@ -16,47 +17,6 @@ import (
 	"github.com/gopher-fleece/gleece/graphs"
 	"github.com/gopher-fleece/gleece/graphs/dot"
 )
-
-type SymbolGraphBuilder interface {
-	AddController(request CreateControllerNode) (*SymbolNode, error)
-	AddRoute(request CreateRouteNode) (*SymbolNode, error)
-	AddRouteParam(request CreateParameterNode) (*SymbolNode, error)
-	AddRouteRetVal(request CreateReturnValueNode) (*SymbolNode, error)
-	AddStruct(request CreateStructNode) (*SymbolNode, error)
-	AddEnum(request CreateEnumNode) (*SymbolNode, error)
-	AddField(request CreateFieldNode) (*SymbolNode, error)
-	AddConst(request CreateConstNode) (*SymbolNode, error)
-	AddPrimitive(kind PrimitiveType) *SymbolNode
-	AddSpecial(special SpecialType) *SymbolNode
-	AddEdge(from, to graphs.SymbolKey, kind SymbolEdgeKind, meta map[string]string)
-	RemoveEdge(from, to graphs.SymbolKey, kind *SymbolEdgeKind)
-	RemoveNode(key graphs.SymbolKey)
-
-	Structs() []metadata.StructMeta
-	Enums() []metadata.EnumMeta
-
-	Exists(key graphs.SymbolKey) bool
-	Get(key graphs.SymbolKey) *SymbolNode
-	FindByKind(kind common.SymKind) []*SymbolNode
-
-	IsPrimitivePresent(primitive PrimitiveType) bool
-	IsSpecialPresent(special SpecialType) bool
-
-	// Children returns direct outward SymbolNode dependencies from the given node,
-	// applying the given traversal behavior if non-nil.
-	Children(node *SymbolNode, behavior *TraversalBehavior) []*SymbolNode
-
-	// Parents returns nodes that have edges pointing to the given node,
-	// applying the given traversal behavior if non-nil.
-	Parents(node *SymbolNode, behavior *TraversalBehavior) []*SymbolNode
-
-	// Descendants returns all transitive children reachable from root,
-	// applying the behavior at each step to decide traversal and inclusion.
-	Descendants(root *SymbolNode, behavior *TraversalBehavior) []*SymbolNode
-
-	ToDot(theme *dot.DotTheme) string
-	String() string
-}
 
 type SymbolGraph struct {
 	// A map for retrieving full symbol keys from their comparable, non-versioned IDs
@@ -369,6 +329,49 @@ func (g *SymbolGraph) Get(key graphs.SymbolKey) *SymbolNode {
 	return g.nodes[key.BaseId()]
 }
 
+// GetEdges returns a map of edge descriptors involving 'key'.
+// It includes both outgoing edges (key -> X) and incoming edges (Y -> key).
+// If 'kinds' is non-empty, only edges whose kind matches one of the kinds are returned.
+// Returned map keys are stable and unique: "<fromBaseId>::<innerEdgeKey>".
+func (g *SymbolGraph) GetEdges(key graphs.SymbolKey, kinds []SymbolEdgeKind) map[string]SymbolEdgeDescriptor {
+	mapKey := key.BaseId()
+	out := make(map[string]SymbolEdgeDescriptor)
+
+	requestedKinds := mapset.NewSet(kinds...)
+
+	// 1) Outgoing edges from `key`
+	if outgoing, ok := g.edges[mapKey]; ok {
+		for innerKey, desc := range outgoing {
+			if !requestedKinds.IsEmpty() && !requestedKinds.ContainsOne(desc.Edge.Kind) {
+				continue
+			}
+			// Use fromBaseId prefix to guarantee uniqueness when aggregating from many sources
+			out[mapKey+"::"+innerKey] = desc
+		}
+	}
+
+	// 2) Incoming edges (parents -> key). Use revDeps to find parents.
+	if parents, ok := g.revDeps[mapKey]; ok {
+		for parentKey := range parents {
+			parentBase := parentKey.BaseId()
+			if parentEdges, ok := g.edges[parentBase]; ok {
+				for innerKey, desc := range parentEdges {
+					// we only want those edges whose 'To' is our key
+					if desc.Edge.To.BaseId() != mapKey {
+						continue
+					}
+					if !requestedKinds.IsEmpty() && !requestedKinds.ContainsOne(desc.Edge.Kind) {
+						continue
+					}
+					out[parentBase+"::"+innerKey] = desc
+				}
+			}
+		}
+	}
+
+	return out
+}
+
 func (g *SymbolGraph) Exists(key graphs.SymbolKey) bool {
 	return g.Get(key) != nil
 }
@@ -590,6 +593,16 @@ func (g *SymbolGraph) Descendants(root *SymbolNode, behavior *TraversalBehavior)
 	walk(root)
 
 	return result
+}
+
+func (g *SymbolGraph) Walk(node *SymbolNode, walker TreeWalker) {
+	edges := g.edges[node.Id.BaseId()]
+	for {
+		next := walker(node, edges)
+		if next == nil {
+			break
+		}
+	}
 }
 
 func (g *SymbolGraph) builtinSymbolExists(name string, isUniverse bool) bool {
@@ -927,7 +940,8 @@ func (g *SymbolGraph) ensureTypeNode(root metadata.TypeRef, fileVersion *gast.Fi
 
 	// 4) Type parameter nodes: produce a TypeParam node (idempotent helper).
 	if root.Kind() == metadata.TypeRefKindParam {
-		tNode, err := g.conditionalEnsureTypeParamNode(key)
+		castRef := root.(*typeref.ParamTypeRef)
+		tNode, err := g.conditionalEnsureTypeParamNode(key, castRef.Index)
 		if err != nil {
 			return graphs.SymbolKey{}, fmt.Errorf("ensureTypeNode: ensure type-param node failed: %w", err)
 		}
@@ -1029,7 +1043,10 @@ func (g *SymbolGraph) conditionalEnsureBuiltInNode(key graphs.SymbolKey) error {
 	return fmt.Errorf("ensureUniverseNode: unknown universe type '%s'", key.Name)
 }
 
-func (g *SymbolGraph) conditionalEnsureTypeParamNode(key graphs.SymbolKey) (*SymbolNode, error) {
+func (g *SymbolGraph) conditionalEnsureTypeParamNode(
+	key graphs.SymbolKey,
+	index int,
+) (*SymbolNode, error) {
 	if existing := g.Get(key); existing != nil {
 		return existing, nil
 	}
@@ -1037,7 +1054,10 @@ func (g *SymbolGraph) conditionalEnsureTypeParamNode(key graphs.SymbolKey) (*Sym
 	node := &SymbolNode{
 		Id:   key,
 		Kind: common.SymKindTypeParam,
-		Data: nil, // optional TypeParamMeta if you want (decl index, name)
+		Data: TypeParamMeta{
+			Name:  key.Name,
+			Index: index,
+		},
 	}
 
 	g.addNode(node)
