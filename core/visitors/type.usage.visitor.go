@@ -834,9 +834,7 @@ func chooseSymKind(resolution gast.TypeSpecResolution, pkg *packages.Package) co
 		_ = t
 		return common.SymKindStruct
 	case *ast.InterfaceType:
-		if resolution.TypeSpec.Name != nil &&
-			resolution.TypeSpec.Name.Name == "Context" &&
-			pkg != nil && pkg.PkgPath == "context" {
+		if resolution.IsContextOrTime() {
 			return common.SymKindSpecialBuiltin
 		}
 		return common.SymKindInterface

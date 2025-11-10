@@ -408,6 +408,22 @@ func (t TypeSpecResolution) String() string {
 	return fmt.Sprintf("Type %s.%s", t.DeclaringPackage.PkgPath, t.TypeName)
 }
 
+func (t TypeSpecResolution) IsContextOrTime() bool {
+	if t.DeclaringPackage == nil || t.TypeSpec.Name == nil {
+		return false
+	}
+
+	if t.TypeSpec.Name.Name == "Context" && t.DeclaringPackage.PkgPath == "context" {
+		return true
+	}
+
+	if t.TypeSpec.Name.Name == "Time" && t.DeclaringPackage.PkgPath == "time" {
+		return true
+	}
+
+	return false
+}
+
 // ResolveTypeSpecFromField Resolves type information from the given field.
 // Returns the declaring *packages.Package, *ast.File and the associated *ast.TypeSpec
 // Has 3 possible outcomes:

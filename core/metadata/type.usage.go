@@ -29,7 +29,7 @@ func (t TypeUsageMeta) Resolve(ctx ReductionContext) (definitions.TypeMetadata, 
 
 	if symKey.IsUniverse {
 		return definitions.TypeMetadata{
-			Name:           t.Name,
+			Name:           t.Root.SimpleTypeString(),
 			Import:         common.ImportTypeNone,
 			IsUniverseType: true,
 			IsByAddress:    t.IsByAddress(),
