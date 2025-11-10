@@ -32,6 +32,10 @@ type TypeRef interface {
 	// This can be used to feed the spec generator as it does not require any package/language level information
 	SimpleTypeString() string
 
+	// A key to be used for metadata cache lookups.
+	// Usually the same as the SimpleTypeString
+	CacheLookupKey(fileVersion *gast.FileVersion) (graphs.SymbolKey, error)
+
 	ToSymKey(fileVersion *gast.FileVersion) (graphs.SymbolKey, error)
 	Flatten() []TypeRef
 }

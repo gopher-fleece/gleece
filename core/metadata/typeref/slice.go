@@ -15,9 +15,12 @@ func (s *SliceTypeRef) CanonicalString() string {
 	return "[]" + s.Elem.CanonicalString()
 }
 
-
 func (s *SliceTypeRef) SimpleTypeString() string {
 	return "[]" + s.Elem.SimpleTypeString()
+}
+
+func (s *SliceTypeRef) CacheLookupKey(fileVersion *gast.FileVersion) (graphs.SymbolKey, error) {
+	return s.Elem.CacheLookupKey(fileVersion)
 }
 
 func (s *SliceTypeRef) ToSymKey(fileVersion *gast.FileVersion) (graphs.SymbolKey, error) {

@@ -26,6 +26,10 @@ func (f *FuncTypeRef) SimpleTypeString() string {
 	return f.stringRepresentation(false)
 }
 
+func (f *FuncTypeRef) CacheLookupKey(fileVersion *gast.FileVersion) (graphs.SymbolKey, error) {
+	return f.ToSymKey(fileVersion)
+}
+
 func (f *FuncTypeRef) stringRepresentation(canonical bool) string {
 	params := make([]string, 0, len(f.Params))
 

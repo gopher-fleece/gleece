@@ -55,6 +55,10 @@ func (n *NamedTypeRef) SimpleTypeString() string {
 	return fmt.Sprintf("%s[%s]", n.Key.Name, strings.Join(argStrings, ","))
 }
 
+func (n *NamedTypeRef) CacheLookupKey(fileVersion *gast.FileVersion) (graphs.SymbolKey, error) {
+	return n.ToSymKey(fileVersion)
+}
+
 func (n *NamedTypeRef) ToSymKey(fileVersion *gast.FileVersion) (graphs.SymbolKey, error) {
 	// if Key present (declared/universe), use it
 	if !n.Key.Empty() {

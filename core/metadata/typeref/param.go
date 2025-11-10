@@ -29,6 +29,10 @@ func (p *ParamTypeRef) SimpleTypeString() string {
 	return p.CanonicalString()
 }
 
+func (p *ParamTypeRef) CacheLookupKey(fileVersion *gast.FileVersion) (graphs.SymbolKey, error) {
+	return p.ToSymKey(fileVersion)
+}
+
 func (p *ParamTypeRef) ToSymKey(fileVersion *gast.FileVersion) (graphs.SymbolKey, error) {
 	if fileVersion == nil {
 		return graphs.SymbolKey{}, fmt.Errorf("fileVersion required for ParamTypeRef key")

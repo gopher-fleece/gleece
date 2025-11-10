@@ -21,6 +21,10 @@ func (p *PtrTypeRef) SimpleTypeString() string {
 	return p.Elem.SimpleTypeString()
 }
 
+func (p *PtrTypeRef) CacheLookupKey(fileVersion *gast.FileVersion) (graphs.SymbolKey, error) {
+	return p.Elem.ToSymKey(fileVersion)
+}
+
 func (p *PtrTypeRef) ToSymKey(fileVersion *gast.FileVersion) (graphs.SymbolKey, error) {
 	elemKey, err := p.Elem.ToSymKey(fileVersion)
 	if err != nil {

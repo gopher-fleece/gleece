@@ -1,4 +1,4 @@
-package sanity_test
+package generics_test
 
 import (
 	"github.com/gopher-fleece/gleece/test/types"
@@ -78,4 +78,10 @@ func (ec *GenericsController) RecvWithMultiGenericStructBody(body MultiGenericSt
 // @Route(/multi-generic-struct-body)
 func (ec *GenericsController) RecvWithMultiGenericStructResponse() (MultiGenericStruct[string, int], error) {
 	return MultiGenericStruct[string, int]{}, nil
+}
+
+// @Method(POST)
+// @Route(/multi-generic-struct-body-diff-params)
+func (ec *GenericsController) RecvWithMultiGenericStructWithDiffTParamsResponse() (MultiGenericStruct[bool, int], error) {
+	return MultiGenericStruct[bool, int]{}, nil
 }

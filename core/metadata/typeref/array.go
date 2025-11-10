@@ -27,6 +27,10 @@ func (a *ArrayTypeRef) SimpleTypeString() string {
 	return "[]" + a.Elem.SimpleTypeString()
 }
 
+func (a *ArrayTypeRef) CacheLookupKey(fileVersion *gast.FileVersion) (graphs.SymbolKey, error) {
+	return a.Elem.CacheLookupKey(fileVersion)
+}
+
 func (a *ArrayTypeRef) ToSymKey(fileVersion *gast.FileVersion) (graphs.SymbolKey, error) {
 	elemKey, err := a.Elem.ToSymKey(fileVersion)
 	if err != nil {

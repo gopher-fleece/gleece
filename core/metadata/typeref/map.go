@@ -23,6 +23,10 @@ func (m *MapTypeRef) SimpleTypeString() string {
 	return fmt.Sprintf("map[%s]%s", m.Key.SimpleTypeString(), m.Value.SimpleTypeString())
 }
 
+func (m *MapTypeRef) CacheLookupKey(fileVersion *gast.FileVersion) (graphs.SymbolKey, error) {
+	return m.ToSymKey(fileVersion)
+}
+
 func (m *MapTypeRef) ToSymKey(fileVersion *gast.FileVersion) (graphs.SymbolKey, error) {
 	keyK, err := m.Key.ToSymKey(fileVersion)
 	if err != nil {

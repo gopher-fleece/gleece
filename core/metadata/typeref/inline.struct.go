@@ -29,6 +29,10 @@ func (i *InlineStructTypeRef) SimpleTypeString() string {
 	return i.stringRepresentation(false)
 }
 
+func (i *InlineStructTypeRef) CacheLookupKey(fileVersion *gast.FileVersion) (graphs.SymbolKey, error) {
+	return i.ToSymKey(fileVersion)
+}
+
 func (i *InlineStructTypeRef) stringRepresentation(canonical bool) string {
 	// Build canonical from fields (short, deterministic).
 	parts := make([]string, 0, len(i.Fields))

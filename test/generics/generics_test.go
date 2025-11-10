@@ -1,4 +1,4 @@
-package sanity_test
+package generics_test
 
 import (
 	"encoding/json"

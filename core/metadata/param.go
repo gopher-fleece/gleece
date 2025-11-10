@@ -1,6 +1,10 @@
 package metadata
 
-import "github.com/gopher-fleece/gleece/definitions"
+import (
+	"fmt"
+
+	"github.com/gopher-fleece/gleece/definitions"
+)
 
 type FuncParam struct {
 	SymNodeMeta
@@ -37,20 +41,21 @@ func (v FuncParam) Reduce(ctx ReductionContext) (definitions.FuncParam, error) {
 		}
 	}
 
-	/*
-	TMP
-	typeRef, err := v.Type.GetBaseTypeRefKey()
-	if err != nil {
-		return definitions.FuncParam{}, err
-	}
-	*/
-
 	// Find the parameter's attribute in the receiver's annotations
 	var paramDescription string
 	paramAttrib := v.Annotations.FindFirstByValue(v.Name)
 	if paramAttrib != nil {
 		// Note that nil here is not valid and should be rejected at the validation stage
 		paramDescription = paramAttrib.Description
+	}
+
+	symKey, err := v.Type.Root.CacheLookupKey(v.FVersion)
+	if err != nil {
+		return definitions.FuncParam{}, fmt.Errorf(
+			"failed to derive symbol key for function parameter '%s' - %v",
+			v.Name,
+			err,
+		)
 	}
 
 	return definitions.FuncParam{
@@ -63,7 +68,7 @@ func (v FuncParam) Reduce(ctx ReductionContext) (definitions.FuncParam, error) {
 		PassedIn:           passedIn,
 		NameInSchema:       nameInSchema,
 		Description:        paramDescription,
-		// UniqueImportSerial: ctx.SyncedProvider.GetIdForKey(typeRef),
+		UniqueImportSerial: ctx.SyncedProvider.GetIdForKey(symKey),
 		Validator:          validator,
 		Deprecation:        GetDeprecationOpts(v.Annotations),
 	}, nil

@@ -83,7 +83,6 @@ func (v *EnumVisitor) extractEnumAliasType(
 	spec *ast.TypeSpec,
 	typeName *types.TypeName,
 ) (metadata.EnumMeta, error) {
-
 	v.enterFmt("Extracting metadata for enum %s.%s", enumPkg.PkgPath, typeName.Name())
 	defer v.exit()
 

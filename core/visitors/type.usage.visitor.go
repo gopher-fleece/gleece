@@ -101,41 +101,37 @@ func (v *TypeUsageVisitor) VisitExpr(
 }
 
 // deriveTopMetaFromRoot inspects the structural root and returns a topLevelMeta and import type.
+// It collapses pointer/array/slice wrappers first so pointer-to-enum and slice-of-instantiated behave correctly.
 func (v *TypeUsageVisitor) deriveTopMetaFromRoot(
 	pkg *packages.Package,
 	file *ast.File,
 	expr ast.Expr,
 	root metadata.TypeRef,
 ) (*topLevelMeta, common.ImportType, error) {
-	// 1) Dereference pointer TypeRefs: *T, **T -> T
-	derefRoot := root
-	for {
-		if pr, ok := derefRoot.(*typeref.PtrTypeRef); ok {
-			derefRoot = pr.Elem
-			continue
-		}
-		break
-	}
+	// Collapse pointer/array/slice to the inner element when possible
+	innerRef, collapsed := collapseContainerTypeRef(root)
 
-	// 2) Unwrap address-of unary exprs: &X -> X (so &CustomError{...} becomes CustomError{...})
+	// Unwrap common AST wrappers so resolution sees the inner node
 	unwrappedExpr := unwrapExpr(expr)
 
-	// 3) Now check if the dereferenced type is a named (or generic-named) type
-	named, isNamed := isNamedRef(derefRoot)
-
+	// Check named-ness against the inner (collapsed) ref
+	named, isNamed := isNamedRef(innerRef)
 	if isNamed && named != nil {
-		// Case 1: plain named reference without type args -> resolve declaration or universe
-		if len(named.TypeArgs) <= 0 {
+		// plain named reference without type args -> resolve declaration or universe
+		if len(named.TypeArgs) == 0 {
 			return v.resolveNamedType(pkg, file, unwrappedExpr)
 		}
 
-		// Case 2: instantiated named usage T[A,...] -> usage-centric canonical name, attempt to resolve base
-		// pass the dereferenced root (the actual NamedTypeRef) for generic handling
-		return v.resolveGenericNamedType(pkg, file, unwrappedExpr, derefRoot)
+		// Instantiated named usage T[A,...] -> pass the named inner ref for generic handling
+		return v.resolveGenericNamedType(pkg, file, unwrappedExpr, innerRef)
 	}
 
-	// Case 3: composite types (maps, funcs, pointers), param types, etc. Create usage-centric meta.
-	// Use original expr/root here (preserve pointer/composite shape for composite resolver).
+	// Not a named inner type:
+	// - if we collapsed a container, prefer resolving the composite/inner using the unwrapped expr
+	// - otherwise resolve using the original shape (preserve pointer/composite for composite resolver)
+	if collapsed {
+		return v.resolveCompositeType(pkg, file, unwrappedExpr, innerRef)
+	}
 	return v.resolveCompositeType(pkg, file, expr, root)
 }
 
@@ -845,7 +841,7 @@ func chooseSymKind(resolution gast.TypeSpecResolution, pkg *packages.Package) co
 		}
 		return common.SymKindInterface
 	case *ast.Ident:
-		if pkg != nil && gast.IsEnumLike(pkg, resolution.TypeSpec) {
+		if pkg != nil && gast.IsEnumLike(resolution.DeclaringPackage, resolution.TypeSpec) {
 			return common.SymKindEnum
 		}
 		return common.SymKindAlias
@@ -871,23 +867,66 @@ func canonicalNameForUsage(root metadata.TypeRef) string {
 	return root.CanonicalString()
 }
 
-// unwrapExpr removes common pointer/address/deref/type wrappers so resolution sees the inner expr.
-// It preserves the original if nothing matched.
+// collapseContainerTypeRef unwraps Ptr / Slice / Array TypeRefs and returns the innermost element.
+// Returns the inner TypeRef and true if any container was collapsed.
+func collapseContainerTypeRef(root metadata.TypeRef) (metadata.TypeRef, bool) {
+	if root == nil {
+		return nil, false
+	}
+
+	inner := root
+	collapsed := false
+	for {
+		switch t := inner.(type) {
+		case *typeref.PtrTypeRef:
+			if t.Elem == nil {
+				return inner, collapsed
+			}
+			inner = t.Elem
+			collapsed = true
+			continue
+		case *typeref.SliceTypeRef:
+			if t.Elem == nil {
+				return inner, collapsed
+			}
+			inner = t.Elem
+			collapsed = true
+			continue
+		case *typeref.ArrayTypeRef:
+			if t.Elem == nil {
+				return inner, collapsed
+			}
+			inner = t.Elem
+			collapsed = true
+			continue
+		default:
+			return inner, collapsed
+		}
+	}
+}
+
+// unwrapExpr removes common wrappers from an AST expr so resolution sees the inner expression.
+// It strips &, * (unary/star) parentheses and array/slice types.
 func unwrapExpr(expr ast.Expr) ast.Expr {
 	for {
 		switch e := expr.(type) {
 		case *ast.UnaryExpr:
-			// address (&X) and indirection (*X) appear as UnaryExpr with token.AND / token.MUL
+			// address (&X) and indirection (*X)
 			if e.Op == token.AND || e.Op == token.MUL {
 				expr = e.X
 				continue
 			}
+			return expr
 		case *ast.StarExpr:
-			// pointer type or star expression (e.g. *T or *x) — unwrap to inner X
+			// pointer expr/type: *X
 			expr = e.X
 			continue
+		case *ast.ArrayType:
+			// slice/array: unwrap to element
+			expr = e.Elt
+			continue
 		case *ast.ParenExpr:
-			// strip parentheses: (T) -> T
+			// (T) -> T
 			expr = e.X
 			continue
 		default:

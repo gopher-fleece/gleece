@@ -18,15 +18,27 @@ type TypeUsageMeta struct {
 }
 
 func (t TypeUsageMeta) Resolve(ctx ReductionContext) (definitions.TypeMetadata, error) {
-	symKey, err := t.Root.ToSymKey(t.FVersion)
+	symKey, err := t.Root.CacheLookupKey(t.FVersion)
 	if err != nil {
 		return definitions.TypeMetadata{}, fmt.Errorf(
-			"failed to derive symbol key for type usage '%s' - %v",
+			"failed to derive cache lookup symbol key for type usage '%s' - %v",
 			t.Name,
 			err,
 		)
 	}
 
+	if symKey.IsUniverse {
+		return definitions.TypeMetadata{
+			Name:           t.Name,
+			Import:         common.ImportTypeNone,
+			IsUniverseType: true,
+			IsByAddress:    t.IsByAddress(),
+			SymbolKind:     t.SymbolKind,
+			AliasMetadata:  nil,
+		}, nil
+	}
+
+	// Check if this usage is for an enum, if so, flatten it to an AliasMetadata
 	underlyingEnum := ctx.MetaCache.GetEnum(symKey)
 
 	alias := definitions.AliasMetadata{}
@@ -46,8 +58,9 @@ func (t TypeUsageMeta) Resolve(ctx ReductionContext) (definitions.TypeMetadata, 
 		description = t.Annotations.GetDescription()
 	}
 
+	name := t.Root.SimpleTypeString()
 	return definitions.TypeMetadata{
-		Name:                t.Root.SimpleTypeString(),
+		Name:                name,
 		PkgPath:             t.PkgPath,
 		DefaultPackageAlias: gast.GetDefaultPkgAliasByName(t.PkgPath),
 		Description:         description,

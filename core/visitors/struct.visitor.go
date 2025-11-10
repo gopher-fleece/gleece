@@ -151,9 +151,8 @@ func (v *StructVisitor) getFieldMeta(
 		return nil, v.getFrozenError("failed to obtain annotations for field/s [%v] - %v", names, err)
 	}
 
-	meta := []metadata.FieldMeta{}
-	for _, name := range names {
-		fieldMeta := metadata.FieldMeta{
+	createMeta := func(name string) metadata.FieldMeta {
+		return metadata.FieldMeta{
 			SymNodeMeta: metadata.SymNodeMeta{
 				Name:        name,
 				Node:        field,
@@ -166,7 +165,15 @@ func (v *StructVisitor) getFieldMeta(
 			Type:       typeUsage,
 			IsEmbedded: isEmbedded,
 		}
-		meta = append(meta, fieldMeta)
+	}
+
+	if len(names) <= 0 {
+		return []metadata.FieldMeta{createMeta(typeUsage.Name)}, nil
+	}
+
+	meta := []metadata.FieldMeta{}
+	for _, name := range names {
+		meta = append(meta, createMeta(name))
 	}
 
 	return meta, nil
