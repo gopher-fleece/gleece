@@ -73,9 +73,14 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 			structNode, _ = graph.AddStruct(symboldg.CreateStructNode{Data: structMeta})
 
 			fieldMeta := metadata.FieldMeta{
-				SymNodeMeta: metadata.SymNodeMeta{Node: utils.MakeIdent("Child"), FVersion: fVersion},
+				SymNodeMeta: metadata.SymNodeMeta{
+					Node:       utils.MakeIdent("Child"),
+					FVersion:   fVersion,
+					SymbolKind: common.SymKindField,
+				},
 				Type: metadata.TypeUsageMeta{
 					SymNodeMeta: metadata.SymNodeMeta{Name: "int", FVersion: fVersion},
+					Root:        utils.MakeUniverseRoot("int"),
 				},
 			}
 			fieldNode, _ = graph.AddField(symboldg.CreateFieldNode{Data: fieldMeta})
@@ -119,6 +124,7 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 					SymNodeMeta: metadata.SymNodeMeta{Node: utils.MakeIdent("AnotherChild"), FVersion: fVersion},
 					Type: metadata.TypeUsageMeta{
 						SymNodeMeta: metadata.SymNodeMeta{Name: "int", FVersion: fVersion},
+						Root:        utils.MakeUniverseRoot("int"),
 					},
 				}
 				fieldNode, _ = graph.AddField(symboldg.CreateFieldNode{Data: fieldMeta})
@@ -194,6 +200,7 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 					SymNodeMeta: metadata.SymNodeMeta{Node: utils.MakeIdent("Child"), FVersion: fVersion},
 					Type: metadata.TypeUsageMeta{
 						SymNodeMeta: metadata.SymNodeMeta{Name: "int", FVersion: fVersion},
+						Root:        utils.MakeUniverseRoot("int"),
 					},
 				},
 			})
@@ -203,6 +210,7 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 					SymNodeMeta: metadata.SymNodeMeta{Node: utils.MakeIdent("OtherChild"), FVersion: fVersion},
 					Type: metadata.TypeUsageMeta{
 						SymNodeMeta: metadata.SymNodeMeta{Name: "string", FVersion: fVersion},
+						Root:        utils.MakeUniverseRoot("string"),
 					},
 				},
 			})
@@ -334,6 +342,7 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 					SymNodeMeta: metadata.SymNodeMeta{Node: utils.MakeIdent("Child"), FVersion: fVersion},
 					Type: metadata.TypeUsageMeta{
 						SymNodeMeta: metadata.SymNodeMeta{Name: "int", FVersion: fVersion},
+						Root:        utils.MakeUniverseRoot("int"),
 					},
 				},
 			})
@@ -342,6 +351,7 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 					SymNodeMeta: metadata.SymNodeMeta{Node: utils.MakeIdent("GrandChild"), FVersion: fVersion},
 					Type: metadata.TypeUsageMeta{
 						SymNodeMeta: metadata.SymNodeMeta{Name: "int", FVersion: fVersion},
+						Root:        utils.MakeUniverseRoot("int"),
 					},
 				},
 			})
@@ -352,8 +362,14 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 
 		It("Recursively traverses all descendants", func() {
 			result := graph.Descendants(structNode, nil)
-			Expect(result).To(HaveLen(2))
-			Expect(result).To(ContainElements(childNode, grandChildNode))
+			Expect(result).To(HaveLen(3))
+
+			// The graph materializes some primitives like integers so we actually do expect
+			// an 'int' node here.
+			intNode := graph.Get(graphs.NewUniverseSymbolKey("int"))
+			Expect(intNode).ToNot(BeNil())
+
+			Expect(result).To(ContainElements(childNode, grandChildNode, intNode))
 		})
 
 		It("Does not revisit already visited nodes", func() {
@@ -361,9 +377,15 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 			graph.AddEdge(grandChildNode.Id, childNode.Id, symboldg.EdgeKindField, nil)
 
 			result := graph.Descendants(structNode, nil)
+
+			// The graph materializes some primitives like integers so we actually do expect
+			// an 'int' node here.
+			intNode := graph.Get(graphs.NewUniverseSymbolKey("int"))
+			Expect(intNode).ToNot(BeNil())
+
 			// Should still only include each node once
-			Expect(result).To(HaveLen(2))
-			Expect(result).To(ContainElements(childNode, grandChildNode))
+			Expect(result).To(HaveLen(3))
+			Expect(result).To(ContainElements(childNode, grandChildNode, intNode))
 		})
 
 		It("Respects the filter to exclude some children", func() {

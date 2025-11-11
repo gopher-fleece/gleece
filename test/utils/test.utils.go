@@ -17,11 +17,13 @@ import (
 	"github.com/gopher-fleece/gleece/core/annotations"
 	"github.com/gopher-fleece/gleece/core/arbitrators/caching"
 	"github.com/gopher-fleece/gleece/core/metadata"
+	"github.com/gopher-fleece/gleece/core/metadata/typeref"
 	"github.com/gopher-fleece/gleece/core/pipeline"
 	"github.com/gopher-fleece/gleece/core/visitors"
 	"github.com/gopher-fleece/gleece/core/visitors/providers"
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/gast"
+	"github.com/gopher-fleece/gleece/graphs"
 	"github.com/gopher-fleece/gleece/graphs/symboldg"
 	. "github.com/onsi/ginkgo/v2"
 	"golang.org/x/tools/go/packages"
@@ -398,4 +400,12 @@ func GetMockRetVals(number int) []metadata.FuncReturnValue {
 		)
 	}
 	return retVals
+}
+
+// MakeUniverseRoot is a tiny test helper that builds a NamedTypeRef pointing at a universe type.
+// Note: typeref.NewNamedTypeRef returns a value so we take its address for Root.
+func MakeUniverseRoot(universeName string) *typeref.NamedTypeRef {
+	k := graphs.NewUniverseSymbolKey(universeName)
+	r := typeref.NewNamedTypeRef(&k, nil)
+	return &r
 }

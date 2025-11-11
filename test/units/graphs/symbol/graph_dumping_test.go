@@ -1,7 +1,6 @@
 package symbol_test
 
 import (
-	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/core/metadata"
 	"github.com/gopher-fleece/gleece/gast"
 	"github.com/gopher-fleece/gleece/graphs"
@@ -37,9 +36,6 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 					Value: "Some Value",
 					Type: metadata.TypeUsageMeta{
 						SymNodeMeta: metadata.SymNodeMeta{Name: "string", FVersion: fVersion},
-						Layers: []metadata.TypeLayer{
-							metadata.NewBaseLayer(common.Ptr(graphs.NewUniverseSymbolKey("string"))),
-						},
 					},
 				},
 			})
@@ -70,9 +66,6 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 					Value: "Some Value",
 					Type: metadata.TypeUsageMeta{
 						SymNodeMeta: metadata.SymNodeMeta{Name: "string", FVersion: fVersion},
-						Layers: []metadata.TypeLayer{
-							metadata.NewBaseLayer(common.Ptr(graphs.NewUniverseSymbolKey("string"))),
-						},
 					},
 				},
 			})
@@ -117,9 +110,6 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 					Value: "Some Value",
 					Type: metadata.TypeUsageMeta{
 						SymNodeMeta: metadata.SymNodeMeta{Name: "string", FVersion: fVersion},
-						Layers: []metadata.TypeLayer{
-							metadata.NewBaseLayer(common.Ptr(graphs.NewUniverseSymbolKey("string"))),
-						},
 					},
 				},
 			})
@@ -149,31 +139,8 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 		It("Outputs correct empty graph with default style when empty", func() {
 			text := graph.ToDot(nil)
 
-			const expectedDotGraph = "digraph SymbolGraph {\n" +
-				"  rankdir=TB;\n" +
-				"  subgraph cluster_legend {\n" +
-				"    label = \"Legend\";\n" +
-				"    style = dashed;\n" +
-				"    L0 [label=\"Alias\", style=filled, shape=note, fillcolor=\"palegreen\"];\n" +
-				"    L1 [label=\"Builtin\", style=filled, shape=box, fillcolor=\"gray80\"];\n" +
-				"    L2 [label=\"Constant\", style=filled, shape=egg, fillcolor=\"plum\"];\n" +
-				"    L3 [label=\"Controller\", style=filled, shape=octagon, fillcolor=\"lightcyan\"];\n" +
-				"    L4 [label=\"Enum\", style=filled, shape=folder, fillcolor=\"mediumpurple\"];\n" +
-				"    L5 [label=\"EnumValue\", style=filled, shape=note, fillcolor=\"plum\"];\n" +
-				"    L6 [label=\"Field\", style=filled, shape=ellipse, fillcolor=\"gold\"];\n" +
-				"    L7 [label=\"Function\", style=filled, shape=oval, fillcolor=\"darkseagreen\"];\n" +
-				"    L8 [label=\"Interface\", style=filled, shape=component, fillcolor=\"lightskyblue\"];\n" +
-				"    L9 [label=\"Package\", style=filled, shape=folder, fillcolor=\"lightyellow\"];\n" +
-				"    L10 [label=\"Parameter\", style=filled, shape=parallelogram, fillcolor=\"khaki\"];\n" +
-				"    L11 [label=\"Receiver\", style=filled, shape=hexagon, fillcolor=\"orange\"];\n" +
-				"    L12 [label=\"RetType\", style=filled, shape=diamond, fillcolor=\"lightgrey\"];\n" +
-				"    L13 [label=\"Struct\", style=filled, shape=box, fillcolor=\"lightblue\"];\n" +
-				"    L14 [label=\"Unknown\", style=filled, shape=triangle, fillcolor=\"lightcoral\"];\n" +
-				"    L15 [label=\"Variable\", style=filled, shape=circle, fillcolor=\"lightsteelblue\"];\n" +
-				"  }\n" +
-				"}\n"
-
-			Expect(text).To(Equal(expectedDotGraph))
+			// Graph renders legend only if not empty
+			Expect(text).To(Equal("digraph SymbolGraph {\n  rankdir=TB;\n}\n"))
 		})
 
 		It("Outputs nodes and their edges", func() {

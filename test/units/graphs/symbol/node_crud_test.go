@@ -28,11 +28,14 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 					FVersion: fVersion,
 				},
 			}
+
+			data := metadata.ControllerMeta{
+				Struct:    structMeta,
+				Receivers: []metadata.ReceiverMeta{},
+			}
+
 			request := symboldg.CreateControllerNode{
-				Data: metadata.ControllerMeta{
-					Struct:    structMeta,
-					Receivers: []metadata.ReceiverMeta{},
-				},
+				Data:        data,
 				Annotations: nil,
 			}
 
@@ -40,7 +43,7 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(node).ToNot(BeNil())
 			Expect(node.Kind).To(Equal(common.SymKindController))
-			Expect(node.Data).To(Equal(structMeta))
+			Expect(node.Data).To(Equal(data))
 		})
 
 		It("Returns an error when createAndAddSymNode returns an error", func() {
@@ -534,6 +537,7 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 						Node:     nil,
 						FVersion: fVersion,
 					},
+					Root:   utils.MakeUniverseRoot("float32"),
 					Import: common.ImportTypeNone,
 				},
 				IsEmbedded: false,
@@ -545,6 +549,7 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 				Data:        fieldMeta,
 				Annotations: nil,
 			})
+
 			Expect(err).ToNot(HaveOccurred())
 			Expect(fieldNode).ToNot(BeNil())
 
@@ -574,13 +579,14 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 
 		It("Returns an error when getTypeRef fails due to missing base type", func() {
 			badMeta := fieldMeta
-			// badMeta.Type.Layers = nil // no base layer → getTypeRef error
+			badMeta.Type.Root = nil
 
 			fieldNode, err := graph.AddField(symboldg.CreateFieldNode{
 				Data:        badMeta,
 				Annotations: nil,
 			})
-			Expect(err).To(HaveOccurred())
+
+			Expect(err).To(MatchError(ContainSubstring("missing Root TypeRef")))
 			Expect(fieldNode).To(BeNil())
 		})
 	})
@@ -684,9 +690,13 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 			// dependent -> other (so dependent should NOT be orphaned when target removed)
 			target, err := graph.AddField(symboldg.CreateFieldNode{
 				Data: metadata.FieldMeta{
-					SymNodeMeta: metadata.SymNodeMeta{Node: utils.MakeIdent("TargetField"), FVersion: fVersion},
+					SymNodeMeta: metadata.SymNodeMeta{
+						Node:     utils.MakeIdent("TargetField"),
+						FVersion: fVersion,
+					},
 					Type: metadata.TypeUsageMeta{
 						SymNodeMeta: metadata.SymNodeMeta{FVersion: fVersion},
+						Root:        utils.MakeUniverseRoot("float32"),
 					},
 				},
 			})
@@ -733,6 +743,7 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 					SymNodeMeta: metadata.SymNodeMeta{Node: utils.MakeIdent("A_field"), FVersion: fVersion},
 					Type: metadata.TypeUsageMeta{
 						SymNodeMeta: metadata.SymNodeMeta{FVersion: fVersion},
+						Root:        utils.MakeUniverseRoot("float32"),
 					},
 				},
 			})
@@ -807,6 +818,7 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 					SymNodeMeta: metadata.SymNodeMeta{Node: utils.MakeIdent("CleanupChild"), FVersion: fVersion},
 					Type: metadata.TypeUsageMeta{
 						SymNodeMeta: metadata.SymNodeMeta{FVersion: fVersion},
+						Root:        utils.MakeUniverseRoot("float32"),
 					},
 				},
 			})

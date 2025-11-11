@@ -99,7 +99,7 @@ var _ = Describe("Unit Tests - Dot", func() {
 				builder.AddNode(from, common.SymKindStruct, "From")
 				builder.AddNode(to, common.SymKindInterface, "To")
 
-				builder.AddEdge(from, to, "calls")
+				builder.AddEdge(from, to, "calls", nil)
 
 				out := builder.Finish()
 				Expect(out).To(ContainSubstring("N0 -> N1"))
@@ -114,7 +114,7 @@ var _ = Describe("Unit Tests - Dot", func() {
 				db.AddNode(from, common.SymKindStruct, "From")
 				db.AddNode(to, common.SymKindStruct, "To")
 
-				db.AddEdge(from, to, "ty") // edge label and style present in theme
+				db.AddEdge(from, to, "ty", nil) // edge label and style present in theme
 				output := db.Finish()
 				Expect(output).To(ContainSubstring("label=\"Type\""))
 				Expect(output).To(ContainSubstring("color=\"black\""))
@@ -128,7 +128,7 @@ var _ = Describe("Unit Tests - Dot", func() {
 				db.AddNode(from, common.SymKindStruct, "From2")
 
 				unknownTo := graphs.SymbolKey{Name: "unknown_to"}
-				db.AddEdge(from, unknownTo, "unknown_kind")
+				db.AddEdge(from, unknownTo, "unknown_kind", nil)
 				output := db.Finish()
 
 				// Should add error node and one edge to error node
@@ -151,7 +151,7 @@ var _ = Describe("Unit Tests - Dot", func() {
 				to := graphs.SymbolKey{Name: "to_unknown"}
 
 				db.AddNode(from, common.SymKindStruct, "From")
-				db.AddEdge(from, to, "edgekind")
+				db.AddEdge(from, to, "edgekind", nil)
 
 				output := db.Finish()
 				Expect(output).To(ContainSubstring("fillcolor=\"red\""))
@@ -170,12 +170,12 @@ var _ = Describe("Unit Tests - Dot", func() {
 				// If it's not, it'll appear twice for each edge.
 
 				db.AddNode(from, common.SymKindStruct, "From")
-				db.AddEdge(from, to, "edgekind")
+				db.AddEdge(from, to, "edgekind", nil)
 				before := db.Finish()
 
 				// Add another edge to unknown node, should not duplicate error node
 				to2 := graphs.SymbolKey{Name: "unknown2"}
-				db.AddEdge(from, to2, "edgekind")
+				db.AddEdge(from, to2, "edgekind", nil)
 				after := db.Finish()
 
 				Expect(strings.Count(before, "N_ERROR")).To(Equal(2))
@@ -184,7 +184,16 @@ var _ = Describe("Unit Tests - Dot", func() {
 		})
 
 		Describe("RenderLegend", func() {
+			It("Does not render legend for an empty graph", func() {
+				builder.RenderLegend()
+
+				out := builder.Finish()
+				Expect(out).ToNot(ContainSubstring("subgraph cluster_legend"))
+				Expect(out).ToNot(ContainSubstring("label = \"Legend\""))
+			})
+
 			It("Renders legend with expected content", func() {
+				builder.AddNode(graphs.NewUniverseSymbolKey("string"), common.SymKindBuiltin, "Test")
 				builder.RenderLegend()
 
 				out := builder.Finish()
@@ -197,17 +206,17 @@ var _ = Describe("Unit Tests - Dot", func() {
 			It("Renders legend with default fallback color and shape", func() {
 				theme := dot.DotTheme{
 					NodeStyles: map[common.SymKind]dot.DotStyle{
-						common.SymKindStruct: {Color: "", Shape: ""},
-						common.SymKindField:  {Color: "", Shape: "circle"},
+						common.SymKindBuiltin: {Color: "", Shape: ""},
 					},
 				}
 				db := dot.NewDotBuilder(&theme)
+				// Add a node to trigger legend render
+				db.AddNode(graphs.NewUniverseSymbolKey("string"), common.SymKindBuiltin, "Test")
 				db.RenderLegend()
 				output := db.Finish()
 
 				Expect(output).To(ContainSubstring("fillcolor=\"gray90\""))
-				Expect(output).To(ContainSubstring("shape=ellipse")) // for empty shape
-				Expect(output).To(ContainSubstring("shape=circle"))  // for set shape
+				Expect(output).To(ContainSubstring("shape=ellipse"))
 			})
 		})
 	})
