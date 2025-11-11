@@ -46,7 +46,7 @@ var _ = Describe("Unit Tests - Metadata", func() {
 								PkgPath:     "",
 								Annotations: &holder,
 							},
-							Layers: []metadata.TypeLayer{},
+							Root: utils.MakeUniverseRoot("string"),
 						},
 					},
 					{
@@ -61,7 +61,7 @@ var _ = Describe("Unit Tests - Metadata", func() {
 								PkgPath:     "",
 								Annotations: &holder,
 							},
-							Layers: []metadata.TypeLayer{},
+							Root: utils.MakeUniverseRoot("int"),
 						},
 						IsEmbedded: true,
 					},
