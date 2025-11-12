@@ -181,7 +181,7 @@ func (v *RouteVisitor) constructRouteMetadata(ctx executionContext) (*metadata.R
 
 	v.context.MetadataCache.AddReceiver(meta)
 
-	_, err = v.context.GraphBuilder.AddRoute(
+	_, err = v.context.Graph.AddRoute(
 		symboldg.CreateRouteNode{
 			Data: meta,
 			ParentController: symboldg.KeyableNodeMeta{
@@ -196,7 +196,7 @@ func (v *RouteVisitor) constructRouteMetadata(ctx executionContext) (*metadata.R
 	}
 
 	for _, param := range params {
-		v.context.GraphBuilder.AddRouteParam(symboldg.CreateParameterNode{
+		v.context.Graph.AddRouteParam(symboldg.CreateParameterNode{
 			Data: param,
 			ParentRoute: symboldg.KeyableNodeMeta{
 				Decl:     meta.Node,
@@ -206,7 +206,7 @@ func (v *RouteVisitor) constructRouteMetadata(ctx executionContext) (*metadata.R
 	}
 
 	for _, retVal := range retVals {
-		v.context.GraphBuilder.AddRouteRetVal(symboldg.CreateReturnValueNode{
+		v.context.Graph.AddRouteRetVal(symboldg.CreateReturnValueNode{
 			Data: retVal,
 			ParentRoute: symboldg.KeyableNodeMeta{
 				Decl:     meta.Node,

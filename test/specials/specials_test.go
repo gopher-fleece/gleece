@@ -1,7 +1,6 @@
 package sanity_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/gopher-fleece/gleece/core/pipeline"
@@ -22,7 +21,6 @@ var _ = Describe("Edge-Cases Controller", func() {
 		It("Generates correct graph", func() {
 			err := pipe.GenerateGraph()
 			Expect(err).To(BeNil())
-			fmt.Println(pipe.Graph().ToDot(nil))
 		})
 	})
 })

@@ -95,6 +95,10 @@ func (o *VisitorOrchestrator) Visit(node ast.Node) ast.Visitor {
 	return o.controllerVisitor.Visit(node)
 }
 
+func (o *VisitorOrchestrator) GetAllSourceFiles() []*ast.File {
+	return o.ctx.ArbitrationProvider.GetAllSourceFiles()
+}
+
 // GetLastError retrieves the last visitor error via the the internal ControllerVisitor.
 // Note that errors are not diagnostics - they are breakages in the processing pipeline.
 func (o *VisitorOrchestrator) GetLastError() error {
@@ -121,7 +125,7 @@ func validateContext(ctx *VisitContext) error {
 		errs = append(errs, errors.New("VisitContext does not have a Gleece Config"))
 	}
 
-	if ctx.GraphBuilder == nil {
+	if ctx.Graph == nil {
 		errs = append(errs, errors.New("VisitContext does not have a graph builder"))
 	}
 

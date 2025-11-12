@@ -28,6 +28,13 @@ func (t TypeUsageMeta) Resolve(ctx ReductionContext) (definitions.TypeMetadata, 
 	}
 
 	if symKey.IsUniverse {
+		//symKind, err := getUniverseSymKind(symKey.Name)
+		//	if err != nil {
+		//		return definitions.TypeMetadata{}, err
+		//	}
+
+		// t.SymKind is kind of the usage's kind - not necessarily the underlying type.
+		// This is some major spaghetti and needs to be improved later - coherency is lacking.
 		return definitions.TypeMetadata{
 			Name:           t.Root.SimpleTypeString(),
 			Import:         common.ImportTypeNone,
@@ -75,3 +82,17 @@ func (t TypeUsageMeta) Resolve(ctx ReductionContext) (definitions.TypeMetadata, 
 func (t TypeUsageMeta) IsContext() bool {
 	return t.Name == "Context" && t.PkgPath == "context"
 }
+
+/*
+func getUniverseSymKind(typeName string) (common.SymKind, error) {
+	if _, ok := symboldg.ToPrimitiveType(typeName); ok {
+		return common.SymKindBuiltin, nil
+	}
+
+	if _, ok := symboldg.ToSpecialType(typeName); ok {
+		return common.SymKindSpecialBuiltin, nil
+	}
+
+	return common.SymKindUnknown, fmt.Errorf("typename '%s' is neither a primitive nor a special type", typeName)
+}
+*/

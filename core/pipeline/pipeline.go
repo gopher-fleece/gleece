@@ -58,7 +58,7 @@ func NewGleecePipeline(gleeceConfig *definitions.GleeceConfig) (GleecePipeline, 
 		GleeceConfig:        gleeceConfig,
 		ArbitrationProvider: arbProvider,
 		MetadataCache:       metaCache,
-		GraphBuilder:        &symGraph,
+		Graph:               &symGraph,
 		SyncedProvider:      &syncedProvider,
 	}
 

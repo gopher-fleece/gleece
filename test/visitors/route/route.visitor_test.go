@@ -303,7 +303,7 @@ func createTestCtx(fileGlobs []string) TestCtx {
 	ctx.visitCtx = &visitors.VisitContext{
 		ArbitrationProvider: arbProvider,
 		MetadataCache:       ctx.metaCache,
-		GraphBuilder:        &ctx.symGraph,
+		Graph:               &ctx.symGraph,
 	}
 
 	ctx.parentCtx = visitors.RouteParentContext{

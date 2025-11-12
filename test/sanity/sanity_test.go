@@ -150,6 +150,8 @@ var _ = Describe("Sanity Controller", func() {
 		Expect(route.Responses[1].TypeMetadata.Import).To(Equal(common.ImportTypeNone))
 		Expect(route.Responses[1].TypeMetadata.IsUniverseType).To(BeTrue())
 		Expect(route.Responses[1].TypeMetadata.IsByAddress).To(BeFalse())
+		// Currently, 'error' is marked 'universe' since it exists in the universe scope and is a *types.TypeName
+		// This is somewhat conflicting with some other internal logic classifying this a 
 		Expect(route.Responses[1].TypeMetadata.SymbolKind).To(Equal(common.SymKindSpecialBuiltin))
 	})
 

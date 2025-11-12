@@ -9,6 +9,7 @@ import (
 	"github.com/gopher-fleece/gleece/gast"
 	"github.com/gopher-fleece/gleece/graphs"
 	"github.com/gopher-fleece/gleece/graphs/symboldg"
+	"github.com/gopher-fleece/gleece/infrastructure/logger"
 	"golang.org/x/tools/go/packages"
 )
 
@@ -186,9 +187,13 @@ func (v *StructVisitor) graphStructAndFields(structMeta metadata.StructMeta) (gr
 		Annotations: structMeta.Annotations,
 	}
 
-	structNode, err := v.context.GraphBuilder.AddStruct(createStructReq)
+	structNode, err := v.context.Graph.AddStruct(createStructReq)
 	if err != nil {
 		return graphs.SymbolKey{}, err
+	}
+
+	if err := v.context.MetadataCache.AddStruct(&structMeta); err != nil {
+		logger.Warn("Struct visitor failed to cache struct '%s' - %v", structMeta.Name, err)
 	}
 
 	// Now insert each field node (so field nodes exist, and edges can be created).
@@ -198,7 +203,7 @@ func (v *StructVisitor) graphStructAndFields(structMeta metadata.StructMeta) (gr
 			Data:        fieldMeta,
 			Annotations: fieldMeta.Annotations,
 		}
-		if _, err := v.context.GraphBuilder.AddField(createFieldReq); err != nil {
+		if _, err := v.context.Graph.AddField(createFieldReq); err != nil {
 			return graphs.SymbolKey{}, err
 		}
 	}

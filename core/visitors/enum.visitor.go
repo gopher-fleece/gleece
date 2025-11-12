@@ -67,7 +67,7 @@ func (v *EnumVisitor) VisitEnumType(
 		Data:        enumMeta,
 		Annotations: enumMeta.Annotations,
 	}
-	enumNode, err := v.context.GraphBuilder.AddEnum(create)
+	enumNode, err := v.context.Graph.AddEnum(create)
 	if err != nil {
 		return metadata.EnumMeta{}, graphs.SymbolKey{}, err
 	}

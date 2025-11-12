@@ -161,7 +161,8 @@ func (v *TypeUsageVisitor) resolveNamedType(
 
 	// Universe/builtin types
 	if resolution.IsUniverse {
-		if err := v.ensureUniverseTypeInGraph(resolution.TypeName); err != nil {
+		kind, err := v.ensureUniverseTypeInGraph(resolution.TypeName)
+		if err != nil {
 			return nil, importType, err
 		}
 
@@ -169,7 +170,7 @@ func (v *TypeUsageVisitor) resolveNamedType(
 			pkg,
 			file,
 			resolution.TypeName,
-			common.SymKindBuiltin,
+			kind,
 			expr,
 		)
 
@@ -225,7 +226,8 @@ func (v *TypeUsageVisitor) resolveGenericNamedType(
 
 	// If base resolved to universe -> ensure primitive and return alias-kind meta
 	if resolution.IsUniverse {
-		if err := v.ensureUniverseTypeInGraph(resolution.TypeName); err != nil {
+		kind, err := v.ensureUniverseTypeInGraph(resolution.TypeName)
+		if err != nil {
 			return nil, common.ImportTypeNone, err
 		}
 
@@ -234,7 +236,7 @@ func (v *TypeUsageVisitor) resolveGenericNamedType(
 			pkg,
 			file,
 			resolution.TypeName,
-			common.SymKindBuiltin,
+			kind,
 			expr,
 		)
 
@@ -406,31 +408,32 @@ func (v *TypeUsageVisitor) ensureDeclMaterialized(
 }
 
 // ensureUniverseTypeInGraph inserts primitives/specials into the graph so later edges can reference them.
-func (v *TypeUsageVisitor) ensureUniverseTypeInGraph(typeName string) error {
-	if !v.materializing {
-		return nil
-	}
+func (v *TypeUsageVisitor) ensureUniverseTypeInGraph(typeName string) (common.SymKind, error) {
 
 	v.enterFmt("ensureUniverseTypeInGraph %s", typeName)
 	defer v.exit()
 
 	// primitives
 	if prim, ok := symboldg.ToPrimitiveType(typeName); ok {
-		if !v.context.GraphBuilder.IsPrimitivePresent(prim) {
-			v.context.GraphBuilder.AddPrimitive(prim)
+		if v.materializing {
+			if !v.context.Graph.IsPrimitivePresent(prim) {
+				v.context.Graph.AddPrimitive(prim)
+			}
 		}
-		return nil
+		return common.SymKindBuiltin, nil
 	}
 
 	// special types
 	if sp, ok := symboldg.ToSpecialType(typeName); ok {
-		if !v.context.GraphBuilder.IsSpecialPresent(sp) {
-			v.context.GraphBuilder.AddSpecial(sp)
+		if v.materializing {
+			if !v.context.Graph.IsSpecialPresent(sp) {
+				v.context.Graph.AddSpecial(sp)
+			}
 		}
-		return nil
+		return common.SymKindSpecialBuiltin, nil
 	}
 
-	return v.getFrozenError("unknown universe type '%s'", typeName)
+	return common.SymKindUnknown, v.getFrozenError("unknown universe type '%s'", typeName)
 }
 
 // ------------------------- buildTypeRef dispatcher + small helpers -------------------------
@@ -669,7 +672,7 @@ func (v *TypeUsageVisitor) buildIdentOrSelectorRef(
 
 	// universe -> ensure primitive/special graph presence
 	if resolution.IsUniverse {
-		if err := v.ensureUniverseTypeInGraph(resolution.TypeName); err != nil {
+		if _, err := v.ensureUniverseTypeInGraph(resolution.TypeName); err != nil {
 			return nil, err
 		}
 

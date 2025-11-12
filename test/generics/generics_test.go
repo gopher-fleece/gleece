@@ -1,8 +1,6 @@
 package generics_test
 
 import (
-	"encoding/json"
-	"fmt"
 	"testing"
 
 	"github.com/gopher-fleece/gleece/core/pipeline"
@@ -23,12 +21,6 @@ var _ = Describe("Generics Controller", func() {
 		It("Bah", func() {
 			err := pipe.GenerateGraph()
 			Expect(err).To(BeNil())
-			fmt.Println(pipe.Graph().ToDot(nil))
-			interm, err := pipe.GenerateIntermediate()
-			Expect(err).To(BeNil())
-			Expect(interm).ToNot(BeNil())
-			dump, _ := json.MarshalIndent(interm, "", "\t")
-			fmt.Println(string(dump))
 		})
 	})
 })

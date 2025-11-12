@@ -293,7 +293,8 @@ func GetVisitContextByRelativeConfigOrFail(relativeConfigPath string) visitors.V
 		GleeceConfig:        config,
 		ArbitrationProvider: arbProvider,
 		MetadataCache:       metaCache,
-		GraphBuilder:        &symGraph,
+		Graph:               &symGraph,
+		SyncedProvider:      common.Ptr(providers.NewSyncedProvider()),
 	}
 }
 

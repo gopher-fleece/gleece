@@ -83,7 +83,7 @@ func (v *AliasVisitor) VisitAlias(
 
 	// Add alias edge: aliasKey -> targetKey
 	// NOTE: EdgeKindAlias should be the alias edge constant in your graph package.
-	v.context.GraphBuilder.AddEdge(aliasKey, targetKey, symboldg.EdgeKindAlias, nil)
+	v.context.Graph.AddEdge(aliasKey, targetKey, symboldg.EdgeKindAlias, nil)
 
 	return aliasKey, nil
 }

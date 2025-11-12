@@ -118,7 +118,7 @@ func (v *FieldVisitor) buildFieldsMeta(
 			Data:        fieldMeta,
 			Annotations: annotationsHolder,
 		}
-		if _, err := v.context.GraphBuilder.AddField(req); err != nil {
+		if _, err := v.context.Graph.AddField(req); err != nil {
 			return nil, v.frozenError(err)
 		}
 

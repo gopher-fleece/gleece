@@ -94,7 +94,7 @@ func (v *ControllerVisitor) addSelfToGraph(meta metadata.ControllerMeta) error {
 	v.enter(fmt.Sprintf("Graph insertion - Controller %s", meta.Struct.Name))
 	defer v.exit()
 
-	_, err := v.context.GraphBuilder.AddController(
+	_, err := v.context.Graph.AddController(
 		symboldg.CreateControllerNode{
 			Data:        meta,
 			Annotations: meta.Struct.Annotations,
