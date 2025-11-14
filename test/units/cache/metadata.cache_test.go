@@ -7,7 +7,6 @@ import (
 	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/core/arbitrators/caching"
 	"github.com/gopher-fleece/gleece/core/metadata"
-	"github.com/gopher-fleece/gleece/core/visitors"
 	"github.com/gopher-fleece/gleece/graphs"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
 	"github.com/gopher-fleece/gleece/test/utils"
@@ -16,15 +15,10 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-type TestCtx struct {
-	visitCtx visitors.VisitContext
-	orc      *visitors.VisitorOrchestrator
-}
-
 var _ = Describe("MetadataCache", func() {
-	var ctx TestCtx
+	var ctx utils.StdTestCtx
 	BeforeEach(func() {
-		ctx = createTestCtx()
+		ctx = utils.CreateStdTestCtx("gleece.test.config.json")
 	})
 
 	Context("NewMetadataCache", func() {
@@ -50,16 +44,16 @@ var _ = Describe("MetadataCache", func() {
 		})
 
 		It("Returns controller when it exists in the cache", func() {
-			for _, file := range ctx.orc.GetAllSourceFiles() {
-				ast.Walk(ctx.orc, file)
+			for _, file := range ctx.Orc.GetAllSourceFiles() {
+				ast.Walk(ctx.Orc, file)
 			}
 
-			controllers := ctx.visitCtx.Graph.FindByKind(common.SymKindController)
+			controllers := ctx.VisitCtx.Graph.FindByKind(common.SymKindController)
 			Expect(controllers).To(HaveLen(1))
 
 			meta := controllers[0].Data.(metadata.ControllerMeta)
 
-			hasController := ctx.visitCtx.MetadataCache.HasController(&meta)
+			hasController := ctx.VisitCtx.MetadataCache.HasController(&meta)
 			Expect(hasController).To(BeTrue())
 		})
 	})
@@ -75,14 +69,14 @@ var _ = Describe("MetadataCache", func() {
 		})
 
 		It("Returns receiver when it exists in the cache", func() {
-			for _, file := range ctx.orc.GetAllSourceFiles() {
-				ast.Walk(ctx.orc, file)
+			for _, file := range ctx.Orc.GetAllSourceFiles() {
+				ast.Walk(ctx.Orc, file)
 			}
 
-			structType := ctx.visitCtx.Graph.FindByKind(common.SymKindStruct)
+			structType := ctx.VisitCtx.Graph.FindByKind(common.SymKindStruct)
 			Expect(structType).To(HaveLen(1))
 
-			hasStruct := ctx.visitCtx.MetadataCache.HasStruct(structType[0].Id)
+			hasStruct := ctx.VisitCtx.MetadataCache.HasStruct(structType[0].Id)
 			Expect(hasStruct).To(BeTrue())
 		})
 	})
@@ -98,14 +92,14 @@ var _ = Describe("MetadataCache", func() {
 		})
 
 		It("Returns struct when it exists in the cache", func() {
-			for _, file := range ctx.orc.GetAllSourceFiles() {
-				ast.Walk(ctx.orc, file)
+			for _, file := range ctx.Orc.GetAllSourceFiles() {
+				ast.Walk(ctx.Orc, file)
 			}
 
-			receivers := ctx.visitCtx.Graph.FindByKind(common.SymKindStruct)
+			receivers := ctx.VisitCtx.Graph.FindByKind(common.SymKindStruct)
 			Expect(receivers).To(HaveLen(1))
 
-			hasRoute := ctx.visitCtx.MetadataCache.HasStruct(receivers[0].Id)
+			hasRoute := ctx.VisitCtx.MetadataCache.HasStruct(receivers[0].Id)
 			Expect(hasRoute).To(BeTrue())
 		})
 	})
@@ -121,21 +115,21 @@ var _ = Describe("MetadataCache", func() {
 		})
 
 		It("Returns enum when it exists in the cache", func() {
-			for _, file := range ctx.orc.GetAllSourceFiles() {
-				ast.Walk(ctx.orc, file)
+			for _, file := range ctx.Orc.GetAllSourceFiles() {
+				ast.Walk(ctx.Orc, file)
 			}
 
-			enums := ctx.visitCtx.Graph.FindByKind(common.SymKindEnum)
+			enums := ctx.VisitCtx.Graph.FindByKind(common.SymKindEnum)
 			Expect(enums).To(HaveLen(1))
 
-			hasEnum := ctx.visitCtx.MetadataCache.HasEnum(enums[0].Id)
+			hasEnum := ctx.VisitCtx.MetadataCache.HasEnum(enums[0].Id)
 			Expect(hasEnum).To(BeTrue())
 		})
 	})
 
 	Context("GetFileVersion", func() {
 		It("Returns an error when unable to construct a FileVersion", func() {
-			_, err := ctx.visitCtx.MetadataCache.GetFileVersion(&ast.File{}, nil)
+			_, err := ctx.VisitCtx.MetadataCache.GetFileVersion(&ast.File{}, nil)
 			Expect(err).To(MatchError(ContainSubstring("GetFileFullPath was provided nil file or fileSet")))
 		})
 	})
@@ -171,30 +165,14 @@ var _ = Describe("MetadataCache", func() {
 				},
 			}
 
-			err := ctx.visitCtx.MetadataCache.AddEnum(&enumMeta)
+			err := ctx.VisitCtx.MetadataCache.AddEnum(&enumMeta)
 			Expect(err).To(BeNil())
 
-			err = ctx.visitCtx.MetadataCache.AddEnum(&enumMeta)
+			err = ctx.VisitCtx.MetadataCache.AddEnum(&enumMeta)
 			Expect(err).To(MatchError(ContainSubstring("already exists in cache")))
 		})
 	})
 })
-
-func createTestCtx() TestCtx {
-	testCtx := TestCtx{
-		visitCtx: utils.GetVisitContextByRelativeConfigOrFail("gleece.test.config.json"),
-	}
-
-	orc, err := visitors.NewVisitorOrchestrator(&testCtx.visitCtx)
-	if err != nil {
-		Fail("Failed to create a VisitorOrchestrator for test setup")
-		return testCtx
-	}
-
-	testCtx.orc = orc
-	Expect(err).To(BeNil(), "Failed to construct a new controller visitor")
-	return testCtx
-}
 
 func TestMetadataCacheVisitor(t *testing.T) {
 	logger.SetLogLevel(logger.LogLevelNone)

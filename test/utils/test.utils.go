@@ -29,6 +29,11 @@ import (
 	"golang.org/x/tools/go/packages"
 )
 
+type StdTestCtx struct {
+	VisitCtx visitors.VisitContext
+	Orc      *visitors.VisitorOrchestrator
+}
+
 func GetMetadataByRelativeConfig(relativeConfigPath string) (pipeline.GleeceFlattenedMetadata, error) {
 	_, meta, err := cmd.GetConfigAndMetadata(
 		arguments.CliArguments{
@@ -409,4 +414,23 @@ func MakeUniverseRoot(universeName string) *typeref.NamedTypeRef {
 	k := graphs.NewUniverseSymbolKey(universeName)
 	r := typeref.NewNamedTypeRef(&k, nil)
 	return &r
+}
+
+func CreateStdTestCtx(configRelPath string) StdTestCtx {
+	testCtx := StdTestCtx{
+		VisitCtx: GetVisitContextByRelativeConfigOrFail(configRelPath),
+	}
+
+	orc, err := visitors.NewVisitorOrchestrator(&testCtx.VisitCtx)
+	if err != nil {
+		Fail("Failed to create a VisitorOrchestrator for test setup")
+		return testCtx
+	}
+
+	testCtx.Orc = orc
+	if err != nil {
+		Fail("Failed to construct a new controller visitor")
+	}
+
+	return testCtx
 }

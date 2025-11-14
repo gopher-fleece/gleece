@@ -13,6 +13,7 @@ type VisitorOrchestrator struct {
 	typeUsageVisitor *TypeUsageVisitor
 	structVisitor    *StructVisitor
 	enumVisitor      *EnumVisitor
+	fieldVisitor     *FieldVisitor
 
 	controllerVisitor *ControllerVisitor
 }
@@ -82,6 +83,7 @@ func NewVisitorOrchestrator(ctx *VisitContext) (*VisitorOrchestrator, error) {
 		ctx:               ctx,
 		controllerVisitor: controllerVisitor,
 		structVisitor:     structVisitor,
+		fieldVisitor:      fieldVisitor,
 		enumVisitor:       enumVisitor,
 		typeUsageVisitor:  typeUsageVisitor,
 		typeDeclVisitor:   typeDeclVisitor,
@@ -109,6 +111,10 @@ func (o *VisitorOrchestrator) GetLastError() error {
 // This is used for outputting human-readable error information originating from deep within the visitor hierarchy
 func (o *VisitorOrchestrator) GetFormattedDiagnosticStack() string {
 	return o.controllerVisitor.GetFormattedDiagnosticStack()
+}
+
+func (o *VisitorOrchestrator) GetFieldVisitor() *FieldVisitor {
+	return o.fieldVisitor
 }
 
 func validateContext(ctx *VisitContext) error {

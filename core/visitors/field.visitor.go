@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"go/ast"
+	"strings"
 
 	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/core/annotations"
@@ -66,7 +67,12 @@ func (v *FieldVisitor) VisitField(
 	// delegate to type-usage visitor
 	typeUsage, err := v.typeUsageVisitor.VisitExpr(pkg, file, field.Type, nil)
 	if err != nil {
-		return nil, v.frozenError(fmt.Errorf("type parsing failed: %w", err))
+		namesStr := "an anonymous field"
+		if len(names) > 0 && names[0] != "" {
+			namesStr = fmt.Sprintf("field/s [%s]", strings.Join(names, ", "))
+		}
+
+		return nil, v.frozenError(fmt.Errorf("cannot visit field type expression for %v - %w", namesStr, err))
 	}
 
 	fileVersion, err := v.context.MetadataCache.GetFileVersion(file, pkg.Fset)

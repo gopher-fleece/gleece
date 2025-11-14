@@ -462,7 +462,7 @@ func (v *TypeUsageVisitor) buildTypeRef(
 	case *ast.StructType:
 		return v.buildInlineStructRef(pkg, file, t, typeParamEnv)
 	default:
-		return nil, fmt.Errorf("unsupported type expression: %T", expr)
+		return nil, fmt.Errorf("unsupported type expression '%T'", expr)
 	}
 }
 

@@ -52,7 +52,7 @@ var _ = Describe("Unit Tests - SymbolKey", func() {
 				Name:   "Bar",
 				FileId: "path/to/thing.go|mymod|deadbeef1234",
 			}
-			Expect(key.ShortLabel()).To(Equal("Bar@thing.go|deadbee"))
+			Expect(key.ShortLabel()).To(Equal("Bar @thing.go|deadbee"))
 		})
 
 		It("handles missing name", func() {

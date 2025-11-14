@@ -61,6 +61,23 @@ func NewRouteVisitor(
 	return &visitor, err
 }
 
+func NewRouteVisitorFromVisitor(
+	context *VisitContext,
+	parent RouteParentContext,
+	fieldVisitor *FieldVisitor,
+) (*RouteVisitor, error) {
+	if fieldVisitor == nil {
+		return nil, fmt.Errorf("NewRouteVisitorFromVisitor constructor was given a nil FieldVisitor")
+	}
+
+	visitor, err := NewRouteVisitor(context, parent)
+	if err == nil {
+		visitor.setFieldVisitor(fieldVisitor)
+	}
+
+	return visitor, err
+}
+
 func (v *RouteVisitor) setFieldVisitor(visitor *FieldVisitor) {
 	v.fieldVisitor = visitor
 }
