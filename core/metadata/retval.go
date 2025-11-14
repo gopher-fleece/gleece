@@ -18,6 +18,8 @@ func (v FuncReturnValue) Reduce(ctx ReductionContext) (definitions.FuncReturnVal
 		return definitions.FuncReturnValue{}, err
 	}
 
+	// This cannot actually error, for now - v.Type.Resolve(ctx) uses the same CacheLookupKey
+	// so if the above call succeeds, this one will too
 	symKey, err := v.Type.Root.CacheLookupKey(v.FVersion)
 	if err != nil {
 		return definitions.FuncReturnValue{}, fmt.Errorf("failed to derive a symbol key for field '%s' - %v", v.Name, err)

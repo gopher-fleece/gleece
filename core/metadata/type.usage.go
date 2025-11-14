@@ -28,13 +28,6 @@ func (t TypeUsageMeta) Resolve(ctx ReductionContext) (definitions.TypeMetadata, 
 	}
 
 	if symKey.IsUniverse {
-		//symKind, err := getUniverseSymKind(symKey.Name)
-		//	if err != nil {
-		//		return definitions.TypeMetadata{}, err
-		//	}
-
-		// t.SymKind is kind of the usage's kind - not necessarily the underlying type.
-		// This is some major spaghetti and needs to be improved later - coherency is lacking.
 		return definitions.TypeMetadata{
 			Name:           t.Root.SimpleTypeString(),
 			Import:         common.ImportTypeNone,

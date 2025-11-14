@@ -84,7 +84,7 @@ func (n *NamedTypeRef) ToSymKey(fileVersion *gast.FileVersion) (graphs.SymbolKey
 		return graphs.SymbolKey{}, fmt.Errorf("cannot instantiate named type without base Key")
 	}
 
-	// No Key and no TypeArgs: this is unexpected.
+	// No Key and no TypeArgs - this is unexpected.
 	return graphs.SymbolKey{}, fmt.Errorf("named type ref missing Key")
 }
 

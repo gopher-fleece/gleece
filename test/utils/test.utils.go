@@ -409,9 +409,15 @@ func GetMockRetVals(number int) []metadata.FuncReturnValue {
 }
 
 // MakeUniverseRoot is a tiny test helper that builds a NamedTypeRef pointing at a universe type.
-// Note: typeref.NewNamedTypeRef returns a value so we take its address for Root.
 func MakeUniverseRoot(universeName string) *typeref.NamedTypeRef {
 	k := graphs.NewUniverseSymbolKey(universeName)
+	r := typeref.NewNamedTypeRef(&k, nil)
+	return &r
+}
+
+// MakeNonUniverseBuiltinRoot is a tiny test helper that builds a NamedTypeRef pointing at a built-in though non-universe type.
+func MakeNonUniverseBuiltinRoot(typeName string) *typeref.NamedTypeRef {
+	k := graphs.NewNonUniverseBuiltInSymbolKey(typeName)
 	r := typeref.NewNamedTypeRef(&k, nil)
 	return &r
 }
