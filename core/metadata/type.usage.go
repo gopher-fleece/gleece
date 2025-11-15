@@ -10,7 +10,6 @@ import (
 
 type TypeUsageMeta struct {
 	SymNodeMeta
-	TypeParams []TypeUsageMeta // Generic type parameters like TKey/TValue in map[TKey]TValue
 	Import     common.ImportType
 	// Describes the actual type reference.
 	// Recursively encodes information such as 'is this a pointer type?' or 'what generic parameters does this usage have?'

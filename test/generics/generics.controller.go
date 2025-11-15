@@ -75,7 +75,7 @@ func (ec *GenericsController) RecvWithMultiGenericStructBody(body MultiGenericSt
 }
 
 // @Method(POST)
-// @Route(/multi-generic-struct-body)
+// @Route(/multi-generic-struct-response)
 func (ec *GenericsController) RecvWithMultiGenericStructResponse() (MultiGenericStruct[string, int], error) {
 	return MultiGenericStruct[string, int]{}, nil
 }
@@ -84,4 +84,17 @@ func (ec *GenericsController) RecvWithMultiGenericStructResponse() (MultiGeneric
 // @Route(/multi-generic-struct-body-diff-params)
 func (ec *GenericsController) RecvWithMultiGenericStructWithDiffTParamsResponse() (MultiGenericStruct[bool, int], error) {
 	return MultiGenericStruct[bool, int]{}, nil
+}
+
+// @Method(POST)
+// @Route(/multi-generic-struct-ptr-body)
+// @Body(body)
+func (ec *GenericsController) RecvWithMultiGenericStructPtrBody(body *MultiGenericStruct[string, int]) error {
+	return nil
+}
+
+// @Method(POST)
+// @Route(/multi-generic-struct-ptr-response)
+func (ec *GenericsController) RecvWithMultiGenericStructPtrResponse() (*MultiGenericStruct[string, int], error) {
+	return nil, nil
 }

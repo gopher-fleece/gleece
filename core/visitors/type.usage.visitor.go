@@ -76,13 +76,7 @@ func (v *TypeUsageVisitor) VisitExpr(
 		return metadata.TypeUsageMeta{}, err
 	}
 
-	// 3) build top-level type-arguments metadata (if any)
-	typeArgs, err := v.buildTypeParamsFromExpr(pkg, file, expr, typeParamEnv)
-	if err != nil {
-		return metadata.TypeUsageMeta{}, err
-	}
-
-	// 4) assemble final TypeUsageMeta
+	// 3) assemble final TypeUsageMeta
 	res := metadata.TypeUsageMeta{
 		SymNodeMeta: metadata.SymNodeMeta{
 			Name:        topMeta.SymName,
@@ -93,9 +87,8 @@ func (v *TypeUsageVisitor) VisitExpr(
 			Range:       topMeta.NodeRange,
 			FVersion:    topMeta.FileVersion,
 		},
-		TypeParams: typeArgs,
-		Import:     importType,
-		Root:       root,
+		Import: importType,
+		Root:   root,
 	}
 	return res, nil
 }
@@ -727,53 +720,6 @@ func (v *TypeUsageVisitor) buildIdentOrSelectorRef(
 	}
 
 	return common.Ptr(typeref.NewNamedTypeRef(&key, nil)), nil
-}
-
-// ------------------------- type param helpers -------------------------
-
-// buildTypeParamsFromExpr extracts top-level type-argument expressions (if this usage is a type instantiation)
-// and returns their metadata via recursive VisitExpr calls.
-func (v *TypeUsageVisitor) buildTypeParamsFromExpr(
-	pkg *packages.Package,
-	file *ast.File,
-	expr ast.Expr,
-	typeParamEnv map[string]int,
-) ([]metadata.TypeUsageMeta, error) {
-
-	// Walk down to find IndexExpr/IndexListExpr applied to a base identifier/selector.
-	for {
-		switch t := expr.(type) {
-		case *ast.IndexExpr:
-			return v.evalTypeParamExprs(pkg, file, []ast.Expr{t.Index}, typeParamEnv)
-		case *ast.IndexListExpr:
-			return v.evalTypeParamExprs(pkg, file, t.Indices, typeParamEnv)
-		case *ast.StarExpr:
-			expr = t.X
-		case *ast.ArrayType:
-			expr = t.Elt
-		case *ast.ParenExpr:
-			expr = t.X
-		default:
-			return nil, nil
-		}
-	}
-}
-
-func (v *TypeUsageVisitor) evalTypeParamExprs(
-	pkg *packages.Package,
-	file *ast.File,
-	indexExprs []ast.Expr,
-	typeParamEnv map[string]int,
-) ([]metadata.TypeUsageMeta, error) {
-	out := make([]metadata.TypeUsageMeta, 0, len(indexExprs))
-	for _, ie := range indexExprs {
-		tu, err := v.VisitExpr(pkg, file, ie, typeParamEnv)
-		if err != nil {
-			return nil, err
-		}
-		out = append(out, tu)
-	}
-	return out, nil
 }
 
 // createUsageMeta creates top level metadata for a usage site.
