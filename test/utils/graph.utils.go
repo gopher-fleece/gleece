@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/common/linq"
@@ -11,6 +12,38 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
+
+type ControllerInfo struct {
+	Node *symboldg.SymbolNode
+	Data metadata.ControllerMeta
+}
+
+type ReceiverInfo struct {
+	Node *symboldg.SymbolNode
+	Data metadata.ReceiverMeta
+}
+
+type FuncParamInfo struct {
+	Node *symboldg.SymbolNode
+	Data metadata.FieldMeta
+}
+
+type FuncRetValInfo struct {
+	Node *symboldg.SymbolNode
+	Data metadata.FieldMeta
+}
+
+type ApiEndpointInfo struct {
+	Controller ControllerInfo
+	Receiver   ReceiverInfo
+	Params     []FuncParamInfo
+	RetVals    []FuncRetValInfo
+}
+
+type TypeParamInstantiationInfo struct {
+	Node        *symboldg.SymbolNode
+	UsedInIndex int
+}
 
 // MustFindController finds a single controller node and asserts it's present.
 func MustFindController(g symboldg.SymbolGraphBuilder, name string) (*symboldg.SymbolNode, metadata.ControllerMeta) {
@@ -130,6 +163,13 @@ func MustStructMeta(node *symboldg.SymbolNode) metadata.StructMeta {
 	return sm
 }
 
+// MustFieldMeta converts node.Data to FieldMeta and asserts it.
+func MustFieldMeta(node *symboldg.SymbolNode) metadata.FieldMeta {
+	fm, ok := node.Data.(metadata.FieldMeta)
+	Expect(ok).To(BeTrue(), "expected node to contain FieldMeta")
+	return fm
+}
+
 // AssertFieldIsMap asserts a field exists with given name and that its type is a Map with key/value canonical strings.
 func AssertFieldIsMap(structMeta metadata.StructMeta, fieldName, wantKey, wantValue string) {
 	var f metadata.FieldMeta
@@ -148,4 +188,110 @@ func AssertFieldIsMap(structMeta metadata.StructMeta, fieldName, wantKey, wantVa
 	Expect(ok).To(BeTrue(), "map type assertion failed for field %s", fieldName)
 	Expect(mapRef.Key.CanonicalString()).To(Equal(wantKey))
 	Expect(mapRef.Value.CanonicalString()).To(Equal(wantValue))
+}
+
+func AssertGetField(
+	g symboldg.SymbolGraphBuilder,
+	structNode *symboldg.SymbolNode,
+	fieldName string,
+) (*symboldg.SymbolNode, metadata.FieldMeta) {
+	Expect(structNode).ToNot(BeNil())
+	MustStructMeta(structNode)
+
+	edges := common.MapValues(g.GetEdges(structNode.Id, []symboldg.SymbolEdgeKind{symboldg.EdgeKindField}))
+
+	relevantEdge := linq.First(edges, func(edge symboldg.SymbolEdgeDescriptor) bool {
+		return edge.Edge.To.Name == fieldName
+	})
+	Expect(relevantEdge).ToNot(BeNil())
+
+	fieldNode := g.Get(relevantEdge.Edge.To)
+	Expect(fieldNode).ToNot(BeNil())
+	fieldMeta := MustFieldMeta(fieldNode)
+
+	return fieldNode, fieldMeta
+}
+
+func GetApiEndpointHierarchy(
+	g symboldg.SymbolGraphBuilder,
+	controllerName, receiverName string,
+	paramNames []string,
+) ApiEndpointInfo {
+	controllerNode, controllerMeta := MustFindController(g, controllerName)
+	receiverNode, receiverMeta := MustFindControllerReceiver(g, controllerNode, receiverName)
+	paramNodes, retValNodes := CollectAssertParamsAndRetVals(g, receiverNode)
+
+	var fParams []FuncParamInfo
+	if len(paramNames) > 0 {
+		fParams = linq.Map(paramNodes, func(pNode *symboldg.SymbolNode) FuncParamInfo {
+			fMeta, isFMeta := pNode.Data.(metadata.FieldMeta)
+			Expect(isFMeta).To(BeTrue())
+			return FuncParamInfo{Node: pNode, Data: fMeta}
+		})
+
+		fParams = linq.Filter(fParams, func(fpi FuncParamInfo) bool {
+			return slices.Contains(paramNames, fpi.Data.Name)
+		})
+	}
+
+	// If we've missing parameters, length will differ and we fail
+	Expect(fParams).To(HaveLen(len(paramNames)))
+
+	fRetVals := linq.Map(retValNodes, func(pNode *symboldg.SymbolNode) FuncRetValInfo {
+		fMeta, isFMeta := pNode.Data.(metadata.FieldMeta)
+		Expect(isFMeta).To(BeTrue())
+		return FuncRetValInfo{Node: pNode, Data: fMeta}
+	})
+
+	return ApiEndpointInfo{
+		Controller: ControllerInfo{Node: controllerNode, Data: controllerMeta},
+		Receiver:   ReceiverInfo{Node: receiverNode, Data: receiverMeta},
+		Params:     fParams,
+		RetVals:    fRetVals,
+	}
+}
+
+func FollowThroughCompositeToTypeParams(
+	g symboldg.SymbolGraphBuilder,
+	fromNode *symboldg.SymbolNode,
+) []*symboldg.SymbolNode {
+	compositeNodes := g.Children(
+		fromNode,
+		&symboldg.TraversalBehavior{Filtering: symboldg.TraversalFilter{
+			EdgeKinds: []symboldg.SymbolEdgeKind{symboldg.EdgeKindType},
+		}},
+	)
+	Expect(compositeNodes).To(HaveLen(1))
+
+	compNode := compositeNodes[0]
+
+	_, isCompData := compNode.Data.(*metadata.CompositeMeta)
+	Expect(isCompData).To(BeTrue())
+
+	return g.Children(
+		compositeNodes[0],
+		&symboldg.TraversalBehavior{Filtering: symboldg.TraversalFilter{
+			EdgeKinds: []symboldg.SymbolEdgeKind{symboldg.EdgeKindTypeParameter},
+		}},
+	)
+}
+
+func AssertFollowEdgesToNode(
+	g symboldg.SymbolGraphBuilder,
+	startNode *symboldg.SymbolNode,
+	edgeTypeToFollow symboldg.SymbolEdgeKind,
+	targetNodeFilter func(node *symboldg.SymbolNode) bool,
+) *symboldg.SymbolNode {
+	edges := g.GetEdges(startNode.Id, []symboldg.SymbolEdgeKind{edgeTypeToFollow})
+	for _, edgeDesc := range common.MapValues(edges) {
+		node := g.Get(edgeDesc.Edge.To)
+		Expect(node).ToNot(BeNil())
+
+		if targetNodeFilter(node) {
+			return node
+		}
+	}
+
+	Fail("AssertFollowEdgesToNode concluded with no result")
+	return nil
 }

@@ -440,7 +440,7 @@ func (g *SymbolGraph) addComposite(req CreateCompositeNode) (*SymbolNode, error)
 	node := &SymbolNode{
 		Id:   req.Key,
 		Kind: common.SymKindComposite,
-		Data: &CompositeMeta{
+		Data: &metadata.CompositeMeta{
 			Canonical: req.Canonical,
 			Operands:  req.Operands,
 		},
@@ -857,7 +857,7 @@ func (g *SymbolGraph) getTypeParamIndex(from, to graphs.SymbolKey) []int {
 		return nil
 	}
 
-	composite, isComposite := fromNode.Data.(*CompositeMeta)
+	composite, isComposite := fromNode.Data.(*metadata.CompositeMeta)
 	if !isComposite {
 		// Shouldn't happen - we should get here only if we're inspecting a composite node
 		return nil
@@ -1054,7 +1054,7 @@ func (g *SymbolGraph) conditionalEnsureTypeParamNode(
 	node := &SymbolNode{
 		Id:   key,
 		Kind: common.SymKindTypeParam,
-		Data: TypeParamMeta{
+		Data: metadata.TypeParamMeta{
 			Name:  key.Name,
 			Index: index,
 		},

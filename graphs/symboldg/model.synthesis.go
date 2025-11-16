@@ -119,7 +119,7 @@ func collectModelList(graph SymbolGraphBuilder) (RawModelsList, error) {
 				)
 			}
 
-			compositeMeta, isCompositeMeta := governingComposite.Data.(*CompositeMeta)
+			compositeMeta, isCompositeMeta := governingComposite.Data.(*metadata.CompositeMeta)
 			if !isCompositeMeta {
 				return modelList, fmt.Errorf(
 					"expected node '%s' to be a composite meta but got '%v'",
@@ -155,7 +155,7 @@ func inPlaceInstantiateGenericModel(
 		if tParamNode.Kind.IsBuiltin() {
 			return tParamNode.Id.Name
 		}
-		return tParamNode.Data.(*TypeParamMeta).Name
+		return tParamNode.Data.(*metadata.TypeParamMeta).Name
 	})
 
 	if modelNameTransformer != nil {
