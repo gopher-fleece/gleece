@@ -325,6 +325,16 @@ func (g *SymbolGraph) AddConst(request CreateConstNode) (*SymbolNode, error) {
 	)
 }
 
+func (g *SymbolGraph) AddAlias(request CreateAliasNode) (*SymbolNode, error) {
+	return g.createAndAddSymNode(
+		request.Data.Node,
+		common.SymKindAlias,
+		request.Data.FVersion,
+		request.Annotations,
+		request.Data,
+	)
+}
+
 func (g *SymbolGraph) Get(key graphs.SymbolKey) *SymbolNode {
 	return g.nodes[key.BaseId()]
 }

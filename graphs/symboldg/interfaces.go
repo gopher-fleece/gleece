@@ -18,6 +18,7 @@ type SymbolGraphBuilder interface {
 	AddEnum(request CreateEnumNode) (*SymbolNode, error)
 	AddField(request CreateFieldNode) (*SymbolNode, error)
 	AddConst(request CreateConstNode) (*SymbolNode, error)
+	AddAlias(request CreateAliasNode) (*SymbolNode, error)
 	AddPrimitive(kind PrimitiveType) *SymbolNode
 	AddSpecial(special SpecialType) *SymbolNode
 	AddEdge(from, to graphs.SymbolKey, kind SymbolEdgeKind, meta map[string]string)

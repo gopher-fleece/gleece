@@ -71,7 +71,7 @@ var _ = Describe("Unit Tests - AST Arbitrator (external)", func() {
 
 	BeforeEach(func() {
 		var err error
-		arbProvider, err = providers.NewArbitrationProvider([]string{})
+		arbProvider, err = providers.NewArbitrationProviderFromGleeceConfig(nil)
 		Expect(err).To(BeNil())
 
 		// Use exported provider API to get the arbitrator.
@@ -442,7 +442,9 @@ var _ = Describe("Unit Tests - AST Arbitrator (external)", func() {
 			}
 			ident := &ast.Ident{Name: "Sprintf"}
 			_, err := astArb.GetPackageFromDotImportedIdent(file, ident)
-			Expect(err).To(MatchError(ContainSubstring("encountered 1 errors over 1 packages during load")))
+			Expect(err).To(MatchError(MatchRegexp(
+				`encountered \d+ errors over \d+ package/s \(.+?\) during load -`,
+			)))
 		})
 
 		It("Returns an error when PackagesFacade.GetPackage returns an error", func() {

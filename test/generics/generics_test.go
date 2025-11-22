@@ -35,7 +35,7 @@ var _ = Describe("Generics Controller", func() {
 			Expect(info.Params).To(HaveLen(1))
 
 			bodyParamNode := utils.GetSingularChildNode(pipe.Graph(), info.Params[0].Node, symboldg.EdgeKindParam)
-			bodyStructNode := utils.GetChildTypeNode(pipe.Graph(), bodyParamNode)
+			bodyStructNode := utils.GetSingularChildTypeNode(pipe.Graph(), bodyParamNode)
 			Expect(bodyStructNode.Id.Name).To(Equal("BodyWithPrimitiveMap"))
 			structMeta := utils.MustStructMeta(bodyStructNode)
 			Expect(structMeta.Fields).To(HaveLen(1))
@@ -48,7 +48,7 @@ var _ = Describe("Generics Controller", func() {
 
 			// RetVals tree structure checks
 			Expect(info.RetVals).To(HaveLen(1))
-			retTypeNode := utils.GetChildTypeNode(pipe.Graph(), info.RetVals[0].Node)
+			retTypeNode := utils.GetSingularChildTypeNode(pipe.Graph(), info.RetVals[0].Node)
 			Expect(retTypeNode.Id).To(Equal(graphs.NewUniverseSymbolKey("error")))
 		})
 	})
@@ -68,7 +68,7 @@ var _ = Describe("Generics Controller", func() {
 			mapRetValInfo := linq.First(
 				info.RetVals,
 				func(retVal utils.FuncRetValInfo) bool {
-					retTypeNode := utils.GetChildTypeNode(pipe.Graph(), retVal.Node)
+					retTypeNode := utils.GetSingularChildTypeNode(pipe.Graph(), retVal.Node)
 					return retTypeNode.Id.Name != "error"
 				},
 			)
@@ -91,7 +91,7 @@ var _ = Describe("Generics Controller", func() {
 			Expect(info.Params).To(HaveLen(1))
 			Expect(info.RetVals).To(HaveLen(1))
 
-			mapTypeParam := utils.GetChildTypeNode(pipe.Graph(), info.Params[0].Node)
+			mapTypeParam := utils.GetSingularChildTypeNode(pipe.Graph(), info.Params[0].Node)
 
 			Expect(mapTypeParam).ToNot(BeNil())
 			tParamChildren := utils.FollowThroughCompositeToTypeParams(pipe.Graph(), info.Params[0].Node)

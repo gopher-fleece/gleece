@@ -38,14 +38,7 @@ type GleecePipeline struct {
 }
 
 func NewGleecePipeline(gleeceConfig *definitions.GleeceConfig) (GleecePipeline, error) {
-	var globs []string
-	if len(gleeceConfig.CommonConfig.ControllerGlobs) > 0 {
-		globs = gleeceConfig.CommonConfig.ControllerGlobs
-	} else {
-		globs = []string{"./*.go", "./**/*.go"}
-	}
-
-	arbProvider, err := providers.NewArbitrationProvider(globs)
+	arbProvider, err := providers.NewArbitrationProviderFromGleeceConfig(gleeceConfig)
 	if err != nil {
 		return GleecePipeline{}, err
 	}

@@ -71,6 +71,7 @@ var DefaultDotTheme = DotTheme{
 		"init":    "Initialize",
 		"ref":     "Reference",
 		"inst":    "Instantiates",
+		"alias":   "Alias",
 	},
 	EdgeStyles: map[string]DotStyle{
 		"ty":    {EdgeColor: "black", EdgeStyle: "solid", ArrowHead: "vee"},

@@ -78,7 +78,8 @@ func (v *TypeDeclVisitor) VisitTypeDecl(
 			return enumSymKey, err
 		}
 		// Not enum-like (or no enumVisitor): return stable key but don't materialize
-		return graphs.NewSymbolKey(typeSpec, fileVersion), nil
+		return v.visitAssignedType(pkg, file, fileVersion, genDecl, typeSpec)
+		// return graphs.NewSymbolKey(typeSpec, fileVersion), nil
 
 	default:
 		// Other types (interface, func types, maps, etc.) — don't attempt to materialize here.

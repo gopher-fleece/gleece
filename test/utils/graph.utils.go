@@ -145,7 +145,7 @@ func GetSingularChildNode(
 	return target
 }
 
-func GetChildTypeNode(g symboldg.SymbolGraphBuilder, node *symboldg.SymbolNode) *symboldg.SymbolNode {
+func GetSingularChildTypeNode(g symboldg.SymbolGraphBuilder, node *symboldg.SymbolNode) *symboldg.SymbolNode {
 	return GetSingularChildNode(g, node, symboldg.EdgeKindType)
 }
 
@@ -168,6 +168,13 @@ func MustFieldMeta(node *symboldg.SymbolNode) metadata.FieldMeta {
 	fm, ok := node.Data.(metadata.FieldMeta)
 	Expect(ok).To(BeTrue(), "expected node to contain FieldMeta")
 	return fm
+}
+
+// MustAliasMeta converts node.Data to AliasMeta and asserts it.
+func MustAliasMeta(node *symboldg.SymbolNode) metadata.AliasMeta {
+	am, ok := node.Data.(metadata.AliasMeta)
+	Expect(ok).To(BeTrue(), "expected node to contain AliasMeta")
+	return am
 }
 
 // AssertFieldIsMap asserts a field exists with given name and that its type is a Map with key/value canonical strings.

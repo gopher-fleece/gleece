@@ -76,16 +76,9 @@ func (v *BaseVisitor) initializeWithGlobs(context *VisitContext) error {
 		return err
 	}
 
-	var globs []string
-	if len(context.GleeceConfig.CommonConfig.ControllerGlobs) > 0 {
-		globs = context.GleeceConfig.CommonConfig.ControllerGlobs
-	} else {
-		globs = []string{"./*.go", "./**/*.go"}
-	}
-
 	v.context = context
 
-	arbProvider, err := providers.NewArbitrationProvider(globs)
+	arbProvider, err := providers.NewArbitrationProviderFromGleeceConfig(context.GleeceConfig)
 	if err != nil {
 		return err
 	}

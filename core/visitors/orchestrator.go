@@ -66,6 +66,9 @@ func NewVisitorOrchestrator(ctx *VisitContext) (*VisitorOrchestrator, error) {
 
 	// Need to re-think this whole thing. Maybe use the orchestrator itself for DI?
 
+	aliasVisitor.setTypeDeclVisitor(typeDeclVisitor)
+	aliasVisitor.setTypeUsageVisitor(typeUsageVisitor)
+
 	typeDeclVisitor.setStructVisitor(structVisitor)
 	typeDeclVisitor.setEnumVisitor(enumVisitor)
 	typeDeclVisitor.setAliasVisitor(aliasVisitor)

@@ -62,6 +62,11 @@ type CreateConstNode struct {
 	Annotations *annotations.AnnotationHolder
 }
 
+type CreateAliasNode struct {
+	Data        metadata.AliasMeta
+	Annotations *annotations.AnnotationHolder
+}
+
 // CreateCompositeNode is the request used to add a canonical composite node.
 type CreateCompositeNode struct {
 	Key       graphs.SymbolKey

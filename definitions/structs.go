@@ -357,7 +357,8 @@ type AuthorizationConfig struct {
 }
 
 type CommonConfig struct {
-	ControllerGlobs []string `json:"controllerGlobs" validate:"omitempty,min=1"`
+	ControllerGlobs          []string `json:"controllerGlobs" validate:"omitempty,min=1"`
+	AllowPackageLoadFailures bool     `json:"failOnAnyPackageLoadError"`
 }
 
 type ExperimentalConfig struct {

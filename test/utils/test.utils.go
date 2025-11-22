@@ -279,14 +279,7 @@ func GetVisitContextByRelativeConfigOrFail(relativeConfigPath string) visitors.V
 		Fail(fmt.Sprintf("could not load Gleece Config - %v", err))
 	}
 
-	var globs []string
-	if len(config.CommonConfig.ControllerGlobs) > 0 {
-		globs = config.CommonConfig.ControllerGlobs
-	} else {
-		globs = []string{"./*.go", "./**/*.go"}
-	}
-
-	arbProvider, err := providers.NewArbitrationProvider(globs)
+	arbProvider, err := providers.NewArbitrationProviderFromGleeceConfig(config)
 	if err != nil {
 		Fail(fmt.Sprintf("could not create an arbitration provider - %v", err))
 	}
