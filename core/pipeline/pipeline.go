@@ -138,7 +138,7 @@ func (p *GleecePipeline) GenerateIntermediate() (GleeceFlattenedMetadata, error)
 		Imports:           p.getImports(controllers),
 		Flat:              controllers,
 		Models:            models,
-		PlainErrorPresent: p.symGraph.IsSpecialPresent(symboldg.SpecialTypeError),
+		PlainErrorPresent: p.symGraph.IsSpecialPresent(common.SpecialTypeError),
 	}, nil
 }
 

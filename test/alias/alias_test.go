@@ -19,12 +19,13 @@ const assignedAliasName = "AssignedAlias"
 
 var pipe pipeline.GleecePipeline
 
+var _ = BeforeSuite(func() {
+	pipe = utils.GetPipelineOrFail()
+	err := pipe.GenerateGraph()
+	Expect(err).To(BeNil())
+})
+
 var _ = Describe("Alias Controller", func() {
-	BeforeEach(func() {
-		pipe = utils.GetPipelineOrFail()
-		err := pipe.GenerateGraph()
-		Expect(err).To(BeNil())
-	})
 
 	Context("ReceivesTypedefAliasQuery", func() {
 		It("Processes a TypeDef Alias parameter", func() {
@@ -633,6 +634,83 @@ var _ = Describe("Alias Controller", func() {
 			Expect(builtin).ToNot(BeNil())
 			Expect(builtin.Kind).To(Equal(common.SymKindBuiltin))
 			Expect(builtin.Id.Name).To(Equal("string"))
+		})
+	})
+
+	Context("ReceivesATypedefSpecialAliasQuery", func() {
+		It("Processes a Typedef-special alias parameter (TypedefSpecialAlias -> time.Time)", func() {
+			info := utils.GetApiEndpointHierarchy(
+				pipe.Graph(),
+				"AliasController",
+				"ReceivesATypedefSpecialAliasQuery",
+				[]string{"alias"},
+			)
+
+			Expect(info.Params).To(HaveLen(1))
+			Expect(info.RetVals).To(HaveLen(1))
+
+			aliasParamNode := utils.GetSingularChildTypeNode(pipe.Graph(), info.Params[0].Node)
+			Expect(aliasParamNode).ToNot(BeNil())
+			Expect(aliasParamNode.Kind).To(Equal(common.SymKindAlias))
+
+			aliasMeta := utils.MustAliasMeta(aliasParamNode)
+			Expect(aliasMeta.Name).To(Equal("TypedefSpecialAlias"))
+			Expect(aliasMeta.AliasType).To(Equal(metadata.AliasKindTypedef))
+
+			// find outgoing type-edge from the alias that points to Time
+			relevantEdges := common.MapValues(pipe.Graph().GetEdges(
+				aliasParamNode.Id,
+				[]symboldg.SymbolEdgeKind{symboldg.EdgeKindType},
+			))
+
+			outgoingToTime := linq.First(relevantEdges, func(edge symboldg.SymbolEdgeDescriptor) bool {
+				return pipe.Graph().Get(edge.Edge.From) == aliasParamNode && edge.Edge.To.Name == "time.Time"
+			})
+			Expect(outgoingToTime).ToNot(BeNil())
+			aliasedType := pipe.Graph().Get(outgoingToTime.Edge.To)
+
+			Expect(aliasedType).ToNot(BeNil())
+			Expect(aliasedType.Id.Name).To(Equal("time.Time"))
+			Expect(aliasedType.Kind).To(Equal(common.SymKindSpecialBuiltin))
+		})
+	})
+
+	Context("ReceivesAnAssignedSpecialAliasQuery", func() {
+		It("Processes an Assigned-special alias parameter (AssignedSpecialAlias = time.Time)", func() {
+			info := utils.GetApiEndpointHierarchy(
+				pipe.Graph(),
+				"AliasController",
+				"ReceivesAnAssignedSpecialAliasQuery",
+				[]string{"alias"},
+			)
+
+			Expect(info.Params).To(HaveLen(1))
+			Expect(info.RetVals).To(HaveLen(1))
+
+			aliasParamNode := utils.GetSingularChildTypeNode(pipe.Graph(), info.Params[0].Node)
+			Expect(aliasParamNode).ToNot(BeNil())
+			Expect(aliasParamNode.Kind).To(Equal(common.SymKindAlias))
+
+			aliasMeta := utils.MustAliasMeta(aliasParamNode)
+			Expect(aliasMeta.Name).To(Equal("AssignedSpecialAlias"))
+			Expect(aliasMeta.AliasType).To(Equal(metadata.AliasKindAssigned))
+
+			// find outgoing type-edge from the alias that points to Time
+			relevantEdges := common.MapValues(pipe.Graph().GetEdges(
+				aliasParamNode.Id,
+				[]symboldg.SymbolEdgeKind{symboldg.EdgeKindType},
+			))
+
+			outgoingToTime := linq.First(relevantEdges, func(edge symboldg.SymbolEdgeDescriptor) bool {
+				return pipe.Graph().Get(edge.Edge.From) == aliasParamNode && edge.Edge.To.Name == "time.Time"
+			})
+			Expect(outgoingToTime).ToNot(BeNil())
+
+			aliasedType := pipe.Graph().Get(outgoingToTime.Edge.To)
+
+			Expect(aliasedType).ToNot(BeNil())
+			Expect(aliasedType.Id.Name).To(Equal("time.Time"))
+			Expect(aliasedType.Kind).To(Equal(common.SymKindSpecialBuiltin))
 		})
 	})
 

@@ -16,7 +16,7 @@ type TypeDeclVisitor struct {
 
 	structVisitor *StructVisitor
 	enumVisitor   *EnumVisitor
-	aliasVisitor  *AliasVisitor // optional; may be nil
+	aliasVisitor  *AliasVisitor
 }
 
 // NewTypeDeclVisitor constructs a TypeDeclVisitor and internal sub-visitors.
@@ -81,10 +81,25 @@ func (v *TypeDeclVisitor) VisitTypeDecl(
 		return v.visitAssignedType(pkg, file, fileVersion, genDecl, typeSpec)
 		// return graphs.NewSymbolKey(typeSpec, fileVersion), nil
 
-	default:
-		// Other types (interface, func types, maps, etc.) — don't attempt to materialize here.
-		return graphs.NewSymbolKey(typeSpec, fileVersion), nil
+	case *ast.SelectorExpr:
+		// An alias for a type import like
+		//
+		// type A = time.Time
+		return v.aliasVisitor.VisitAlias(pkg, file, genDecl, typeSpec)
+
+	case *ast.InterfaceType:
+		// Currently, the only interface we care about is context.Context
+		specName := gast.GetIdentNameOrFallback(typeSpec.Name, "")
+		if pkg.PkgPath == "context" && specName == "Context" {
+			return graphs.NewNonUniverseBuiltInSymbolKey("context.Context"), nil
+		}
 	}
+
+	return graphs.SymbolKey{}, fmt.Errorf(
+		"type-spec '%s' has an unexpected underlying type expression '%v'",
+		typeSpec.Name.Name,
+		typeSpec.Type,
+	)
 }
 
 func (v *TypeDeclVisitor) visitAssignedType(
@@ -103,16 +118,9 @@ func (v *TypeDeclVisitor) visitAssignedType(
 		return v.aliasVisitor.VisitAlias(pkg, file, genDecl, typeSpec)
 	}
 
-	var tsName string
-	if typeSpec.Name != nil {
-		tsName = typeSpec.Name.Name
-	} else {
-		tsName = "Unknown"
-	}
-
 	return graphs.SymbolKey{}, fmt.Errorf(
 		"enum visitor for type %s yielded an error - %v",
-		tsName,
+		gast.GetIdentNameOrFallback(typeSpec.Name, "Unknown"),
 		err,
 	)
 }

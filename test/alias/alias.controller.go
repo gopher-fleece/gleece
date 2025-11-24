@@ -1,6 +1,8 @@
 package generics_test
 
 import (
+	"time"
+
 	"github.com/gopher-fleece/runtime"
 )
 
@@ -12,12 +14,24 @@ type NestedTypedefAlias TypedefAlias
 
 type NestedAssignedAlias = TypedefAlias
 
+type TypedefSpecialAlias time.Time
+
+type AssignedSpecialAlias = time.Time
+
 type BodyWithTypedefAlias struct {
 	Ally TypedefAlias
 }
 
+type BodyWithTypedefSpecialAlias struct {
+	Ally TypedefSpecialAlias
+}
+
 type BodyWithAssignedAlias struct {
 	Ally AssignedAlias
+}
+
+type BodyWithAssignedSpecialAlias struct {
+	Ally AssignedSpecialAlias
 }
 
 type BodyWithNestedTypedefAlias struct {
@@ -121,4 +135,24 @@ func (ec *AliasController) ReceivesAnNestedAssignedAliasInBody(body BodyWithNest
 // @Route(/nas-alias-return)
 func (ec *AliasController) ReturnsAnNestedAssignedAlias() (NestedAssignedAlias, error) {
 	return "", nil
+}
+
+
+// Special
+
+
+// Nested Assigned
+
+// @Method(POST)
+// @Route(/as-alias-query)
+// @Query(alias)
+func (ec *AliasController) ReceivesATypedefSpecialAliasQuery(alias TypedefSpecialAlias) error {
+	return nil
+}
+
+// @Method(POST)
+// @Route(/as-alias-query)
+// @Query(alias)
+func (ec *AliasController) ReceivesAnAssignedSpecialAliasQuery(alias AssignedSpecialAlias) error {
+	return nil
 }

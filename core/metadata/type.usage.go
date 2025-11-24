@@ -74,17 +74,3 @@ func (t TypeUsageMeta) Resolve(ctx ReductionContext) (definitions.TypeMetadata, 
 func (t TypeUsageMeta) IsContext() bool {
 	return t.Name == "Context" && t.PkgPath == "context"
 }
-
-/*
-func getUniverseSymKind(typeName string) (common.SymKind, error) {
-	if _, ok := symboldg.ToPrimitiveType(typeName); ok {
-		return common.SymKindBuiltin, nil
-	}
-
-	if _, ok := symboldg.ToSpecialType(typeName); ok {
-		return common.SymKindSpecialBuiltin, nil
-	}
-
-	return common.SymKindUnknown, fmt.Errorf("typename '%s' is neither a primitive nor a special type", typeName)
-}
-*/

@@ -554,7 +554,7 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 			Expect(fieldNode).ToNot(BeNil())
 
 			// Add the type node so links actually exist
-			graph.AddPrimitive(symboldg.PrimitiveTypeFloat32)
+			graph.AddPrimitive(common.PrimitiveTypeFloat32)
 
 			children := graph.Children(fieldNode, &symboldg.TraversalBehavior{
 				Filtering: symboldg.TraversalFilter{
@@ -617,14 +617,14 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 	Context("AddPrimitive", func() {
 		It("Adds a primitive and returns a non-nil node", func() {
 			graph := symboldg.NewSymbolGraph()
-			node := graph.AddPrimitive(symboldg.PrimitiveTypeBool)
+			node := graph.AddPrimitive(common.PrimitiveTypeBool)
 			Expect(node).ToNot(BeNil())
 		})
 
 		It("Returns the same node when adding a duplicate primitive", func() {
 			graph := symboldg.NewSymbolGraph()
-			n1 := graph.AddPrimitive(symboldg.PrimitiveTypeBool)
-			n2 := graph.AddPrimitive(symboldg.PrimitiveTypeBool)
+			n1 := graph.AddPrimitive(common.PrimitiveTypeBool)
+			n2 := graph.AddPrimitive(common.PrimitiveTypeBool)
 			Expect(n2).To(Equal(n1))
 		})
 	})
@@ -632,7 +632,7 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 	Context("AddSpecial", func() {
 		It("Adds a special type and returns a non-nil node", func() {
 			graph := symboldg.NewSymbolGraph()
-			node := graph.AddSpecial(symboldg.SpecialTypeError)
+			node := graph.AddSpecial(common.SpecialTypeError)
 			Expect(node).ToNot(BeNil())
 		})
 	})
@@ -709,7 +709,7 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 			})
 			Expect(err).ToNot(HaveOccurred())
 
-			other := graph.AddPrimitive(symboldg.PrimitiveTypeBool) // another node for dep to point to
+			other := graph.AddPrimitive(common.PrimitiveTypeBool) // another node for dep to point to
 			Expect(other).ToNot(BeNil())
 
 			// Add dependent->target and dependent->other
@@ -831,7 +831,7 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 			})
 			Expect(err).ToNot(HaveOccurred())
 
-			p := graph.AddPrimitive(symboldg.PrimitiveTypeInt)
+			p := graph.AddPrimitive(common.PrimitiveTypeInt)
 			Expect(p).ToNot(BeNil())
 
 			// Parent -> Child and Parent -> p

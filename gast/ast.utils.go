@@ -408,20 +408,33 @@ func (t TypeSpecResolution) String() string {
 	return fmt.Sprintf("Type %s.%s", t.DeclaringPackage.PkgPath, t.TypeName)
 }
 
-func (t TypeSpecResolution) IsContextOrTime() bool {
+func (t TypeSpecResolution) IsPrimitive() bool {
+	_, isPrimitive := common.ToPrimitiveType(t.GetQualifiedName())
+	return isPrimitive
+}
+
+func (t TypeSpecResolution) IsSpecial() bool {
+	_, isSpecial := common.ToSpecialType(t.GetQualifiedName())
+	return isSpecial
+}
+
+func (t TypeSpecResolution) IsBuiltin() bool {
+	return t.IsUniverse || t.IsPrimitive() || t.IsSpecial()
+}
+
+func (t TypeSpecResolution) IsContext() bool {
 	if t.DeclaringPackage == nil || t.TypeSpec.Name == nil {
 		return false
 	}
 
-	if t.TypeSpec.Name.Name == "Context" && t.DeclaringPackage.PkgPath == "context" {
-		return true
-	}
+	return t.TypeSpec.Name.Name == "Context" && t.DeclaringPackage.PkgPath == "context"
+}
 
-	if t.TypeSpec.Name.Name == "Time" && t.DeclaringPackage.PkgPath == "time" {
-		return true
+func (t TypeSpecResolution) GetQualifiedName() string {
+	if t.DeclaringPackage != nil {
+		return fmt.Sprintf("%s.%s", t.DeclaringPackage.Name, t.TypeName)
 	}
-
-	return false
+	return t.TypeName
 }
 
 // ResolveTypeSpecFromField Resolves type information from the given field.

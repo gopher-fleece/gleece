@@ -13,7 +13,6 @@ import (
 	"github.com/gopher-fleece/gleece/core/metadata/typeref"
 	"github.com/gopher-fleece/gleece/gast"
 	"github.com/gopher-fleece/gleece/graphs"
-	"github.com/gopher-fleece/gleece/graphs/symboldg"
 )
 
 type topLevelMeta struct {
@@ -407,7 +406,7 @@ func (v *TypeUsageVisitor) ensureUniverseTypeInGraph(typeName string) (common.Sy
 	defer v.exit()
 
 	// primitives
-	if prim, ok := symboldg.ToPrimitiveType(typeName); ok {
+	if prim, ok := common.ToPrimitiveType(typeName); ok {
 		if v.materializing {
 			if !v.context.Graph.IsPrimitivePresent(prim) {
 				v.context.Graph.AddPrimitive(prim)
@@ -417,7 +416,7 @@ func (v *TypeUsageVisitor) ensureUniverseTypeInGraph(typeName string) (common.Sy
 	}
 
 	// special types
-	if sp, ok := symboldg.ToSpecialType(typeName); ok {
+	if sp, ok := common.ToSpecialType(typeName); ok {
 		if v.materializing {
 			if !v.context.Graph.IsSpecialPresent(sp) {
 				v.context.Graph.AddSpecial(sp)
@@ -783,7 +782,7 @@ func chooseSymKind(resolution gast.TypeSpecResolution, pkg *packages.Package) co
 		_ = t
 		return common.SymKindStruct
 	case *ast.InterfaceType:
-		if resolution.IsContextOrTime() {
+		if resolution.IsContext() {
 			return common.SymKindSpecialBuiltin
 		}
 		return common.SymKindInterface

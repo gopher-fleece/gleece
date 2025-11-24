@@ -19,8 +19,8 @@ type SymbolGraphBuilder interface {
 	AddField(request CreateFieldNode) (*SymbolNode, error)
 	AddConst(request CreateConstNode) (*SymbolNode, error)
 	AddAlias(request CreateAliasNode) (*SymbolNode, error)
-	AddPrimitive(kind PrimitiveType) *SymbolNode
-	AddSpecial(special SpecialType) *SymbolNode
+	AddPrimitive(kind common.PrimitiveType) *SymbolNode
+	AddSpecial(special common.SpecialType) *SymbolNode
 	AddEdge(from, to graphs.SymbolKey, kind SymbolEdgeKind, meta map[string]string)
 	RemoveEdge(from, to graphs.SymbolKey, kind *SymbolEdgeKind)
 	RemoveNode(key graphs.SymbolKey)
@@ -33,8 +33,8 @@ type SymbolGraphBuilder interface {
 	GetEdges(key graphs.SymbolKey, kinds []SymbolEdgeKind) map[string]SymbolEdgeDescriptor
 	FindByKind(kind common.SymKind) []*SymbolNode
 
-	IsPrimitivePresent(primitive PrimitiveType) bool
-	IsSpecialPresent(special SpecialType) bool
+	IsPrimitivePresent(primitive common.PrimitiveType) bool
+	IsSpecialPresent(special common.SpecialType) bool
 
 	// Children returns direct outward SymbolNode dependencies from the given node,
 	// applying the given traversal behavior if non-nil.

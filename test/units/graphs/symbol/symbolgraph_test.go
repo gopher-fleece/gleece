@@ -19,7 +19,7 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 		It("Creates a usable SymbolGraph", func() {
 			g := symboldg.NewSymbolGraph()
 			// Graph should be usable: add a primitive and check presence
-			p := symboldg.PrimitiveTypeString
+			p := common.PrimitiveTypeString
 			n := g.AddPrimitive(p)
 			Expect(n).ToNot(BeNil())
 			Expect(g.IsPrimitivePresent(p)).To(BeTrue())

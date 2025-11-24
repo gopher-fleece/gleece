@@ -1,6 +1,7 @@
 package symbol_test
 
 import (
+	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/core/metadata"
 	"github.com/gopher-fleece/gleece/gast"
 	"github.com/gopher-fleece/gleece/graphs"
@@ -71,7 +72,7 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 			})
 			Expect(err).To(BeNil())
 
-			strNode := graph.AddPrimitive(symboldg.PrimitiveTypeString)
+			strNode := graph.AddPrimitive(common.PrimitiveTypeString)
 			graph.AddEdge(constNode.Id, strNode.Id, symboldg.EdgeKindType, nil)
 
 			text := graph.String()
@@ -144,8 +145,8 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 		})
 
 		It("Outputs nodes and their edges", func() {
-			anyNode := graph.AddSpecial(symboldg.SpecialTypeAny)
-			strNode := graph.AddPrimitive(symboldg.PrimitiveTypeString)
+			anyNode := graph.AddSpecial(common.SpecialTypeAny)
+			strNode := graph.AddPrimitive(common.PrimitiveTypeString)
 			graph.AddEdge(anyNode.Id, strNode.Id, symboldg.EdgeKindType, nil)
 
 			text := graph.ToDot(nil)

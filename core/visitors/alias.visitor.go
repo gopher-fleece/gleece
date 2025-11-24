@@ -143,8 +143,8 @@ func (v *AliasVisitor) resolveAliasRhsIdentOrSelector(
 		return metadata.TypeUsageMeta{}, fmt.Errorf("could not resolve aliased type expression")
 	}
 
-	// Universe branch
-	if resolution.IsUniverse {
+	// Built-ins have an easier materialization flow.
+	if resolution.IsBuiltin() {
 		return v.processUniverseTypeResolution(resolution)
 	}
 
@@ -200,23 +200,28 @@ func (v *AliasVisitor) resolveAliasRhsIdentOrSelector(
 }
 
 func (v *AliasVisitor) processUniverseTypeResolution(resolution gast.TypeSpecResolution) (metadata.TypeUsageMeta, error) {
+	qualifiedTypeName := resolution.GetQualifiedName()
+
 	var symKind common.SymKind
-	if prim, isPrim := symboldg.ToPrimitiveType(resolution.TypeName); isPrim {
-		v.context.Graph.AddPrimitive(prim)
+	var symKey graphs.SymbolKey
+
+	if prim, isPrim := common.ToPrimitiveType(qualifiedTypeName); isPrim {
+		node := v.context.Graph.AddPrimitive(prim)
 		symKind = common.SymKindBuiltin
-	} else if sp, isSp := symboldg.ToSpecialType(resolution.TypeName); isSp {
-		v.context.Graph.AddSpecial(sp)
+		symKey = node.Id
+	} else if sp, isSp := common.ToSpecialType(qualifiedTypeName); isSp {
+		node := v.context.Graph.AddSpecial(sp)
+
 		symKind = common.SymKindSpecialBuiltin
+		symKey = node.Id
 	} else {
 		return metadata.TypeUsageMeta{}, fmt.Errorf(
 			"type resolution named '%s' is a universe type but is neither a primitive nor a special",
-			resolution.TypeName,
+			qualifiedTypeName,
 		)
 	}
 
-	universeKey := graphs.NewUniverseSymbolKey(resolution.TypeName)
-	// build basic TypeUsageMeta -> NamedTypeRef(universeKey)
-	named := typeref.NewNamedTypeRef(&universeKey, nil)
+	named := typeref.NewNamedTypeRef(&symKey, nil)
 	usage := metadata.TypeUsageMeta{
 		SymNodeMeta: metadata.SymNodeMeta{
 			Name:       resolution.TypeName,

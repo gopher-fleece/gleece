@@ -255,7 +255,7 @@ func (g *SymbolGraph) AddEnum(request CreateEnumNode) (*SymbolNode, error) {
 	// This is not strictly necessary due to how the visitor code is built but it serves as a bit of
 	// an extra layer of 'protection' against malformed graphs.
 	if g.nodes[typeRef.BaseId()] == nil {
-		primitive, isPrimitive := ToPrimitiveType(string(request.Data.ValueKind))
+		primitive, isPrimitive := common.ToPrimitiveType(string(request.Data.ValueKind))
 		if !isPrimitive {
 			return nil, fmt.Errorf(
 				"value kind for enum '%s' is '%s' which is unexpected",
@@ -422,20 +422,20 @@ func (g *SymbolGraph) Structs() []metadata.StructMeta {
 	return results
 }
 
-func (g *SymbolGraph) IsPrimitivePresent(primitive PrimitiveType) bool {
+func (g *SymbolGraph) IsPrimitivePresent(primitive common.PrimitiveType) bool {
 	return g.builtinSymbolExists(string(primitive), true)
 }
 
-func (g *SymbolGraph) AddPrimitive(p PrimitiveType) *SymbolNode {
+func (g *SymbolGraph) AddPrimitive(p common.PrimitiveType) *SymbolNode {
 	// Primitives are always 'universe' types
 	return g.addBuiltinSymbol(string(p), common.SymKindBuiltin, true)
 }
 
-func (g *SymbolGraph) IsSpecialPresent(special SpecialType) bool {
+func (g *SymbolGraph) IsSpecialPresent(special common.SpecialType) bool {
 	return g.builtinSymbolExists(string(special), special.IsUniverse())
 }
 
-func (g *SymbolGraph) AddSpecial(special SpecialType) *SymbolNode {
+func (g *SymbolGraph) AddSpecial(special common.SpecialType) *SymbolNode {
 	return g.addBuiltinSymbol(string(special), common.SymKindSpecialBuiltin, special.IsUniverse())
 }
 
@@ -1042,11 +1042,11 @@ func (g *SymbolGraph) conditionalEnsureInstantiatedBase(root metadata.TypeRef) e
 
 // conditionalEnsureBuiltInNode creates primitives/special nodes (idempotent).
 func (g *SymbolGraph) conditionalEnsureBuiltInNode(key graphs.SymbolKey) error {
-	if prim, ok := ToPrimitiveType(key.Name); ok {
+	if prim, ok := common.ToPrimitiveType(key.Name); ok {
 		g.AddPrimitive(prim)
 		return nil
 	}
-	if sp, ok := ToSpecialType(key.Name); ok {
+	if sp, ok := common.ToSpecialType(key.Name); ok {
 		g.AddSpecial(sp)
 		return nil
 	}

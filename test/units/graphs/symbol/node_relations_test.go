@@ -40,7 +40,7 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 			Expect(structNode).ToNot(BeNil())
 
 			// Create a builtin/type node
-			typeNode = graph.AddPrimitive(symboldg.PrimitiveTypeInt)
+			typeNode = graph.AddPrimitive(common.PrimitiveTypeInt)
 			Expect(typeNode).ToNot(BeNil())
 		})
 
@@ -144,13 +144,13 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 			BeforeEach(func() {
 				// The graph itself doesn't verify semantics so we can use this un-real linkage
 				// to test filtering logic
-				primNode := graph.AddPrimitive(symboldg.PrimitiveTypeString)
+				primNode := graph.AddPrimitive(common.PrimitiveTypeString)
 				graph.AddEdge(structNode.Id, primNode.Id, symboldg.EdgeKindType, nil)
 
-				timeNode = graph.AddSpecial(symboldg.SpecialTypeTime)
+				timeNode = graph.AddSpecial(common.SpecialTypeTime)
 				graph.AddEdge(structNode.Id, timeNode.Id, symboldg.EdgeKindField, nil)
 
-				anyNode = graph.AddSpecial(symboldg.SpecialTypeAny)
+				anyNode = graph.AddSpecial(common.SpecialTypeAny)
 				graph.AddEdge(structNode.Id, anyNode.Id, symboldg.EdgeKindField, nil)
 
 			})
@@ -266,7 +266,7 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 		When("Sorted", func() {
 			var strNode *symboldg.SymbolNode
 			BeforeEach(func() {
-				strNode = graph.AddPrimitive(symboldg.PrimitiveTypeString)
+				strNode = graph.AddPrimitive(common.PrimitiveTypeString)
 				// As before this is *not* a valid tree but as the graph does not validate
 				// semantics we can use this for testing
 				graph.AddEdge(strNode.Id, fieldNode.Id, symboldg.EdgeKindType, nil)
