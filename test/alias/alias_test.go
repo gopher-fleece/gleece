@@ -714,6 +714,16 @@ var _ = Describe("Alias Controller", func() {
 		})
 	})
 
+	/*
+		Context("HIR Generation", func() {
+			It("Produces correct models list when an alias is present", func() {
+				intermediate, err := pipe.GenerateIntermediate()
+				Expect(err).To(BeNil())
+				fmt.Println(pipe.Graph().ToDot(nil))
+				Expect(intermediate).ToNot(BeNil())
+			})
+		})
+	*/
 })
 
 func TestAliasController(t *testing.T) {

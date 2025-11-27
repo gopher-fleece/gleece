@@ -37,7 +37,7 @@ func (m ControllerMeta) Reduce(ctx ReductionContext) (definitions.ControllerMeta
 	meta := definitions.ControllerMetadata{
 		Name:        m.Struct.Name,
 		PkgPath:     m.Struct.PkgPath,
-		Tag:         m.Struct.Annotations.GetFirstValueOrEmpty(annotations.GleeceAnnotationTag),
+		Tag:         annotations.GetTag(m.Struct.Annotations),
 		Description: m.Struct.Annotations.GetDescription(),
 		RestMetadata: definitions.RestMetadata{
 			Path: m.Struct.Annotations.GetFirstValueOrEmpty(annotations.GleeceAnnotationRoute),

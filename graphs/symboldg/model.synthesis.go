@@ -2,6 +2,7 @@ package symboldg
 
 import (
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 	"unicode"
@@ -29,7 +30,7 @@ type MapComposite struct {
 	TypeParams [2]*SymbolNode
 }
 
-type RawModelsList struct {
+type RawStructModelsList struct {
 	GenericStructs []GenericInstantiationList
 	Structs        []metadata.StructMeta
 }
@@ -39,46 +40,32 @@ func ComposeModels(
 	graph SymbolGraphBuilder,
 	modelNameTransformer ModelNameTransformer,
 ) ([]definitions.StructMetadata, error) {
-	models, err := collectModelList(graph)
+	// Collect struct and struct-like models (Structs, Aliases, generic struct instantiations)
+	modelsList, err := collectStructModelList(graph)
 	if err != nil {
 		return nil, fmt.Errorf("failed to collect models from graph - %v", err)
 	}
 
-	allModels := make([]definitions.StructMetadata, 0, len(models.Structs)+len(models.GenericStructs))
-
-	// Reduce the standard structs
-	for _, stdStruct := range models.Structs {
-		reduced, err := stdStruct.Reduce(reductionCtx)
-		if err != nil {
-			return allModels, fmt.Errorf("failed to reduce struct '%s' - %v", stdStruct.Name, err)
-		}
-		allModels = append(allModels, reduced)
+	// Reduce said struct/struct-like HIR items to the flattened, emitter-ready structs (definitions)
+	allModels, err := reduceStructLists(reductionCtx, modelsList, modelNameTransformer)
+	if err != nil {
+		return nil, fmt.Errorf("failed to reduce struct models list - %v", err)
 	}
 
-	// Synthesize ephemeral models
-	for _, instComposite := range models.GenericStructs {
-		instantiations, err := synthesizeModelsForGenericStruct(
-			reductionCtx,
-			instComposite,
-			modelNameTransformer,
-		)
-
-		if err != nil {
-			return allModels, fmt.Errorf(
-				"failed to synthesize instantiations for struct '%s' - %v",
-				instComposite.Struct.Name,
-				err,
-			)
-		}
-
-		allModels = append(allModels, instantiations...)
+	// Collect/Reduce 'Alias' type models (e.g. `type Something = string`)
+	aliasModels, err := collectAliasModels(reductionCtx, graph)
+	if err != nil {
+		return allModels, fmt.Errorf("failed to collect alias models - %v", err)
 	}
+
+	// Concat all struct-like entities
+	allModels = slices.Concat(allModels, aliasModels)
 
 	return allModels, nil
 }
 
-func collectModelList(graph SymbolGraphBuilder) (RawModelsList, error) {
-	modelList := RawModelsList{
+func collectStructModelList(graph SymbolGraphBuilder) (RawStructModelsList, error) {
+	modelList := RawStructModelsList{
 		GenericStructs: []GenericInstantiationList{},
 		Structs:        []metadata.StructMeta{},
 	}
@@ -86,7 +73,7 @@ func collectModelList(graph SymbolGraphBuilder) (RawModelsList, error) {
 	for _, structNode := range graph.FindByKind(common.SymKindStruct) {
 		structMeta, isStructMeta := structNode.Data.(metadata.StructMeta)
 		if !isStructMeta {
-			return RawModelsList{}, fmt.Errorf(
+			return RawStructModelsList{}, fmt.Errorf(
 				"expected node with ID '%s' to be a StructMeta node but got '%v'",
 				structNode.Id.Name,
 				structNode.Kind,
@@ -142,6 +129,49 @@ func collectModelList(graph SymbolGraphBuilder) (RawModelsList, error) {
 	}
 
 	return modelList, nil
+}
+
+func reduceStructLists(
+	ctx metadata.ReductionContext,
+	structList RawStructModelsList,
+	modelNameTransformer ModelNameTransformer,
+) ([]definitions.StructMetadata, error) {
+	// Allocate enough for both standard structs and whatever materialized ephemeral/generic we need
+	reducedList := make(
+		[]definitions.StructMetadata,
+		0,
+		len(structList.Structs)+len(structList.GenericStructs),
+	)
+
+	// Reduce the normal structs
+	for _, stdStruct := range structList.Structs {
+		reduced, err := stdStruct.Reduce(ctx)
+		if err != nil {
+			return reducedList, fmt.Errorf("failed to reduce struct '%s' - %v", stdStruct.Name, err)
+		}
+		reducedList = append(reducedList, reduced)
+	}
+
+	// Synthesize ephemeral models (i.e.,  instantiations like SomeStruct[string, int])
+	for _, instComposite := range structList.GenericStructs {
+		instantiations, err := synthesizeModelsForGenericStruct(
+			ctx,
+			instComposite,
+			modelNameTransformer,
+		)
+
+		if err != nil {
+			return reducedList, fmt.Errorf(
+				"failed to synthesize instantiations for struct '%s' - %v",
+				instComposite.Struct.Name,
+				err,
+			)
+		}
+
+		reducedList = append(reducedList, instantiations...)
+	}
+
+	return reducedList, nil
 }
 
 func inPlaceInstantiateGenericModel(
@@ -242,6 +272,33 @@ func synthesizeModelsForGenericStruct(
 	}
 
 	return materialized, nil
+}
+
+func collectAliasModels(
+	ctx metadata.ReductionContext,
+	graph SymbolGraphBuilder,
+) ([]definitions.StructMetadata, error) {
+	reduced := []definitions.StructMetadata{}
+
+	for _, aliasNode := range graph.FindByKind(common.SymKindAlias) {
+		aliasMeta, isAliasMeta := aliasNode.Data.(metadata.AliasMeta)
+		if !isAliasMeta {
+			return reduced, fmt.Errorf(
+				"expected node with ID '%s' to be an AliasMeta node but got '%v'",
+				aliasNode.Id.Name,
+				aliasNode.Kind,
+			)
+		}
+
+		alias, err := aliasMeta.Reduce(ctx)
+		if err != nil {
+			return reduced, fmt.Errorf("failed to reduce AliasMeta '%s' - %v", aliasMeta.Name, err)
+		}
+
+		reduced = append(reduced, alias)
+	}
+
+	return reduced, nil
 }
 
 // StandardModelNameTransformer turns a model base name and type parameters
