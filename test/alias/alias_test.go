@@ -7,9 +7,11 @@ import (
 	"github.com/gopher-fleece/gleece/common/linq"
 	"github.com/gopher-fleece/gleece/core/metadata"
 	"github.com/gopher-fleece/gleece/core/pipeline"
+	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/graphs/symboldg"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
 	"github.com/gopher-fleece/gleece/test/utils"
+	"github.com/gopher-fleece/runtime"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -714,16 +716,157 @@ var _ = Describe("Alias Controller", func() {
 		})
 	})
 
-	/*
-		Context("HIR Generation", func() {
-			It("Produces correct models list when an alias is present", func() {
-				intermediate, err := pipe.GenerateIntermediate()
-				Expect(err).To(BeNil())
-				fmt.Println(pipe.Graph().ToDot(nil))
-				Expect(intermediate).ToNot(BeNil())
-			})
+	Context("HIR Generation", func() {
+		It("Produces correct models list when an alias is present", func() {
+			intermediate, err := pipe.GenerateIntermediate()
+			Expect(err).To(BeNil())
+			Expect(intermediate).NotTo(BeNil())
+
+			// Basic top-level assertions
+			Expect(intermediate.PlainErrorPresent).To(BeTrue())
+
+			// Imports assertions (core: package present and contains expected names)
+			Expect(intermediate.Imports).To(HaveKey("github.com/gopher-fleece/gleece/test/alias"))
+			expectedImportNames := []string{
+				"Response1TypedefAlias",
+				"Param3alias",
+				"Param4body",
+				"Param6body",
+				"Param8body",
+				"AliasController",
+				"Param1alias",
+				"Param2body",
+				"Response3AssignedAlias",
+				"Param7alias",
+				"Param9alias",
+				"Param10alias",
+				"Param5alias",
+				"Response5NestedTypedefAlias",
+				"Response7NestedAssignedAlias",
+			}
+			Expect(intermediate.Imports["github.com/gopher-fleece/gleece/test/alias"]).To(
+				ConsistOf(expectedImportNames),
+			)
+
+			// Helper: find controller by name
+			findController := func(
+				flat []definitions.ControllerMetadata,
+				name string,
+			) *definitions.ControllerMetadata {
+				for i := range flat {
+					if flat[i].Name == name {
+						return &flat[i]
+					}
+				}
+				return nil
+			}
+
+			ctrl := findController(intermediate.Flat, "AliasController")
+			Expect(ctrl).NotTo(BeNil())
+			Expect(ctrl.PkgPath).To(Equal("github.com/gopher-fleece/gleece/test/alias"))
+			Expect(ctrl.Tag).To(Equal("Alias Controller Tag"))
+			Expect(ctrl.Description).To(Equal("Alias Controller"))
+			Expect(ctrl.RestMetadata.Path).To(Equal("/test/alias"))
+
+			// Helper: find route by operation id
+			findRoute := func(routes []definitions.RouteMetadata, op string) *definitions.RouteMetadata {
+				for i := range routes {
+					if routes[i].OperationId == op {
+						return &routes[i]
+					}
+				}
+				return nil
+			}
+
+			// Check a few representative routes and their param/response core fields
+			r := findRoute(ctrl.Routes, "ReceivesTypedefAliasQuery")
+			Expect(r).NotTo(BeNil())
+			Expect(r.RestMetadata.Path).To(Equal("/td-alias-query"))
+			Expect(len(r.FuncParams)).To(BeNumerically(">", 0))
+			fp := r.FuncParams[0]
+			Expect(fp.Name).To(Equal("alias"))
+			Expect(fp.TypeMeta.Name).To(Equal("TypedefAlias"))
+			Expect(fp.TypeMeta.PkgPath).To(Equal("github.com/gopher-fleece/gleece/test/alias"))
+			Expect(fp.Validator).To(Equal("required"))
+			Expect(fp.UniqueImportSerial).To(Equal(uint64(1)))
+
+			// route that returns a value
+			rr := findRoute(ctrl.Routes, "ReturnsATypedefAlias")
+			Expect(rr).NotTo(BeNil())
+			Expect(rr.HasReturnValue).To(BeTrue())
+			Expect(len(rr.Responses)).To(BeNumerically(">=", 1))
+			Expect(rr.Responses[0].Name).To(Equal("TypedefAlias"))
+			Expect(rr.Responses[0].PkgPath).To(Equal("github.com/gopher-fleece/gleece/test/alias"))
+			Expect(rr.ResponseSuccessCode).To(Equal(runtime.StatusOK))
+
+			// Another representative: assigned alias query
+			r2 := findRoute(ctrl.Routes, "ReceivesAssignedAliasQuery")
+			Expect(r2).NotTo(BeNil())
+			Expect(r2.RestMetadata.Path).To(Equal("/as-alias-query"))
+			Expect(len(r2.FuncParams)).To(BeNumerically(">", 0))
+			fp2 := r2.FuncParams[0]
+			Expect(fp2.TypeMeta.Name).To(Equal("AssignedAlias"))
+			Expect(fp2.UniqueImportSerial).To(Equal(uint64(3)))
+
+			// Models assertions: build map for easier lookup and assert core fields
+			structMap := map[string]definitions.StructMetadata{}
+			for _, s := range intermediate.Models.Structs {
+				structMap[s.Name] = s
+			}
+
+			// TypedefAlias
+			td, ok := structMap["TypedefAlias"]
+			Expect(ok).To(BeTrue())
+			Expect(td.PkgPath).To(Equal("github.com/gopher-fleece/gleece/test/alias"))
+			Expect(len(td.Fields)).To(BeNumerically(">", 0))
+			Expect(td.Fields[0].Type).To(Equal("string"))
+			Expect(td.Fields[0].IsEmbedded).To(BeTrue())
+
+			// AssignedAlias
+			aa, ok := structMap["AssignedAlias"]
+			Expect(ok).To(BeTrue())
+			Expect(aa.PkgPath).To(Equal("github.com/gopher-fleece/gleece/test/alias"))
+			Expect(len(aa.Fields)).To(BeNumerically(">", 0))
+			Expect(aa.Fields[0].Type).To(Equal("string"))
+			Expect(aa.Fields[0].IsEmbedded).To(BeTrue())
+
+			// NestedTypedefAlias (embedded typedef)
+			ntd, ok := structMap["NestedTypedefAlias"]
+			Expect(ok).To(BeTrue())
+			Expect(len(ntd.Fields)).To(BeNumerically(">", 0))
+			Expect(ntd.Fields[0].Type).To(Equal("TypedefAlias"))
+			Expect(ntd.Fields[0].IsEmbedded).To(BeTrue())
+
+			// NestedAssignedAlias (embedded typedef alias)
+			nas, ok := structMap["NestedAssignedAlias"]
+			Expect(ok).To(BeTrue())
+			Expect(len(nas.Fields)).To(BeNumerically(">", 0))
+			Expect(nas.Fields[0].Type).To(Equal("TypedefAlias"))
+			Expect(nas.Fields[0].IsEmbedded).To(BeTrue())
+
+			// Body structs containing alias-typed fields
+			btd, ok := structMap["BodyWithTypedefAlias"]
+			Expect(ok).To(BeTrue())
+			Expect(len(btd.Fields)).To(BeNumerically(">", 0))
+			Expect(btd.Fields[0].Type).To(Equal("TypedefAlias"))
+
+			bna, ok := structMap["BodyWithNestedAssignedAlias"]
+			Expect(ok).To(BeTrue())
+			Expect(len(bna.Fields)).To(BeNumerically(">", 0))
+			Expect(bna.Fields[0].Type).To(Equal("NestedAssignedAlias"))
+
+			// Special typedefs (time-based)
+			ts, ok := structMap["TypedefSpecialAlias"]
+			Expect(ok).To(BeTrue())
+			Expect(len(ts.Fields)).To(BeNumerically(">", 0))
+			Expect(ts.Fields[0].Type).To(Equal("Time"))
+
+			aSpecial, ok := structMap["AssignedSpecialAlias"]
+			Expect(ok).To(BeTrue())
+			Expect(len(aSpecial.Fields)).To(BeNumerically(">", 0))
+			Expect(aSpecial.Fields[0].Type).To(Equal("Time"))
 		})
-	*/
+	})
 })
 
 func TestAliasController(t *testing.T) {
