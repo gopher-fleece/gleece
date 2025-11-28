@@ -18,7 +18,6 @@ const (
 	TypeRefKindInlineStruct TypeRefKind = "inline_struct"
 )
 
-// ------------------------------ TypeRef interface ----------------------------
 type TypeRef interface {
 	Kind() TypeRefKind
 	// Deterministic structural representation used for interning/canonicalization.

@@ -7,6 +7,7 @@ import (
 	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/graphs"
 	"github.com/gopher-fleece/gleece/graphs/dot"
+	"github.com/gopher-fleece/gleece/graphs/symboldg"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -134,6 +135,20 @@ var _ = Describe("Unit Tests - Dot", func() {
 				// Should add error node and one edge to error node
 				Expect(strings.Count(output, "N_ERROR")).To(Equal(2))
 				Expect(strings.Count(output, "-> N_ERROR")).To(Equal(1))
+			})
+
+			It("Appends a given edge suffix string if provided", func() {
+				from := graphs.SymbolKey{Name: "FromNode"}
+				to := graphs.SymbolKey{Name: "ToNode"}
+
+				builder.AddNode(from, common.SymKindStruct, "From")
+				builder.AddNode(to, common.SymKindInterface, "To")
+
+				builder.AddEdge(from, to, string(symboldg.EdgeKindType), common.Ptr(" (Suffix Test)"))
+
+				out := builder.Finish()
+
+				Expect(out).To(ContainSubstring("N0 -> N1 [label=\"Type (Suffix Test)\""))
 			})
 		})
 

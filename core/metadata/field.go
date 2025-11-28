@@ -20,7 +20,7 @@ type FieldMeta struct {
 func (f FieldMeta) Reduce(_ ReductionContext) (definitions.FieldMetadata, error) {
 	fieldNode, ok := f.Node.(*ast.Field)
 	if !ok {
-		return definitions.FieldMetadata{}, fmt.Errorf("field %s has a non-field node type", f.Name)
+		return definitions.FieldMetadata{}, fmt.Errorf("field '%s' has a non-field node type", f.Name)
 	}
 
 	var tag string

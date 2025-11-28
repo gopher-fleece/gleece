@@ -66,7 +66,7 @@ func (v *AliasVisitor) VisitAlias(
 	// Parse the spec into metadata structures
 	aliasMeta, err := v.parseAliasSpec(pkg, file, genDecl, spec)
 	if err != nil {
-		return graphs.SymbolKey{}, err
+		return graphs.SymbolKey{}, v.getFrozenError("failed to visit alias '%s' - %w", specName, err)
 	}
 
 	// Add the alias to the graph
@@ -135,15 +135,6 @@ func (v *AliasVisitor) parseAliasSpec(
 		)
 	}
 
-	// The alias's kind.
-	// Currently, we consider both
-	//
-	// type A string
-	// and
-	// type A = string
-	//
-	// to be functionally equivalent. We do want to keep track of this for any future needs though.
-	//
 	aliasKind := common.Ternary(spec.Assign != 0, metadata.AliasKindAssigned, metadata.AliasKindTypedef)
 
 	return metadata.AliasMeta{
@@ -189,8 +180,6 @@ func (v *AliasVisitor) resolveAliasRhsIdentOrSelector(
 	file *ast.File,
 	expr ast.Expr,
 ) (metadata.TypeUsageMeta, error) {
-
-	// Use the existing resolver to get the named-type resolution
 	resolution, ok, resolveErr := gast.ResolveNamedType(
 		pkg,
 		file,
@@ -198,7 +187,11 @@ func (v *AliasVisitor) resolveAliasRhsIdentOrSelector(
 		v.context.ArbitrationProvider.Pkg().GetPackage,
 	)
 	if resolveErr != nil {
-		return metadata.TypeUsageMeta{}, resolveErr
+		return metadata.TypeUsageMeta{}, v.getFrozenError(
+			"failed to resolve named type for expression '%v' - %w",
+			expr,
+			resolveErr,
+		)
 	}
 	if !ok {
 		return metadata.TypeUsageMeta{}, fmt.Errorf("could not resolve aliased type expression")
@@ -209,9 +202,13 @@ func (v *AliasVisitor) resolveAliasRhsIdentOrSelector(
 		return v.processBuiltinTypeResolution(resolution)
 	}
 
-	// Declared target: ensure target is materialized (requires declVisitor)
+	// If the resolved type isn't a built-in and doesn't have an associated file/package/spec,
+	// something has gone wrong during resolution and we must halt.
 	if resolution.DeclaringAstFile == nil || resolution.DeclaringPackage == nil || resolution.TypeSpec == nil {
-		return metadata.TypeUsageMeta{}, fmt.Errorf("incomplete declaration context for aliased type %s", resolution.TypeName)
+		return metadata.TypeUsageMeta{}, v.getFrozenError(
+			"incomplete declaration context for aliased type %s",
+			resolution.TypeName,
+		)
 	}
 
 	targetFileVersion, fvErr := v.context.MetadataCache.GetFileVersion(
@@ -219,10 +216,17 @@ func (v *AliasVisitor) resolveAliasRhsIdentOrSelector(
 		resolution.DeclaringPackage.Fset,
 	)
 	if fvErr != nil {
-		return metadata.TypeUsageMeta{}, fvErr
+		return metadata.TypeUsageMeta{}, v.getFrozenError(
+			"could not obtain file version for '%s' - %w",
+			gast.GetAstFileName(resolution.DeclaringPackage.Fset, resolution.DeclaringAstFile),
+			fvErr,
+		)
 	}
 	if targetFileVersion == nil {
-		return metadata.TypeUsageMeta{}, fmt.Errorf("missing file version for declaring file of aliased type %s", resolution.TypeName)
+		return metadata.TypeUsageMeta{}, v.getFrozenError(
+			"missing file version for declaring file of aliased type %s",
+			resolution.TypeName,
+		)
 	}
 
 	targetKey := graphs.NewSymbolKey(resolution.TypeSpec, targetFileVersion)
@@ -230,7 +234,10 @@ func (v *AliasVisitor) resolveAliasRhsIdentOrSelector(
 	// Ask declVisitor to materialize if needed
 	if !v.context.MetadataCache.HasVisited(targetKey) {
 		if v.declVisitor == nil {
-			return metadata.TypeUsageMeta{}, fmt.Errorf("declaration for %s not materialized and no materializer provided", resolution.TypeName)
+			return metadata.TypeUsageMeta{}, v.getFrozenError(
+				"declaration for %s not materialized and no materializer provided",
+				resolution.TypeName,
+			)
 		}
 		if _, err := v.declVisitor.EnsureDeclMaterialized(
 			resolution.DeclaringPackage,

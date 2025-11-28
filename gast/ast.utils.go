@@ -437,22 +437,6 @@ func (t TypeSpecResolution) GetQualifiedName() string {
 	return t.TypeName
 }
 
-// ResolveTypeSpecFromField Resolves type information from the given field.
-// Returns the declaring *packages.Package, *ast.File and the associated *ast.TypeSpec
-// Has 3 possible outcomes:
-//
-// * Returns all of the above (the field references a concrete type somewhere)
-// * Returns 4 nils - the field's type is a 'Universe' one
-// * Returns an error
-func ResolveTypeSpecFromField(
-	declaringPkg *packages.Package, // <<<< Used only for locally defined type references
-	declaringFile *ast.File,
-	field *ast.Field,
-	pkgResolver GetPackageMethod,
-) (TypeSpecResolution, error) {
-	return ResolveTypeSpecFromExpr(declaringPkg, declaringFile, field.Type, pkgResolver)
-}
-
 // ResolveTypeSpecFromExpr resolves a type expression to its defining TypeSpec,
 // if it originates from a user-defined type, otherwise returns information about the universe type.
 func ResolveTypeSpecFromExpr(
