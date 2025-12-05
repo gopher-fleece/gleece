@@ -21,6 +21,8 @@ var _ = Describe("Generics Controller", func() {
 		pipe = utils.GetPipelineOrFail()
 		err := pipe.GenerateGraph()
 		Expect(err).To(BeNil())
+
+		pipe.Validate()
 	})
 
 	Context("RecvWithPrimitiveMapInBody", func() {

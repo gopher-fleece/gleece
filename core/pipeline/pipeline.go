@@ -220,21 +220,13 @@ func (p *GleecePipeline) appendRouteImports(imports map[string]MapSet.Set[string
 
 // Validate validates the metadata created by the graph generation phase
 func (p *GleecePipeline) Validate() ([]diagnostics.EntityDiagnostic, error) {
-	allDiags := []diagnostics.EntityDiagnostic{}
+	validator := validators.NewApiValidator(
+		p.gleeceConfig,
+		p.arbitrationProvider.Pkg(),
+		p.getControllers(),
+	)
 
-	for _, ctrl := range p.getControllers() {
-		validator := validators.NewControllerValidator(p.gleeceConfig, p.arbitrationProvider.Pkg(), &ctrl)
-		ctrlDiag, err := validator.Validate()
-		if err != nil {
-			return allDiags, fmt.Errorf("failed to validate controller '%s' due to an error - %w", ctrl.Struct.Name, err)
-		}
-
-		if !ctrlDiag.Empty() {
-			allDiags = append(allDiags, ctrlDiag)
-		}
-	}
-
-	return allDiags, nil
+	return validator.Validate()
 }
 
 func (p *GleecePipeline) getControllers() []metadata.ControllerMeta {

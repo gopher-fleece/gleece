@@ -18,7 +18,7 @@ Previously, alias support was limited and resulted in the aliased type effective
   	type Id string  `validate:"regex=^[0-9A-Fa-f]{8}(?:-[0-9A-Fa-f]{4}){3}-[0-9A-Fa-f]{12}$"`
 
 	// A unique ID
-  	type ID = string `validate:"regex=^[0-9A-Fa-f]{8}(?:-[0-9A-Fa-f]{4}){3}-[0-9A-Fa-f]{12}$"`
+  	type Id = string `validate:"regex=^[0-9A-Fa-f]{8}(?:-[0-9A-Fa-f]{4}){3}-[0-9A-Fa-f]{12}$"`
   ```
   </br>
   These aliases will be translated into an equivalent OpenAPI model:
@@ -78,6 +78,9 @@ Previously, alias support was limited and resulted in the aliased type effective
 * Overhauled type resolution flows.
   
   *Gleece* now has a set of composable visitors, each tailored for a specific part of the AST.
+
+* Added a global `ApiValidator` as the entry point to the HIR validation subsystem.</br>
+  This currently includes a URL conflict detection algorithm to emit diagnostics upon route conflicts such as between `POST /a/b/c` and `POST /a/{foo}/c`
 
 
 ------------------

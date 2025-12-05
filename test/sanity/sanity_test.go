@@ -58,7 +58,7 @@ var _ = Describe("Sanity Controller", func() {
 		Expect(route.Deprecation.Deprecated).To(BeFalse())
 		Expect(route.Deprecation.Description).To(BeEmpty())
 		Expect(route.Description).To(Equal("A sanity test controller method"))
-		Expect(route.RestMetadata.Path).To(Equal("/{routeParamAlias}"))
+		Expect(route.RestMetadata.Path).To(Equal("/valid-method-simple-route-query-and-header-params/{routeParamAlias}"))
 		Expect(route.FuncParams).To(HaveLen(3))
 		Expect(route.Responses).To(HaveLen(2))
 		Expect(route.HasReturnValue).To(BeTrue())
@@ -151,7 +151,7 @@ var _ = Describe("Sanity Controller", func() {
 		Expect(route.Responses[1].TypeMetadata.IsUniverseType).To(BeTrue())
 		Expect(route.Responses[1].TypeMetadata.IsByAddress).To(BeFalse())
 		// Currently, 'error' is marked 'universe' since it exists in the universe scope and is a *types.TypeName
-		// This is somewhat conflicting with some other internal logic classifying this a 
+		// This is somewhat conflicting with some other internal logic classifying this a
 		Expect(route.Responses[1].TypeMetadata.SymbolKind).To(Equal(common.SymKindSpecialBuiltin))
 	})
 

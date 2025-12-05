@@ -27,7 +27,7 @@ func (c DiagnosticsController) MethodWithUnlinkedParam(id string) error {
 	return nil
 }
 
-// @Route(/unlinked-param/{aliased})
+// @Route(/unlinked-alias/{aliased})
 // @Method(POST)
 // @Path(id)
 func (c DiagnosticsController) MethodWithUnlinkedAlias(id string) error {
