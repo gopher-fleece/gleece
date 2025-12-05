@@ -269,8 +269,6 @@ func NewParamSymbolKey(fileVersion *gast.FileVersion, paramName string, index in
 	}
 }
 
-// ----------------- small helpers -----------------
-
 // extractFileInfo returns the file base and a short hash part from FileId (if present).
 func extractFileInfo(sk SymbolKey) (fileBase, shortHash string) {
 	if sk.FileId == "" {
@@ -316,8 +314,6 @@ func formatTypeParam(n string) string {
 	return trimAt(n)
 }
 
-// ----------------- instantiated name pretty-print -----------------
-
 // instLabelFromName handles strings like:
 //
 //	"inst:MultiGenericStruct@...|... [UniverseType:string,UniverseType:int]"
@@ -354,8 +350,6 @@ func instLabelFromName(inst string) string {
 	}
 	return fmt.Sprintf("%s[%s]", base, strings.Join(argParts, ","))
 }
-
-// ----------------- composite pretty-print -----------------
 
 // compositeLabelFromName pretty-prints composite symbol names produced by canonicalizer.
 // Input examples:
