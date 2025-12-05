@@ -249,6 +249,36 @@ type StructMetadata struct {
 	Deprecation DeprecationOptions
 }
 
+func (s StructMetadata) Clone() StructMetadata {
+	fields := make([]FieldMetadata, 0, len(s.Fields))
+	for _, field := range s.Fields {
+		var deprecationOpts *DeprecationOptions
+		if field.Deprecation != nil {
+			deprecationOpts = &DeprecationOptions{
+				Deprecated:  field.Deprecation.Deprecated,
+				Description: field.Deprecation.Description,
+			}
+		}
+
+		fields = append(fields, FieldMetadata{
+			Name:        field.Name,
+			Type:        field.Type,
+			Description: field.Description,
+			Tag:         field.Tag,
+			IsEmbedded:  field.IsEmbedded,
+			Deprecation: deprecationOpts,
+		})
+	}
+
+	return StructMetadata{
+		Name:        s.Name,
+		PkgPath:     s.PkgPath,
+		Description: s.Description,
+		Fields:      fields,
+		Deprecation: s.Deprecation,
+	}
+}
+
 type EnumMetadata struct {
 	Name        string
 	PkgPath     string

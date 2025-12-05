@@ -3,8 +3,10 @@ package generics_test
 import (
 	"testing"
 
+	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/common/linq"
 	"github.com/gopher-fleece/gleece/core/pipeline"
+	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/graphs"
 	"github.com/gopher-fleece/gleece/graphs/symboldg"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
@@ -52,6 +54,57 @@ var _ = Describe("Generics Controller", func() {
 			Expect(info.RetVals).To(HaveLen(1))
 			retTypeNode := utils.GetSingularChildTypeNode(pipe.Graph(), info.RetVals[0].Node)
 			Expect(retTypeNode.Id).To(Equal(graphs.NewUniverseSymbolKey("error")))
+		})
+
+		It("Creates correct models", func() {
+			intermediate, err := pipe.GenerateIntermediate()
+			Expect(err).To(BeNil())
+			Expect(intermediate.Models.Structs).To(ContainElements(
+				[]definitions.StructMetadata{
+					{
+
+						Name:    "MonoGenericStructString",
+						PkgPath: "github.com/gopher-fleece/gleece/test/generics",
+						Fields: []definitions.FieldMetadata{{
+							Name:        "Value",
+							Type:        "string",
+							Deprecation: common.Ptr(definitions.DeprecationOptions{Deprecated: false, Description: ""}),
+						}},
+					},
+					{
+						Name:    "MultiGenericStructBoolInt",
+						PkgPath: "github.com/gopher-fleece/gleece/test/generics",
+						Fields: []definitions.FieldMetadata{
+							{
+								Name:        "ValueA",
+								Type:        "bool",
+								Deprecation: common.Ptr(definitions.DeprecationOptions{Deprecated: false, Description: ""}),
+							},
+							{
+								Name:        "ValueB",
+								Type:        "int",
+								Deprecation: common.Ptr(definitions.DeprecationOptions{Deprecated: false, Description: ""}),
+							},
+						},
+					},
+					{
+						Name:    "MultiGenericStructStringInt",
+						PkgPath: "github.com/gopher-fleece/gleece/test/generics",
+						Fields: []definitions.FieldMetadata{
+							{
+								Name:        "ValueA",
+								Type:        "string",
+								Deprecation: common.Ptr(definitions.DeprecationOptions{Deprecated: false, Description: ""}),
+							},
+							{
+								Name:        "ValueB",
+								Type:        "int",
+								Deprecation: common.Ptr(definitions.DeprecationOptions{Deprecated: false, Description: ""}),
+							},
+						},
+					},
+				}),
+			)
 		})
 	})
 

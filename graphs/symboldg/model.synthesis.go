@@ -174,12 +174,16 @@ func reduceStructLists(
 	return reducedList, nil
 }
 
-func inPlaceInstantiateGenericModel(
+func instantiateGenericModel(
 	rawStruct *metadata.StructMeta,
-	reducedStruct *definitions.StructMetadata,
+	reducedStruct definitions.StructMetadata,
 	typeParamReplacementNodes []*SymbolNode,
 	modelNameTransformer func(modelBaseName string, typeParamNames []string) string,
-) error {
+) (definitions.StructMetadata, error) {
+
+	// Clone the reduced struct - Fields is a slice and therefore the struct as a whole
+	// is not safe to modify.
+	clonedStruct := reducedStruct.Clone()
 
 	rawParamNames := linq.Map(typeParamReplacementNodes, func(tParamNode *SymbolNode) string {
 		if tParamNode.Kind.IsBuiltin() {
@@ -189,9 +193,9 @@ func inPlaceInstantiateGenericModel(
 	})
 
 	if modelNameTransformer != nil {
-		reducedStruct.Name = modelNameTransformer(reducedStruct.Name, rawParamNames)
+		clonedStruct.Name = modelNameTransformer(clonedStruct.Name, rawParamNames)
 	} else {
-		reducedStruct.Name = StandardModelNameTransformer(reducedStruct.Name, rawParamNames)
+		clonedStruct.Name = StandardModelNameTransformer(clonedStruct.Name, rawParamNames)
 	}
 
 	for fieldIdx, field := range rawStruct.Fields {
@@ -199,7 +203,7 @@ func inPlaceInstantiateGenericModel(
 		if field.Type.Root != nil && field.Type.Root.Kind() == metadata.TypeRefKindParam {
 			nameParts := strings.SplitN(field.Type.Name, "#", 2)
 			if len(nameParts) != 2 {
-				return fmt.Errorf(
+				return clonedStruct, fmt.Errorf(
 					"failed to determine replacement to generic placeholder '%s' in field '%s'",
 					field.Type.Name,
 					field.Name,
@@ -208,7 +212,7 @@ func inPlaceInstantiateGenericModel(
 
 			replParamIdx, err := strconv.ParseInt(nameParts[1], 10, 16)
 			if err != nil {
-				return fmt.Errorf(
+				return clonedStruct, fmt.Errorf(
 					"failed to parse replacement index to generic placeholder '%s' in field '%s'",
 					field.Type.Name,
 					field.Name,
@@ -216,12 +220,12 @@ func inPlaceInstantiateGenericModel(
 			}
 
 			// Re-write the type
-			reducedStruct.Fields[fieldIdx].Type = rawParamNames[replParamIdx]
+			clonedStruct.Fields[fieldIdx].Type = rawParamNames[replParamIdx]
 		}
 
 	}
 
-	return nil
+	return clonedStruct, nil
 }
 
 func materializeInstantiationTarget(
@@ -230,12 +234,12 @@ func materializeInstantiationTarget(
 	target InitializationTarget,
 	modelNameTransformer func(modelBaseName string, typeParamNames []string) string,
 ) (definitions.StructMetadata, error) {
-	err := inPlaceInstantiateGenericModel(rawStruct, &reducedStruct, target.TypeParams, modelNameTransformer)
+	instance, err := instantiateGenericModel(rawStruct, reducedStruct, target.TypeParams, modelNameTransformer)
 	if err != nil {
-		return reducedStruct, fmt.Errorf("failed to construct fields for generic struct '%s' - %v", rawStruct.Name, err)
+		return instance, fmt.Errorf("failed to construct fields for generic struct '%s' - %v", rawStruct.Name, err)
 	}
 
-	return reducedStruct, nil
+	return instance, nil
 }
 
 func synthesizeModelsForGenericStruct(
