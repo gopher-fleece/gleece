@@ -809,40 +809,38 @@ var _ = Describe("Alias Controller", func() {
 			Expect(fp2.UniqueImportSerial).To(Equal(uint64(3)))
 
 			// Models assertions: build map for easier lookup and assert core fields
+
 			structMap := map[string]definitions.StructMetadata{}
 			for _, s := range intermediate.Models.Structs {
 				structMap[s.Name] = s
 			}
 
+			aliasMap := map[string]definitions.NakedAliasMetadata{}
+			for _, s := range intermediate.Models.Aliases {
+				aliasMap[s.Name] = s
+			}
+
 			// TypedefAlias
-			td, ok := structMap["TypedefAlias"]
+			td, ok := aliasMap["TypedefAlias"]
 			Expect(ok).To(BeTrue())
 			Expect(td.PkgPath).To(Equal("github.com/gopher-fleece/gleece/test/alias"))
-			Expect(len(td.Fields)).To(BeNumerically(">", 0))
-			Expect(td.Fields[0].Type).To(Equal("string"))
-			Expect(td.Fields[0].IsEmbedded).To(BeTrue())
+			Expect(td.Type).To(Equal("string"))
 
 			// AssignedAlias
-			aa, ok := structMap["AssignedAlias"]
+			aa, ok := aliasMap["AssignedAlias"]
 			Expect(ok).To(BeTrue())
 			Expect(aa.PkgPath).To(Equal("github.com/gopher-fleece/gleece/test/alias"))
-			Expect(len(aa.Fields)).To(BeNumerically(">", 0))
-			Expect(aa.Fields[0].Type).To(Equal("string"))
-			Expect(aa.Fields[0].IsEmbedded).To(BeTrue())
+			Expect(aa.Type).To(Equal("string"))
 
 			// NestedTypedefAlias (embedded typedef)
-			ntd, ok := structMap["NestedTypedefAlias"]
+			ntd, ok := aliasMap["NestedTypedefAlias"]
 			Expect(ok).To(BeTrue())
-			Expect(len(ntd.Fields)).To(BeNumerically(">", 0))
-			Expect(ntd.Fields[0].Type).To(Equal("TypedefAlias"))
-			Expect(ntd.Fields[0].IsEmbedded).To(BeTrue())
+			Expect(ntd.Type).To(Equal("TypedefAlias"))
 
 			// NestedAssignedAlias (embedded typedef alias)
-			nas, ok := structMap["NestedAssignedAlias"]
+			nas, ok := aliasMap["NestedAssignedAlias"]
 			Expect(ok).To(BeTrue())
-			Expect(len(nas.Fields)).To(BeNumerically(">", 0))
-			Expect(nas.Fields[0].Type).To(Equal("TypedefAlias"))
-			Expect(nas.Fields[0].IsEmbedded).To(BeTrue())
+			Expect(nas.Type).To(Equal("TypedefAlias"))
 
 			// Body structs containing alias-typed fields
 			btd, ok := structMap["BodyWithTypedefAlias"]
@@ -856,15 +854,13 @@ var _ = Describe("Alias Controller", func() {
 			Expect(bna.Fields[0].Type).To(Equal("NestedAssignedAlias"))
 
 			// Special typedefs (time-based)
-			ts, ok := structMap["TypedefSpecialAlias"]
+			ts, ok := aliasMap["TypedefSpecialAlias"]
 			Expect(ok).To(BeTrue())
-			Expect(len(ts.Fields)).To(BeNumerically(">", 0))
-			Expect(ts.Fields[0].Type).To(Equal("Time"))
+			Expect(ts.Type).To(Equal("Time"))
 
-			aSpecial, ok := structMap["AssignedSpecialAlias"]
+			aSpecial, ok := aliasMap["AssignedSpecialAlias"]
 			Expect(ok).To(BeTrue())
-			Expect(len(aSpecial.Fields)).To(BeNumerically(">", 0))
-			Expect(aSpecial.Fields[0].Type).To(Equal("Time"))
+			Expect(aSpecial.Type).To(Equal("Time"))
 		})
 	})
 })

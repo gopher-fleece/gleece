@@ -4,8 +4,10 @@ import (
 	"fmt"
 
 	"github.com/gopher-fleece/gleece/common"
+	"github.com/gopher-fleece/gleece/core/annotations"
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/gast"
+	"github.com/gopher-fleece/gleece/graphs"
 )
 
 type TypeUsageMeta struct {
@@ -37,11 +39,37 @@ func (t TypeUsageMeta) Resolve(ctx ReductionContext) (definitions.TypeMetadata, 
 		}, nil
 	}
 
-	// Check if this usage is for an enum, if so, flatten it to an AliasMetadata
-	underlyingEnum := ctx.MetaCache.GetEnum(symKey)
+	return definitions.TypeMetadata{
+		Name:                t.Root.SimpleTypeString(),
+		PkgPath:             t.PkgPath,
+		DefaultPackageAlias: gast.GetDefaultPkgAliasByName(t.PkgPath),
+		Description:         annotations.GetDescription(t.Annotations),
+		Import:              t.Import,
+		IsUniverseType:      t.PkgPath == "" && gast.IsUniverseType(t.Name),
+		IsByAddress:         t.IsByAddress(),
+		SymbolKind:          t.SymbolKind,
+		AliasMetadata:       common.Ptr(getAliasMeta(ctx, symKey)),
+	}, nil
+}
 
+func (t TypeUsageMeta) IsContext() bool {
+	return t.Name == "Context" && t.PkgPath == "context"
+}
+
+// getAliasMeta attempts to retrieve Alias metadata for the given type.
+// Alias metadata is relevant for enums and true aliases. For other kinds, it'll remain empty.
+func getAliasMeta(
+	ctx ReductionContext,
+	typeSymKey graphs.SymbolKey,
+) definitions.AliasMetadata {
+	// Take the actual data from the cache. Quite hacky but good enough for now.
 	alias := definitions.AliasMetadata{}
+
+	// Check if this usage is for an enum, if so, flatten it to an AliasMetadata
+	underlyingEnum := ctx.MetaCache.GetEnum(typeSymKey)
+
 	if underlyingEnum != nil {
+		// This is an enum
 		alias.Name = underlyingEnum.Name
 		alias.AliasType = string(underlyingEnum.ValueKind)
 
@@ -50,33 +78,15 @@ func (t TypeUsageMeta) Resolve(ctx ReductionContext) (definitions.TypeMetadata, 
 			values = append(values, fmt.Sprintf("%v", v.Value))
 		}
 		alias.Values = values
+	} else {
+		// If the type is not an enum, check if it's an alias
+		underlyingAlias := ctx.MetaCache.GetAlias(typeSymKey)
+		if underlyingAlias != nil {
+			// This is an alias
+			alias.Name = underlyingAlias.Name
+			alias.AliasType = underlyingAlias.Type.Root.SimpleTypeString()
+		}
 	}
 
-	underlyingAlias := ctx.MetaCache.GetAlias(symKey)
-	if underlyingAlias != nil {
-		alias.Name = underlyingAlias.Name
-		alias.AliasType = underlyingAlias.Type.Root.SimpleTypeString()
-	}
-
-	description := ""
-	if t.Annotations != nil {
-		description = t.Annotations.GetDescription()
-	}
-
-	name := t.Root.SimpleTypeString()
-	return definitions.TypeMetadata{
-		Name:                name,
-		PkgPath:             t.PkgPath,
-		DefaultPackageAlias: gast.GetDefaultPkgAliasByName(t.PkgPath),
-		Description:         description,
-		Import:              t.Import,
-		IsUniverseType:      t.PkgPath == "" && gast.IsUniverseType(t.Name),
-		IsByAddress:         t.IsByAddress(),
-		SymbolKind:          t.SymbolKind,
-		AliasMetadata:       &alias,
-	}, nil
-}
-
-func (t TypeUsageMeta) IsContext() bool {
-	return t.Name == "Context" && t.PkgPath == "context"
+	return alias
 }
