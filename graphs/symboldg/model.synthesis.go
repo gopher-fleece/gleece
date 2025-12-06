@@ -2,7 +2,6 @@ package symboldg
 
 import (
 	"fmt"
-	"slices"
 	"strconv"
 	"strings"
 	"unicode"
@@ -35,7 +34,7 @@ type RawStructModelsList struct {
 	Structs        []metadata.StructMeta
 }
 
-func ComposeModels(
+func ComposeStructs(
 	reductionCtx metadata.ReductionContext,
 	graph SymbolGraphBuilder,
 	modelNameTransformer ModelNameTransformer,
@@ -52,16 +51,14 @@ func ComposeModels(
 		return nil, fmt.Errorf("failed to reduce struct models list - %v", err)
 	}
 
-	// Collect/Reduce 'Alias' type models (e.g. `type Something = string`)
-	aliasModels, err := collectAliasModels(reductionCtx, graph)
-	if err != nil {
-		return allModels, fmt.Errorf("failed to collect alias models - %v", err)
-	}
-
-	// Concat all struct-like entities
-	allModels = slices.Concat(allModels, aliasModels)
-
 	return allModels, nil
+}
+
+func ComposeAliases(
+	reductionCtx metadata.ReductionContext,
+	graph SymbolGraphBuilder,
+) ([]definitions.NakedAliasMetadata, error) {
+	return collectAliasModels(reductionCtx, graph)
 }
 
 func collectStructModelList(graph SymbolGraphBuilder) (RawStructModelsList, error) {
@@ -281,8 +278,8 @@ func synthesizeModelsForGenericStruct(
 func collectAliasModels(
 	ctx metadata.ReductionContext,
 	graph SymbolGraphBuilder,
-) ([]definitions.StructMetadata, error) {
-	reduced := []definitions.StructMetadata{}
+) ([]definitions.NakedAliasMetadata, error) {
+	reduced := []definitions.NakedAliasMetadata{}
 
 	for _, aliasNode := range graph.FindByKind(common.SymKindAlias) {
 		aliasMeta, isAliasMeta := aliasNode.Data.(metadata.AliasMeta)

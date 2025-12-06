@@ -79,6 +79,14 @@ func (a AliasMetadata) Equals(other AliasMetadata) bool {
 	return true
 }
 
+type NakedAliasMetadata struct {
+	Name        string // e.g. MyStringAlias
+	PkgPath     string
+	Type        string // e.g. string, int, etc.
+	Description string
+	Deprecation DeprecationOptions
+}
+
 type TypeMetadata struct {
 	Name                string
 	PkgPath             string
@@ -305,6 +313,7 @@ type EnumValidator struct {
 type Models struct {
 	Structs        []StructMetadata
 	Enums          []EnumMetadata
+	Aliases        []NakedAliasMetadata
 	EnumValidators []EnumValidator
 }
 

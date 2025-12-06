@@ -253,7 +253,12 @@ func (p *GleecePipeline) reduceControllers(controllers []metadata.ControllerMeta
 func (p *GleecePipeline) getModels() (definitions.Models, error) {
 	ctx := p.getReductionContext()
 
-	reducedStructs, err := symboldg.ComposeModels(p.getReductionContext(), p.Graph(), nil)
+	reducedStructs, err := symboldg.ComposeStructs(p.getReductionContext(), p.Graph(), nil)
+	if err != nil {
+		return definitions.Models{}, err
+	}
+
+	reducedAliases, err := symboldg.ComposeAliases(p.getReductionContext(), p.Graph())
 	if err != nil {
 		return definitions.Models{}, err
 	}
@@ -278,6 +283,7 @@ func (p *GleecePipeline) getModels() (definitions.Models, error) {
 	return definitions.Models{
 		Structs: reducedStructs,
 		Enums:   reducedEnums,
+		Aliases: reducedAliases,
 	}, nil
 }
 
