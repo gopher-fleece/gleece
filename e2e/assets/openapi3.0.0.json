@@ -1,6 +1,23 @@
 {
   "components": {
     "schemas": {
+      "AliasOfDirectString": {
+        "deprecated": true,
+        "description": "Bla Bla",
+        "title": "AliasOfDirectString",
+        "type": "string"
+      },
+      "AliasOfInt": {
+        "deprecated": true,
+        "description": "AliasOfInt types for testing",
+        "title": "AliasOfInt",
+        "type": "integer"
+      },
+      "AliasOfString": {
+        "description": "AliasOfString types for testing",
+        "title": "AliasOfString",
+        "type": "string"
+      },
       "BlaBla": {
         "properties": {
           "listOfLength": {
@@ -162,6 +179,21 @@
         ],
         "title": "NumberEnumeration",
         "type": "integer"
+      },
+      "ObjectWithAliasOfString": {
+        "properties": {
+          "number": {
+            "$ref": "#/components/schemas/AliasOfInt"
+          },
+          "value": {
+            "$ref": "#/components/schemas/AliasOfString"
+          },
+          "valueDirect": {
+            "$ref": "#/components/schemas/AliasOfDirectString"
+          }
+        },
+        "title": "ObjectWithAliasOfString",
+        "type": "object"
       },
       "ObjectWithByteSlice": {
         "properties": {
@@ -470,6 +502,63 @@
         "operationId": "Error503",
         "responses": {
           "204": {
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/alias-of-primitive": {
+      "post": {
+        "operationId": "AliasOfString",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "num",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/AliasOfInt"
+            }
+          },
+          {
+            "in": "query",
+            "name": "str",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/AliasOfDirectString"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ObjectWithAliasOfString"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObjectWithAliasOfString"
+                }
+              }
+            },
             "description": ""
           },
           "default": {

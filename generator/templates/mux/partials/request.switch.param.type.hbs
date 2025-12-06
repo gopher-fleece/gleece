@@ -117,24 +117,31 @@ if is{{Name}}Exists {
     
   {{/if}}
 
-  {{!-- Case of alias --}}
+  {{!-- Case of Enum with validation enabled --}}
   {{#ifEqual TypeMeta.SymbolKind "Enum"}}
-    {{!-- An experimental feature to validate top-level (only) enums --}}
-    {{#if ExperimentalConfig.ValidateTopLevelOnlyEnum}}
-      switch {{ToLowerCamel Name}}Raw {
-      case {{#each TypeMeta.AliasMetadata.Values}}"{{this}}"{{#unless @last}}, {{/unless}}{{/each}}:
-        {{ToLowerCamel Name}}Var := Param{{{UniqueImportSerial}}}{{{Name}}}.{{{TypeMeta.Name}}}({{ToLowerCamel Name}})
-        {{ToLowerCamel Name}}RawPtr = &{{ToLowerCamel Name}}Var
-		  default:
-        conversionErr := fmt.Errorf("{{ToLowerCamel Name}} must be one of \"{{#each TypeMeta.AliasMetadata.Values}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}\" options only but got \"%s\"", {{ToLowerCamel Name}}Raw)
-        {{> ParamsValidationErrorResponse }}
-		  }
-    {{else}}
-      {{ToLowerCamel Name}}Var := {{SlicePrefix TypeMeta.Name}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{SliceSlice TypeMeta.Name}}({{ToLowerCamel Name}})
-      {{ToLowerCamel Name}}RawPtr = &{{ToLowerCamel Name}}Var
-    {{/if}}
+      {{#if ExperimentalConfig.ValidateTopLevelOnlyEnum}}
+          switch {{ToLowerCamel Name}}Raw {
+          case {{#each TypeMeta.AliasMetadata.Values}}"{{this}}"{{#unless @last}}, {{/unless}}{{/each}}:
+          {{ToLowerCamel Name}}Var := Param{{{UniqueImportSerial}}}{{{Name}}}.{{{TypeMeta.Name}}}({{ToLowerCamel Name}})
+          {{ToLowerCamel Name}}RawPtr = &{{ToLowerCamel Name}}Var
+          default:
+          conversionErr := fmt.Errorf("{{ToLowerCamel Name}} must be one of \"{{#each TypeMeta.AliasMetadata.Values}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}\" options only but got \"%s\"", {{ToLowerCamel Name}}Raw)
+          {{> ParamsValidationErrorResponse }}
+          }
+      {{else}}
+      {{!-- Enum without validation --}}
+          {{ToLowerCamel Name}}Var := {{SlicePrefix TypeMeta.Name}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{SliceSlice TypeMeta.Name}}({{ToLowerCamel Name}})
+          {{ToLowerCamel Name}}RawPtr = &{{ToLowerCamel Name}}Var
+      {{/if}}
   {{else}}
-    {{ToLowerCamel Name}}RawPtr = &{{ToLowerCamel Name}}
+  {{!-- Case of Alias --}}
+      {{#ifEqual TypeMeta.SymbolKind "Alias"}}
+          {{ToLowerCamel Name}}Var := {{SlicePrefix TypeMeta.Name}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{SliceSlice TypeMeta.Name}}({{ToLowerCamel Name}})
+          {{ToLowerCamel Name}}RawPtr = &{{ToLowerCamel Name}}Var
+      {{else}}
+      {{!-- Default case for primitive types --}}
+          {{ToLowerCamel Name}}RawPtr = &{{ToLowerCamel Name}}
+      {{/ifEqual}}
   {{/ifEqual}}
 
 }

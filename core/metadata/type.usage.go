@@ -10,7 +10,7 @@ import (
 
 type TypeUsageMeta struct {
 	SymNodeMeta
-	Import     common.ImportType
+	Import common.ImportType
 	// Describes the actual type reference.
 	// Recursively encodes information such as 'is this a pointer type?' or 'what generic parameters does this usage have?'
 	Root TypeRef
@@ -50,6 +50,12 @@ func (t TypeUsageMeta) Resolve(ctx ReductionContext) (definitions.TypeMetadata, 
 			values = append(values, fmt.Sprintf("%v", v.Value))
 		}
 		alias.Values = values
+	}
+
+	underlyingAlias := ctx.MetaCache.GetAlias(symKey)
+	if underlyingAlias != nil {
+		alias.Name = underlyingAlias.Name
+		alias.AliasType = underlyingAlias.Type.Root.SimpleTypeString()
 	}
 
 	description := ""
