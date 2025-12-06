@@ -74,9 +74,18 @@ func (v *AliasVisitor) VisitAlias(
 		Data:        aliasMeta,
 		Annotations: aliasMeta.Annotations,
 	})
+
 	if err != nil {
 		return graphs.SymbolKey{}, v.getFrozenError(
 			"failed to add alias '%s' to the symbol graph - %w",
+			aliasMeta.Name,
+			err,
+		)
+	}
+
+	if v.context.MetadataCache.AddAlias(&aliasMeta) != nil {
+		return graphs.SymbolKey{}, v.getFrozenError(
+			"failed to add alias '%s' to the metadata cache - %w",
 			aliasMeta.Name,
 			err,
 		)
