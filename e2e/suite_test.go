@@ -129,7 +129,7 @@ func GenerateE2ERoutes(args arguments.CliArguments, engineName string) error {
 	}
 
 	// Generate the OpenAPI 3.1.0 spec
-	config.OpenAPIGeneratorConfig.Info.Version = "3.1.0"
+	config.OpenAPIGeneratorConfig.OpenAPI = "3.1.0"
 	config.OpenAPIGeneratorConfig.SpecGeneratorConfig.OutputPath = fmt.Sprintf("./%s/openapi/openapi3.1.0.json", engineName)
 	if err := swagen.GenerateAndOutputSpec(
 		&config.OpenAPIGeneratorConfig,

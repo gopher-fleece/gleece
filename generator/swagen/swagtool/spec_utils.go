@@ -72,3 +72,17 @@ func FileExists(filename string) bool {
 	}
 	return true
 }
+
+func ForceOrderedJSON(input []byte) ([]byte, error) {
+	var orderedData any
+	if err := json.Unmarshal(input, &orderedData); err != nil {
+		return nil, fmt.Errorf("error unmarshaling JSON for ordering: %v", err)
+	}
+
+	orderedJSON, err := json.MarshalIndent(orderedData, "", "  ")
+	if err != nil {
+		return nil, fmt.Errorf("error marshaling ordered JSON: %v", err)
+	}
+
+	return orderedJSON, nil
+}

@@ -117,7 +117,7 @@ func IsDeprecated(deprecationOptions *definitions.DeprecationOptions) bool {
 
 func HasEmbeddedField(fields []definitions.FieldMetadata) bool {
 	for _, field := range fields {
-		if field.IsEmbedded {
+		if field.IsEmbedded && field.Type != "error" {
 			return true
 		}
 	}

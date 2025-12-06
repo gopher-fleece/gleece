@@ -133,3 +133,5 @@ For more information, please see the [architecture](https://docs.gleece.dev/docs
 * Fixed several issues with import detection resulting in resolution failures
 
 * Fixed an issue that could cause type information to be emitted with incorrect `PkgPath`
+
+* Fix custom error causing OpenAPI 3.1 generation to fail

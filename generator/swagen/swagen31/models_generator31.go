@@ -45,6 +45,9 @@ func generateStructsSpec(doc *v3.Document, model definitions.StructMetadata) {
 
 	for _, field := range model.Fields {
 		if field.IsEmbedded {
+			if field.Type == "error" {
+				continue
+			}
 			// If the field is embedded, add it to the allOf array
 			fieldSchemaRef := InterfaceToSchemaV3(doc, field.Type)
 			finalSchema.AllOf = append(finalSchema.AllOf, fieldSchemaRef)
@@ -110,6 +113,22 @@ func generateEnumsSpec(doc *v3.Document, model definitions.EnumMetadata) {
 	doc.Components.Schemas.Set(model.Name, highbase.CreateSchemaProxy(highbaseSchema))
 }
 
+func generateAliasSpec(doc *v3.Document, alias definitions.NakedAliasMetadata) {
+	isDeprecated := swagtool.IsDeprecated(&alias.Deprecation)
+	aliasType := swagtool.ToOpenApiType(alias.Type)
+
+	// Create the alias schema
+	highbaseSchema := &highbase.Schema{
+		Title:       alias.Name,
+		Description: alias.Description,
+		Type:        []string{aliasType},
+		Deprecated:  &isDeprecated,
+	}
+
+	// Add schema to components
+	doc.Components.Schemas.Set(alias.Name, highbase.CreateSchemaProxy(highbaseSchema))
+}
+
 func GenerateModelsSpec(doc *v3.Document, models *definitions.Models) error {
 	for _, enum := range models.Enums {
 		generateEnumsSpec(doc, enum)
@@ -117,6 +136,10 @@ func GenerateModelsSpec(doc *v3.Document, models *definitions.Models) error {
 
 	for _, model := range models.Structs {
 		generateStructsSpec(doc, model)
+	}
+
+	for _, alias := range models.Aliases {
+		generateAliasSpec(doc, alias)
 	}
 
 	return nil

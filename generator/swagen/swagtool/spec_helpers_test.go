@@ -306,5 +306,41 @@ var _ = Describe("Spec Helpers", func() {
 			}
 			Expect(HasEmbeddedField(fields)).To(BeTrue())
 		})
+
+		It("should return false when embedded field has type 'error'", func() {
+			fields := []definitions.FieldMetadata{
+				{Name: "Field1", Type: "string", IsEmbedded: false},
+				{Name: "Field2", Type: "error", IsEmbedded: true},
+				{Name: "Field3", Type: "int", IsEmbedded: false},
+			}
+			Expect(HasEmbeddedField(fields)).To(BeFalse())
+		})
+
+		It("should return true when embedded field has type other than 'error'", func() {
+			fields := []definitions.FieldMetadata{
+				{Name: "Field1", Type: "string", IsEmbedded: false},
+				{Name: "Field2", Type: "CustomType", IsEmbedded: true},
+				{Name: "Field3", Type: "int", IsEmbedded: false},
+			}
+			Expect(HasEmbeddedField(fields)).To(BeTrue())
+		})
+
+		It("should return false when all embedded fields are of type 'error'", func() {
+			fields := []definitions.FieldMetadata{
+				{Name: "Field1", Type: "error", IsEmbedded: true},
+				{Name: "Field2", Type: "error", IsEmbedded: true},
+				{Name: "Field3", Type: "int", IsEmbedded: false},
+			}
+			Expect(HasEmbeddedField(fields)).To(BeFalse())
+		})
+
+		It("should return true when at least one embedded field is not of type 'error'", func() {
+			fields := []definitions.FieldMetadata{
+				{Name: "Field1", Type: "error", IsEmbedded: true},
+				{Name: "Field2", Type: "CustomType", IsEmbedded: true},
+				{Name: "Field3", Type: "int", IsEmbedded: false},
+			}
+			Expect(HasEmbeddedField(fields)).To(BeTrue())
+		})
 	})
 })

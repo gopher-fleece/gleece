@@ -733,3 +733,32 @@ func (ec *E2EController) ReturnsStructWithSpecialPrimitives(arrive *ObjectWithSp
 		Value: newValue,
 	}, nil
 }
+
+// AliasOfString types for testing
+type AliasOfString = string
+
+// Bla Bla
+// @Deprecated
+type AliasOfDirectString string
+
+// AliasOfInt types for testing
+// @Deprecated bla bla
+type AliasOfInt int
+
+type ObjectWithAliasOfString struct {
+	Value       AliasOfString       `json:"value"`
+	ValueDirect AliasOfDirectString `json:"valueDirect"`
+	Number      AliasOfInt          `json:"number"`
+}
+
+// @Method(POST)
+// @Body(object)
+// @Query(num)
+// @Query(str)
+// @Route(/alias-of-primitive)
+func (ec *E2EController) AliasOfString(object *ObjectWithAliasOfString, num AliasOfInt, str AliasOfDirectString) (*ObjectWithAliasOfString, error) {
+	object.Value = AliasOfString(str) + object.Value
+	object.ValueDirect = AliasOfDirectString(str) + object.ValueDirect
+	object.Number = object.Number + num
+	return object, nil
+}
