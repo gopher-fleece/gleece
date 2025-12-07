@@ -103,6 +103,9 @@
             "type": "number"
           }
         },
+        "required": [
+          "unit"
+        ],
         "title": "LengthDto",
         "type": "object"
       },
@@ -360,6 +363,9 @@
             "type": "number"
           }
         },
+        "required": [
+          "unit"
+        ],
         "title": "SpeedDto",
         "type": "object"
       },

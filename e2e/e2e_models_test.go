@@ -472,6 +472,18 @@ var _ = Describe("E2E Models Spec", func() {
 			Query:               map[string]string{"unit": "Kilometer"},
 			RunningMode:         &fullyFeaturedRouting,
 		})
+
+		RunRouterTest(common.RouterTest{
+			Name:                "Should NOT return status code 422 for enum prams and body - wrong enum param external package",
+			ExpectedStatus:      422,
+			ExpectedBodyContain: "Field 'Unit' failed validation with tag 'oneof'",
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/external-packages",
+			Method:              "POST",
+			Body:                dtoInBroken,
+			Query:               map[string]string{"unit": "Kilometer"},
+			RunningMode:         &allRouting,
+		})
 	})
 
 	It("Should NOT return status code 422 for wrong enum prams and body", func() {
@@ -508,18 +520,6 @@ var _ = Describe("E2E Models Spec", func() {
 			Method:              "POST",
 			Body:                dtoInCm,
 			Query:               map[string]string{"unit": "KiloBoom"},
-			RunningMode:         &exExtraRouting,
-		})
-
-		RunRouterTest(common.RouterTest{
-			Name:                "Should NOT return status code 422 for enum prams and body - wrong enum param external package",
-			ExpectedStatus:      200,
-			ExpectedBodyContain: "{\"value\":9.992,\"unit\":\"Kilometer\"}",
-			ExpendedHeaders:     nil,
-			Path:                "/e2e/external-packages",
-			Method:              "POST",
-			Body:                dtoInBroken,
-			Query:               map[string]string{"unit": "Kilometer"},
 			RunningMode:         &exExtraRouting,
 		})
 	})

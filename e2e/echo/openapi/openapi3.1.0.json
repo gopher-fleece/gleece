@@ -34,6 +34,7 @@
       "BlaBla2": {
         "properties": {
           "value": {
+            "minimum": 0,
             "type": "integer"
           }
         },
@@ -105,7 +106,9 @@
             "type": "number"
           }
         },
-        "required": [],
+        "required": [
+          "unit"
+        ],
         "title": "LengthDto",
         "type": "object"
       },
@@ -290,6 +293,7 @@
       "ResponseTest": {
         "properties": {
           "index": {
+            "minimum": 0,
             "type": "integer"
           },
           "success": {
@@ -365,7 +369,9 @@
             "type": "number"
           }
         },
-        "required": [],
+        "required": [
+          "unit"
+        ],
         "title": "SpeedDto",
         "type": "object"
       },

@@ -175,5 +175,427 @@ var _ = Describe("Swagtools - Spec Utilities", func() {
 }`
 			Expect(string(result)).To(Equal(expected))
 		})
+
+		It("should sort enum values in components.schemas", func() {
+			input := []byte(`{
+				"components": {
+					"schemas": {
+						"Status": {
+							"type": "string",
+							"enum": ["pending", "active", "completed", "archived"]
+						}
+					}
+				}
+			}`)
+
+			result, err := ForceOrderedJSON(input)
+			Expect(err).To(BeNil())
+
+			expected := `{
+  "components": {
+    "schemas": {
+      "Status": {
+        "enum": [
+          "active",
+          "archived",
+          "completed",
+          "pending"
+        ],
+        "type": "string"
+      }
+    }
+  }
+}`
+			Expect(string(result)).To(Equal(expected))
+		})
+
+		It("should sort numeric enum values", func() {
+			input := []byte(`{
+				"components": {
+					"schemas": {
+						"Priority": {
+							"type": "integer",
+							"enum": [3, 1, 5, 2, 4]
+						}
+					}
+				}
+			}`)
+
+			result, err := ForceOrderedJSON(input)
+			Expect(err).To(BeNil())
+
+			expected := `{
+  "components": {
+    "schemas": {
+      "Priority": {
+        "enum": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "type": "integer"
+      }
+    }
+  }
+}`
+			Expect(string(result)).To(Equal(expected))
+		})
+
+		It("should sort enum values in nested properties", func() {
+			input := []byte(`{
+				"components": {
+					"schemas": {
+						"User": {
+							"type": "object",
+							"properties": {
+								"status": {
+									"type": "string",
+									"enum": ["inactive", "active", "banned"]
+								},
+								"role": {
+									"type": "string",
+									"enum": ["user", "admin", "guest"]
+								}
+							}
+						}
+					}
+				}
+			}`)
+
+			result, err := ForceOrderedJSON(input)
+			Expect(err).To(BeNil())
+
+			expected := `{
+  "components": {
+    "schemas": {
+      "User": {
+        "properties": {
+          "role": {
+            "enum": [
+              "admin",
+              "guest",
+              "user"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "banned",
+              "inactive"
+            ],
+            "type": "string"
+          }
+        },
+        "type": "object"
+      }
+    }
+  }
+}`
+			Expect(string(result)).To(Equal(expected))
+		})
+
+		It("should sort enum values in array items", func() {
+			input := []byte(`{
+				"components": {
+					"schemas": {
+						"StatusArray": {
+							"type": "array",
+							"items": {
+								"type": "string",
+								"enum": ["draft", "published", "archived"]
+							}
+						}
+					}
+				}
+			}`)
+
+			result, err := ForceOrderedJSON(input)
+			Expect(err).To(BeNil())
+
+			expected := `{
+  "components": {
+    "schemas": {
+      "StatusArray": {
+        "items": {
+          "enum": [
+            "archived",
+            "draft",
+            "published"
+          ],
+          "type": "string"
+        },
+        "type": "array"
+      }
+    }
+  }
+}`
+			Expect(string(result)).To(Equal(expected))
+		})
+
+		It("should sort enum values in allOf, oneOf, anyOf", func() {
+			input := []byte(`{
+				"components": {
+					"schemas": {
+						"Combined": {
+							"oneOf": [
+								{
+									"type": "string",
+									"enum": ["z", "a", "m"]
+								}
+							],
+							"allOf": [
+								{
+									"type": "string",
+									"enum": ["3", "1", "2"]
+								}
+							],
+							"anyOf": [
+								{
+									"type": "string",
+									"enum": ["y", "x", "z"]
+								}
+							]
+						}
+					}
+				}
+			}`)
+
+			result, err := ForceOrderedJSON(input)
+			Expect(err).To(BeNil())
+
+			expected := `{
+  "components": {
+    "schemas": {
+      "Combined": {
+        "allOf": [
+          {
+            "enum": [
+              "1",
+              "2",
+              "3"
+            ],
+            "type": "string"
+          }
+        ],
+        "anyOf": [
+          {
+            "enum": [
+              "x",
+              "y",
+              "z"
+            ],
+            "type": "string"
+          }
+        ],
+        "oneOf": [
+          {
+            "enum": [
+              "a",
+              "m",
+              "z"
+            ],
+            "type": "string"
+          }
+        ]
+      }
+    }
+  }
+}`
+			Expect(string(result)).To(Equal(expected))
+		})
+
+		It("should sort enum values in additionalProperties", func() {
+			input := []byte(`{
+				"components": {
+					"schemas": {
+						"MapType": {
+							"type": "object",
+							"additionalProperties": {
+								"type": "string",
+								"enum": ["value3", "value1", "value2"]
+							}
+						}
+					}
+				}
+			}`)
+
+			result, err := ForceOrderedJSON(input)
+			Expect(err).To(BeNil())
+
+			expected := `{
+  "components": {
+    "schemas": {
+      "MapType": {
+        "additionalProperties": {
+          "enum": [
+            "value1",
+            "value2",
+            "value3"
+          ],
+          "type": "string"
+        },
+        "type": "object"
+      }
+    }
+  }
+}`
+			Expect(string(result)).To(Equal(expected))
+		})
+
+		It("should handle empty enum arrays", func() {
+			input := []byte(`{
+				"components": {
+					"schemas": {
+						"Empty": {
+							"type": "string",
+							"enum": []
+						}
+					}
+				}
+			}`)
+
+			result, err := ForceOrderedJSON(input)
+			Expect(err).To(BeNil())
+
+			expected := `{
+  "components": {
+    "schemas": {
+      "Empty": {
+        "enum": [],
+        "type": "string"
+      }
+    }
+  }
+}`
+			Expect(string(result)).To(Equal(expected))
+		})
+
+		It("should handle single enum value", func() {
+			input := []byte(`{
+				"components": {
+					"schemas": {
+						"Single": {
+							"type": "string",
+							"enum": ["only"]
+						}
+					}
+				}
+			}`)
+
+			result, err := ForceOrderedJSON(input)
+			Expect(err).To(BeNil())
+
+			expected := `{
+  "components": {
+    "schemas": {
+      "Single": {
+        "enum": [
+          "only"
+        ],
+        "type": "string"
+      }
+    }
+  }
+}`
+			Expect(string(result)).To(Equal(expected))
+		})
+
+		It("should not sort non-enum arrays", func() {
+			input := []byte(`{
+				"components": {
+					"schemas": {
+						"NotEnum": {
+							"type": "array",
+							"items": {"type": "string"},
+							"example": ["z", "a", "m"]
+						}
+					}
+				}
+			}`)
+
+			result, err := ForceOrderedJSON(input)
+			Expect(err).To(BeNil())
+
+			// example array should maintain original order
+			expected := `{
+  "components": {
+    "schemas": {
+      "NotEnum": {
+        "example": [
+          "z",
+          "a",
+          "m"
+        ],
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      }
+    }
+  }
+}`
+			Expect(string(result)).To(Equal(expected))
+		})
+
+		It("should handle JSON without components.schemas", func() {
+			input := []byte(`{
+				"openapi": "3.1.0",
+				"info": {
+					"title": "API"
+				}
+			}`)
+
+			result, err := ForceOrderedJSON(input)
+			Expect(err).To(BeNil())
+
+			expected := `{
+  "info": {
+    "title": "API"
+  },
+  "openapi": "3.1.0"
+}`
+			Expect(string(result)).To(Equal(expected))
+		})
+
+		It("should handle multiple schemas with enum values", func() {
+			input := []byte(`{
+				"components": {
+					"schemas": {
+						"Status": {
+							"enum": ["pending", "active"]
+						},
+						"Role": {
+							"enum": ["user", "admin"]
+						}
+					}
+				}
+			}`)
+
+			result, err := ForceOrderedJSON(input)
+			Expect(err).To(BeNil())
+
+			expected := `{
+  "components": {
+    "schemas": {
+      "Role": {
+        "enum": [
+          "admin",
+          "user"
+        ]
+      },
+      "Status": {
+        "enum": [
+          "active",
+          "pending"
+        ]
+      }
+    }
+  }
+}`
+			Expect(string(result)).To(Equal(expected))
+		})
 	})
 })
