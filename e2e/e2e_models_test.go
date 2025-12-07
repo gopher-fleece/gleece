@@ -486,6 +486,103 @@ var _ = Describe("E2E Models Spec", func() {
 		})
 	})
 
+	It("Should handle AliasOfString route correctly", func() {
+		RunRouterTest(common.RouterTest{
+			Name:           "Should handle alias of primitive types with valid data",
+			ExpectedStatus: 200,
+			Body: &assets.ObjectWithAliasOfString{
+				Value:              "test",
+				ValueDirect:        "direct",
+				Number:             5,
+				ValueWithTag:       "valid",
+				ValueDirectWithTag: "also_valid",
+				NumberWithTag:      15,
+			},
+			ExpectedBodyContain: "{\"value\":\"querytest\",\"valueDirect\":\"querydirect\",\"number\":15,\"value_with_tag\":\"valid\",\"value_direct_with_tag\":\"also_valid\",\"number_with_tag\":15}",
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/alias-of-primitive",
+			Method:              "POST",
+			Query:               map[string]string{"num": "10", "str": "query"},
+			RunningMode:         &allRouting,
+		})
+
+		RunRouterTest(common.RouterTest{
+			Name:           "Should return 422 when ValueWithTag is too short",
+			ExpectedStatus: 422,
+			Body: &assets.ObjectWithAliasOfString{
+				Value:              "test",
+				ValueDirect:        "direct",
+				Number:             5,
+				ValueWithTag:       "ab", // Too short - min is 3
+				ValueDirectWithTag: "valid",
+				NumberWithTag:      15,
+			},
+			ExpectedBodyContain: "Field 'ValueWithTag' failed validation with tag 'min'",
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/alias-of-primitive",
+			Method:              "POST",
+			Query:               map[string]string{"num": "10", "str": "query"},
+			RunningMode:         &allRouting,
+		})
+
+		RunRouterTest(common.RouterTest{
+			Name:           "Should return 422 when ValueDirectWithTag is too short",
+			ExpectedStatus: 422,
+			Body: &assets.ObjectWithAliasOfString{
+				Value:              "test",
+				ValueDirect:        "direct",
+				Number:             5,
+				ValueWithTag:       "valid",
+				ValueDirectWithTag: "ab", // Too short - min is 3
+				NumberWithTag:      15,
+			},
+			ExpectedBodyContain: "Field 'ValueDirectWithTag' failed validation with tag 'min'",
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/alias-of-primitive",
+			Method:              "POST",
+			Query:               map[string]string{"num": "10", "str": "query"},
+			RunningMode:         &allRouting,
+		})
+
+		RunRouterTest(common.RouterTest{
+			Name:           "Should return 422 when NumberWithTag is less than 10",
+			ExpectedStatus: 422,
+			Body: &assets.ObjectWithAliasOfString{
+				Value:              "test",
+				ValueDirect:        "direct",
+				Number:             5,
+				ValueWithTag:       "valid",
+				ValueDirectWithTag: "also_valid",
+				NumberWithTag:      5, // Less than 10 - gte is 10
+			},
+			ExpectedBodyContain: "Field 'NumberWithTag' failed validation with tag 'gte'",
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/alias-of-primitive",
+			Method:              "POST",
+			Query:               map[string]string{"num": "10", "str": "query"},
+			RunningMode:         &allRouting,
+		})
+
+		RunRouterTest(common.RouterTest{
+			Name:           "Should return 422 when ValueWithTag is missing (required)",
+			ExpectedStatus: 422,
+			Body: &assets.ObjectWithAliasOfString{
+				Value:              "test",
+				ValueDirect:        "direct",
+				Number:             5,
+				ValueWithTag:       "", // Empty - required
+				ValueDirectWithTag: "valid",
+				NumberWithTag:      15,
+			},
+			ExpectedBodyContain: "Field 'ValueWithTag' failed validation with tag 'required'",
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/alias-of-primitive",
+			Method:              "POST",
+			Query:               map[string]string{"num": "10", "str": "query"},
+			RunningMode:         &allRouting,
+		})
+	})
+
 	It("Should NOT return status code 422 for wrong enum prams and body", func() {
 		RunRouterTest(common.RouterTest{
 			Name:                "Should NOT return status code 422 for enum prams and body - wrong direct number enum",

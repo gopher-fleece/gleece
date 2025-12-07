@@ -758,9 +758,12 @@ type AliasOfDirectString string
 type AliasOfInt int
 
 type ObjectWithAliasOfString struct {
-	Value       AliasOfString       `json:"value"`
-	ValueDirect AliasOfDirectString `json:"valueDirect"`
-	Number      AliasOfInt          `json:"number"`
+	Value              AliasOfString       `json:"value"`
+	ValueDirect        AliasOfDirectString `json:"valueDirect"`
+	Number             AliasOfInt          `json:"number"`
+	ValueWithTag       AliasOfString       `json:"value_with_tag" validate:"required,min=3"`
+	ValueDirectWithTag AliasOfDirectString `json:"value_direct_with_tag" validate:"required,min=3"`
+	NumberWithTag      AliasOfInt          `json:"number_with_tag" validate:"required,gte=10"`
 }
 
 // @Method(POST)

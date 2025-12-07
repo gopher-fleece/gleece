@@ -191,14 +191,27 @@
           "number": {
             "$ref": "#/components/schemas/AliasOfInt"
           },
+          "number_with_tag": {
+            "$ref": "#/components/schemas/AliasOfInt"
+          },
           "value": {
             "$ref": "#/components/schemas/AliasOfString"
           },
           "valueDirect": {
             "$ref": "#/components/schemas/AliasOfDirectString"
+          },
+          "value_direct_with_tag": {
+            "$ref": "#/components/schemas/AliasOfDirectString"
+          },
+          "value_with_tag": {
+            "$ref": "#/components/schemas/AliasOfString"
           }
         },
-        "required": [],
+        "required": [
+          "value_with_tag",
+          "value_direct_with_tag",
+          "number_with_tag"
+        ],
         "title": "ObjectWithAliasOfString",
         "type": "object"
       },
