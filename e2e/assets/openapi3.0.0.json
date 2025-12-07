@@ -1241,9 +1241,89 @@
               "schema": {
                 "properties": {
                   "item1": {
+                    "description": "The item 1 of the form",
                     "type": "string"
                   },
                   "item2": {
+                    "description": "The item 2 of the form",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "item1",
+                  "item2"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "The ID of the newly created user"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rfc7807Error"
+                }
+              }
+            },
+            "description": "The error when process failed"
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "summary": "Create a new user",
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/form-extra": {
+      "post": {
+        "description": "Create a new user",
+        "operationId": "TestFormExtra",
+        "parameters": [
+          {
+            "description": "The item 3 of the form",
+            "in": "query",
+            "name": "item3",
+            "required": true,
+            "schema": {
+              "minimum": 80,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "properties": {
+                  "item1": {
+                    "description": "The item 1 of the form",
+                    "minimum": 80,
+                    "type": "integer"
+                  },
+                  "item2": {
+                    "description": "The item 2 of the form",
                     "type": "string"
                   }
                 },

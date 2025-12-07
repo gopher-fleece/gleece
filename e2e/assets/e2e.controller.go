@@ -434,12 +434,24 @@ func (ec *E2EController) TemplateContext2() (string, error) {
 // @Description Create a new user
 // @Method(POST) This text is not part of the OpenAPI spec
 // @Route(/form) Same here
-// @FormField(item1) The user's ID
-// @FormField(item2) The user's ID
+// @FormField(item1) The item 1 of the form
+// @FormField(item2) The item 2 of the form
 // @Response(200) The ID of the newly created user
 // @ErrorResponse(500) The error when process failed
 func (ec *E2EController) TestForm(item1 string, item2 string) (string, error) {
 	return item1 + item2, nil
+}
+
+// @Description Create a new user
+// @Method(POST) This text is not part of the OpenAPI spec
+// @Route(/form-extra) Same here
+// @FormField(item1, { validate:"required,gte=80" }) The item 1 of the form
+// @FormField(item2) The item 2 of the form
+// @Query(item3, { validate:"required,gte=80" }) The item 3 of the form
+// @Response(200) The ID of the newly created user
+// @ErrorResponse(500) The error when process failed
+func (ec *E2EController) TestFormExtra(item1 int64, item2 string, item3 int64) (string, error) {
+	return fmt.Sprintf("%d|%s|%d", item1, item2, item3), nil
 }
 
 type ResponseTest struct {

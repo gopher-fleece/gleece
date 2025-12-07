@@ -199,7 +199,7 @@ func createRequestBodyParam(doc *v3.Document, param definitions.FuncParam) *v3.R
 func createRequestFormParam(doc *v3.Document, param definitions.FuncParam, operation *v3.Operation) {
 	// Form parameters are always passed in the body, so we need to create a request body if it doesn't exist
 	if operation.RequestBody == nil {
-		// The body will be a object with the form parameters as properties
+		// The body will be an object with the form parameters as properties
 		schemaRef := ToOpenApiSchemaV3("object")
 		schemaRef.Properties = orderedmap.New[string, *highbase.SchemaProxy]()
 		content := orderedmap.New[string, *v3.MediaType]()
@@ -207,7 +207,7 @@ func createRequestFormParam(doc *v3.Document, param definitions.FuncParam, opera
 			Schema: highbase.CreateSchemaProxy(schemaRef),
 		})
 		operation.RequestBody = &v3.RequestBody{
-			Description: param.Description,
+			Description: "", // Currently we dot not support annotating description for a form body itself
 			Content:     content,
 		}
 	}
@@ -215,10 +215,17 @@ func createRequestFormParam(doc *v3.Document, param definitions.FuncParam, opera
 	// Get the schema from the request body
 	formMedia, _ := operation.RequestBody.Content.Get(string(definitions.ContentTypeFormURLEncoded))
 	formSchema := formMedia.Schema.Schema()
+	if formSchema == nil {
+		return
+	}
 	// Create a new schema for the form parameter
 	propertySchemaRef := InterfaceToSchemaV3(doc, param.TypeMeta.Name)
 	// Add the validation to the schema
 	BuildSchemaValidationV31(propertySchemaRef.Schema(), param.Validator, param.TypeMeta.Name)
+	// Set the description on the property schema itself
+	if propertySchemaRef.Schema() != nil {
+		propertySchemaRef.Schema().Description = param.Description
+	}
 	// Add the form parameter to the schema
 	formSchema.Properties.Set(param.NameInSchema, propertySchemaRef)
 	// Add the form parameter to the required list if it is required

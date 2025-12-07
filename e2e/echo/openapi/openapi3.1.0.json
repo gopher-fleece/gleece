@@ -1,6 +1,23 @@
 {
   "components": {
     "schemas": {
+      "AliasOfDirectString": {
+        "deprecated": true,
+        "description": "Bla Bla",
+        "title": "AliasOfDirectString",
+        "type": "string"
+      },
+      "AliasOfInt": {
+        "deprecated": true,
+        "description": "AliasOfInt types for testing",
+        "title": "AliasOfInt",
+        "type": "integer"
+      },
+      "AliasOfString": {
+        "description": "AliasOfString types for testing",
+        "title": "AliasOfString",
+        "type": "string"
+      },
       "BlaBla": {
         "properties": {
           "listOfLength": {
@@ -10,13 +27,13 @@
             "type": "array"
           }
         },
+        "required": [],
         "title": "BlaBla",
         "type": "object"
       },
       "BlaBla2": {
         "properties": {
           "value": {
-            "minimum": 0,
             "type": "integer"
           }
         },
@@ -44,6 +61,7 @@
             "type": "string"
           }
         },
+        "required": [],
         "title": "BodyResponse",
         "type": "object"
       },
@@ -53,6 +71,7 @@
             "type": "string"
           }
         },
+        "required": [],
         "title": "CustomError",
         "type": "object"
       },
@@ -86,6 +105,7 @@
             "type": "number"
           }
         },
+        "required": [],
         "title": "LengthDto",
         "type": "object"
       },
@@ -157,11 +177,27 @@
       "NumberEnumeration": {
         "description": "Test enum with = flavor too",
         "enum": [
-          "1",
-          "2"
+          1,
+          2
         ],
         "title": "NumberEnumeration",
         "type": "integer"
+      },
+      "ObjectWithAliasOfString": {
+        "properties": {
+          "number": {
+            "$ref": "#/components/schemas/AliasOfInt"
+          },
+          "value": {
+            "$ref": "#/components/schemas/AliasOfString"
+          },
+          "valueDirect": {
+            "$ref": "#/components/schemas/AliasOfDirectString"
+          }
+        },
+        "required": [],
+        "title": "ObjectWithAliasOfString",
+        "type": "object"
       },
       "ObjectWithByteSlice": {
         "properties": {
@@ -170,6 +206,7 @@
             "type": "string"
           }
         },
+        "required": [],
         "title": "ObjectWithByteSlice",
         "type": "object"
       },
@@ -207,6 +244,7 @@
             "type": "string"
           }
         },
+        "required": [],
         "title": "ObjectWithSpecialPrimitives",
         "type": "object"
       },
@@ -252,7 +290,6 @@
       "ResponseTest": {
         "properties": {
           "index": {
-            "minimum": 0,
             "type": "integer"
           },
           "success": {
@@ -328,6 +365,7 @@
             "type": "number"
           }
         },
+        "required": [],
         "title": "SpeedDto",
         "type": "object"
       },
@@ -416,6 +454,7 @@
             "$ref": "#/components/schemas/TheModel"
           }
         },
+        "required": [],
         "title": "TheModelWithInnerPointer",
         "type": "object"
       },
@@ -429,6 +468,7 @@
             "$ref": "#/components/schemas/SpeedUnits"
           }
         },
+        "required": [],
         "title": "UniqueExternalUsage",
         "type": "object"
       }
@@ -461,19 +501,72 @@
     },
     "termsOfService": "http://example.com/terms/",
     "title": "Sample API",
-    "version": "3.1.0"
+    "version": "1.0.0"
   },
-  "openapi": "3.0.0",
+  "openapi": "3.1.0",
   "paths": {
     "/e2e/503-error-code": {
       "get": {
         "operationId": "Error503",
+        "parameters": [],
         "responses": {
           "204": {
-            "description": ""
+            "description": " "
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/alias-of-primitive": {
+      "post": {
+        "operationId": "AliasOfString",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "num",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/AliasOfInt"
+            }
           },
-          "default": {
-            "description": ""
+          {
+            "in": "query",
+            "name": "str",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/AliasOfDirectString"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ObjectWithAliasOfString"
+              }
+            }
+          },
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObjectWithAliasOfString"
+                }
+              }
+            },
+            "description": " "
           }
         },
         "security": [
@@ -491,6 +584,7 @@
     "/e2e/arrays-in-body-and-res": {
       "post": {
         "operationId": "ArraysInBodyAndRes",
+        "parameters": [],
         "requestBody": {
           "content": {
             "application/json": {
@@ -516,7 +610,7 @@
                 }
               }
             },
-            "description": ""
+            "description": " "
           },
           "500": {
             "content": {
@@ -526,10 +620,7 @@
                 }
               }
             },
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -547,6 +638,7 @@
     "/e2e/arrays-inside-body-and-res": {
       "post": {
         "operationId": "ArraysInsideBodyAndRes",
+        "parameters": [],
         "requestBody": {
           "content": {
             "application/json": {
@@ -557,7 +649,8 @@
                 "type": "array"
               }
             }
-          }
+          },
+          "required": false
         },
         "responses": {
           "200": {
@@ -571,7 +664,7 @@
                 }
               }
             },
-            "description": ""
+            "description": " "
           },
           "500": {
             "content": {
@@ -581,10 +674,7 @@
                 }
               }
             },
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -602,6 +692,7 @@
     "/e2e/byte-slice": {
       "post": {
         "operationId": "ReturnsStructWithByteSlice",
+        "parameters": [],
         "requestBody": {
           "content": {
             "application/json": {
@@ -609,7 +700,8 @@
                 "$ref": "#/components/schemas/ObjectWithByteSlice"
               }
             }
-          }
+          },
+          "required": false
         },
         "responses": {
           "200": {
@@ -620,10 +712,7 @@
                 }
               }
             },
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -641,12 +730,10 @@
     "/e2e/context-access": {
       "get": {
         "operationId": "ContextAccess",
+        "parameters": [],
         "responses": {
           "204": {
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -664,6 +751,7 @@
     "/e2e/context-injection": {
       "post": {
         "operationId": "ContextInjection",
+        "parameters": [],
         "requestBody": {
           "content": {
             "application/json": {
@@ -676,7 +764,7 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": " "
           },
           "500": {
             "content": {
@@ -686,10 +774,7 @@
                 }
               }
             },
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -707,9 +792,10 @@
     "/e2e/context-injection-empty": {
       "post": {
         "operationId": "ContextInjectionEmpty",
+        "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": " "
           },
           "500": {
             "content": {
@@ -719,10 +805,7 @@
                 }
               }
             },
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -740,12 +823,10 @@
     "/e2e/custom-error": {
       "get": {
         "operationId": "CustomError",
+        "parameters": [],
         "responses": {
           "204": {
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -763,12 +844,10 @@
     "/e2e/custom-error-503": {
       "get": {
         "operationId": "CustomError503",
+        "parameters": [],
         "responses": {
           "204": {
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -786,12 +865,10 @@
     "/e2e/custom-error-ptr": {
       "get": {
         "operationId": "CustomPtrError",
+        "parameters": [],
         "responses": {
           "204": {
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -809,6 +886,7 @@
     "/e2e/deep-arrays-with-validation": {
       "post": {
         "operationId": "DeepArraysWithValidation",
+        "parameters": [],
         "requestBody": {
           "content": {
             "application/json": {
@@ -843,7 +921,7 @@
                 }
               }
             },
-            "description": ""
+            "description": " "
           },
           "500": {
             "content": {
@@ -853,10 +931,7 @@
                 }
               }
             },
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -874,12 +949,10 @@
     "/e2e/default-error": {
       "get": {
         "operationId": "DefaultError",
+        "parameters": [],
         "responses": {
           "204": {
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -897,6 +970,7 @@
     "/e2e/default-error-with-payload": {
       "get": {
         "operationId": "DefaultErrorWithPayload",
+        "parameters": [],
         "responses": {
           "200": {
             "content": {
@@ -906,10 +980,7 @@
                 }
               }
             },
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -927,6 +998,7 @@
     "/e2e/embedded-structs": {
       "post": {
         "operationId": "EmbeddedStructs",
+        "parameters": [],
         "requestBody": {
           "content": {
             "application/json": {
@@ -946,7 +1018,7 @@
                 }
               }
             },
-            "description": ""
+            "description": " "
           },
           "500": {
             "content": {
@@ -956,10 +1028,7 @@
                 }
               }
             },
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -981,6 +1050,7 @@
           {
             "in": "query",
             "name": "unit",
+            "required": false,
             "schema": {
               "$ref": "#/components/schemas/LengthUnits"
             }
@@ -1005,7 +1075,7 @@
                 }
               }
             },
-            "description": ""
+            "description": " "
           },
           "500": {
             "content": {
@@ -1015,10 +1085,7 @@
                 }
               }
             },
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -1036,6 +1103,7 @@
     "/e2e/external-packages-unique-in-struct": {
       "post": {
         "operationId": "ExternalPackagesUniqueInStruct",
+        "parameters": [],
         "requestBody": {
           "content": {
             "application/json": {
@@ -1055,7 +1123,7 @@
                 }
               }
             },
-            "description": ""
+            "description": " "
           },
           "500": {
             "content": {
@@ -1065,10 +1133,7 @@
                 }
               }
             },
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -1090,6 +1155,7 @@
           {
             "in": "query",
             "name": "unit",
+            "required": false,
             "schema": {
               "$ref": "#/components/schemas/LengthUnits"
             }
@@ -1114,7 +1180,7 @@
                 }
               }
             },
-            "description": ""
+            "description": " "
           },
           "500": {
             "content": {
@@ -1124,10 +1190,7 @@
                 }
               }
             },
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -1146,15 +1209,18 @@
       "post": {
         "description": "Create a new user",
         "operationId": "TestForm",
+        "parameters": [],
         "requestBody": {
           "content": {
             "application/x-www-form-urlencoded": {
               "schema": {
                 "properties": {
                   "item1": {
+                    "description": "The item 1 of the form",
                     "type": "string"
                   },
                   "item2": {
+                    "description": "The item 2 of the form",
                     "type": "string"
                   }
                 },
@@ -1187,9 +1253,81 @@
               }
             },
             "description": "The error when process failed"
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "summary": "Create a new user",
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/form-extra": {
+      "post": {
+        "description": "Create a new user",
+        "operationId": "TestFormExtra",
+        "parameters": [
+          {
+            "description": "The item 3 of the form",
+            "in": "query",
+            "name": "item3",
+            "required": true,
+            "schema": {
+              "minimum": 80,
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "properties": {
+                  "item1": {
+                    "description": "The item 1 of the form",
+                    "minimum": 80,
+                    "type": "integer"
+                  },
+                  "item2": {
+                    "description": "The item 2 of the form",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "item1",
+                  "item2"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "The ID of the newly created user"
           },
-          "default": {
-            "description": ""
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rfc7807Error"
+                }
+              }
+            },
+            "description": "The error when process failed"
           }
         },
         "security": [
@@ -1227,10 +1365,7 @@
                 }
               }
             },
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -1252,6 +1387,7 @@
           {
             "in": "query",
             "name": "queryParam",
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -1267,6 +1403,7 @@
           {
             "in": "header",
             "name": "headerParam",
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -1281,10 +1418,7 @@
                 }
               }
             },
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -1337,10 +1471,7 @@
                 }
               }
             },
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -1393,10 +1524,7 @@
                 }
               }
             },
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -1414,12 +1542,10 @@
     "/e2e/http-method": {
       "delete": {
         "operationId": "Delete",
+        "parameters": [],
         "responses": {
           "204": {
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -1435,12 +1561,10 @@
       },
       "get": {
         "operationId": "Get",
+        "parameters": [],
         "responses": {
           "204": {
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -1456,12 +1580,10 @@
       },
       "patch": {
         "operationId": "Patch",
+        "parameters": [],
         "responses": {
           "204": {
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -1477,12 +1599,10 @@
       },
       "post": {
         "operationId": "Post",
+        "parameters": [],
         "responses": {
           "204": {
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -1498,12 +1618,10 @@
       },
       "put": {
         "operationId": "Put",
+        "parameters": [],
         "responses": {
           "204": {
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -1558,10 +1676,7 @@
                 }
               }
             },
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -1583,6 +1698,7 @@
           {
             "in": "query",
             "name": "queryParam",
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -1590,6 +1706,7 @@
           {
             "in": "header",
             "name": "headerParam",
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -1602,7 +1719,8 @@
                 "$ref": "#/components/schemas/BodyInfo"
               }
             }
-          }
+          },
+          "required": false
         },
         "responses": {
           "200": {
@@ -1613,10 +1731,7 @@
                 }
               }
             },
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -1634,6 +1749,7 @@
     "/e2e/post-with-all-params-body-required-ptr": {
       "post": {
         "operationId": "PostWithAllParamsWithBodyRequiredPtr",
+        "parameters": [],
         "requestBody": {
           "content": {
             "application/json": {
@@ -1653,10 +1769,7 @@
                 }
               }
             },
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -1674,6 +1787,7 @@
     "/e2e/primitive-alias-array-return-type": {
       "get": {
         "operationId": "PrimitiveAliasArrayReturnType",
+        "parameters": [],
         "responses": {
           "200": {
             "content": {
@@ -1686,7 +1800,7 @@
                 }
               }
             },
-            "description": ""
+            "description": " "
           },
           "500": {
             "content": {
@@ -1696,10 +1810,7 @@
                 }
               }
             },
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -1717,6 +1828,7 @@
     "/e2e/primitive-alias-return-type": {
       "get": {
         "operationId": "PrimitiveAliasReturnType",
+        "parameters": [],
         "responses": {
           "200": {
             "content": {
@@ -1726,7 +1838,7 @@
                 }
               }
             },
-            "description": ""
+            "description": " "
           },
           "500": {
             "content": {
@@ -1736,10 +1848,7 @@
                 }
               }
             },
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -1757,6 +1866,7 @@
     "/e2e/primitive-array-return-type": {
       "get": {
         "operationId": "PrimitiveArrayReturnType",
+        "parameters": [],
         "responses": {
           "200": {
             "content": {
@@ -1769,7 +1879,7 @@
                 }
               }
             },
-            "description": ""
+            "description": " "
           },
           "500": {
             "content": {
@@ -1779,10 +1889,7 @@
                 }
               }
             },
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -1800,6 +1907,7 @@
     "/e2e/primitive-return-type": {
       "get": {
         "operationId": "PrimitiveReturnType",
+        "parameters": [],
         "responses": {
           "200": {
             "content": {
@@ -1809,7 +1917,7 @@
                 }
               }
             },
-            "description": ""
+            "description": " "
           },
           "500": {
             "content": {
@@ -1819,10 +1927,7 @@
                 }
               }
             },
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -1840,6 +1945,7 @@
     "/e2e/simple-get": {
       "get": {
         "operationId": "SimpleGet",
+        "parameters": [],
         "responses": {
           "200": {
             "content": {
@@ -1849,10 +1955,7 @@
                 }
               }
             },
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -1882,10 +1985,7 @@
         ],
         "responses": {
           "204": {
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -1903,6 +2003,7 @@
     "/e2e/simple-get-empty-string": {
       "get": {
         "operationId": "SimpleGetEmptyString",
+        "parameters": [],
         "responses": {
           "200": {
             "content": {
@@ -1912,10 +2013,7 @@
                 }
               }
             },
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -1933,6 +2031,7 @@
     "/e2e/simple-get-null-string": {
       "get": {
         "operationId": "SimpleGetNullString",
+        "parameters": [],
         "responses": {
           "200": {
             "content": {
@@ -1942,10 +2041,7 @@
                 }
               }
             },
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -1963,6 +2059,7 @@
     "/e2e/simple-get-object": {
       "get": {
         "operationId": "SimpleGetObject",
+        "parameters": [],
         "responses": {
           "200": {
             "content": {
@@ -1972,10 +2069,7 @@
                 }
               }
             },
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -1993,6 +2087,7 @@
     "/e2e/simple-get-object-null": {
       "get": {
         "operationId": "SimpleGetObjectNull",
+        "parameters": [],
         "responses": {
           "200": {
             "content": {
@@ -2002,10 +2097,7 @@
                 }
               }
             },
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -2023,6 +2115,7 @@
     "/e2e/simple-get-object-ptr": {
       "get": {
         "operationId": "SimpleGetObjectPtr",
+        "parameters": [],
         "responses": {
           "200": {
             "content": {
@@ -2032,10 +2125,7 @@
                 }
               }
             },
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -2053,6 +2143,7 @@
     "/e2e/simple-get-ptr-string": {
       "get": {
         "operationId": "SimpleGetPtrString",
+        "parameters": [],
         "responses": {
           "200": {
             "content": {
@@ -2062,10 +2153,7 @@
                 }
               }
             },
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -2083,6 +2171,7 @@
     "/e2e/special-primitives": {
       "post": {
         "operationId": "ReturnsStructWithSpecialPrimitives",
+        "parameters": [],
         "requestBody": {
           "content": {
             "application/json": {
@@ -2090,7 +2179,8 @@
                 "$ref": "#/components/schemas/ObjectWithSpecialPrimitives"
               }
             }
-          }
+          },
+          "required": false
         },
         "responses": {
           "200": {
@@ -2101,10 +2191,7 @@
                 }
               }
             },
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -2122,6 +2209,7 @@
     "/e2e/structs-with-inner-pointer": {
       "post": {
         "operationId": "StructsWithInnerPointer",
+        "parameters": [],
         "requestBody": {
           "content": {
             "application/json": {
@@ -2141,7 +2229,7 @@
                 }
               }
             },
-            "description": ""
+            "description": " "
           },
           "500": {
             "content": {
@@ -2151,10 +2239,7 @@
                 }
               }
             },
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -2172,6 +2257,7 @@
     "/e2e/template-context-1": {
       "get": {
         "operationId": "TemplateContext1",
+        "parameters": [],
         "responses": {
           "200": {
             "content": {
@@ -2181,10 +2267,7 @@
                 }
               }
             },
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -2202,6 +2285,7 @@
     "/e2e/template-context-2": {
       "get": {
         "operationId": "TemplateContext2",
+        "parameters": [],
         "responses": {
           "200": {
             "content": {
@@ -2211,10 +2295,7 @@
                 }
               }
             },
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -2280,9 +2361,6 @@
               }
             },
             "description": "The error when process failed"
-          },
-          "default": {
-            "description": ""
           }
         },
         "security": [
@@ -2355,9 +2433,6 @@
               }
             },
             "description": "The error when process failed"
-          },
-          "default": {
-            "description": ""
           }
         },
         "security": [
@@ -2379,6 +2454,7 @@
           {
             "in": "header",
             "name": "value1",
+            "required": false,
             "schema": {
               "$ref": "#/components/schemas/StatusEnumeration"
             }
@@ -2404,9 +2480,6 @@
               }
             },
             "description": "The error when process failed"
-          },
-          "default": {
-            "description": ""
           }
         },
         "security": [
@@ -2478,9 +2551,6 @@
               }
             },
             "description": "The error when process failed"
-          },
-          "default": {
-            "description": ""
           }
         },
         "security": [
@@ -2498,6 +2568,7 @@
     "/e2e/test-response-validation": {
       "post": {
         "operationId": "TestResponseValidation",
+        "parameters": [],
         "responses": {
           "200": {
             "content": {
@@ -2507,7 +2578,7 @@
                 }
               }
             },
-            "description": ""
+            "description": " "
           },
           "500": {
             "content": {
@@ -2517,10 +2588,7 @@
                 }
               }
             },
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -2538,6 +2606,7 @@
     "/e2e/test-response-validation-null": {
       "post": {
         "operationId": "TestResponseValidationNull",
+        "parameters": [],
         "responses": {
           "200": {
             "content": {
@@ -2558,9 +2627,6 @@
               }
             },
             "description": "The error when process failed"
-          },
-          "default": {
-            "description": ""
           }
         },
         "security": [
@@ -2578,6 +2644,7 @@
     "/e2e/test-response-validation-ptr": {
       "post": {
         "operationId": "TestResponseValidationPtr",
+        "parameters": [],
         "responses": {
           "200": {
             "content": {
@@ -2598,9 +2665,6 @@
               }
             },
             "description": "The error when process failed"
-          },
-          "default": {
-            "description": ""
           }
         },
         "security": [
@@ -2637,10 +2701,7 @@
                 }
               }
             },
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -2677,10 +2738,7 @@
                 }
               }
             },
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -2717,10 +2775,7 @@
                 }
               }
             },
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -2757,10 +2812,7 @@
                 }
               }
             },
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -2797,10 +2849,7 @@
                 }
               }
             },
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
@@ -2843,10 +2892,7 @@
                 }
               }
             },
-            "description": ""
-          },
-          "default": {
-            "description": ""
+            "description": " "
           }
         },
         "security": [
