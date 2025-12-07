@@ -48,6 +48,38 @@ var rootCmd = &cobra.Command{
 }
 
 func Execute() {
+
+	//// Set working directory to the executable's directory /Users/haimk/Desktop/work/atmosec
+	//err := os.Chdir("/Users/haimk/Desktop/work/atmosec")
+	//if err != nil {
+	//	fmt.Println("Failed to change directory:", err)
+	//	return
+	//}
+	//
+	//f, _ := os.ReadFile("/Users/haimk/Desktop/work/atmosec/cmd/svc/restapi/gleece.config.json")
+	//var c definitions.GleeceConfig
+	//err = json.Unmarshal(f, &c)
+	//if err != nil {
+	//	return
+	//}
+	//pp, err := pipeline.NewGleecePipeline(&c)
+	//if err != nil {
+	//	return
+	//}
+	//
+	//err = pp.GenerateGraph()
+	//if err != nil {
+	//	return
+	//}
+	//err = pp.GenerateGraph()
+	//if err != nil {
+	//	return
+	//}
+	//
+	//if &pp == nil {
+	//	fmt.Println("nil")
+	//}
+
 	err := rootCmd.Execute()
 	if err != nil {
 		os.Exit(1)
