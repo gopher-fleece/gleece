@@ -1,6 +1,7 @@
 package visitors
 
 import (
+	"fmt"
 	"go/ast"
 	"go/types"
 
@@ -37,8 +38,9 @@ func (v *EnumVisitor) VisitEnumType(
 	specGenDecl *ast.GenDecl,
 	spec *ast.TypeSpec,
 ) (metadata.EnumMeta, graphs.SymbolKey, error) {
+	specName := gast.GetIdentNameOrFallback(spec.Name, "N/A")
 
-	v.enterFmt("Visiting enum %s.%s", pkg.PkgPath, spec.Name.Name)
+	v.enterFmt("Visiting enum %s.%s", pkg.PkgPath, specName)
 	defer v.exit()
 
 	// Cache check
@@ -170,8 +172,21 @@ func (v *EnumVisitor) getEnumValueDefinitions(
 		if !ok {
 			continue
 		}
+
+		if enumTypeName.Name() != constObj.Name() {
+			fmt.Println("")
+		}
+
+		// To avoid clobbering consts that happen to have the same type under aliases/enums,
+		// we check the actual underlying type name as well.
+		if curObjAlias, isCurObjAlias := constObj.Type().(*types.Alias); isCurObjAlias {
+			if enumTypeName.Name() != curObjAlias.Obj().Name() {
+				continue
+			}
+		}
+
 		// ensure the const's type exactly matches the enum type
-		if !types.Identical(constObj.Type(), enumTypeName.Type()) {
+		if !types.Identical(enumTypeName.Type(), constObj.Type()) {
 			continue
 		}
 

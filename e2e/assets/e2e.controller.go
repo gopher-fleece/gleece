@@ -757,10 +757,13 @@ type AliasOfDirectString string
 // @Deprecated bla bla
 type AliasOfInt int
 
+type AssignedAliasOfInt = int
+
 type ObjectWithAliasOfString struct {
 	Value              AliasOfString       `json:"value"`
 	ValueDirect        AliasOfDirectString `json:"valueDirect"`
 	Number             AliasOfInt          `json:"number"`
+	AssignedInt        AssignedAliasOfInt  `json:"assignedInt"`
 	ValueWithTag       AliasOfString       `json:"value_with_tag" validate:"required,min=3"`
 	ValueDirectWithTag AliasOfDirectString `json:"value_direct_with_tag" validate:"required,min=3"`
 	NumberWithTag      AliasOfInt          `json:"number_with_tag" validate:"required,gte=10"`
