@@ -137,11 +137,7 @@ func (ec *AliasController) ReturnsAnNestedAssignedAlias() (NestedAssignedAlias, 
 	return "", nil
 }
 
-
 // Special
-
-
-// Nested Assigned
 
 // @Method(POST)
 // @Route(/as-alias-query)
