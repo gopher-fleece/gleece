@@ -1,6 +1,7 @@
 package visitors
 
 import (
+	"errors"
 	"fmt"
 	"go/ast"
 	"go/token"
@@ -428,7 +429,6 @@ func (v *TypeUsageVisitor) ensureUniverseTypeInGraph(typeName string) (common.Sy
 	return common.SymKindUnknown, v.getFrozenError("unknown universe type '%s'", typeName)
 }
 
-// ------------------------- buildTypeRef dispatcher + small helpers -------------------------
 
 func (v *TypeUsageVisitor) buildTypeRef(
 	pkg *packages.Package,
@@ -453,6 +453,11 @@ func (v *TypeUsageVisitor) buildTypeRef(
 		return v.buildIndexListExprRef(pkg, file, t, typeParamEnv)
 	case *ast.StructType:
 		return v.buildInlineStructRef(pkg, file, t, typeParamEnv)
+	case *ast.InterfaceType:
+		if t.Methods == nil || len(t.Methods.List) == 0 {
+			return nil, errors.New("'interface{}' is not supported. Use 'any' instead'")
+		}
+		return nil, fmt.Errorf("interfaces are not supported'%T'", expr)
 	default:
 		return nil, fmt.Errorf("unsupported type expression '%T'", expr)
 	}
@@ -766,8 +771,6 @@ func (v *TypeUsageVisitor) createUsageMeta(
 		SymbolKind:  kind,
 	}, nil
 }
-
-// ------------------------- utilities -------------------------
 
 // chooseSymKind picks a SymKind based on the resolution (struct/interface/alias/enum/special/builtin).
 func chooseSymKind(resolution gast.TypeSpecResolution, pkg *packages.Package) common.SymKind {
