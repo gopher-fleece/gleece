@@ -68,7 +68,6 @@ func GetConfigAndMetadata(args arguments.CliArguments) (
 	pipeline.GleeceFlattenedMetadata,
 	error,
 ) {
-	//config, err := LoadGleeceConfig("/Users/haimk/Desktop/work/atmosec/cmd/svc/restapi/gleece.config.json")
 	config, err := LoadGleeceConfig(args.ConfigPath)
 	if err != nil {
 		return config, pipeline.GleeceFlattenedMetadata{}, err

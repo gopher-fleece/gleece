@@ -498,7 +498,7 @@ var _ = Describe("E2E Models Spec", func() {
 				ValueDirectWithTag: "also_valid",
 				NumberWithTag:      15,
 			},
-			ExpectedBodyContain: "{\"value\":\"querytest\",\"valueDirect\":\"querydirect\",\"number\":15,\"value_with_tag\":\"valid\",\"value_direct_with_tag\":\"also_valid\",\"number_with_tag\":15}",
+			ExpectedBodyContain: "{\"value\":\"querytest\",\"valueDirect\":\"querydirect\",\"number\":15,\"assignedInt\":0,\"value_with_tag\":\"valid\",\"value_direct_with_tag\":\"also_valid\",\"number_with_tag\":15}",
 			ExpendedHeaders:     nil,
 			Path:                "/e2e/alias-of-primitive",
 			Method:              "POST",
@@ -649,6 +649,273 @@ var _ = Describe("E2E Models Spec", func() {
 			Path:                "/e2e/special-primitives",
 			Method:              "POST",
 			RunningMode:         &allRouting,
+		})
+	})
+
+	It("Should return status code 200 for alias-of-primitive", func() {
+		RunRouterTest(common.RouterTest{
+			Name:           "Should handle alias of primitive types",
+			ExpectedStatus: 200,
+			Body: &assets.ObjectWithAliasOfString{
+				Value:              "hello",
+				ValueDirect:        "world",
+				Number:             5,
+				AssignedInt:        1,
+				ValueWithTag:       "validvalue",
+				ValueDirectWithTag: "validvalue2",
+				NumberWithTag:      15,
+			},
+			ExpectedBodyContain: "{\"value\":\"testhello\",\"valueDirect\":\"testworld\",\"number\":15",
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/alias-of-primitive",
+			Method:              "POST",
+			Query:               map[string]string{"num": "10", "str": "test"},
+			RunningMode:         &allRouting,
+		})
+	})
+
+	It("Should return status code 200 for body-array-of-string", func() {
+		RunRouterTest(common.RouterTest{
+			Name:            "Should handle body array of strings",
+			ExpectedStatus:  200,
+			Body:            []string{"item1", "item2", "item3"},
+			ExpectedBody:    "\"received 3 items\"",
+			ExpendedHeaders: nil,
+			Path:            "/e2e/body-array-of-string",
+			Method:          "POST",
+			RunningMode:     &allRouting,
+		})
+	})
+
+	It("Should return status code 200 for body-array-of-string-enum", func() {
+		RunRouterTest(common.RouterTest{
+			Name:            "Should handle body array of strings",
+			ExpectedStatus:  200,
+			Body:            []string{"one", "two"},
+			ExpectedBody:    "\"received 2 items\"",
+			ExpendedHeaders: nil,
+			Path:            "/e2e/body-array-of-enum-string",
+			Method:          "POST",
+			RunningMode:     &allRouting,
+		})
+	})
+
+	It("Should return status code 200 for query-array-of-string", func() {
+		RunRouterTest(common.RouterTest{
+			Name:            "Should handle query array of strings",
+			ExpectedStatus:  200,
+			ExpectedBody:    "\"received 3 items\"",
+			ExpendedHeaders: nil,
+			Path:            "/e2e/query-array-of-string",
+			Method:          "POST",
+			QueryArray:      map[string][]string{"values": {"item1", "item2", "item3"}},
+			RunningMode:     &allRouting,
+		})
+	})
+
+	It("Should return status code 200 for query-array-of-enum", func() {
+		RunRouterTest(common.RouterTest{
+			Name:            "Should handle query array of enums",
+			ExpectedStatus:  200,
+			ExpectedBody:    "\"received 2 items and 2 items\"",
+			ExpendedHeaders: nil,
+			Path:            "/e2e/query-array-of-enum",
+			Method:          "POST",
+			QueryArray:      map[string][]string{"values": {"one", "two"}, "values2": {"str1", "str2"}},
+			RunningMode:     &allRouting,
+		})
+	})
+
+	It("Should return status code 200 for query-array-of-others", func() {
+		RunRouterTest(common.RouterTest{
+			Name:            "Should handle query array of other types",
+			ExpectedStatus:  200,
+			ExpectedBody:    "\"received 2, 2, 2 and 2 items\"",
+			ExpendedHeaders: nil,
+			Path:            "/e2e/query-array-of-others",
+			Method:          "POST",
+			QueryArray:      map[string][]string{"values": {"1", "2"}, "values2": {"3", "4"}, "values3": {"true", "false"}, "values4": {"5", "6"}},
+			RunningMode:     &allRouting,
+		})
+	})
+
+	It("Should return status code 200 for query-array-of-others-enum", func() {
+		RunRouterTest(common.RouterTest{
+			Name:            "Should handle query array of number and bool enums",
+			ExpectedStatus:  200,
+			ExpectedBody:    "\"received 2 and 2 items\"",
+			ExpendedHeaders: nil,
+			Path:            "/e2e/query-array-of-others-enum",
+			Method:          "POST",
+			QueryArray:      map[string][]string{"values": {"1", "2"}, "values2": {"true", "false"}},
+			RunningMode:     &allRouting,
+		})
+	})
+
+	It("Should return status code 422 for alias-of-primitive when body is missing", func() {
+		RunRouterTest(common.RouterTest{
+			Name:            "Should return 422 when body is missing",
+			ExpectedStatus:  422,
+			ExpendedHeaders: nil,
+			Path:            "/e2e/alias-of-primitive",
+			Method:          "POST",
+			Query:           map[string]string{"num": "10", "str": "test"},
+			RunningMode:     &allRouting,
+		})
+	})
+
+	It("Should return status code 422 for alias-of-primitive when validation fails on string length", func() {
+		RunRouterTest(common.RouterTest{
+			Name:           "Should return 422 when validation fails on tagged fields",
+			ExpectedStatus: 422,
+			Body: &assets.ObjectWithAliasOfString{
+				Value:              "hello",
+				ValueDirect:        "world",
+				Number:             5,
+				AssignedInt:        1,
+				ValueWithTag:       "ab", // too short, min=3
+				ValueDirectWithTag: "validvalue2",
+				NumberWithTag:      15,
+			},
+			ExpendedHeaders: nil,
+			Path:            "/e2e/alias-of-primitive",
+			Method:          "POST",
+			Query:           map[string]string{"num": "10", "str": "test"},
+			RunningMode:     &allRouting,
+		})
+	})
+
+	It("Should return status code 422 for alias-of-primitive when number validation fails", func() {
+		RunRouterTest(common.RouterTest{
+			Name:           "Should return 422 when number validation fails",
+			ExpectedStatus: 422,
+			Body: &assets.ObjectWithAliasOfString{
+				Value:              "hello",
+				ValueDirect:        "world",
+				Number:             5,
+				AssignedInt:        1,
+				ValueWithTag:       "validvalue",
+				ValueDirectWithTag: "validvalue2",
+				NumberWithTag:      5, // too small, gte=10
+			},
+			ExpendedHeaders: nil,
+			Path:            "/e2e/alias-of-primitive",
+			Method:          "POST",
+			Query:           map[string]string{"num": "10", "str": "test"},
+			RunningMode:     &allRouting,
+		})
+	})
+
+	It("Should return status code 422 for body-array-of-string with missing body", func() {
+		RunRouterTest(common.RouterTest{
+			Name:            "Should return 422 when body array is missing",
+			ExpectedStatus:  422,
+			ExpendedHeaders: nil,
+			Path:            "/e2e/body-array-of-string",
+			Method:          "POST",
+			RunningMode:     &allRouting,
+		})
+	})
+
+	It("Should return status code 422 for body-array-of-enum-string with missing body", func() {
+		RunRouterTest(common.RouterTest{
+			Name:            "Should return 422 when body array is missing",
+			ExpectedStatus:  422,
+			ExpendedHeaders: nil,
+			Path:            "/e2e/body-array-of-enum-string",
+			Method:          "POST",
+			RunningMode:     &allRouting,
+		})
+	})
+
+	It("Should return status code 422 for query-array-of-string with missing query", func() {
+		RunRouterTest(common.RouterTest{
+			Name:            "Should return 422 when query array is missing",
+			ExpectedStatus:  422,
+			ExpendedHeaders: nil,
+			Path:            "/e2e/query-array-of-string",
+			Method:          "POST",
+			RunningMode:     &allRouting,
+		})
+	})
+
+	It("Should return status code 422 for query-array-of-enum with wrong enum values", func() {
+		RunRouterTest(common.RouterTest{
+			Name:                "Should return 422 when enum value is wrong",
+			ExpectedStatus:      422,
+			ExpectedBodyContain: "must be one of",
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/query-array-of-enum",
+			Method:              "POST",
+			Query:               map[string]string{"values": "invalid,two", "values2": "str1,str2"},
+			RunningMode:         &fullyFeaturedRouting,
+		})
+
+		RunRouterTest(common.RouterTest{
+			Name:            "Should return 422 when query arrays are missing",
+			ExpectedStatus:  422,
+			ExpendedHeaders: nil,
+			Path:            "/e2e/query-array-of-enum",
+			Method:          "POST",
+			RunningMode:     &allRouting,
+		})
+	})
+
+	It("Should return status code 422 for query-array-of-others with missing queries", func() {
+		RunRouterTest(common.RouterTest{
+			Name:            "Should return 422 when query arrays are missing",
+			ExpectedStatus:  422,
+			ExpendedHeaders: nil,
+			Path:            "/e2e/query-array-of-others",
+			Method:          "POST",
+			RunningMode:     &allRouting,
+		})
+
+		RunRouterTest(common.RouterTest{
+			Name:            "Should return 422 when int values are invalid",
+			ExpectedStatus:  422,
+			ExpendedHeaders: nil,
+			Path:            "/e2e/query-array-of-others",
+			Method:          "POST",
+			Query:           map[string]string{"values": "not_a_number,2", "values2": "3,4", "values3": "true,false", "values4": "5,6"},
+			RunningMode:     &allRouting,
+		})
+	})
+
+	It("Should return status code 422 for query-array-of-others-enum when number enum value is wrong", func() {
+		RunRouterTest(common.RouterTest{
+			Name:                "Should return 422 when number enum value is wrong",
+			ExpectedStatus:      422,
+			ExpectedBodyContain: "but parameter 'values' was not properly sent - Expected []NumberEnum",
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/query-array-of-others-enum",
+			Method:              "POST",
+			Query:               map[string]string{"values": "99,2", "values2": "true,false"},
+			RunningMode:         &fullyFeaturedRouting,
+		})
+	})
+
+	It("Should return status code 422 for query-array-of-others-enum when bool enum value is wrong", func() {
+		RunRouterTest(common.RouterTest{
+			Name:                "Should return 422 when bool enum value is wrong",
+			ExpectedStatus:      422,
+			ExpectedBodyContain: "but parameter 'values' was not properly sent - Expected []NumberEnum",
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/query-array-of-others-enum",
+			Method:              "POST",
+			Query:               map[string]string{"values": "1,2", "values2": "invalid,false"},
+			RunningMode:         &fullyFeaturedRouting,
+		})
+	})
+
+	It("Should return status code 422 for query-array-of-others-enum when query arrays are missing", func() {
+		RunRouterTest(common.RouterTest{
+			Name:            "Should return 422 when query arrays are missing",
+			ExpectedStatus:  422,
+			ExpendedHeaders: nil,
+			Path:            "/e2e/query-array-of-others-enum",
+			Method:          "POST",
+			RunningMode:     &allRouting,
 		})
 	})
 

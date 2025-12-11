@@ -770,7 +770,7 @@ type ObjectWithAliasOfString struct {
 }
 
 // @Method(POST)
-// @Body(object)
+// @Body(object, { validate: "required" })
 // @Query(num)
 // @Query(str)
 // @Route(/alias-of-primitive)
@@ -779,4 +779,75 @@ func (ec *E2EController) AliasOfString(object *ObjectWithAliasOfString, num Alia
 	object.ValueDirect = AliasOfDirectString(str) + object.ValueDirect
 	object.Number = object.Number + num
 	return object, nil
+}
+
+// @Method(POST)
+// @Body(values)
+// @Route(/body-array-of-string)
+func (ec *E2EController) BodyArrayOfString(values []string) (string, error) {
+	return fmt.Sprintf("received %d items", len(values)), nil
+}
+
+type Myemamium string
+
+const (
+	EmamiumOne Myemamium = "one"
+	EmamiumTwo Myemamium = "two"
+)
+
+type MyaliasString = string
+type MyaliasInt = int
+
+// @Method(POST)
+// @Body(values)
+// @Route(/body-array-of-enum-string)
+func (ec *E2EController) BodyArrayOfStringEnum(values []Myemamium) (string, error) {
+	return fmt.Sprintf("received %d items", len(values)), nil
+}
+
+// @Method(POST)
+// @Query(values)
+// @Route(/query-array-of-string)
+func (ec *E2EController) QueryArrayOfString(values []string) (string, error) {
+	return fmt.Sprintf("received %d items", len(values)), nil
+}
+
+// @Method(POST)
+// @Query(values)
+// @Query(values2)
+// @Route(/query-array-of-enum)
+func (ec *E2EController) QueryArrayOfEnum(values []Myemamium, values2 []MyaliasString) (string, error) {
+	return fmt.Sprintf("received %d items and %d items", len(values), len(values2)), nil
+}
+
+// @Method(POST)
+// @Query(values)
+// @Query(values2)
+// @Query(values3)
+// @Query(values4)
+// @Route(/query-array-of-others)
+func (ec *E2EController) QueryArrayOfOthers(values []int, values2 []MyaliasInt, values3 []bool, values4 []int32) (string, error) {
+	return fmt.Sprintf("received %d, %d, %d and %d items", len(values), len(values2), len(values3), len(values4)), nil
+}
+
+type BoolEnum string
+
+const (
+	BoolEnumTrue  BoolEnum = "true"
+	BoolEnumFalse BoolEnum = "false"
+)
+
+type NumberEnum = int16
+
+const (
+	NumberEnumOne NumberEnum = 1
+	NumberEnumTwo NumberEnum = 2
+)
+
+// @Method(POST)
+// @Query(values)
+// @Query(values2)
+// @Route(/query-array-of-others-enum)
+func (ec *E2EController) QueryArrayOfOthersEnum(values []NumberEnum, values2 []BoolEnum) (string, error) {
+	return fmt.Sprintf("received %d and %d items", len(values), len(values2)), nil
 }
