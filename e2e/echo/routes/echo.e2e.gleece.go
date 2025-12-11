@@ -44,6 +44,11 @@ import (
 	Param24object "github.com/gopher-fleece/gleece/e2e/assets"
 	Param25num "github.com/gopher-fleece/gleece/e2e/assets"
 	Param26str "github.com/gopher-fleece/gleece/e2e/assets"
+	Param27values "github.com/gopher-fleece/gleece/e2e/assets"
+	Param28values2 "github.com/gopher-fleece/gleece/e2e/assets"
+	Param29values2 "github.com/gopher-fleece/gleece/e2e/assets"
+	Param31values "github.com/gopher-fleece/gleece/e2e/assets"
+	Param32values2 "github.com/gopher-fleece/gleece/e2e/assets"
 	Param4value2 "github.com/gopher-fleece/gleece/e2e/assets"
 	Param5theBody "github.com/gopher-fleece/gleece/e2e/assets"
 	Response6CustomError "github.com/gopher-fleece/gleece/e2e/assets"
@@ -303,7 +308,10 @@ func RegisterCustomValidator(validateTagName string, validateFunc runtime.Valida
 }
 func RegisterRoutes(engine *echo.Echo) {
 	urlParamRegex = regexp.MustCompile(`\{([\w\d-_]+)\}`)
+	registerEnumValidation(validatorInstance, "bool_enum_enum", []string{"false", "true"})
 	registerEnumValidation(validatorInstance, "length_units_enum", []string{"Angstrom", "AstronomicalUnit", "Centimeter", "Chain", "DataMile", "Decameter", "Decimeter", "DtpPica", "DtpPoint", "Fathom", "Femtometer", "Foot", "Gigameter", "Hand", "Hectometer", "Inch", "Kilofoot", "KilolightYear", "Kilometer", "Kiloparsec", "Kiloyard", "LightYear", "MegalightYear", "Megameter", "Megaparsec", "Meter", "Microinch", "Micrometer", "Mil", "Mile", "Millimeter", "Nanometer", "NauticalMile", "Parsec", "Picometer", "PrinterPica", "PrinterPoint", "Shackle", "SolarRadius", "Twip", "UsSurveyFoot", "Yard"})
+	registerEnumValidation(validatorInstance, "myemamium_enum", []string{"one", "two"})
+	registerEnumValidation(validatorInstance, "number_enum_enum", []string{"1", "2"})
 	registerEnumValidation(validatorInstance, "number_enumeration_enum", []string{"1", "2"})
 	registerEnumValidation(validatorInstance, "speed_units_enum", []string{"CentimeterPerHour", "CentimeterPerMinute", "CentimeterPerSecond", "DecimeterPerMinute", "DecimeterPerSecond", "FootPerHour", "FootPerMinute", "FootPerSecond", "InchPerHour", "InchPerMinute", "InchPerSecond", "KilometerPerHour", "KilometerPerMinute", "KilometerPerSecond", "Knot", "Mach", "MeterPerHour", "MeterPerMinute", "MeterPerSecond", "MicrometerPerMinute", "MicrometerPerSecond", "MilePerHour", "MillimeterPerHour", "MillimeterPerMinute", "MillimeterPerSecond", "NanometerPerMinute", "NanometerPerSecond", "UsSurveyFootPerHour", "UsSurveyFootPerMinute", "UsSurveyFootPerSecond", "YardPerHour", "YardPerMinute", "YardPerSecond"})
 	registerEnumValidation(validatorInstance, "status_enumeration_enum", []string{"active", "inactive"})
@@ -4677,7 +4685,7 @@ func RegisterRoutes(engine *echo.Echo) {
 		value2Raw := echoCtx.QueryParam("value2")
 		isvalue2Exists := echoCtx.Request().URL.Query().Has("value2")
 		if isvalue2Exists {
-			value2, conversionErr := strconv.ParseBool(value2Raw)
+			value2Bool, conversionErr := strconv.ParseBool(value2Raw)
 			if conversionErr != nil {
 				// Middlewares onInputValidationMiddlewares section
 				for _, middleware := range onInputValidationMiddlewares {
@@ -4703,6 +4711,7 @@ func RegisterRoutes(engine *echo.Echo) {
 				echoCtx.Response().Header().Set("x-ParamsValidationErrorResponseExtension", "TestPrimitiveConversions")
 				return echoCtx.JSON(http.StatusUnprocessableEntity, validationError)
 			}
+			value2 := value2Bool
 			value2RawPtr = &value2
 		}
 		if validatorErr := validatorInstance.Var(value2RawPtr, "required"); validatorErr != nil {
@@ -4772,7 +4781,7 @@ func RegisterRoutes(engine *echo.Echo) {
 		value4Raw := echoCtx.QueryParam("value4")
 		isvalue4Exists := echoCtx.Request().URL.Query().Has("value4")
 		if isvalue4Exists {
-			value4, conversionErr := strconv.ParseFloat(value4Raw, 64)
+			value4Float64, conversionErr := strconv.ParseFloat(value4Raw, 64)
 			if conversionErr != nil {
 				// Middlewares onInputValidationMiddlewares section
 				for _, middleware := range onInputValidationMiddlewares {
@@ -4798,6 +4807,7 @@ func RegisterRoutes(engine *echo.Echo) {
 				echoCtx.Response().Header().Set("x-ParamsValidationErrorResponseExtension", "TestPrimitiveConversions")
 				return echoCtx.JSON(http.StatusUnprocessableEntity, validationError)
 			}
+			value4 := float64(value4Float64)
 			value4RawPtr = &value4
 		}
 		if validatorErr := validatorInstance.Var(value4RawPtr, "required"); validatorErr != nil {
@@ -6972,7 +6982,7 @@ func RegisterRoutes(engine *echo.Echo) {
 		controller.InitController(echoCtx)
 		var conversionErr error
 		var objectRawPtr *Param24object.ObjectWithAliasOfString = nil
-		conversionErr = bindAndValidateBody(echoCtx, "application/json", "", &objectRawPtr)
+		conversionErr = bindAndValidateBody(echoCtx, "application/json", "required", &objectRawPtr)
 		if conversionErr != nil {
 			// Middlewares onInputValidationMiddlewares section
 			for _, middleware := range onInputValidationMiddlewares {
@@ -7145,6 +7155,969 @@ func RegisterRoutes(engine *echo.Echo) {
 		echoCtx.Response().Header().Set("x-AfterOperationRoutesExtension", "AliasOfString")
 		echoCtx.JSON(statusCode, value)
 		echoCtx.Response().Header().Set("x-RouteEndRoutesExtension", "AliasOfString")
+		return nil
+	})
+	engine.POST(toEchoUrl("/e2e/body-array-of-string"), func(echoCtx echo.Context) error {
+		echoCtx.Response().Header().Set("x-RouteStartRoutesExtension", "BodyArrayOfString")
+		authErr := authorize(
+			echoCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(echoCtx, authErr, "BodyArrayOfString")
+		}
+		controller := E2EController.E2EController{}
+		controller.InitController(echoCtx)
+		var conversionErr error
+		var valuesRawPtr *[]string = nil
+		conversionErr = bindAndValidateBody(echoCtx, "application/json", "required", &valuesRawPtr)
+		if conversionErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(echoCtx), echoCtx, conversionErr)
+				setRequestContext(echoCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			validationError := runtime.Rfc7807Error{
+				Type: http.StatusText(http.StatusUnprocessableEntity),
+				Detail: fmt.Sprintf(
+					"A request was made to operation 'BodyArrayOfString' but body parameter '%s' did not pass validation of '%s' - %s",
+					"values",
+					"[]string",
+					extractValidationErrorMessage(conversionErr, nil),
+				),
+				Status:   http.StatusUnprocessableEntity,
+				Instance: "/validation/error/BodyArrayOfString",
+			}
+			echoCtx.Response().Header().Set("x-JsonBodyValidationErrorResponseExtension", "BodyArrayOfString")
+			return echoCtx.JSON(http.StatusUnprocessableEntity, validationError)
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(echoCtx), echoCtx)
+			setRequestContext(echoCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		echoCtx.Response().Header().Set("x-BeforeOperationRoutesExtension", "BodyArrayOfString")
+		value, opError := controller.BodyArrayOfString(*valuesRawPtr)
+		for key, value := range controller.GetHeaders() {
+			echoCtx.Response().Header().Set(key, value)
+		}
+		echoCtx.Response().Header().Set("x-inject", "true")
+		echoCtx.Response().Header().Set("x-ResponseHeadersExtension", "BodyArrayOfString")
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(echoCtx), echoCtx, opError)
+				setRequestContext(echoCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'BodyArrayOfString'",
+				Status:     statusCode,
+				Instance:   "/controller/error/BodyArrayOfString",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			echoCtx.Response().Header().Set("x-JsonErrorResponseExtension", "BodyArrayOfString")
+			return echoCtx.JSON(statusCode, stdError)
+		}
+		echoCtx.Response().Header().Set("x-JsonResponseExtension", "BodyArrayOfString")
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(echoCtx), echoCtx)
+			setRequestContext(echoCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		echoCtx.Response().Header().Set("x-AfterOperationRoutesExtension", "BodyArrayOfString")
+		echoCtx.JSON(statusCode, value)
+		echoCtx.Response().Header().Set("x-RouteEndRoutesExtension", "BodyArrayOfString")
+		return nil
+	})
+	engine.POST(toEchoUrl("/e2e/body-array-of-enum-string"), func(echoCtx echo.Context) error {
+		echoCtx.Response().Header().Set("x-RouteStartRoutesExtension", "BodyArrayOfStringEnum")
+		authErr := authorize(
+			echoCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(echoCtx, authErr, "BodyArrayOfStringEnum")
+		}
+		controller := E2EController.E2EController{}
+		controller.InitController(echoCtx)
+		var conversionErr error
+		var valuesRawPtr *[]Param27values.Myemamium = nil
+		conversionErr = bindAndValidateBody(echoCtx, "application/json", "required", &valuesRawPtr)
+		if conversionErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(echoCtx), echoCtx, conversionErr)
+				setRequestContext(echoCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			validationError := runtime.Rfc7807Error{
+				Type: http.StatusText(http.StatusUnprocessableEntity),
+				Detail: fmt.Sprintf(
+					"A request was made to operation 'BodyArrayOfStringEnum' but body parameter '%s' did not pass validation of '%s' - %s",
+					"values",
+					"[]Myemamium",
+					extractValidationErrorMessage(conversionErr, nil),
+				),
+				Status:   http.StatusUnprocessableEntity,
+				Instance: "/validation/error/BodyArrayOfStringEnum",
+			}
+			echoCtx.Response().Header().Set("x-JsonBodyValidationErrorResponseExtension", "BodyArrayOfStringEnum")
+			return echoCtx.JSON(http.StatusUnprocessableEntity, validationError)
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(echoCtx), echoCtx)
+			setRequestContext(echoCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		echoCtx.Response().Header().Set("x-BeforeOperationRoutesExtension", "BodyArrayOfStringEnum")
+		value, opError := controller.BodyArrayOfStringEnum(*valuesRawPtr)
+		for key, value := range controller.GetHeaders() {
+			echoCtx.Response().Header().Set(key, value)
+		}
+		echoCtx.Response().Header().Set("x-inject", "true")
+		echoCtx.Response().Header().Set("x-ResponseHeadersExtension", "BodyArrayOfStringEnum")
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(echoCtx), echoCtx, opError)
+				setRequestContext(echoCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'BodyArrayOfStringEnum'",
+				Status:     statusCode,
+				Instance:   "/controller/error/BodyArrayOfStringEnum",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			echoCtx.Response().Header().Set("x-JsonErrorResponseExtension", "BodyArrayOfStringEnum")
+			return echoCtx.JSON(statusCode, stdError)
+		}
+		echoCtx.Response().Header().Set("x-JsonResponseExtension", "BodyArrayOfStringEnum")
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(echoCtx), echoCtx)
+			setRequestContext(echoCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		echoCtx.Response().Header().Set("x-AfterOperationRoutesExtension", "BodyArrayOfStringEnum")
+		echoCtx.JSON(statusCode, value)
+		echoCtx.Response().Header().Set("x-RouteEndRoutesExtension", "BodyArrayOfStringEnum")
+		return nil
+	})
+	engine.POST(toEchoUrl("/e2e/query-array-of-string"), func(echoCtx echo.Context) error {
+		echoCtx.Response().Header().Set("x-RouteStartRoutesExtension", "QueryArrayOfString")
+		authErr := authorize(
+			echoCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(echoCtx, authErr, "QueryArrayOfString")
+		}
+		controller := E2EController.E2EController{}
+		controller.InitController(echoCtx)
+		var valuesRawPtr *[]string = nil
+		valuesRawArray := echoCtx.QueryParams()["values"]
+		isvaluesExists := echoCtx.Request().URL.Query().Has("values")
+		if isvaluesExists {
+			values := make([]string, 0, len(valuesRawArray))
+			for _, valuesRaw := range valuesRawArray {
+				valuesItem := valuesRaw
+				values = append(values, string(valuesItem))
+			}
+			valuesRawPtr = &values
+			valuesRawPtr = &values
+		}
+		if validatorErr := validatorInstance.Var(valuesRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(echoCtx), echoCtx, validatorErr)
+				setRequestContext(echoCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "values"
+			validationError := wrapValidatorError(validatorErr, "QueryArrayOfString", fieldName)
+			echoCtx.Response().Header().Set("x-RunValidatorExtension", "QueryArrayOfString")
+			return echoCtx.JSON(http.StatusUnprocessableEntity, validationError)
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(echoCtx), echoCtx)
+			setRequestContext(echoCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		echoCtx.Response().Header().Set("x-BeforeOperationRoutesExtension", "QueryArrayOfString")
+		value, opError := controller.QueryArrayOfString(*valuesRawPtr)
+		for key, value := range controller.GetHeaders() {
+			echoCtx.Response().Header().Set(key, value)
+		}
+		echoCtx.Response().Header().Set("x-inject", "true")
+		echoCtx.Response().Header().Set("x-ResponseHeadersExtension", "QueryArrayOfString")
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(echoCtx), echoCtx, opError)
+				setRequestContext(echoCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'QueryArrayOfString'",
+				Status:     statusCode,
+				Instance:   "/controller/error/QueryArrayOfString",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			echoCtx.Response().Header().Set("x-JsonErrorResponseExtension", "QueryArrayOfString")
+			return echoCtx.JSON(statusCode, stdError)
+		}
+		echoCtx.Response().Header().Set("x-JsonResponseExtension", "QueryArrayOfString")
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(echoCtx), echoCtx)
+			setRequestContext(echoCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		echoCtx.Response().Header().Set("x-AfterOperationRoutesExtension", "QueryArrayOfString")
+		echoCtx.JSON(statusCode, value)
+		echoCtx.Response().Header().Set("x-RouteEndRoutesExtension", "QueryArrayOfString")
+		return nil
+	})
+	engine.POST(toEchoUrl("/e2e/query-array-of-enum"), func(echoCtx echo.Context) error {
+		echoCtx.Response().Header().Set("x-RouteStartRoutesExtension", "QueryArrayOfEnum")
+		authErr := authorize(
+			echoCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(echoCtx, authErr, "QueryArrayOfEnum")
+		}
+		controller := E2EController.E2EController{}
+		controller.InitController(echoCtx)
+		var valuesRawPtr *[]Param27values.Myemamium = nil
+		valuesRawArray := echoCtx.QueryParams()["values"]
+		isvaluesExists := echoCtx.Request().URL.Query().Has("values")
+		if isvaluesExists {
+			values := make([]Param27values.Myemamium, 0, len(valuesRawArray))
+			for _, valuesRaw := range valuesRawArray {
+				valuesItem := valuesRaw
+				switch valuesRaw {
+				case "one", "two":
+					break
+				default:
+					conversionErr := fmt.Errorf("values must be one of \"one, two\" options only but got \"%s\"", valuesRaw)
+					// Middlewares onInputValidationMiddlewares section
+					for _, middleware := range onInputValidationMiddlewares {
+						middlewareCtx, continueOperation := middleware(getRequestContext(echoCtx), echoCtx, conversionErr)
+						setRequestContext(echoCtx, middlewareCtx)
+						if !continueOperation {
+							return nil
+						}
+					}
+					// End middlewares onInputValidationMiddlewares section
+					validationError := runtime.Rfc7807Error{
+						Type: http.StatusText(http.StatusUnprocessableEntity),
+						Detail: fmt.Sprintf(
+							"A request was made to operation 'QueryArrayOfEnum' but parameter '%s' was not properly sent - Expected %s but got %s",
+							"values",
+							"[]Myemamium",
+							reflect.TypeOf(valuesRaw).String(),
+						),
+						Status:     http.StatusUnprocessableEntity,
+						Instance:   "/validation/error/QueryArrayOfEnum",
+						Extensions: map[string]string{"error": conversionErr.Error()},
+					}
+					echoCtx.Response().Header().Set("x-ParamsValidationErrorResponseExtension", "QueryArrayOfEnum")
+					return echoCtx.JSON(http.StatusUnprocessableEntity, validationError)
+				}
+				values = append(values, Param27values.Myemamium(valuesItem))
+			}
+			valuesRawPtr = &values
+		}
+		if validatorErr := validatorInstance.Var(valuesRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(echoCtx), echoCtx, validatorErr)
+				setRequestContext(echoCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "values"
+			validationError := wrapValidatorError(validatorErr, "QueryArrayOfEnum", fieldName)
+			echoCtx.Response().Header().Set("x-RunValidatorExtension", "QueryArrayOfEnum")
+			return echoCtx.JSON(http.StatusUnprocessableEntity, validationError)
+		}
+		var values2RawPtr *[]Param28values2.MyaliasString = nil
+		values2RawArray := echoCtx.QueryParams()["values2"]
+		isvalues2Exists := echoCtx.Request().URL.Query().Has("values2")
+		if isvalues2Exists {
+			values2 := make([]Param28values2.MyaliasString, 0, len(values2RawArray))
+			for _, values2Raw := range values2RawArray {
+				values2Item := values2Raw
+				values2 = append(values2, Param28values2.MyaliasString(values2Item))
+			}
+			values2RawPtr = &values2
+			values2Var := []Param28values2.MyaliasString(values2)
+			values2RawPtr = &values2Var
+		}
+		if validatorErr := validatorInstance.Var(values2RawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(echoCtx), echoCtx, validatorErr)
+				setRequestContext(echoCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "values2"
+			validationError := wrapValidatorError(validatorErr, "QueryArrayOfEnum", fieldName)
+			echoCtx.Response().Header().Set("x-RunValidatorExtension", "QueryArrayOfEnum")
+			return echoCtx.JSON(http.StatusUnprocessableEntity, validationError)
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(echoCtx), echoCtx)
+			setRequestContext(echoCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		echoCtx.Response().Header().Set("x-BeforeOperationRoutesExtension", "QueryArrayOfEnum")
+		value, opError := controller.QueryArrayOfEnum(*valuesRawPtr, *values2RawPtr)
+		for key, value := range controller.GetHeaders() {
+			echoCtx.Response().Header().Set(key, value)
+		}
+		echoCtx.Response().Header().Set("x-inject", "true")
+		echoCtx.Response().Header().Set("x-ResponseHeadersExtension", "QueryArrayOfEnum")
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(echoCtx), echoCtx, opError)
+				setRequestContext(echoCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'QueryArrayOfEnum'",
+				Status:     statusCode,
+				Instance:   "/controller/error/QueryArrayOfEnum",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			echoCtx.Response().Header().Set("x-JsonErrorResponseExtension", "QueryArrayOfEnum")
+			return echoCtx.JSON(statusCode, stdError)
+		}
+		echoCtx.Response().Header().Set("x-JsonResponseExtension", "QueryArrayOfEnum")
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(echoCtx), echoCtx)
+			setRequestContext(echoCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		echoCtx.Response().Header().Set("x-AfterOperationRoutesExtension", "QueryArrayOfEnum")
+		echoCtx.JSON(statusCode, value)
+		echoCtx.Response().Header().Set("x-RouteEndRoutesExtension", "QueryArrayOfEnum")
+		return nil
+	})
+	engine.POST(toEchoUrl("/e2e/query-array-of-others"), func(echoCtx echo.Context) error {
+		echoCtx.Response().Header().Set("x-RouteStartRoutesExtension", "QueryArrayOfOthers")
+		authErr := authorize(
+			echoCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(echoCtx, authErr, "QueryArrayOfOthers")
+		}
+		controller := E2EController.E2EController{}
+		controller.InitController(echoCtx)
+		var valuesRawPtr *[]int = nil
+		valuesRawArray := echoCtx.QueryParams()["values"]
+		isvaluesExists := echoCtx.Request().URL.Query().Has("values")
+		if isvaluesExists {
+			values := make([]int, 0, len(valuesRawArray))
+			for _, valuesRaw := range valuesRawArray {
+				valuesUint64, conversionErr := strconv.Atoi(valuesRaw)
+				if conversionErr != nil {
+					// Middlewares onInputValidationMiddlewares section
+					for _, middleware := range onInputValidationMiddlewares {
+						middlewareCtx, continueOperation := middleware(getRequestContext(echoCtx), echoCtx, conversionErr)
+						setRequestContext(echoCtx, middlewareCtx)
+						if !continueOperation {
+							return nil
+						}
+					}
+					// End middlewares onInputValidationMiddlewares section
+					validationError := runtime.Rfc7807Error{
+						Type: http.StatusText(http.StatusUnprocessableEntity),
+						Detail: fmt.Sprintf(
+							"A request was made to operation 'QueryArrayOfOthers' but parameter '%s' was not properly sent - Expected %s but got %s",
+							"values",
+							"[]int",
+							reflect.TypeOf(valuesRaw).String(),
+						),
+						Status:     http.StatusUnprocessableEntity,
+						Instance:   "/validation/error/QueryArrayOfOthers",
+						Extensions: map[string]string{"error": conversionErr.Error()},
+					}
+					echoCtx.Response().Header().Set("x-ParamsValidationErrorResponseExtension", "QueryArrayOfOthers")
+					return echoCtx.JSON(http.StatusUnprocessableEntity, validationError)
+				}
+				valuesItem := int(valuesUint64)
+				values = append(values, int(valuesItem))
+			}
+			valuesRawPtr = &values
+			valuesRawPtr = &values
+		}
+		if validatorErr := validatorInstance.Var(valuesRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(echoCtx), echoCtx, validatorErr)
+				setRequestContext(echoCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "values"
+			validationError := wrapValidatorError(validatorErr, "QueryArrayOfOthers", fieldName)
+			echoCtx.Response().Header().Set("x-RunValidatorExtension", "QueryArrayOfOthers")
+			return echoCtx.JSON(http.StatusUnprocessableEntity, validationError)
+		}
+		var values2RawPtr *[]Param29values2.MyaliasInt = nil
+		values2RawArray := echoCtx.QueryParams()["values2"]
+		isvalues2Exists := echoCtx.Request().URL.Query().Has("values2")
+		if isvalues2Exists {
+			values2 := make([]Param29values2.MyaliasInt, 0, len(values2RawArray))
+			for _, values2Raw := range values2RawArray {
+				values2Uint64, conversionErr := strconv.Atoi(values2Raw)
+				if conversionErr != nil {
+					// Middlewares onInputValidationMiddlewares section
+					for _, middleware := range onInputValidationMiddlewares {
+						middlewareCtx, continueOperation := middleware(getRequestContext(echoCtx), echoCtx, conversionErr)
+						setRequestContext(echoCtx, middlewareCtx)
+						if !continueOperation {
+							return nil
+						}
+					}
+					// End middlewares onInputValidationMiddlewares section
+					validationError := runtime.Rfc7807Error{
+						Type: http.StatusText(http.StatusUnprocessableEntity),
+						Detail: fmt.Sprintf(
+							"A request was made to operation 'QueryArrayOfOthers' but parameter '%s' was not properly sent - Expected %s but got %s",
+							"values2",
+							"[]MyaliasInt",
+							reflect.TypeOf(values2Raw).String(),
+						),
+						Status:     http.StatusUnprocessableEntity,
+						Instance:   "/validation/error/QueryArrayOfOthers",
+						Extensions: map[string]string{"error": conversionErr.Error()},
+					}
+					echoCtx.Response().Header().Set("x-ParamsValidationErrorResponseExtension", "QueryArrayOfOthers")
+					return echoCtx.JSON(http.StatusUnprocessableEntity, validationError)
+				}
+				values2Item := int(values2Uint64)
+				values2 = append(values2, Param29values2.MyaliasInt(values2Item))
+			}
+			values2RawPtr = &values2
+			values2Var := []Param29values2.MyaliasInt(values2)
+			values2RawPtr = &values2Var
+		}
+		if validatorErr := validatorInstance.Var(values2RawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(echoCtx), echoCtx, validatorErr)
+				setRequestContext(echoCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "values2"
+			validationError := wrapValidatorError(validatorErr, "QueryArrayOfOthers", fieldName)
+			echoCtx.Response().Header().Set("x-RunValidatorExtension", "QueryArrayOfOthers")
+			return echoCtx.JSON(http.StatusUnprocessableEntity, validationError)
+		}
+		var values3RawPtr *[]bool = nil
+		values3RawArray := echoCtx.QueryParams()["values3"]
+		isvalues3Exists := echoCtx.Request().URL.Query().Has("values3")
+		if isvalues3Exists {
+			values3 := make([]bool, 0, len(values3RawArray))
+			for _, values3Raw := range values3RawArray {
+				values3Bool, conversionErr := strconv.ParseBool(values3Raw)
+				if conversionErr != nil {
+					// Middlewares onInputValidationMiddlewares section
+					for _, middleware := range onInputValidationMiddlewares {
+						middlewareCtx, continueOperation := middleware(getRequestContext(echoCtx), echoCtx, conversionErr)
+						setRequestContext(echoCtx, middlewareCtx)
+						if !continueOperation {
+							return nil
+						}
+					}
+					// End middlewares onInputValidationMiddlewares section
+					validationError := runtime.Rfc7807Error{
+						Type: http.StatusText(http.StatusUnprocessableEntity),
+						Detail: fmt.Sprintf(
+							"A request was made to operation 'QueryArrayOfOthers' but parameter '%s' was not properly sent - Expected %s but got %s",
+							"values3",
+							"[]bool",
+							reflect.TypeOf(values3Raw).String(),
+						),
+						Status:     http.StatusUnprocessableEntity,
+						Instance:   "/validation/error/QueryArrayOfOthers",
+						Extensions: map[string]string{"error": conversionErr.Error()},
+					}
+					echoCtx.Response().Header().Set("x-ParamsValidationErrorResponseExtension", "QueryArrayOfOthers")
+					return echoCtx.JSON(http.StatusUnprocessableEntity, validationError)
+				}
+				values3Item := values3Bool
+				values3 = append(values3, bool(values3Item))
+			}
+			values3RawPtr = &values3
+			values3RawPtr = &values3
+		}
+		if validatorErr := validatorInstance.Var(values3RawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(echoCtx), echoCtx, validatorErr)
+				setRequestContext(echoCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "values3"
+			validationError := wrapValidatorError(validatorErr, "QueryArrayOfOthers", fieldName)
+			echoCtx.Response().Header().Set("x-RunValidatorExtension", "QueryArrayOfOthers")
+			return echoCtx.JSON(http.StatusUnprocessableEntity, validationError)
+		}
+		var values4RawPtr *[]int32 = nil
+		values4RawArray := echoCtx.QueryParams()["values4"]
+		isvalues4Exists := echoCtx.Request().URL.Query().Has("values4")
+		if isvalues4Exists {
+			values4 := make([]int32, 0, len(values4RawArray))
+			for _, values4Raw := range values4RawArray {
+				values4Uint64, conversionErr := strconv.ParseInt(values4Raw, 10, 32)
+				if conversionErr != nil {
+					// Middlewares onInputValidationMiddlewares section
+					for _, middleware := range onInputValidationMiddlewares {
+						middlewareCtx, continueOperation := middleware(getRequestContext(echoCtx), echoCtx, conversionErr)
+						setRequestContext(echoCtx, middlewareCtx)
+						if !continueOperation {
+							return nil
+						}
+					}
+					// End middlewares onInputValidationMiddlewares section
+					validationError := runtime.Rfc7807Error{
+						Type: http.StatusText(http.StatusUnprocessableEntity),
+						Detail: fmt.Sprintf(
+							"A request was made to operation 'QueryArrayOfOthers' but parameter '%s' was not properly sent - Expected %s but got %s",
+							"values4",
+							"[]int32",
+							reflect.TypeOf(values4Raw).String(),
+						),
+						Status:     http.StatusUnprocessableEntity,
+						Instance:   "/validation/error/QueryArrayOfOthers",
+						Extensions: map[string]string{"error": conversionErr.Error()},
+					}
+					echoCtx.Response().Header().Set("x-ParamsValidationErrorResponseExtension", "QueryArrayOfOthers")
+					return echoCtx.JSON(http.StatusUnprocessableEntity, validationError)
+				}
+				values4Item := int32(values4Uint64)
+				values4 = append(values4, int32(values4Item))
+			}
+			values4RawPtr = &values4
+			values4RawPtr = &values4
+		}
+		if validatorErr := validatorInstance.Var(values4RawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(echoCtx), echoCtx, validatorErr)
+				setRequestContext(echoCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "values4"
+			validationError := wrapValidatorError(validatorErr, "QueryArrayOfOthers", fieldName)
+			echoCtx.Response().Header().Set("x-RunValidatorExtension", "QueryArrayOfOthers")
+			return echoCtx.JSON(http.StatusUnprocessableEntity, validationError)
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(echoCtx), echoCtx)
+			setRequestContext(echoCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		echoCtx.Response().Header().Set("x-BeforeOperationRoutesExtension", "QueryArrayOfOthers")
+		value, opError := controller.QueryArrayOfOthers(*valuesRawPtr, *values2RawPtr, *values3RawPtr, *values4RawPtr)
+		for key, value := range controller.GetHeaders() {
+			echoCtx.Response().Header().Set(key, value)
+		}
+		echoCtx.Response().Header().Set("x-inject", "true")
+		echoCtx.Response().Header().Set("x-ResponseHeadersExtension", "QueryArrayOfOthers")
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(echoCtx), echoCtx, opError)
+				setRequestContext(echoCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'QueryArrayOfOthers'",
+				Status:     statusCode,
+				Instance:   "/controller/error/QueryArrayOfOthers",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			echoCtx.Response().Header().Set("x-JsonErrorResponseExtension", "QueryArrayOfOthers")
+			return echoCtx.JSON(statusCode, stdError)
+		}
+		echoCtx.Response().Header().Set("x-JsonResponseExtension", "QueryArrayOfOthers")
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(echoCtx), echoCtx)
+			setRequestContext(echoCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		echoCtx.Response().Header().Set("x-AfterOperationRoutesExtension", "QueryArrayOfOthers")
+		echoCtx.JSON(statusCode, value)
+		echoCtx.Response().Header().Set("x-RouteEndRoutesExtension", "QueryArrayOfOthers")
+		return nil
+	})
+	engine.POST(toEchoUrl("/e2e/query-array-of-others-enum"), func(echoCtx echo.Context) error {
+		echoCtx.Response().Header().Set("x-RouteStartRoutesExtension", "QueryArrayOfOthersEnum")
+		authErr := authorize(
+			echoCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(echoCtx, authErr, "QueryArrayOfOthersEnum")
+		}
+		controller := E2EController.E2EController{}
+		controller.InitController(echoCtx)
+		var valuesRawPtr *[]Param31values.NumberEnum = nil
+		valuesRawArray := echoCtx.QueryParams()["values"]
+		isvaluesExists := echoCtx.Request().URL.Query().Has("values")
+		if isvaluesExists {
+			values := make([]Param31values.NumberEnum, 0, len(valuesRawArray))
+			for _, valuesRaw := range valuesRawArray {
+				valuesUint64, conversionErr := strconv.ParseInt(valuesRaw, 10, 16)
+				if conversionErr != nil {
+					// Middlewares onInputValidationMiddlewares section
+					for _, middleware := range onInputValidationMiddlewares {
+						middlewareCtx, continueOperation := middleware(getRequestContext(echoCtx), echoCtx, conversionErr)
+						setRequestContext(echoCtx, middlewareCtx)
+						if !continueOperation {
+							return nil
+						}
+					}
+					// End middlewares onInputValidationMiddlewares section
+					validationError := runtime.Rfc7807Error{
+						Type: http.StatusText(http.StatusUnprocessableEntity),
+						Detail: fmt.Sprintf(
+							"A request was made to operation 'QueryArrayOfOthersEnum' but parameter '%s' was not properly sent - Expected %s but got %s",
+							"values",
+							"[]NumberEnum",
+							reflect.TypeOf(valuesRaw).String(),
+						),
+						Status:     http.StatusUnprocessableEntity,
+						Instance:   "/validation/error/QueryArrayOfOthersEnum",
+						Extensions: map[string]string{"error": conversionErr.Error()},
+					}
+					echoCtx.Response().Header().Set("x-ParamsValidationErrorResponseExtension", "QueryArrayOfOthersEnum")
+					return echoCtx.JSON(http.StatusUnprocessableEntity, validationError)
+				}
+				valuesItem := int16(valuesUint64)
+				switch valuesRaw {
+				case "1", "2":
+					break
+				default:
+					conversionErr := fmt.Errorf("values must be one of \"1, 2\" options only but got \"%s\"", valuesRaw)
+					// Middlewares onInputValidationMiddlewares section
+					for _, middleware := range onInputValidationMiddlewares {
+						middlewareCtx, continueOperation := middleware(getRequestContext(echoCtx), echoCtx, conversionErr)
+						setRequestContext(echoCtx, middlewareCtx)
+						if !continueOperation {
+							return nil
+						}
+					}
+					// End middlewares onInputValidationMiddlewares section
+					validationError := runtime.Rfc7807Error{
+						Type: http.StatusText(http.StatusUnprocessableEntity),
+						Detail: fmt.Sprintf(
+							"A request was made to operation 'QueryArrayOfOthersEnum' but parameter '%s' was not properly sent - Expected %s but got %s",
+							"values",
+							"[]NumberEnum",
+							reflect.TypeOf(valuesRaw).String(),
+						),
+						Status:     http.StatusUnprocessableEntity,
+						Instance:   "/validation/error/QueryArrayOfOthersEnum",
+						Extensions: map[string]string{"error": conversionErr.Error()},
+					}
+					echoCtx.Response().Header().Set("x-ParamsValidationErrorResponseExtension", "QueryArrayOfOthersEnum")
+					return echoCtx.JSON(http.StatusUnprocessableEntity, validationError)
+				}
+				values = append(values, Param31values.NumberEnum(valuesItem))
+			}
+			valuesRawPtr = &values
+		}
+		if validatorErr := validatorInstance.Var(valuesRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(echoCtx), echoCtx, validatorErr)
+				setRequestContext(echoCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "values"
+			validationError := wrapValidatorError(validatorErr, "QueryArrayOfOthersEnum", fieldName)
+			echoCtx.Response().Header().Set("x-RunValidatorExtension", "QueryArrayOfOthersEnum")
+			return echoCtx.JSON(http.StatusUnprocessableEntity, validationError)
+		}
+		var values2RawPtr *[]Param32values2.BoolEnum = nil
+		values2RawArray := echoCtx.QueryParams()["values2"]
+		isvalues2Exists := echoCtx.Request().URL.Query().Has("values2")
+		if isvalues2Exists {
+			values2 := make([]Param32values2.BoolEnum, 0, len(values2RawArray))
+			for _, values2Raw := range values2RawArray {
+				values2Item := values2Raw
+				switch values2Raw {
+				case "false", "true":
+					break
+				default:
+					conversionErr := fmt.Errorf("values2 must be one of \"false, true\" options only but got \"%s\"", values2Raw)
+					// Middlewares onInputValidationMiddlewares section
+					for _, middleware := range onInputValidationMiddlewares {
+						middlewareCtx, continueOperation := middleware(getRequestContext(echoCtx), echoCtx, conversionErr)
+						setRequestContext(echoCtx, middlewareCtx)
+						if !continueOperation {
+							return nil
+						}
+					}
+					// End middlewares onInputValidationMiddlewares section
+					validationError := runtime.Rfc7807Error{
+						Type: http.StatusText(http.StatusUnprocessableEntity),
+						Detail: fmt.Sprintf(
+							"A request was made to operation 'QueryArrayOfOthersEnum' but parameter '%s' was not properly sent - Expected %s but got %s",
+							"values2",
+							"[]BoolEnum",
+							reflect.TypeOf(values2Raw).String(),
+						),
+						Status:     http.StatusUnprocessableEntity,
+						Instance:   "/validation/error/QueryArrayOfOthersEnum",
+						Extensions: map[string]string{"error": conversionErr.Error()},
+					}
+					echoCtx.Response().Header().Set("x-ParamsValidationErrorResponseExtension", "QueryArrayOfOthersEnum")
+					return echoCtx.JSON(http.StatusUnprocessableEntity, validationError)
+				}
+				values2 = append(values2, Param32values2.BoolEnum(values2Item))
+			}
+			values2RawPtr = &values2
+		}
+		if validatorErr := validatorInstance.Var(values2RawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(echoCtx), echoCtx, validatorErr)
+				setRequestContext(echoCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "values2"
+			validationError := wrapValidatorError(validatorErr, "QueryArrayOfOthersEnum", fieldName)
+			echoCtx.Response().Header().Set("x-RunValidatorExtension", "QueryArrayOfOthersEnum")
+			return echoCtx.JSON(http.StatusUnprocessableEntity, validationError)
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(echoCtx), echoCtx)
+			setRequestContext(echoCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		echoCtx.Response().Header().Set("x-BeforeOperationRoutesExtension", "QueryArrayOfOthersEnum")
+		value, opError := controller.QueryArrayOfOthersEnum(*valuesRawPtr, *values2RawPtr)
+		for key, value := range controller.GetHeaders() {
+			echoCtx.Response().Header().Set(key, value)
+		}
+		echoCtx.Response().Header().Set("x-inject", "true")
+		echoCtx.Response().Header().Set("x-ResponseHeadersExtension", "QueryArrayOfOthersEnum")
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(echoCtx), echoCtx, opError)
+				setRequestContext(echoCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'QueryArrayOfOthersEnum'",
+				Status:     statusCode,
+				Instance:   "/controller/error/QueryArrayOfOthersEnum",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			echoCtx.Response().Header().Set("x-JsonErrorResponseExtension", "QueryArrayOfOthersEnum")
+			return echoCtx.JSON(statusCode, stdError)
+		}
+		echoCtx.Response().Header().Set("x-JsonResponseExtension", "QueryArrayOfOthersEnum")
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(echoCtx), echoCtx)
+			setRequestContext(echoCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		echoCtx.Response().Header().Set("x-AfterOperationRoutesExtension", "QueryArrayOfOthersEnum")
+		echoCtx.JSON(statusCode, value)
+		echoCtx.Response().Header().Set("x-RouteEndRoutesExtension", "QueryArrayOfOthersEnum")
 		return nil
 	})
 }

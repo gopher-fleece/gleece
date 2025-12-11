@@ -1,147 +1,171 @@
 if is{{Name}}Exists {
-  {{#if (OrEqual TypeMeta.Name "string" TypeMeta.AliasMetadata.AliasType "string")}}
-  {{ToLowerCamel Name}} := {{ToLowerCamel Name}}Raw
-  {{/if}}
 
-  {{#if (OrEqual TypeMeta.Name "int" TypeMeta.AliasMetadata.AliasType "int")}}
+{{#if (IsArray TypeMeta.Name)}}
+    {{ToLowerCamel Name}} := make({{SlicePrefix TypeMeta.Name}}{{#ifEqual TypeMeta.SymbolKind "Builtin"}}{{else}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/ifEqual}}{{SliceSlice TypeMeta.Name}}, 0, len({{ToLowerCamel Name}}RawArray))
+    for _, {{ToLowerCamel Name}}Raw := range {{ToLowerCamel Name}}RawArray {
+{{/if}}
+
+{{#if (OrEqual (SliceSlice TypeMeta.Name) "string" (SliceSlice TypeMeta.AliasMetadata.AliasType) "string")}}
+    {{ToLowerCamel Name}}{{#if (IsArray TypeMeta.Name)}}Item{{/if}} := {{ToLowerCamel Name}}Raw
+{{/if}}
+
+{{#if (OrEqual (SliceSlice TypeMeta.Name) "int" (SliceSlice TypeMeta.AliasMetadata.AliasType) "int")}}
     {{ToLowerCamel Name}}Uint64, conversionErr := strconv.Atoi({{ToLowerCamel Name}}Raw)
     if conversionErr != nil {
-  	{{> ParamsValidationErrorResponse }}
+    {{> ParamsValidationErrorResponse }}
     }
-    {{ToLowerCamel Name}} := int({{ToLowerCamel Name}}Uint64)
-    
-  {{/if}}
-  
-  {{#if (OrEqual TypeMeta.Name "int8" TypeMeta.AliasMetadata.AliasType "int8")}}
+    {{ToLowerCamel Name}}{{#if (IsArray TypeMeta.Name)}}Item{{/if}} := int({{ToLowerCamel Name}}Uint64)
+{{/if}}
+
+{{#if (OrEqual (SliceSlice TypeMeta.Name) "int8" (SliceSlice TypeMeta.AliasMetadata.AliasType) "int8")}}
     {{ToLowerCamel Name}}Uint64, conversionErr := strconv.ParseInt({{ToLowerCamel Name}}Raw, 10, 8)
     if conversionErr != nil {
-  	{{> ParamsValidationErrorResponse }}
+    {{> ParamsValidationErrorResponse }}
     }
-    {{ToLowerCamel Name}} := int8({{ToLowerCamel Name}}Uint64)
-    
-  {{/if}}
-  
-  {{#if (OrEqual TypeMeta.Name "int16" TypeMeta.AliasMetadata.AliasType "int16")}}
+    {{ToLowerCamel Name}}{{#if (IsArray TypeMeta.Name)}}Item{{/if}} := int8({{ToLowerCamel Name}}Uint64)
+
+{{/if}}
+
+{{#if (OrEqual (SliceSlice TypeMeta.Name) "int16" (SliceSlice TypeMeta.AliasMetadata.AliasType) "int16")}}
     {{ToLowerCamel Name}}Uint64, conversionErr := strconv.ParseInt({{ToLowerCamel Name}}Raw, 10, 16)
     if conversionErr != nil {
-  	{{> ParamsValidationErrorResponse }}
+    {{> ParamsValidationErrorResponse }}
     }
-    {{ToLowerCamel Name}} := int16({{ToLowerCamel Name}}Uint64)
-    
-  {{/if}}
-  
-  {{#if (OrEqual TypeMeta.Name "int32" TypeMeta.AliasMetadata.AliasType "int32")}}
+    {{ToLowerCamel Name}}{{#if (IsArray TypeMeta.Name)}}Item{{/if}} := int16({{ToLowerCamel Name}}Uint64)
+
+{{/if}}
+
+{{#if (OrEqual (SliceSlice TypeMeta.Name) "int32" (SliceSlice TypeMeta.AliasMetadata.AliasType) "int32")}}
     {{ToLowerCamel Name}}Uint64, conversionErr := strconv.ParseInt({{ToLowerCamel Name}}Raw, 10, 32)
     if conversionErr != nil {
-  	{{> ParamsValidationErrorResponse }}
+    {{> ParamsValidationErrorResponse }}
     }
-    {{ToLowerCamel Name}} := int32({{ToLowerCamel Name}}Uint64)
-    
-  {{/if}}
-  
-  {{#if (OrEqual TypeMeta.Name "int64" TypeMeta.AliasMetadata.AliasType "int64")}}
+    {{ToLowerCamel Name}}{{#if (IsArray TypeMeta.Name)}}Item{{/if}} := int32({{ToLowerCamel Name}}Uint64)
+
+{{/if}}
+
+{{#if (OrEqual (SliceSlice TypeMeta.Name) "int64" (SliceSlice TypeMeta.AliasMetadata.AliasType) "int64")}}
     {{ToLowerCamel Name}}Uint64, conversionErr := strconv.ParseInt({{ToLowerCamel Name}}Raw, 10, 64)
     if conversionErr != nil {
-  	{{> ParamsValidationErrorResponse }}
+    {{> ParamsValidationErrorResponse }}
     }
-    {{ToLowerCamel Name}} := int64({{ToLowerCamel Name}}Uint64)
-    
-  {{/if}}
-  
-  {{#if (OrEqual TypeMeta.Name "uint" TypeMeta.AliasMetadata.AliasType "uint")}}
+    {{ToLowerCamel Name}}{{#if (IsArray TypeMeta.Name)}}Item{{/if}} := int64({{ToLowerCamel Name}}Uint64)
+
+{{/if}}
+
+{{#if (OrEqual (SliceSlice TypeMeta.Name) "uint" (SliceSlice TypeMeta.AliasMetadata.AliasType) "uint")}}
     {{ToLowerCamel Name}}Uint64, conversionErr := strconv.ParseUint({{ToLowerCamel Name}}Raw, 10, 32)
     if conversionErr != nil {
-  	{{> ParamsValidationErrorResponse }}
+    {{> ParamsValidationErrorResponse }}
     }
-    {{ToLowerCamel Name}} := uint({{ToLowerCamel Name}}Uint64)
-    
-  {{/if}}
-  
-  {{#if (OrEqual TypeMeta.Name "uint8" TypeMeta.AliasMetadata.AliasType "uint8")}}
+    {{ToLowerCamel Name}}{{#if (IsArray TypeMeta.Name)}}Item{{/if}} := uint({{ToLowerCamel Name}}Uint64)
+
+{{/if}}
+
+{{#if (OrEqual (SliceSlice TypeMeta.Name) "uint8" (SliceSlice TypeMeta.AliasMetadata.AliasType) "uint8")}}
     {{ToLowerCamel Name}}Uint64, conversionErr := strconv.ParseUint({{ToLowerCamel Name}}Raw, 10, 8)
     if conversionErr != nil {
-  	{{> ParamsValidationErrorResponse }}
+    {{> ParamsValidationErrorResponse }}
     }
-    {{ToLowerCamel Name}} := uint8({{ToLowerCamel Name}}Uint64)
-    
-  {{/if}}
-  
-  {{#if (OrEqual TypeMeta.Name "uint16" TypeMeta.AliasMetadata.AliasType "uint16")}}
+    {{ToLowerCamel Name}}{{#if (IsArray TypeMeta.Name)}}Item{{/if}} := uint8({{ToLowerCamel Name}}Uint64)
+
+{{/if}}
+
+{{#if (OrEqual (SliceSlice TypeMeta.Name) "uint16" (SliceSlice TypeMeta.AliasMetadata.AliasType) "uint16")}}
     {{ToLowerCamel Name}}Uint64, conversionErr := strconv.ParseUint({{ToLowerCamel Name}}Raw, 10, 16)
     if conversionErr != nil {
-  	{{> ParamsValidationErrorResponse }}
+    {{> ParamsValidationErrorResponse }}
     }
-    {{ToLowerCamel Name}} := uint16({{ToLowerCamel Name}}Uint64)
-    
-  {{/if}}
-  
-  {{#if (OrEqual TypeMeta.Name "uint32" TypeMeta.AliasMetadata.AliasType "uint32")}}
+    {{ToLowerCamel Name}}{{#if (IsArray TypeMeta.Name)}}Item{{/if}} := uint16({{ToLowerCamel Name}}Uint64)
+
+{{/if}}
+
+{{#if (OrEqual (SliceSlice TypeMeta.Name) "uint32" (SliceSlice TypeMeta.AliasMetadata.AliasType) "uint32")}}
     {{ToLowerCamel Name}}Uint64, conversionErr := strconv.ParseUint({{ToLowerCamel Name}}Raw, 10, 32)
     if conversionErr != nil {
-  	{{> ParamsValidationErrorResponse }}
+    {{> ParamsValidationErrorResponse }}
     }
-    {{ToLowerCamel Name}} := uint32({{ToLowerCamel Name}}Uint64)
-    
-  {{/if}}
-  
-  {{#if (OrEqual TypeMeta.Name "uint64" TypeMeta.AliasMetadata.AliasType "uint64")}}
-    {{ToLowerCamel Name}}, conversionErr := strconv.ParseUint({{ToLowerCamel Name}}Raw, 10, 64)
+    {{ToLowerCamel Name}}{{#if (IsArray TypeMeta.Name)}}Item{{/if}} := uint32({{ToLowerCamel Name}}Uint64)
+
+{{/if}}
+
+{{#if (OrEqual (SliceSlice TypeMeta.Name) "uint64" (SliceSlice TypeMeta.AliasMetadata.AliasType) "uint64")}}
+    {{ToLowerCamel Name}}Uint64, conversionErr := strconv.ParseUint({{ToLowerCamel Name}}Raw, 10, 64)
     if conversionErr != nil {
-  	{{> ParamsValidationErrorResponse }}
+    {{> ParamsValidationErrorResponse }}
     }
-    
-  {{/if}}
-  
-  {{#if (OrEqual TypeMeta.Name "bool" TypeMeta.AliasMetadata.AliasType "bool")}}
-    {{ToLowerCamel Name}}, conversionErr := strconv.ParseBool({{ToLowerCamel Name}}Raw)
+    {{ToLowerCamel Name}}{{#if (IsArray TypeMeta.Name)}}Item{{/if}} := {{ToLowerCamel Name}}Uint64
+
+{{/if}}
+
+{{#if (OrEqual (SliceSlice TypeMeta.Name) "bool" (SliceSlice TypeMeta.AliasMetadata.AliasType) "bool")}}
+    {{ToLowerCamel Name}}Bool, conversionErr := strconv.ParseBool({{ToLowerCamel Name}}Raw)
     if conversionErr != nil {
-  	{{> ParamsValidationErrorResponse }}
+    {{> ParamsValidationErrorResponse }}
     }
-    
-  {{/if}}
-  
-  {{#if (OrEqual TypeMeta.Name "float32" TypeMeta.AliasMetadata.AliasType "float32")}}
+    {{ToLowerCamel Name}}{{#if (IsArray TypeMeta.Name)}}Item{{/if}} := {{ToLowerCamel Name}}Bool
+
+{{/if}}
+
+{{#if (OrEqual (SliceSlice TypeMeta.Name) "float32" (SliceSlice TypeMeta.AliasMetadata.AliasType) "float32")}}
     {{ToLowerCamel Name}}Float64, conversionErr := strconv.ParseFloat({{ToLowerCamel Name}}Raw, 32)
     if conversionErr != nil {
-  	{{> ParamsValidationErrorResponse }}
+    {{> ParamsValidationErrorResponse }}
     }
-    {{ToLowerCamel Name}} := float32({{ToLowerCamel Name}}Float64)
-    
-  {{/if}}
-  
-  {{#if (OrEqual TypeMeta.Name "float64" TypeMeta.AliasMetadata.AliasType "float64")}}
-    {{ToLowerCamel Name}}, conversionErr := strconv.ParseFloat({{ToLowerCamel Name}}Raw, 64)
-    if conversionErr != nil {
-  	{{> ParamsValidationErrorResponse }}
-    }
-    
-  {{/if}}
+    {{ToLowerCamel Name}}{{#if (IsArray TypeMeta.Name)}}Item{{/if}} := float32({{ToLowerCamel Name}}Float64)
 
-  {{!-- Case of Enum with validation enabled --}}
-  {{#ifEqual TypeMeta.SymbolKind "Enum"}}
-      {{#if ExperimentalConfig.ValidateTopLevelOnlyEnum}}
-          switch {{ToLowerCamel Name}}Raw {
-          case {{#each TypeMeta.AliasMetadata.Values}}"{{this}}"{{#unless @last}}, {{/unless}}{{/each}}:
-          {{ToLowerCamel Name}}Var := Param{{{UniqueImportSerial}}}{{{Name}}}.{{{TypeMeta.Name}}}({{ToLowerCamel Name}})
-          {{ToLowerCamel Name}}RawPtr = &{{ToLowerCamel Name}}Var
-          default:
-          conversionErr := fmt.Errorf("{{ToLowerCamel Name}} must be one of \"{{#each TypeMeta.AliasMetadata.Values}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}\" options only but got \"%s\"", {{ToLowerCamel Name}}Raw)
-          {{> ParamsValidationErrorResponse }}
-          }
-      {{else}}
-      {{!-- Enum without validation --}}
-          {{ToLowerCamel Name}}Var := {{SlicePrefix TypeMeta.Name}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{SliceSlice TypeMeta.Name}}({{ToLowerCamel Name}})
-          {{ToLowerCamel Name}}RawPtr = &{{ToLowerCamel Name}}Var
-      {{/if}}
-  {{else}}
-  {{!-- Case of Alias --}}
-      {{#ifEqual TypeMeta.SymbolKind "Alias"}}
-          {{ToLowerCamel Name}}Var := {{SlicePrefix TypeMeta.Name}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{SliceSlice TypeMeta.Name}}({{ToLowerCamel Name}})
-          {{ToLowerCamel Name}}RawPtr = &{{ToLowerCamel Name}}Var
-      {{else}}
-      {{!-- Default case for primitive types --}}
-          {{ToLowerCamel Name}}RawPtr = &{{ToLowerCamel Name}}
-      {{/ifEqual}}
-  {{/ifEqual}}
+{{/if}}
+
+{{#if (OrEqual (SliceSlice TypeMeta.Name) "float64" (SliceSlice TypeMeta.AliasMetadata.AliasType) "float64")}}
+    {{ToLowerCamel Name}}Float64, conversionErr := strconv.ParseFloat({{ToLowerCamel Name}}Raw, 64)
+    if conversionErr != nil {
+    {{> ParamsValidationErrorResponse }}
+    }
+    {{ToLowerCamel Name}}{{#if (IsArray TypeMeta.Name)}}Item{{/if}} := float64({{ToLowerCamel Name}}Float64)
+
+{{/if}}
+
+{{#ifEqual TypeMeta.SymbolKind "Enum"}}
+    {{#if (And ExperimentalConfig.ValidateTopLevelOnlyEnum TypeMeta.AliasMetadata.Values)}}
+        switch {{ToLowerCamel Name}}Raw {
+        case {{#each TypeMeta.AliasMetadata.Values}}"{{this}}"{{#unless @last}}, {{/unless}}{{/each}}:
+        {{#if (IsArray TypeMeta.Name)}}
+            break
+        {{else}}
+            {{ToLowerCamel Name}}Var := Param{{{UniqueImportSerial}}}{{{Name}}}.{{SliceSlice TypeMeta.Name}}({{ToLowerCamel Name}})
+            {{ToLowerCamel Name}}RawPtr = &{{ToLowerCamel Name}}Var
+        {{/if}}
+        default:
+        conversionErr := fmt.Errorf("{{ToLowerCamel Name}} must be one of \"{{#each TypeMeta.AliasMetadata.Values}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}\" options only but got \"%s\"", {{ToLowerCamel Name}}Raw)
+        {{> ParamsValidationErrorResponse }}
+        }
+    {{/if}}
+{{/ifEqual}}
+
+{{#if (IsArray TypeMeta.Name)}}
+    {{ToLowerCamel Name}} = append({{ToLowerCamel Name}}, {{#if TypeMeta.PkgPath}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{SliceSlice TypeMeta.Name}}({{ToLowerCamel Name}}Item))
+    }
+    {{ToLowerCamel Name}}RawPtr = &{{ToLowerCamel Name}}
+{{/if}}
+
+{{!-- Case of Enum with validation enabled --}}
+{{#ifEqual TypeMeta.SymbolKind "Enum"}}
+    {{#if (And ExperimentalConfig.ValidateTopLevelOnlyEnum TypeMeta.AliasMetadata.Values)}}
+    {{!--The ValidateTopLevelOnlyEnum section alredy put the nessesary vars --}}
+    {{else}}
+    {{!-- Enum without validation --}}
+        {{ToLowerCamel Name}}Var := {{SlicePrefix TypeMeta.Name}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{SliceSlice TypeMeta.Name}}({{ToLowerCamel Name}})
+        {{ToLowerCamel Name}}RawPtr = &{{ToLowerCamel Name}}Var
+    {{/if}}
+{{else}}
+{{!-- Case of Alias --}}
+    {{#ifEqual TypeMeta.SymbolKind "Alias"}}
+        {{ToLowerCamel Name}}Var := {{SlicePrefix TypeMeta.Name}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{SliceSlice TypeMeta.Name}}({{ToLowerCamel Name}})
+        {{ToLowerCamel Name}}RawPtr = &{{ToLowerCamel Name}}Var
+    {{else}}
+    {{!-- Default case for primitive types --}}
+        {{ToLowerCamel Name}}RawPtr = &{{ToLowerCamel Name}}
+    {{/ifEqual}}
+{{/ifEqual}}
 
 }

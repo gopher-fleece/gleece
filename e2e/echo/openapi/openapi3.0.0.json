@@ -18,6 +18,10 @@
         "title": "AliasOfString",
         "type": "string"
       },
+      "AssignedAliasOfInt": {
+        "title": "AssignedAliasOfInt",
+        "type": "integer"
+      },
       "BlaBla": {
         "properties": {
           "listOfLength": {
@@ -63,6 +67,14 @@
         },
         "title": "BodyResponse",
         "type": "object"
+      },
+      "BoolEnum": {
+        "enum": [
+          "false",
+          "true"
+        ],
+        "title": "BoolEnum",
+        "type": "string"
       },
       "CustomError": {
         "properties": {
@@ -174,6 +186,30 @@
         "title": "LengthUnits",
         "type": "string"
       },
+      "MyaliasInt": {
+        "title": "MyaliasInt",
+        "type": "integer"
+      },
+      "MyaliasString": {
+        "title": "MyaliasString",
+        "type": "string"
+      },
+      "Myemamium": {
+        "enum": [
+          "one",
+          "two"
+        ],
+        "title": "Myemamium",
+        "type": "string"
+      },
+      "NumberEnum": {
+        "enum": [
+          "1",
+          "2"
+        ],
+        "title": "NumberEnum",
+        "type": "integer"
+      },
       "NumberEnumeration": {
         "description": "Test enum with = flavor too",
         "enum": [
@@ -185,6 +221,9 @@
       },
       "ObjectWithAliasOfString": {
         "properties": {
+          "assignedInt": {
+            "$ref": "#/components/schemas/AssignedAliasOfInt"
+          },
           "number": {
             "$ref": "#/components/schemas/AliasOfInt"
           },
@@ -576,7 +615,8 @@
                 "$ref": "#/components/schemas/ObjectWithAliasOfString"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -695,6 +735,92 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Rfc7807Error"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/body-array-of-enum-string": {
+      "post": {
+        "operationId": "BodyArrayOfStringEnum",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "$ref": "#/components/schemas/Myemamium"
+                },
+                "type": "array"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/body-array-of-string": {
+      "post": {
+        "operationId": "BodyArrayOfString",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
                 }
               }
             },
@@ -2013,6 +2139,233 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Rfc7807Error"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/query-array-of-enum": {
+      "post": {
+        "operationId": "QueryArrayOfEnum",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "values",
+            "required": true,
+            "schema": {
+              "items": {
+                "$ref": "#/components/schemas/Myemamium"
+              },
+              "type": "array"
+            }
+          },
+          {
+            "in": "query",
+            "name": "values2",
+            "required": true,
+            "schema": {
+              "items": {
+                "$ref": "#/components/schemas/MyaliasString"
+              },
+              "type": "array"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/query-array-of-others": {
+      "post": {
+        "operationId": "QueryArrayOfOthers",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "values",
+            "required": true,
+            "schema": {
+              "items": {
+                "type": "integer"
+              },
+              "type": "array"
+            }
+          },
+          {
+            "in": "query",
+            "name": "values2",
+            "required": true,
+            "schema": {
+              "items": {
+                "$ref": "#/components/schemas/MyaliasInt"
+              },
+              "type": "array"
+            }
+          },
+          {
+            "in": "query",
+            "name": "values3",
+            "required": true,
+            "schema": {
+              "items": {
+                "type": "boolean"
+              },
+              "type": "array"
+            }
+          },
+          {
+            "in": "query",
+            "name": "values4",
+            "required": true,
+            "schema": {
+              "items": {
+                "type": "integer"
+              },
+              "type": "array"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/query-array-of-others-enum": {
+      "post": {
+        "operationId": "QueryArrayOfOthersEnum",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "values",
+            "required": true,
+            "schema": {
+              "items": {
+                "$ref": "#/components/schemas/NumberEnum"
+              },
+              "type": "array"
+            }
+          },
+          {
+            "in": "query",
+            "name": "values2",
+            "required": true,
+            "schema": {
+              "items": {
+                "$ref": "#/components/schemas/BoolEnum"
+              },
+              "type": "array"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
+    "/e2e/query-array-of-string": {
+      "post": {
+        "operationId": "QueryArrayOfString",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "values",
+            "required": true,
+            "schema": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
                 }
               }
             },

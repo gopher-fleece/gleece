@@ -33,6 +33,15 @@ func ChiRouterTest(routerTest common.RouterTest) common.RouterTestResult {
 		path += "?" + queryParams.Encode()
 	}
 
+	if routerTest.QueryArray != nil {
+		for k, v := range routerTest.QueryArray {
+			for _, vItem := range v {
+				queryParams.Add(k, vItem)
+			}
+		}
+		path += "?" + queryParams.Encode()
+	}
+
 	var req *http.Request
 
 	// Handle form data

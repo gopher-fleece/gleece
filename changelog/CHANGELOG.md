@@ -135,3 +135,5 @@ For more information, please see the [architecture](https://docs.gleece.dev/docs
 * Fixed an issue that could cause type information to be emitted with incorrect `PkgPath`
 
 * Fix custom error causing OpenAPI 3.1 generation to fail
+
+* Fix Query parameter with array of primitive types not being generated correctly

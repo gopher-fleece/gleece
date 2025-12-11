@@ -32,6 +32,17 @@ func FiberRouterTest(routerTest common.RouterTest) common.RouterTestResult {
 		}
 	}
 
+	if routerTest.QueryArray != nil {
+		for k, v := range routerTest.QueryArray {
+			for _, vItem := range v {
+				queryParams.Add(k, vItem)
+			}
+		}
+		if encoded := queryParams.Encode(); encoded != "" {
+			path += "?" + encoded
+		}
+	}
+
 	var req *http.Request
 
 	// Handle form data
