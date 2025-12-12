@@ -711,4 +711,214 @@ var _ = Describe("swagen31", func() {
 			Expect(baseSchema.Required).To(ContainElement("required_base_field"))
 		})
 	})
+
+	Describe("GenerateAliasSpec", func() {
+		It("should generate a string alias specification correctly", func() {
+			alias := definitions.NakedAliasMetadata{
+				Name:        "UserID",
+				Description: "A unique user identifier",
+				Type:        "string",
+				PkgPath:     "example.com/types",
+			}
+
+			generateAliasSpec(doc, alias)
+
+			schemaRef, found := doc.Components.Schemas.Get("UserID")
+			Expect(found).To(BeTrue())
+			schema := schemaRef.Schema()
+			Expect(schema.Title).To(Equal("UserID"))
+			Expect(schema.Description).To(Equal("A unique user identifier"))
+			Expect(schema.Type).To(Equal([]string{"string"}))
+			Expect(*schema.Deprecated).To(BeFalse())
+		})
+
+		It("should generate an integer alias specification correctly", func() {
+			alias := definitions.NakedAliasMetadata{
+				Name:        "Count",
+				Description: "A count of items",
+				Type:        "int",
+				PkgPath:     "example.com/types",
+			}
+
+			generateAliasSpec(doc, alias)
+
+			schemaRef, found := doc.Components.Schemas.Get("Count")
+			Expect(found).To(BeTrue())
+			schema := schemaRef.Schema()
+			Expect(schema.Title).To(Equal("Count"))
+			Expect(schema.Description).To(Equal("A count of items"))
+			Expect(schema.Type).To(Equal([]string{"integer"}))
+		})
+
+		It("should set deprecation flag correctly for alias", func() {
+			deprecationInfo := "Use NewID instead"
+			alias := definitions.NakedAliasMetadata{
+				Name:        "OldID",
+				Description: "A deprecated identifier",
+				Type:        "string",
+				PkgPath:     "example.com/types",
+				Deprecation: definitions.DeprecationOptions{
+					Deprecated:  true,
+					Description: deprecationInfo,
+				},
+			}
+
+			generateAliasSpec(doc, alias)
+
+			schemaRef, found := doc.Components.Schemas.Get("OldID")
+			Expect(found).To(BeTrue())
+			schema := schemaRef.Schema()
+			Expect(*schema.Deprecated).To(BeTrue())
+		})
+
+		It("should generate a float alias specification correctly", func() {
+			alias := definitions.NakedAliasMetadata{
+				Name:        "Price",
+				Description: "A price value",
+				Type:        "float64",
+				PkgPath:     "example.com/types",
+			}
+
+			generateAliasSpec(doc, alias)
+
+			schemaRef, found := doc.Components.Schemas.Get("Price")
+			Expect(found).To(BeTrue())
+			schema := schemaRef.Schema()
+			Expect(schema.Title).To(Equal("Price"))
+			Expect(schema.Description).To(Equal("A price value"))
+			Expect(schema.Type).To(Equal([]string{"number"}))
+		})
+
+		It("should generate a boolean alias specification correctly", func() {
+			alias := definitions.NakedAliasMetadata{
+				Name:        "IsActive",
+				Description: "Active status flag",
+				Type:        "bool",
+				PkgPath:     "example.com/types",
+			}
+
+			generateAliasSpec(doc, alias)
+
+			schemaRef, found := doc.Components.Schemas.Get("IsActive")
+			Expect(found).To(BeTrue())
+			schema := schemaRef.Schema()
+			Expect(schema.Title).To(Equal("IsActive"))
+			Expect(schema.Description).To(Equal("Active status flag"))
+			Expect(schema.Type).To(Equal([]string{"boolean"}))
+		})
+
+		It("should handle alias with empty description", func() {
+			alias := definitions.NakedAliasMetadata{
+				Name:    "EmptyDescAlias",
+				Type:    "string",
+				PkgPath: "example.com/types",
+			}
+
+			generateAliasSpec(doc, alias)
+
+			schemaRef, found := doc.Components.Schemas.Get("EmptyDescAlias")
+			Expect(found).To(BeTrue())
+			schema := schemaRef.Schema()
+			Expect(schema.Title).To(Equal("EmptyDescAlias"))
+			Expect(schema.Description).To(Equal(""))
+		})
+	})
+
+	Describe("GenerateModelsSpec with Aliases", func() {
+		It("should generate specifications for models with aliases", func() {
+			models := &definitions.Models{
+				Structs: []definitions.StructMetadata{
+					{
+						Name:        "User",
+						Description: "A user model",
+						Fields: []definitions.FieldMetadata{
+							{
+								Name:        "ID",
+								Type:        "UserID",
+								Description: "User identifier",
+								Tag:         `json:"id"`,
+							},
+							{
+								Name:        "Name",
+								Type:        "string",
+								Description: "User name",
+								Tag:         `json:"name"`,
+							},
+						},
+					},
+				},
+				Enums: []definitions.EnumMetadata{
+					{
+						Name:        "Role",
+						Description: "User role",
+						Type:        "string",
+						Values:      []string{"admin", "user"},
+					},
+				},
+				Aliases: []definitions.NakedAliasMetadata{
+					{
+						Name:        "UserID",
+						Description: "A unique user identifier",
+						Type:        "string",
+						PkgPath:     "example.com/types",
+					},
+					{
+						Name:        "Count",
+						Description: "A count value",
+						Type:        "int",
+						PkgPath:     "example.com/types",
+					},
+				},
+			}
+
+			err := GenerateModelsSpec(doc, models)
+			Expect(err).To(BeNil())
+
+			// Verify struct was generated
+			userSchemaRef, found := doc.Components.Schemas.Get("User")
+			Expect(found).To(BeTrue())
+			Expect(userSchemaRef.Schema().Title).To(Equal("User"))
+
+			// Verify enum was generated
+			roleSchemaRef, found := doc.Components.Schemas.Get("Role")
+			Expect(found).To(BeTrue())
+			Expect(roleSchemaRef.Schema().Title).To(Equal("Role"))
+
+			// Verify aliases were generated
+			userIDSchemaRef, found := doc.Components.Schemas.Get("UserID")
+			Expect(found).To(BeTrue())
+			userIDSchema := userIDSchemaRef.Schema()
+			Expect(userIDSchema.Title).To(Equal("UserID"))
+			Expect(userIDSchema.Description).To(Equal("A unique user identifier"))
+			Expect(userIDSchema.Type).To(Equal([]string{"string"}))
+
+			countSchemaRef, found := doc.Components.Schemas.Get("Count")
+			Expect(found).To(BeTrue())
+			countSchema := countSchemaRef.Schema()
+			Expect(countSchema.Title).To(Equal("Count"))
+			Expect(countSchema.Description).To(Equal("A count value"))
+			Expect(countSchema.Type).To(Equal([]string{"integer"}))
+		})
+
+		It("should handle empty aliases list", func() {
+			models := &definitions.Models{
+				Structs: []definitions.StructMetadata{
+					{
+						Name:        "Simple",
+						Description: "Simple model",
+						Fields:      []definitions.FieldMetadata{},
+					},
+				},
+				Enums:   []definitions.EnumMetadata{},
+				Aliases: []definitions.NakedAliasMetadata{},
+			}
+
+			err := GenerateModelsSpec(doc, models)
+			Expect(err).To(BeNil())
+
+			simpleSchemaRef, found := doc.Components.Schemas.Get("Simple")
+			Expect(found).To(BeTrue())
+			Expect(simpleSchemaRef.Schema().Title).To(Equal("Simple"))
+		})
+	})
 })

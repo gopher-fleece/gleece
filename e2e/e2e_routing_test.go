@@ -387,6 +387,48 @@ var _ = Describe("E2E Routing Spec", func() {
 		})
 	})
 
+	It("Should return status code 200 for valid form extra", func() {
+		RunRouterTest(common.RouterTest{
+			Name:                "Should return status code 200 for valid form extra",
+			ExpectedStatus:      200,
+			ExpectedBodyContain: "99|second|100",
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/form-extra",
+			Method:              "POST",
+			Form:                map[string]string{"item1": "99", "item2": "second"},
+			Headers:             map[string]string{},
+			Query:               map[string]string{"item3": "100"},
+		})
+	})
+
+	It("Should return status code 422 for not matching form extra validation tag", func() {
+		RunRouterTest(common.RouterTest{
+			Name:                "Should return status code 422 for not matching form extra validation tag",
+			ExpectedStatus:      422,
+			ExpectedBodyContain: "Field 'item1' failed validation with tag 'gte'",
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/form-extra",
+			Method:              "POST",
+			Form:                map[string]string{"item1": "70", "item2": "second"},
+			Headers:             map[string]string{},
+			Query:               map[string]string{"item3": "100"},
+		})
+	})
+
+	It("Should return status code 422 for form required tag", func() {
+		RunRouterTest(common.RouterTest{
+			Name:                "Should return status code 422 for form required tag",
+			ExpectedStatus:      422,
+			ExpectedBodyContain: "Field 'item2' failed validation with tag 'required'",
+			ExpendedHeaders:     nil,
+			Path:                "/e2e/form-extra",
+			Method:              "POST",
+			Form:                map[string]string{"item1": "99"},
+			Headers:             map[string]string{},
+			Query:               map[string]string{"item3": "100"},
+		})
+	})
+
 	It("Should return status code 200 for primitive parameters", func() {
 		RunRouterTest(common.RouterTest{
 			Name:                "Should return status code 200 for primitive parameters",

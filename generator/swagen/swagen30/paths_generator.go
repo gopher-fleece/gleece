@@ -160,10 +160,11 @@ func createRequestBodyParam(openapi *openapi3.T, param definitions.FuncParam) *o
 func createRequestFormParam(openapi *openapi3.T, param definitions.FuncParam, operation *openapi3.Operation) {
 	// Form parameters are always passed in the body, so we need to create a request body if it doesn't exist
 	if operation.RequestBody == nil {
-		// The body will be a object with the form parameters as properties
+		// The body will be an object with the form parameters as properties
 		schemaRef := ToOpenApiSchemaRef("object")
 		operation.RequestBody = &openapi3.RequestBodyRef{
 			Value: &openapi3.RequestBody{
+				Description: "", // Currently we dot not support annotating description for a form body itself
 				Content: openapi3.Content{
 					string(definitions.ContentTypeFormURLEncoded): &openapi3.MediaType{
 						Schema: schemaRef,
@@ -179,6 +180,10 @@ func createRequestFormParam(openapi *openapi3.T, param definitions.FuncParam, op
 	propertySchemaRef := InterfaceToSchemaRef(openapi, param.TypeMeta.Name)
 	// Add the validation to the schema
 	BuildSchemaValidation(propertySchemaRef, param.Validator, param.TypeMeta.Name)
+	// Set the description on the property schema itself
+	if propertySchemaRef.Value != nil {
+		propertySchemaRef.Value.Description = param.Description
+	}
 	// Add the form parameter to the schema
 	formSchema.Value.Properties[param.NameInSchema] = propertySchemaRef
 	// Add the form parameter to the required list if it is required

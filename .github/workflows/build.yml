@@ -40,7 +40,7 @@ jobs:
         if: ${{ !matrix.run_on_main || github.ref == 'refs/heads/main' }}
         run: |
           go mod download
-          go install github.com/onsi/ginkgo/v2/ginkgo@v2.22.2
+          go install github.com/onsi/ginkgo/v2/ginkgo@v2.27.2
           go install github.com/mattn/goveralls@latest
 
       - name: 4️⃣ Run tests 🧪

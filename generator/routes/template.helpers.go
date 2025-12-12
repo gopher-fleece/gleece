@@ -84,8 +84,12 @@ func registerHandlebarsHelpers() {
 				// The CTX param is not come from the http "input" and should not be converted from anything
 				continue
 			}
-			if param.TypeMeta.Name != "string" && param.TypeMeta.PkgPath != "" && param.TypeMeta.SymbolKind != common.SymKindEnum {
+			if param.TypeMeta.Name != "string" && param.TypeMeta.PkgPath != "" && param.TypeMeta.SymbolKind != common.SymKindEnum && param.TypeMeta.SymbolKind != common.SymKindAlias {
 				// Currently, only 'string' parameters don't undergo any validation
+				return options.Fn()
+			}
+			if strings.HasPrefix(param.TypeMeta.Name, "[]") && param.PassedIn == definitions.PassedInBody {
+				// Body of array needs conversion
 				return options.Fn()
 			}
 		}
@@ -118,6 +122,66 @@ func registerHandlebarsHelpers() {
 		isEqual1 := (val1 == comp1)
 		isEqual2 := (val2 == comp2)
 		return isEqual1 || isEqual2
+	})
+
+	raymond.RegisterHelper("And", func(val1, val2 any) bool {
+		// Helper function to check if a value is falsy
+		isFalsy := func(val any) bool {
+			if val == nil {
+				return true
+			}
+
+			switch v := val.(type) {
+			case bool:
+				return !v
+			case string:
+				return v == ""
+			case int, int8, int16, int32, int64:
+				return v == 0
+			case uint, uint8, uint16, uint32, uint64:
+				return v == 0
+			case float32, float64:
+				return v == 0
+			case []any:
+				return len(v) == 0
+			case []string:
+				return len(v) == 0
+			case []int:
+				return len(v) == 0
+			case []int8:
+				return len(v) == 0
+			case []int16:
+				return len(v) == 0
+			case []int32:
+				return len(v) == 0
+			case []int64:
+				return len(v) == 0
+			case []uint:
+				return len(v) == 0
+			case []uint8:
+				return len(v) == 0
+			case []uint16:
+				return len(v) == 0
+			case []uint32:
+				return len(v) == 0
+			case []uint64:
+				return len(v) == 0
+			case []float32:
+				return len(v) == 0
+			case []float64:
+				return len(v) == 0
+			case []bool:
+				return len(v) == 0
+			}
+
+			return false
+		}
+
+		return !isFalsy(val1) && !isFalsy(val2)
+	})
+
+	raymond.RegisterHelper("IsArray", func(value string) bool {
+		return strings.HasPrefix(value, "[]")
 	})
 
 	raymond.RegisterHelper("CollapseMultiline", func(options *raymond.Options) string {

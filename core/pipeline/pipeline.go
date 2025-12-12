@@ -33,43 +33,40 @@ type GleecePipeline struct {
 	arbitrationProvider providers.ArbitrationProvider
 	syncedProvider      providers.SyncedProvider
 
-	symGraph    symboldg.SymbolGraphBuilder
-	rootVisitor *visitors.ControllerVisitor
+	symGraph            symboldg.SymbolGraphBuilder
+	visitorOrchestrator *visitors.VisitorOrchestrator
 }
 
 func NewGleecePipeline(gleeceConfig *definitions.GleeceConfig) (GleecePipeline, error) {
-	var globs []string
-	if len(gleeceConfig.CommonConfig.ControllerGlobs) > 0 {
-		globs = gleeceConfig.CommonConfig.ControllerGlobs
-	} else {
-		globs = []string{"./*.go", "./**/*.go"}
-	}
-
-	arbProvider, err := providers.NewArbitrationProvider(globs)
+	arbProvider, err := providers.NewArbitrationProviderFromGleeceConfig(gleeceConfig)
 	if err != nil {
 		return GleecePipeline{}, err
 	}
 
 	metaCache := caching.NewMetadataCache()
 	symGraph := symboldg.NewSymbolGraph()
+	syncedProvider := providers.NewSyncedProvider()
 
-	visitor, err := visitors.NewControllerVisitor(&visitors.VisitContext{
+	visitCtx := &visitors.VisitContext{
 		GleeceConfig:        gleeceConfig,
 		ArbitrationProvider: arbProvider,
 		MetadataCache:       metaCache,
-		GraphBuilder:        &symGraph,
-	})
+		Graph:               &symGraph,
+		SyncedProvider:      &syncedProvider,
+	}
+
+	visitorOrchestrator, err := visitors.NewVisitorOrchestrator(visitCtx)
 	if err != nil {
-		return GleecePipeline{}, err
+		return GleecePipeline{}, fmt.Errorf("the GleecePipeline could not construct an instance of VisitorOrchestrator - %v", err)
 	}
 
 	return GleecePipeline{
-		rootVisitor:         visitor,
+		visitorOrchestrator: visitorOrchestrator,
 		symGraph:            &symGraph,
 		gleeceConfig:        gleeceConfig,
 		metadataCache:       metaCache,
 		arbitrationProvider: *arbProvider,
-		syncedProvider:      providers.NewSyncedProvider(),
+		syncedProvider:      syncedProvider,
 	}, nil
 }
 
@@ -107,13 +104,17 @@ func (p *GleecePipeline) Run() (GleeceFlattenedMetadata, error) {
 }
 
 func (p *GleecePipeline) GenerateGraph() error {
-	for _, file := range p.rootVisitor.GetAllSourceFiles() {
-		ast.Walk(p.rootVisitor, file)
+	for _, file := range p.arbitrationProvider.GetAllSourceFiles() {
+		ast.Walk(p.visitorOrchestrator, file)
 	}
 
-	lastErr := p.rootVisitor.GetLastError()
+	lastErr := p.visitorOrchestrator.GetLastError()
 	if lastErr != nil {
-		logger.Error("Visitor encountered at-least one error. Last error:\n%v\n\t%s", lastErr, p.rootVisitor.GetFormattedDiagnosticStack())
+		logger.Error(
+			"Visitor encountered at-least one error. Last error:\n%v\n\t%s",
+			lastErr,
+			p.visitorOrchestrator.GetFormattedDiagnosticStack(),
+		)
 		return lastErr
 	}
 
@@ -127,16 +128,22 @@ func (p *GleecePipeline) GenerateIntermediate() (GleeceFlattenedMetadata, error)
 		return GleeceFlattenedMetadata{}, err
 	}
 
+	models, err := p.getModels()
+	if err != nil {
+		logger.Error("Pipeline failed to obtain models list - %w", err)
+		return GleeceFlattenedMetadata{}, err
+	}
+
 	return GleeceFlattenedMetadata{
 		Imports:           p.getImports(controllers),
 		Flat:              controllers,
-		Models:            p.getModels(),
-		PlainErrorPresent: p.symGraph.IsSpecialPresent(symboldg.SpecialTypeError),
+		Models:            models,
+		PlainErrorPresent: p.symGraph.IsSpecialPresent(common.SpecialTypeError),
 	}, nil
 }
 
 func (p *GleecePipeline) getReducedControllers() ([]definitions.ControllerMetadata, error) {
-	controllers, err := p.reduceControllers(p.rootVisitor.GetControllers())
+	controllers, err := p.reduceControllers(p.getControllers())
 	if err != nil {
 		logger.Error("Failed to reduce controller tree to flat form: %w", err)
 		return []definitions.ControllerMetadata{}, err
@@ -213,28 +220,27 @@ func (p *GleecePipeline) appendRouteImports(imports map[string]MapSet.Set[string
 
 // Validate validates the metadata created by the graph generation phase
 func (p *GleecePipeline) Validate() ([]diagnostics.EntityDiagnostic, error) {
-	allDiags := []diagnostics.EntityDiagnostic{}
+	validator := validators.NewApiValidator(
+		p.gleeceConfig,
+		p.arbitrationProvider.Pkg(),
+		p.getControllers(),
+	)
 
-	for _, ctrl := range p.rootVisitor.GetControllers() {
-		validator := validators.NewControllerValidator(p.gleeceConfig, p.arbitrationProvider.Pkg(), &ctrl)
-		ctrlDiag, err := validator.Validate()
-		if err != nil {
-			return allDiags, fmt.Errorf("failed to validate controller '%s' due to an error - %w", ctrl.Struct.Name, err)
-		}
+	return validator.Validate()
+}
 
-		if !ctrlDiag.Empty() {
-			allDiags = append(allDiags, ctrlDiag)
-		}
-	}
-
-	return allDiags, nil
+func (p *GleecePipeline) getControllers() []metadata.ControllerMeta {
+	controllerNodes := p.symGraph.FindByKind(common.SymKindController)
+	return linq.Map(controllerNodes, func(node *symboldg.SymbolNode) metadata.ControllerMeta {
+		return node.Data.(metadata.ControllerMeta)
+	})
 }
 
 func (p *GleecePipeline) reduceControllers(controllers []metadata.ControllerMeta) ([]definitions.ControllerMetadata, error) {
 	var reducedControllers []definitions.ControllerMetadata
 
 	for _, controller := range controllers {
-		reduced, err := controller.Reduce(p.gleeceConfig, p.metadataCache, &p.syncedProvider)
+		reduced, err := controller.Reduce(p.getReductionContext())
 		if err != nil {
 			return []definitions.ControllerMetadata{}, err
 		}
@@ -244,16 +250,27 @@ func (p *GleecePipeline) reduceControllers(controllers []metadata.ControllerMeta
 	return reducedControllers, nil
 }
 
-func (p *GleecePipeline) getModels() definitions.Models {
-	structs := p.symGraph.Structs()
-	reducedStructs := linq.Map(structs, func(s metadata.StructMeta) definitions.StructMetadata {
-		return s.Reduce()
-	})
+func (p *GleecePipeline) getModels() (definitions.Models, error) {
+	ctx := p.getReductionContext()
 
-	enums := p.symGraph.Enums()
-	reducedEnums := linq.Map(enums, func(e metadata.EnumMeta) definitions.EnumMetadata {
-		return e.Reduce()
-	})
+	reducedStructs, err := symboldg.ComposeStructs(p.getReductionContext(), p.Graph(), nil)
+	if err != nil {
+		return definitions.Models{}, err
+	}
+
+	reducedAliases, err := symboldg.ComposeAliases(p.getReductionContext(), p.Graph())
+	if err != nil {
+		return definitions.Models{}, err
+	}
+
+	reducedEnums := []definitions.EnumMetadata{}
+	for _, enumEntity := range p.symGraph.Enums() {
+		reduced, err := enumEntity.Reduce(ctx)
+		if err != nil {
+			return definitions.Models{}, fmt.Errorf("failed during reduction of enum '%s' - %v", enumEntity.Name, err)
+		}
+		reducedEnums = append(reducedEnums, reduced)
+	}
 
 	slices.SortFunc(reducedStructs, func(a, b definitions.StructMetadata) int {
 		return strings.Compare(a.Name, b.Name)
@@ -266,5 +283,14 @@ func (p *GleecePipeline) getModels() definitions.Models {
 	return definitions.Models{
 		Structs: reducedStructs,
 		Enums:   reducedEnums,
+		Aliases: reducedAliases,
+	}, nil
+}
+
+func (p *GleecePipeline) getReductionContext() metadata.ReductionContext {
+	return metadata.ReductionContext{
+		GleeceConfig:   p.gleeceConfig,
+		MetaCache:      p.metadataCache,
+		SyncedProvider: &p.syncedProvider,
 	}
 }

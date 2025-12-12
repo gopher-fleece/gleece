@@ -8,9 +8,9 @@
 {{/equal}}
 
 {{#equal PassedIn "Query"}}
-	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.PkgPath}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
+    var {{ToLowerCamel Name}}RawPtr *{{SlicePrefix TypeMeta.Name}}{{#if TypeMeta.PkgPath}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{SliceSlice TypeMeta.Name}} = nil
 
-	{{ToLowerCamel Name}}Raw := req.URL.Query().Get("{{{NameInSchema}}}")
+	{{ToLowerCamel Name}}Raw{{#if (IsArray TypeMeta.Name)}}Array{{/if}} := req.URL.Query(){{#if (IsArray TypeMeta.Name)}}["{{{NameInSchema}}}"]{{else}}.Get("{{{NameInSchema}}}"){{/if}}
 	is{{Name}}Exists := req.URL.Query().Has("{{{NameInSchema}}}")
 	{{> RequestSwitchParamType}}
 	{{> RunValidator}}

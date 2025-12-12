@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/gopher-fleece/gleece/definitions"
+	"github.com/gopher-fleece/gleece/generator/swagen/swagtool"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
 	"github.com/pb33f/libopenapi"
 	validator "github.com/pb33f/libopenapi-validator"
@@ -71,7 +72,14 @@ func GenerateSpec(config *definitions.OpenAPIGeneratorConfig, defs []definitions
 
 	jsonData, err := doc.RenderJSON("    ")
 	if err != nil {
-		fmt.Println("Error marshaling v3.1 JSON:", err)
+		logger.Error("Error rendering v3.1 JSON:", err)
+		return nil, err
+	}
+
+	jsonData, err = swagtool.ForceOrderedJSON(jsonData)
+	if err != nil {
+		logger.Error("Error reordering JSON:", err)
+		return nil, err
 	}
 
 	libopenapiDoc, docErr := libopenapi.NewDocument(jsonData)

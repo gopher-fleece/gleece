@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<svg width="1794pt" height="577pt" viewBox="0.00 0.00 1793.53 576.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 572.8)">
+<title>SymbolGraph</title>
+<polygon fill="#ffffff" stroke="transparent" points="-4,4 -4,-572.8 1789.5327,-572.8 1789.5327,4 -4,4"/>
+<!-- N0 -->
+<g id="node1" class="node">
+<title>N0</title>
+<polygon fill="#00cd00" stroke="#000000" points="1068.8737,-213.6 969.659,-213.6 969.659,-177.6 1068.8737,-177.6 1068.8737,-213.6"/>
+<text text-anchor="middle" x="1019.2663" y="-191.4" font-family="Times,serif" font-size="14.00" fill="#000000">string (Builtin)</text>
+</g>
+<!-- N1 -->
+<g id="node2" class="node">
+<title>N1</title>
+<polygon fill="#adff2f" stroke="#000000" points="926.9918,-302.4 829.5409,-302.4 829.5409,-266.4 926.9918,-266.4 926.9918,-302.4"/>
+<text text-anchor="middle" x="878.2663" y="-280.2" font-family="Times,serif" font-size="14.00" fill="#000000">error (Special)</text>
+</g>
+<!-- N2 -->
+<g id="node3" class="node">
+<title>N2</title>
+<polygon fill="#d3d3d3" stroke="#000000" points="1140.657,-385.2 901.8757,-385.2 901.8757,-361.2 1140.657,-361.2 1152.657,-373.2 1140.657,-385.2"/>
+<text text-anchor="middle" x="1027.2663" y="-369" font-family="Times,serif" font-size="14.00" fill="#000000">generics.controller.go|254787d (RetType)</text>
+</g>
+<!-- N2&#45;&gt;N1 -->
+<g id="edge11" class="edge">
+<title>N2-&gt;N1</title>
+<path fill="none" stroke="#000000" d="M996.7544,-355.0157C973.7785,-341.3227 942.1061,-322.4468 917.2874,-307.6555"/>
+<polygon fill="#000000" stroke="#000000" points="908.4825,-302.408 919.3765,-303.662 912.7776,-304.9678 917.0727,-307.5276 917.0727,-307.5276 917.0727,-307.5276 912.7776,-304.9678 914.7689,-311.3932 908.4825,-302.408 908.4825,-302.408"/>
+<text text-anchor="middle" x="979.6499" y="-324.6" font-family="Times,serif" font-size="14.00" fill="#000000">Type</text>
+</g>
+<!-- N3 -->
+<g id="node4" class="node">
+<title>N3</title>
+<polygon fill="#8470ff" stroke="#000000" points="645.5301,-36 329.0026,-36 329.0026,0 645.5301,0 645.5301,-36"/>
+<text text-anchor="middle" x="487.2663" y="-13.8" font-family="Times,serif" font-size="14.00" fill="#000000">TA#0 @generics.controller.go|254787d (TypeParam)</text>
+</g>
+<!-- N4 -->
+<g id="node5" class="node">
+<title>N4</title>
+<polygon fill="#f0e68c" stroke="#000000" points="614.2992,-391.2 125.8786,-391.2 .2335,-355.2 488.6541,-355.2 614.2992,-391.2"/>
+<text text-anchor="middle" x="307.2663" y="-369" font-family="Times,serif" font-size="14.00" fill="#000000">body @generics.controller.go|254787d (Parameter)</text>
+</g>
+<!-- N11 -->
+<g id="node12" class="node">
+<title>N11</title>
+<polygon fill="#f08080" stroke="#000000" points="651.354,-302.4 203.1787,-302.4 203.1787,-298.4 199.1787,-298.4 199.1787,-294.4 203.1787,-294.4 203.1787,-274.4 199.1787,-274.4 199.1787,-270.4 203.1787,-270.4 203.1787,-266.4 651.354,-266.4 651.354,-302.4"/>
+<polyline fill="none" stroke="#000000" points="203.1787,-298.4 207.1787,-298.4 207.1787,-294.4 203.1787,-294.4 "/>
+<polyline fill="none" stroke="#000000" points="203.1787,-274.4 207.1787,-274.4 207.1787,-270.4 203.1787,-270.4 "/>
+<text text-anchor="middle" x="427.2663" y="-280.2" font-family="Times,serif" font-size="14.00" fill="#000000">MultiGenericStruct[string,int] @generics.controller.go|254787d (Composite)</text>
+</g>
+<!-- N4&#45;&gt;N11 -->
+<g id="edge19" class="edge">
+<title>N4-&gt;N11</title>
+<path fill="none" stroke="#000000" d="M331.8397,-355.0157C349.9592,-341.6073 374.7943,-323.2293 394.5865,-308.5831"/>
+<polygon fill="#000000" stroke="#000000" points="402.7258,-302.56 397.3642,-312.1257 398.7066,-305.5342 394.6874,-308.5084 394.6874,-308.5084 394.6874,-308.5084 398.7066,-305.5342 392.0106,-304.8911 402.7258,-302.56 402.7258,-302.56"/>
+<text text-anchor="middle" x="392.6499" y="-324.6" font-family="Times,serif" font-size="14.00" fill="#000000">Type</text>
+</g>
+<!-- N5 -->
+<g id="node6" class="node">
+<title>N5</title>
+<ellipse fill="#ffd700" stroke="#000000" cx="1409.2663" cy="-106.8" rx="194.0422" ry="18"/>
+<text text-anchor="middle" x="1409.2663" y="-102.6" font-family="Times,serif" font-size="14.00" fill="#000000">Value @generics.controller.go|254787d (Field)</text>
+</g>
+<!-- N14 -->
+<g id="node15" class="node">
+<title>N14</title>
+<polygon fill="#8470ff" stroke="#000000" points="1562.4234,-36 1256.1093,-36 1256.1093,0 1562.4234,0 1562.4234,-36"/>
+<text text-anchor="middle" x="1409.2663" y="-13.8" font-family="Times,serif" font-size="14.00" fill="#000000">T#0 @generics.controller.go|254787d (TypeParam)</text>
+</g>
+<!-- N5&#45;&gt;N14 -->
+<g id="edge10" class="edge">
+<title>N5-&gt;N14</title>
+<path fill="none" stroke="#000000" d="M1409.2663,-88.4006C1409.2663,-76.2949 1409.2663,-60.2076 1409.2663,-46.4674"/>
+<polygon fill="#000000" stroke="#000000" points="1409.2663,-36.072 1413.7664,-46.072 1409.2664,-41.072 1409.2664,-46.072 1409.2664,-46.072 1409.2664,-46.072 1409.2664,-41.072 1404.7664,-46.0721 1409.2663,-36.072 1409.2663,-36.072"/>
+<text text-anchor="middle" x="1453.7716" y="-58.2" font-family="Times,serif" font-size="14.00" fill="#000000">Type Parameter</text>
+</g>
+<!-- N6 -->
+<g id="node7" class="node">
+<title>N6</title>
+<polygon fill="#f0e68c" stroke="#000000" points="1785.2992,-391.2 1296.8786,-391.2 1171.2335,-355.2 1659.6541,-355.2 1785.2992,-391.2"/>
+<text text-anchor="middle" x="1478.2663" y="-369" font-family="Times,serif" font-size="14.00" fill="#000000">body @generics.controller.go|254787d (Parameter)</text>
+</g>
+<!-- N7 -->
+<g id="node8" class="node">
+<title>N7</title>
+<polygon fill="#f08080" stroke="#000000" points="1625.401,-302.4 1193.1317,-302.4 1193.1317,-298.4 1189.1317,-298.4 1189.1317,-294.4 1193.1317,-294.4 1193.1317,-274.4 1189.1317,-274.4 1189.1317,-270.4 1193.1317,-270.4 1193.1317,-266.4 1625.401,-266.4 1625.401,-302.4"/>
+<polyline fill="none" stroke="#000000" points="1193.1317,-298.4 1197.1317,-298.4 1197.1317,-294.4 1193.1317,-294.4 "/>
+<polyline fill="none" stroke="#000000" points="1193.1317,-274.4 1197.1317,-274.4 1197.1317,-270.4 1193.1317,-270.4 "/>
+<text text-anchor="middle" x="1409.2663" y="-280.2" font-family="Times,serif" font-size="14.00" fill="#000000">MonoGenericStruct[string] @generics.controller.go|254787d (Composite)</text>
+</g>
+<!-- N6&#45;&gt;N7 -->
+<g id="edge1" class="edge">
+<title>N6-&gt;N7</title>
+<path fill="none" stroke="#000000" d="M1463.9695,-354.8006C1454.0042,-341.9757 1440.5667,-324.6822 1429.5038,-310.4448"/>
+<polygon fill="#000000" stroke="#000000" points="1423.3088,-302.472 1432.9979,-307.6073 1426.3767,-306.4202 1429.4445,-310.3684 1429.4445,-310.3684 1429.4445,-310.3684 1426.3767,-306.4202 1425.8912,-313.1295 1423.3088,-302.472 1423.3088,-302.472"/>
+<text text-anchor="middle" x="1463.6499" y="-324.6" font-family="Times,serif" font-size="14.00" fill="#000000">Type</text>
+</g>
+<!-- N7&#45;&gt;N0 -->
+<g id="edge20" class="edge">
+<title>N7-&gt;N0</title>
+<path fill="none" stroke="#000000" d="M1329.8739,-266.323C1255.5179,-249.3927 1146.0629,-224.4706 1078.8993,-209.178"/>
+<polygon fill="#000000" stroke="#000000" points="1068.9006,-206.9013 1079.6501,-204.7338 1073.7758,-208.0114 1078.651,-209.1215 1078.651,-209.1215 1078.651,-209.1215 1073.7758,-208.0114 1077.652,-213.5092 1068.9006,-206.9013 1068.9006,-206.9013"/>
+<text text-anchor="middle" x="1298.0216" y="-235.8" font-family="Times,serif" font-size="14.00" fill="#000000">Type Parameter 0</text>
+</g>
+<!-- N13 -->
+<g id="node14" class="node">
+<title>N13</title>
+<polygon fill="#add8e6" stroke="#000000" points="1590.9649,-213.6 1227.5678,-213.6 1227.5678,-177.6 1590.9649,-177.6 1590.9649,-213.6"/>
+<text text-anchor="middle" x="1409.2663" y="-191.4" font-family="Times,serif" font-size="14.00" fill="#000000">MonoGenericStruct @generics.controller.go|254787d (Struct)</text>
+</g>
+<!-- N7&#45;&gt;N13 -->
+<g id="edge21" class="edge">
+<title>N7-&gt;N13</title>
+<path fill="none" stroke="#000000" d="M1409.2663,-266.0006C1409.2663,-253.8949 1409.2663,-237.8076 1409.2663,-224.0674"/>
+<polygon fill="#000000" stroke="#000000" points="1409.2663,-213.672 1413.7664,-223.672 1409.2664,-218.672 1409.2664,-223.672 1409.2664,-223.672 1409.2664,-223.672 1409.2664,-218.672 1404.7664,-223.6721 1409.2663,-213.672 1409.2663,-213.672"/>
+<text text-anchor="middle" x="1441.1443" y="-235.8" font-family="Times,serif" font-size="14.00" fill="#000000">Instantiates</text>
+</g>
+<!-- N8 -->
+<g id="node9" class="node">
+<title>N8</title>
+<polygon fill="#add8e6" stroke="#000000" points="786.1367,-213.6 424.396,-213.6 424.396,-177.6 786.1367,-177.6 786.1367,-213.6"/>
+<text text-anchor="middle" x="605.2663" y="-191.4" font-family="Times,serif" font-size="14.00" fill="#000000">MultiGenericStruct @generics.controller.go|254787d (Struct)</text>
+</g>
+<!-- N9 -->
+<g id="node10" class="node">
+<title>N9</title>
+<ellipse fill="#ffd700" stroke="#000000" cx="906.2663" cy="-106.8" rx="200.4227" ry="18"/>
+<text text-anchor="middle" x="906.2663" y="-102.6" font-family="Times,serif" font-size="14.00" fill="#000000">ValueB @generics.controller.go|254787d (Field)</text>
+</g>
+<!-- N8&#45;&gt;N9 -->
+<g id="edge15" class="edge">
+<title>N8-&gt;N9</title>
+<path fill="none" stroke="#8b7500" d="M666.541,-177.523C716.3585,-162.826 786.5899,-142.1065 838.1617,-126.892"/>
+<polygon fill="#8b7500" stroke="#8b7500" points="847.89,-124.022 839.572,-131.1678 843.0944,-125.4368 838.2987,-126.8517 838.2987,-126.8517 838.2987,-126.8517 843.0944,-125.4368 837.0253,-122.5356 847.89,-124.022 847.89,-124.022"/>
+<text text-anchor="middle" x="797.6555" y="-147" font-family="Times,serif" font-size="14.00" fill="#000000">Field</text>
+</g>
+<!-- N15 -->
+<g id="node16" class="node">
+<title>N15</title>
+<ellipse fill="#ffd700" stroke="#000000" cx="487.2663" cy="-106.8" rx="200.9849" ry="18"/>
+<text text-anchor="middle" x="487.2663" y="-102.6" font-family="Times,serif" font-size="14.00" fill="#000000">ValueA @generics.controller.go|254787d (Field)</text>
+</g>
+<!-- N8&#45;&gt;N15 -->
+<g id="edge14" class="edge">
+<title>N8-&gt;N15</title>
+<path fill="none" stroke="#8b7500" d="M581.1025,-177.4157C563.285,-164.0073 538.8638,-145.6293 519.4015,-130.9831"/>
+<polygon fill="#8b7500" stroke="#8b7500" points="511.3978,-124.96 522.094,-127.3774 515.393,-127.9665 519.3881,-130.973 519.3881,-130.973 519.3881,-130.973 515.393,-127.9665 516.6822,-134.5686 511.3978,-124.96 511.3978,-124.96"/>
+<text text-anchor="middle" x="571.6555" y="-147" font-family="Times,serif" font-size="14.00" fill="#000000">Field</text>
+</g>
+<!-- N10 -->
+<g id="node11" class="node">
+<title>N10</title>
+<polygon fill="#8470ff" stroke="#000000" points="1064.2603,-36 748.2724,-36 748.2724,0 1064.2603,0 1064.2603,-36"/>
+<text text-anchor="middle" x="906.2663" y="-13.8" font-family="Times,serif" font-size="14.00" fill="#000000">TB#1 @generics.controller.go|254787d (TypeParam)</text>
+</g>
+<!-- N9&#45;&gt;N10 -->
+<g id="edge5" class="edge">
+<title>N9-&gt;N10</title>
+<path fill="none" stroke="#000000" d="M906.2663,-88.4006C906.2663,-76.2949 906.2663,-60.2076 906.2663,-46.4674"/>
+<polygon fill="#000000" stroke="#000000" points="906.2663,-36.072 910.7664,-46.072 906.2664,-41.072 906.2664,-46.072 906.2664,-46.072 906.2664,-46.072 906.2664,-41.072 901.7664,-46.0721 906.2663,-36.072 906.2663,-36.072"/>
+<text text-anchor="middle" x="950.7716" y="-58.2" font-family="Times,serif" font-size="14.00" fill="#000000">Type Parameter</text>
+</g>
+<!-- N11&#45;&gt;N0 -->
+<g id="edge16" class="edge">
+<title>N11-&gt;N0</title>
+<path fill="none" stroke="#000000" d="M547.423,-266.3765C672.4762,-247.6185 863.215,-219.0077 959.3857,-204.5821"/>
+<polygon fill="#000000" stroke="#000000" points="969.5138,-203.0629 960.292,-208.9966 964.5692,-203.8046 959.6245,-204.5464 959.6245,-204.5464 959.6245,-204.5464 964.5692,-203.8046 958.9569,-200.0962 969.5138,-203.0629 969.5138,-203.0629"/>
+<text text-anchor="middle" x="827.0216" y="-235.8" font-family="Times,serif" font-size="14.00" fill="#000000">Type Parameter 0</text>
+</g>
+<!-- N11&#45;&gt;N8 -->
+<g id="edge18" class="edge">
+<title>N11-&gt;N8</title>
+<path fill="none" stroke="#000000" d="M468.0904,-266.3824C480.4318,-260.7786 493.9689,-254.4739 506.2663,-248.4 525.3032,-238.9974 546.0766,-228.0296 563.6567,-218.5341"/>
+<polygon fill="#000000" stroke="#000000" points="572.5327,-213.7188 565.8887,-222.4428 568.1378,-216.1031 563.7429,-218.4874 563.7429,-218.4874 563.7429,-218.4874 568.1378,-216.1031 561.597,-214.5319 572.5327,-213.7188 572.5327,-213.7188"/>
+<text text-anchor="middle" x="569.1443" y="-235.8" font-family="Times,serif" font-size="14.00" fill="#000000">Instantiates</text>
+</g>
+<!-- N16 -->
+<g id="node17" class="node">
+<title>N16</title>
+<polygon fill="#00cd00" stroke="#000000" points="406.2692,-213.6 324.2635,-213.6 324.2635,-177.6 406.2692,-177.6 406.2692,-213.6"/>
+<text text-anchor="middle" x="365.2663" y="-191.4" font-family="Times,serif" font-size="14.00" fill="#000000">int (Builtin)</text>
+</g>
+<!-- N11&#45;&gt;N16 -->
+<g id="edge17" class="edge">
+<title>N11-&gt;N16</title>
+<path fill="none" stroke="#000000" d="M414.4199,-266.0006C405.5493,-253.2956 393.6167,-236.2051 383.73,-222.0448"/>
+<polygon fill="#000000" stroke="#000000" points="377.8842,-213.672 387.2986,-219.2952 380.7466,-217.7717 383.6089,-221.8713 383.6089,-221.8713 383.6089,-221.8713 380.7466,-217.7717 379.9193,-224.4474 377.8842,-213.672 377.8842,-213.672"/>
+<text text-anchor="middle" x="452.0216" y="-235.8" font-family="Times,serif" font-size="14.00" fill="#000000">Type Parameter 1</text>
+</g>
+<!-- N12 -->
+<g id="node13" class="node">
+<title>N12</title>
+<polygon fill="#d3d3d3" stroke="#000000" points="871.657,-385.2 632.8757,-385.2 632.8757,-361.2 871.657,-361.2 883.657,-373.2 871.657,-385.2"/>
+<text text-anchor="middle" x="758.2663" y="-369" font-family="Times,serif" font-size="14.00" fill="#000000">generics.controller.go|254787d (RetType)</text>
+</g>
+<!-- N12&#45;&gt;N1 -->
+<g id="edge6" class="edge">
+<title>N12-&gt;N1</title>
+<path fill="none" stroke="#000000" d="M782.8397,-355.0157C800.9592,-341.6073 825.7943,-323.2293 845.5865,-308.5831"/>
+<polygon fill="#000000" stroke="#000000" points="853.7258,-302.56 848.3642,-312.1257 849.7066,-305.5342 845.6874,-308.5084 845.6874,-308.5084 845.6874,-308.5084 849.7066,-305.5342 843.0106,-304.8911 853.7258,-302.56 853.7258,-302.56"/>
+<text text-anchor="middle" x="843.6499" y="-324.6" font-family="Times,serif" font-size="14.00" fill="#000000">Type</text>
+</g>
+<!-- N13&#45;&gt;N5 -->
+<g id="edge9" class="edge">
+<title>N13-&gt;N5</title>
+<path fill="none" stroke="#8b7500" d="M1409.2663,-177.2006C1409.2663,-165.0949 1409.2663,-149.0076 1409.2663,-135.2674"/>
+<polygon fill="#8b7500" stroke="#8b7500" points="1409.2663,-124.872 1413.7664,-134.872 1409.2664,-129.872 1409.2664,-134.872 1409.2664,-134.872 1409.2664,-134.872 1409.2664,-129.872 1404.7664,-134.8721 1409.2663,-124.872 1409.2663,-124.872"/>
+<text text-anchor="middle" x="1423.6555" y="-147" font-family="Times,serif" font-size="14.00" fill="#000000">Field</text>
+</g>
+<!-- N15&#45;&gt;N3 -->
+<g id="edge4" class="edge">
+<title>N15-&gt;N3</title>
+<path fill="none" stroke="#000000" d="M487.2663,-88.4006C487.2663,-76.2949 487.2663,-60.2076 487.2663,-46.4674"/>
+<polygon fill="#000000" stroke="#000000" points="487.2663,-36.072 491.7664,-46.072 487.2664,-41.072 487.2664,-46.072 487.2664,-46.072 487.2664,-46.072 487.2664,-41.072 482.7664,-46.0721 487.2663,-36.072 487.2663,-36.072"/>
+<text text-anchor="middle" x="531.7716" y="-58.2" font-family="Times,serif" font-size="14.00" fill="#000000">Type Parameter</text>
+</g>
+<!-- N17 -->
+<g id="node18" class="node">
+<title>N17</title>
+<polygon fill="#ffa500" stroke="#000000" points="885.542,-474 420.9907,-474 420.9907,-450 885.542,-450 885.542,-474"/>
+<polyline fill="none" stroke="#000000" points="423.9907,-463.5 426.9907,-460.5 "/>
+<polyline fill="none" stroke="#000000" points="423.9907,-460.5 426.9907,-463.5 "/>
+<polyline fill="none" stroke="#000000" points="423.9907,-453 882.542,-453 "/>
+<text text-anchor="middle" x="653.2663" y="-457.8" font-family="Times,serif" font-size="14.00" fill="#000000">RecvWithMultiGenericStructBody @generics.controller.go|254787d (Receiver)</text>
+</g>
+<!-- N17&#45;&gt;N4 -->
+<g id="edge7" class="edge">
+<title>N17-&gt;N4</title>
+<path fill="none" stroke="#7f7f7f" stroke-dasharray="1,5" d="M582.831,-443.923C526.2358,-429.398 446.7209,-408.9907 387.6427,-393.8284"/>
+<polygon fill="#7f7f7f" stroke="#7f7f7f" points="388.1592,-390.3476 377.603,-391.2517 386.419,-397.1278 388.1592,-390.3476"/>
+<text text-anchor="middle" x="539.638" y="-413.4" font-family="Times,serif" font-size="14.00" fill="#000000">Parameter</text>
+</g>
+<!-- N17&#45;&gt;N12 -->
+<g id="edge8" class="edge">
+<title>N17-&gt;N12</title>
+<path fill="none" stroke="#4d4d4d" stroke-dasharray="5,2" d="M674.768,-443.8157C690.3395,-430.6467 711.5791,-412.6841 728.7396,-398.1712"/>
+<polygon fill="#4d4d4d" stroke="#4d4d4d" points="731.418,-400.4899 736.7934,-391.36 726.8977,-395.145 731.418,-400.4899"/>
+<text text-anchor="middle" x="752.7807" y="-413.4" font-family="Times,serif" font-size="14.00" fill="#000000">Return Value</text>
+</g>
+<!-- N18 -->
+<g id="node19" class="node">
+<title>N18</title>
+<polygon fill="#e0ffff" stroke="#000000" points="1181.0301,-543.3442 1181.0301,-558.2558 1013.0478,-568.8 775.4849,-568.8 607.5026,-558.2558 607.5026,-543.3442 775.4849,-532.8 1013.0478,-532.8 1181.0301,-543.3442"/>
+<text text-anchor="middle" x="894.2663" y="-546.6" font-family="Times,serif" font-size="14.00" fill="#000000">GenericsController @generics.controller.go|254787d (Controller)</text>
+</g>
+<!-- N18&#45;&gt;N17 -->
+<g id="edge3" class="edge">
+<title>N18-&gt;N17</title>
+<path fill="none" stroke="#ffa500" stroke-dasharray="5,2" d="M845.2059,-532.723C806.6,-518.4981 752.6827,-498.6314 711.8196,-483.5748"/>
+<polygon fill="#ffa500" stroke="#ffa500" points="702.2581,-480.0517 713.1972,-479.2867 706.9497,-481.7805 711.6414,-483.5092 711.6414,-483.5092 711.6414,-483.5092 706.9497,-481.7805 710.0855,-487.7317 702.2581,-480.0517 702.2581,-480.0517"/>
+<text text-anchor="middle" x="821.1394" y="-502.2" font-family="Times,serif" font-size="14.00" fill="#000000">Receiver</text>
+</g>
+<!-- N19 -->
+<g id="node20" class="node">
+<title>N19</title>
+<polygon fill="#ffa500" stroke="#000000" points="1370.8702,-474 903.6625,-474 903.6625,-450 1370.8702,-450 1370.8702,-474"/>
+<polyline fill="none" stroke="#000000" points="906.6625,-463.5 909.6625,-460.5 "/>
+<polyline fill="none" stroke="#000000" points="906.6625,-460.5 909.6625,-463.5 "/>
+<polyline fill="none" stroke="#000000" points="906.6625,-453 1367.8702,-453 "/>
+<text text-anchor="middle" x="1137.2663" y="-457.8" font-family="Times,serif" font-size="14.00" fill="#000000">RecvWithMonoGenericStructBody @generics.controller.go|254787d (Receiver)</text>
+</g>
+<!-- N18&#45;&gt;N19 -->
+<g id="edge2" class="edge">
+<title>N18-&gt;N19</title>
+<path fill="none" stroke="#ffa500" stroke-dasharray="5,2" d="M943.7339,-532.723C982.6602,-518.4981 1037.025,-498.6314 1078.2272,-483.5748"/>
+<polygon fill="#ffa500" stroke="#ffa500" points="1087.868,-480.0517 1080.0201,-487.7107 1083.1718,-481.7679 1078.4755,-483.4841 1078.4755,-483.4841 1078.4755,-483.4841 1083.1718,-481.7679 1076.931,-479.2575 1087.868,-480.0517 1087.868,-480.0517"/>
+<text text-anchor="middle" x="1062.1394" y="-502.2" font-family="Times,serif" font-size="14.00" fill="#000000">Receiver</text>
+</g>
+<!-- N19&#45;&gt;N2 -->
+<g id="edge13" class="edge">
+<title>N19-&gt;N2</title>
+<path fill="none" stroke="#4d4d4d" stroke-dasharray="5,2" d="M1114.7408,-443.8157C1098.2795,-430.527 1075.7717,-412.3571 1057.7099,-397.7763"/>
+<polygon fill="#4d4d4d" stroke="#4d4d4d" points="1059.7413,-394.918 1049.7618,-391.36 1055.3443,-400.3648 1059.7413,-394.918"/>
+<text text-anchor="middle" x="1128.7807" y="-413.4" font-family="Times,serif" font-size="14.00" fill="#000000">Return Value</text>
+</g>
+<!-- N19&#45;&gt;N6 -->
+<g id="edge12" class="edge">
+<title>N19-&gt;N6</title>
+<path fill="none" stroke="#7f7f7f" stroke-dasharray="1,5" d="M1206.6838,-443.923C1262.4612,-429.398 1340.827,-408.9907 1399.0515,-393.8284"/>
+<polygon fill="#7f7f7f" stroke="#7f7f7f" points="1400.1509,-397.1589 1408.9461,-391.2517 1398.3868,-390.3848 1400.1509,-397.1589"/>
+<text text-anchor="middle" x="1366.638" y="-413.4" font-family="Times,serif" font-size="14.00" fill="#000000">Parameter</text>
+</g>
+</g>
+</svg>

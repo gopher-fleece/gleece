@@ -4,6 +4,7 @@ import (
 	"go/ast"
 
 	"github.com/gopher-fleece/gleece/core/arbitrators"
+	"github.com/gopher-fleece/gleece/definitions"
 )
 
 type ArbitrationProvider struct {
@@ -21,8 +22,12 @@ func (p *ArbitrationProvider) Ast() *arbitrators.AstArbitrator {
 	return p.astArbitrator
 }
 
-func NewArbitrationProvider(globs []string) (*ArbitrationProvider, error) {
-	packagesFacade, err := arbitrators.NewPackagesFacade(globs)
+func NewArbitrationProviderFromGleeceConfig(gleeceConfig *definitions.GleeceConfig) (*ArbitrationProvider, error) {
+	return NewArbitrationProvider(NewArbitrationProviderConfig(gleeceConfig))
+}
+
+func NewArbitrationProvider(config ArbitrationProviderConfig) (*ArbitrationProvider, error) {
+	packagesFacade, err := arbitrators.NewPackagesFacade(config.PackageFacadeConfig)
 	if err != nil {
 		return nil, err
 	}

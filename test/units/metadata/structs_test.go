@@ -46,7 +46,7 @@ var _ = Describe("Unit Tests - Metadata", func() {
 								PkgPath:     "",
 								Annotations: &holder,
 							},
-							Layers: []metadata.TypeLayer{},
+							Root: utils.MakeUniverseRoot("string"),
 						},
 					},
 					{
@@ -61,14 +61,17 @@ var _ = Describe("Unit Tests - Metadata", func() {
 								PkgPath:     "",
 								Annotations: &holder,
 							},
-							Layers: []metadata.TypeLayer{},
+							Root: utils.MakeUniverseRoot("int"),
 						},
 						IsEmbedded: true,
 					},
 				},
 			}
 
-			reduced := structMeta.Reduce()
+			// An empty context here is OK, for now - this is done to maintain a uniform reducer signature and is
+			// is not currently being used
+			reduced, err := structMeta.Reduce(metadata.ReductionContext{})
+			Expect(err).To(BeNil())
 
 			Expect(reduced.Name).To(Equal("TestStruct"))
 			Expect(reduced.PkgPath).To(Equal("example.com/mypkg"))
@@ -116,7 +119,12 @@ var _ = Describe("Unit Tests - Metadata", func() {
 
 				controller.Struct.Annotations = holder
 
-				result, err := controller.Reduce(ctx.GleeceConfig, ctx.MetadataCache, ctx.SyncedProvider)
+				result, err := controller.Reduce(metadata.ReductionContext{
+					GleeceConfig:   ctx.GleeceConfig,
+					MetaCache:      ctx.MetadataCache,
+					SyncedProvider: ctx.SyncedProvider,
+				})
+
 				Expect(err).ToNot(HaveOccurred())
 				Expect(result.Name).To(Equal("ExampleController"))
 				Expect(result.Description).To(Equal("Example controller"))
@@ -139,7 +147,12 @@ var _ = Describe("Unit Tests - Metadata", func() {
 				)
 				controller.Struct.Annotations = holder
 
-				result, err := controller.Reduce(ctx.GleeceConfig, ctx.MetadataCache, ctx.SyncedProvider)
+				result, err := controller.Reduce(metadata.ReductionContext{
+					GleeceConfig:   ctx.GleeceConfig,
+					MetaCache:      ctx.MetadataCache,
+					SyncedProvider: ctx.SyncedProvider,
+				})
+
 				Expect(err).ToNot(HaveOccurred())
 				Expect(result.Security).To(Equal(metadata.GetDefaultSecurity(ctx.GleeceConfig)))
 			})
@@ -168,7 +181,12 @@ var _ = Describe("Unit Tests - Metadata", func() {
 
 				controller.Struct.Annotations = &holder
 
-				_, err := controller.Reduce(ctx.GleeceConfig, ctx.MetadataCache, ctx.SyncedProvider)
+				_, err := controller.Reduce(metadata.ReductionContext{
+					GleeceConfig:   ctx.GleeceConfig,
+					MetaCache:      ctx.MetadataCache,
+					SyncedProvider: ctx.SyncedProvider,
+				})
+
 				Expect(err).To(MatchError(ContainSubstring("a security schema's name cannot be empty")))
 			})
 		})
