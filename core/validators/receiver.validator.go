@@ -86,12 +86,11 @@ func (v ReceiverValidator) validateParams(receiver *metadata.ReceiverMeta) ([]di
 			continue
 		}
 
-		passedIn, diag, err := v.getPassedInValue(param)
+		passedIn, err := v.getPassedInValue(param)
 		if err != nil {
 			return diags, err
 		}
 
-		diags = common.AppendIfNotNil(diags, diag)
 		if passedIn == nil {
 			// If we couldn't process the passedIn portion, no reason in continuing.
 			// An error or error diagnostic will have been added, at this point.
@@ -113,37 +112,26 @@ func (v ReceiverValidator) validateParams(receiver *metadata.ReceiverMeta) ([]di
 	return diags, nil
 }
 
-func (v ReceiverValidator) getPassedInValue(param metadata.FuncParam) (
-	*definitions.ParamPassedIn,
-	*diagnostics.ResolvedDiagnostic,
-	error,
-) {
+func (v ReceiverValidator) getPassedInValue(param metadata.FuncParam) (*definitions.ParamPassedIn, error) {
 	// This function gets the parameter's passed-in value (e.g. passed-in-body or passed-in-header)
 	// If it fails, it may return a standard error or an InvalidAnnotation error.
 	passedIn, err := metadata.GetParamPassedIn(param.Name, param.Annotations)
 	if err == nil {
-		return &passedIn, nil, nil
+		return &passedIn, nil
 	}
 
 	// If we didn't get a value, it generally means a missing annotation which is a 'diagnostic'
 	// or an outright malformed one which we consider an 'error'.
 	// InvalidAnnotation error is the former.
+	// In such a case, we return a nil here to halt further checks.
+	//
+	// The relevant diagnostic will be emitted by a subsequent call to validators.AnnotationLinkValidator
 	if _, isInvalidAnnotationErr := err.(metadata.InvalidAnnotationError); isInvalidAnnotationErr {
-		diag := diagnostics.NewErrorDiagnostic(
-			v.receiver.Annotations.FileName(),
-			fmt.Sprintf(
-				"Parameter '%s' in receiver '%s' is not referenced by any annotation",
-				param.Name,
-				v.receiver.Name,
-			),
-			diagnostics.DiagLinkerUnreferencedParameter,
-			v.receiver.RetValsRange(),
-		)
-		return nil, &diag, nil
+		return nil, nil
 	}
 
 	// A true error or a grossly malformed annotation. Regardless, this is a flow-terminating error.
-	return nil, nil, fmt.Errorf(
+	return nil, fmt.Errorf(
 		"failed to determine 'passed-in' type for parameter '%s' in receiver '%s' - %w",
 		param.Name,
 		v.receiver.Name,
