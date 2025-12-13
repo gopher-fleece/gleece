@@ -155,8 +155,8 @@ func (v ReceiverValidator) validateBodyParam(
 	receiver *metadata.ReceiverMeta,
 	param metadata.FuncParam,
 ) *diagnostics.ResolvedDiagnostic {
-	// Verify the body is not a built-in
-	if param.Type.SymbolKind.IsBuiltin() {
+	// Currently, body parameters cannot be a non-array/slice primitive/built-in special
+	if param.Type.SymbolKind.IsBuiltin() && !param.Type.IsIterable() {
 		diag := diagnostics.NewErrorDiagnostic(
 			receiver.Annotations.FileName(),
 			fmt.Sprintf(
@@ -182,10 +182,7 @@ func (v ReceiverValidator) validateNonBodyParam(
 	// First - any arrays in anything other than query
 	// (remember that this validates non-body parameters)
 	// is automatically invalid - Neither URL parameters
-	isAnArray := param.Type.Root.Kind() == metadata.TypeRefKindSlice ||
-		param.Type.Root.Kind() == metadata.TypeRefKindArray
-
-	if isAnArray && passedIn != definitions.PassedInQuery && passedIn != definitions.PassedInBody {
+	if param.Type.IsIterable() && passedIn != definitions.PassedInQuery && passedIn != definitions.PassedInBody {
 		diag := diagnostics.NewErrorDiagnostic(
 			receiver.Annotations.FileName(),
 			fmt.Sprintf(
@@ -204,19 +201,27 @@ func (v ReceiverValidator) validateNonBodyParam(
 	isMapType := param.Type.PkgPath == "" && strings.HasPrefix(param.Type.Name, "map[")
 	isAnEnum := param.Type.SymbolKind == common.SymKindEnum
 
-	if (param.Type.IsUniverseType() || isAnEnum) && !isErrType && !isMapType {
+	isAnAlias, isAPrimitiveAlias := isPrimitiveAlias(param)
+
+	if (param.Type.IsUniverseType() || isAnEnum || (isAnAlias && isAPrimitiveAlias)) && !isErrType && !isMapType {
 		return nil
+	}
+
+	isIterableMsg := ""
+	if param.Type.IsIterable() {
+		isIterableMsg = "an iterable "
 	}
 
 	diag := diagnostics.NewErrorDiagnostic(
 		receiver.Annotations.FileName(),
 		fmt.Sprintf(
-			"header, path and query parameters are currently limited to primitives only but "+
-				"%s parameter '%s' (schema name '%s', type '%s') is of kind '%s'",
+			"header/path/query parameters may only be primitives but "+
+				"%s parameter '%s' (schema name '%s', type '%s') is %sof kind '%s'",
 			passedIn,
 			param.Name,
 			getParamSchemaNameOrFallback(param, "unknown"),
 			param.Type.Name,
+			isIterableMsg,
 			param.Type.SymbolKind,
 		),
 		diagnostics.DiagReceiverParamNotPrimitive,
@@ -421,4 +426,21 @@ func getParamSchemaNameOrFallback(param metadata.FuncParam, fallback string) str
 		return fallback
 	}
 	return nameInSchema
+}
+
+func isPrimitiveAlias(param metadata.FuncParam) (bool, bool) {
+	if param.Type.SymbolKind != common.SymKindAlias {
+		return false, false
+	}
+
+	flattenedTypeRef := param.Type.Root.Flatten()
+
+	switch len(flattenedTypeRef) {
+	case 0:
+		return true, true
+	case 1:
+		return true, flattenedTypeRef[0].Kind() == metadata.TypeRefKindNamed
+	default:
+		return true, flattenedTypeRef[len(flattenedTypeRef)-1].Kind() == metadata.TypeRefKindNamed
+	}
 }

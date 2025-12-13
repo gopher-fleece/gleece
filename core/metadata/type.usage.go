@@ -56,6 +56,10 @@ func (t TypeUsageMeta) IsContext() bool {
 	return t.Name == "Context" && t.PkgPath == "context"
 }
 
+func (t TypeUsageMeta) IsIterable() bool {
+	return t.Root.Kind() == TypeRefKindSlice || t.Root.Kind() == TypeRefKindArray
+}
+
 // getAliasMeta attempts to retrieve Alias metadata for the given type.
 // Alias metadata is relevant for enums and true aliases. For other kinds, it'll remain empty.
 func getAliasMeta(
