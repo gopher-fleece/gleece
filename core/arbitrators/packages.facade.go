@@ -196,13 +196,15 @@ func (facade *PackagesFacade) loadAndCacheExpressions(
 		if facade.config.AllowPackageLoadFailures {
 			logger.Warn(failMessage)
 		} else {
-			logger.Fatal(failMessage)
+			skipMessage := "To ignore package load failures, set 'commonConfig->allowPackageLoadFailures' to 'true' in the gleece config file."
+			logger.Fatal(failMessage + skipMessage)
 			return nil, fmt.Errorf(
-				"encountered %d errors over %d package/s (%v) during load - %v",
+				"encountered %d errors over %d package/s (%v) during load - %v. %s",
 				len(pkgErrs),
 				failedPkgCount,
 				failedPackageNames,
 				pkgErrs,
+				skipMessage,
 			)
 		}
 	}
