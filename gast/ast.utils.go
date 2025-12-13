@@ -640,6 +640,15 @@ func IsEnumLike(pkg *packages.Package, spec *ast.TypeSpec) bool {
 		if !ok {
 			continue
 		}
+
+		// To avoid clobbering consts that happen to have the same type under aliases/enums,
+		// we check the actual underlying type name as well.
+		if curObjAlias, isCurObjAlias := constVal.Type().(*types.Alias); isCurObjAlias {
+			if typeName.Name() != curObjAlias.Obj().Name() {
+				continue
+			}
+		}
+
 		if types.Identical(constVal.Type(), typeName.Type()) {
 			return true
 		}

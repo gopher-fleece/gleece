@@ -1,7 +1,6 @@
 package visitors
 
 import (
-	"fmt"
 	"go/ast"
 	"go/types"
 
@@ -171,10 +170,6 @@ func (v *EnumVisitor) getEnumValueDefinitions(
 		constObj, ok := obj.(*types.Const)
 		if !ok {
 			continue
-		}
-
-		if enumTypeName.Name() != constObj.Name() {
-			fmt.Println("")
 		}
 
 		// To avoid clobbering consts that happen to have the same type under aliases/enums,
