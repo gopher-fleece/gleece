@@ -14,19 +14,13 @@ Repository: https://github.com/gopher-fleece/gleece
 --
 */
 package routes
+
 import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
-	"reflect"
-	"regexp"
-	"strconv"
-	"strings"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
-	RequestAuth "github.com/gopher-fleece/gleece/e2e/fiber/auth"
-	"github.com/gopher-fleece/runtime"
 	E2EClassSecController "github.com/gopher-fleece/gleece/e2e/assets"
 	E2EController "github.com/gopher-fleece/gleece/e2e/assets"
 	Param11value3 "github.com/gopher-fleece/gleece/e2e/assets"
@@ -51,20 +45,32 @@ import (
 	Param4value2 "github.com/gopher-fleece/gleece/e2e/assets"
 	Param5theBody "github.com/gopher-fleece/gleece/e2e/assets"
 	Response6CustomError "github.com/gopher-fleece/gleece/e2e/assets"
+	RequestAuth "github.com/gopher-fleece/gleece/e2e/fiber/auth"
+	"github.com/gopher-fleece/runtime"
 	Param13data "github.com/haimkastner/unitsnet-go/units"
 	Param14unit "github.com/haimkastner/unitsnet-go/units"
+	"net/http"
+	"reflect"
+	"regexp"
+	"strconv"
+	"strings"
 	// ImportsExtension - test
 )
+
 var validatorInstance = validator.New()
 var urlParamRegex *regexp.Regexp
+
 type SecurityListRelation string
+
 const (
 	SecurityListRelationAnd SecurityListRelation = "AND"
 )
+
 type SecurityCheckList struct {
 	Checks   []runtime.SecurityCheck
 	Relation SecurityListRelation
 }
+
 // TypeDeclarationsExtension - test
 func getRequestContext(fiberCtx *fiber.Ctx) context.Context {
 	return fiberCtx.UserContext()
@@ -273,14 +279,17 @@ func wrapValidatorError(validatorErr error, operationId string, fieldName string
 		Instance: fmt.Sprintf("/validation/error/%s", operationId),
 	}
 }
+
 // FunctionDeclarationsExtension - test
 type MiddlewareFunc func(ctx context.Context, fiberCtx *fiber.Ctx) (context.Context, bool)
 type ErrorMiddlewareFunc func(ctx context.Context, fiberCtx *fiber.Ctx, err error) (context.Context, bool)
+
 var beforeOperationMiddlewares []MiddlewareFunc
 var afterOperationSuccessMiddlewares []MiddlewareFunc
 var onErrorMiddlewares []ErrorMiddlewareFunc
 var onInputValidationMiddlewares []ErrorMiddlewareFunc
 var onOutputValidationMiddlewares []ErrorMiddlewareFunc
+
 func RegisterMiddleware(executionType runtime.MiddlewareExecutionType, middlewareFunc MiddlewareFunc) {
 	switch executionType {
 	case runtime.BeforeOperation:
@@ -8062,6 +8071,97 @@ func RegisterRoutes(engine *fiber.App) {
 		fiberCtx.Set("x-AfterOperationRoutesExtension", "QueryArrayOfOthersEnum")
 		fiberCtx.Status(statusCode).JSON(value)
 		fiberCtx.Set("x-RouteEndRoutesExtension", "QueryArrayOfOthersEnum")
+		return nil
+	})
+	engine.Post(toFiberUrl("/e2e/query-pointer-to-array"), func(fiberCtx *fiber.Ctx) error {
+		fiberCtx.Set("x-RouteStartRoutesExtension", "QueryArrayOfPointers")
+		authErr := authorize(
+			fiberCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(fiberCtx, authErr, "QueryArrayOfPointers")
+		}
+		controller := E2EController.E2EController{}
+		controller.InitController(fiberCtx)
+		var values07RawPtr *[]string = nil
+		values07RawArrayBytes := fiberCtx.Context().QueryArgs().PeekMulti("values07")
+		values07RawArray := make([]string, len(values07RawArrayBytes))
+		for i, v := range values07RawArrayBytes {
+			values07RawArray[i] = string(v)
+		}
+		isvalues07Exists := fiberCtx.Context().QueryArgs().Has("values07")
+		if isvalues07Exists {
+			values07 := make([]string, 0, len(values07RawArray))
+			for _, values07Raw := range values07RawArray {
+				values07Item := values07Raw
+				values07 = append(values07, string(values07Item))
+			}
+			values07RawPtr = &values07
+			values07RawPtr = &values07
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		fiberCtx.Set("x-BeforeOperationRoutesExtension", "QueryArrayOfPointers")
+		value, opError := controller.QueryArrayOfPointers(values07RawPtr)
+		for key, value := range controller.GetHeaders() {
+			fiberCtx.Set(key, value)
+		}
+		fiberCtx.Set("x-inject", "true")
+		fiberCtx.Set("x-ResponseHeadersExtension", "QueryArrayOfPointers")
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'QueryArrayOfPointers'",
+				Status:     statusCode,
+				Instance:   "/controller/error/QueryArrayOfPointers",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			fiberCtx.Set("x-JsonErrorResponseExtension", "QueryArrayOfPointers")
+			return fiberCtx.Status(statusCode).JSON(stdError)
+		}
+		fiberCtx.Set("x-JsonResponseExtension", "QueryArrayOfPointers")
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		fiberCtx.Set("x-AfterOperationRoutesExtension", "QueryArrayOfPointers")
+		fiberCtx.Status(statusCode).JSON(value)
+		fiberCtx.Set("x-RouteEndRoutesExtension", "QueryArrayOfPointers")
 		return nil
 	})
 }

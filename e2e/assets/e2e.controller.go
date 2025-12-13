@@ -851,3 +851,13 @@ const (
 func (ec *E2EController) QueryArrayOfOthersEnum(values []NumberEnum, values2 []BoolEnum) (string, error) {
 	return fmt.Sprintf("received %d and %d items", len(values), len(values2)), nil
 }
+
+// @Method(POST)
+// @Query(values07)
+// @Route(/query-pointer-to-array)
+func (ec *E2EController) QueryArrayOfPointers(values07 *[]string) (string, error) {
+	if values07 == nil {
+		return "received nil items", nil
+	}
+	return fmt.Sprintf("received %d items", len(*values07)), nil
+}

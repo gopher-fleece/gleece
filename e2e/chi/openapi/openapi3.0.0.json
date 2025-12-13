@@ -2387,6 +2387,48 @@
         ]
       }
     },
+    "/e2e/query-pointer-to-array": {
+      "post": {
+        "operationId": "QueryArrayOfPointers",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "values07",
+            "schema": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "securitySchemaName2": [
+              "config"
+            ]
+          }
+        ],
+        "tags": [
+          "E2E"
+        ]
+      }
+    },
     "/e2e/simple-get": {
       "get": {
         "operationId": "SimpleGet",

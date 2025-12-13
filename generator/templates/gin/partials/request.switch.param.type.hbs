@@ -126,7 +126,7 @@ if is{{Name}}Exists {
   {{/if}}
 
 {{#ifEqual TypeMeta.SymbolKind "Enum"}}
-    {{#if (And ExperimentalConfig.ValidateTopLevelOnlyEnum TypeMeta.AliasMetadata.Values)}}
+    {{#if ExperimentalConfig.ValidateTopLevelOnlyEnum}}
         switch {{ToLowerCamel Name}}Raw {
         case {{#each TypeMeta.AliasMetadata.Values}}"{{this}}"{{#unless @last}}, {{/unless}}{{/each}}:
             {{#if (IsArray TypeMeta.Name)}}
@@ -150,7 +150,7 @@ if is{{Name}}Exists {
 
   {{!-- Case of Enum with validation enabled --}}
   {{#ifEqual TypeMeta.SymbolKind "Enum"}}
-    {{#if (And ExperimentalConfig.ValidateTopLevelOnlyEnum TypeMeta.AliasMetadata.Values)}}
+    {{#if ExperimentalConfig.ValidateTopLevelOnlyEnum}}
      {{!--The ValidateTopLevelOnlyEnum section alredy put the nessesary vars --}}
     {{else}}
       {{!-- Enum without validation --}}

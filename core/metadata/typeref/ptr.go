@@ -22,7 +22,7 @@ func (p *PtrTypeRef) SimpleTypeString() string {
 }
 
 func (p *PtrTypeRef) CacheLookupKey(fileVersion *gast.FileVersion) (graphs.SymbolKey, error) {
-	return p.Elem.ToSymKey(fileVersion)
+	return p.Elem.CacheLookupKey(fileVersion)
 }
 
 func (p *PtrTypeRef) ToSymKey(fileVersion *gast.FileVersion) (graphs.SymbolKey, error) {

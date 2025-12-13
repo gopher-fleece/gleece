@@ -752,6 +752,31 @@ var _ = Describe("E2E Models Spec", func() {
 		})
 	})
 
+	It("Should return status code 200 for query-pointer-to-array", func() {
+		RunRouterTest(common.RouterTest{
+			Name:            "Should handle query pointer to array of strings",
+			ExpectedStatus:  200,
+			ExpectedBody:    "\"received 2 items\"",
+			ExpendedHeaders: nil,
+			Path:            "/e2e/query-pointer-to-array",
+			Method:          "POST",
+			QueryArray:      map[string][]string{"values07": {"a1", "b2"}},
+			RunningMode:     &allRouting,
+		})
+	})
+
+	It("Should return status code 200 for missing query-pointer-to-array", func() {
+		RunRouterTest(common.RouterTest{
+			Name:            "Should handle missing query pointer to array of strings (as it is optional)",
+			ExpectedStatus:  200,
+			ExpectedBody:    "\"received nil items\"",
+			ExpendedHeaders: nil,
+			Path:            "/e2e/query-pointer-to-array",
+			Method:          "POST",
+			RunningMode:     &allRouting,
+		})
+	})
+
 	It("Should return status code 422 for alias-of-primitive when body is missing", func() {
 		RunRouterTest(common.RouterTest{
 			Name:            "Should return 422 when body is missing",
