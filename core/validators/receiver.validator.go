@@ -102,7 +102,7 @@ func (v ReceiverValidator) validateParams(receiver *metadata.ReceiverMeta) ([]di
 		case definitions.PassedInBody:
 			common.AppendIfNotNil(diags, v.validateBodyParam(receiver, param))
 		default:
-			common.AppendIfNotNil(diags, v.validatePrimitiveParam(receiver, param, *passedIn))
+			common.AppendIfNotNil(diags, v.validateNonBodyParam(receiver, param, *passedIn))
 		}
 
 		common.AppendIfNotNil(diags, v.validateParamsCombinations(processedParams, param, *passedIn))
@@ -180,11 +180,32 @@ func (v ReceiverValidator) validateBodyParam(
 	return nil
 }
 
-func (v ReceiverValidator) validatePrimitiveParam(
+func (v ReceiverValidator) validateNonBodyParam(
 	receiver *metadata.ReceiverMeta,
 	param metadata.FuncParam,
 	passedIn definitions.ParamPassedIn,
 ) *diagnostics.ResolvedDiagnostic {
+	// First - any arrays in anything other than query
+	// (remember that this validates non-body parameters)
+	// is automatically invalid - Neither URL parameters
+	isAnArray := param.Type.Root.Kind() == metadata.TypeRefKindSlice ||
+		param.Type.Root.Kind() == metadata.TypeRefKindArray
+
+	if isAnArray && passedIn != definitions.PassedInQuery && passedIn != definitions.PassedInBody {
+		diag := diagnostics.NewErrorDiagnostic(
+			receiver.Annotations.FileName(),
+			fmt.Sprintf(
+				"parameter '%s' (schema name '%s', type '%s') is an array/slice and can only be passed in a query or a body",
+				param.Name,
+				getParamSchemaNameOrFallback(param, "unknown"),
+				param.Type.Name,
+			),
+			diagnostics.DiagReceiverParamNotPrimitive,
+			param.Range,
+		)
+		return &diag
+	}
+
 	isErrType := param.Type.PkgPath == "" && param.Type.Name == "error"
 	isMapType := param.Type.PkgPath == "" && strings.HasPrefix(param.Type.Name, "map[")
 	isAnEnum := param.Type.SymbolKind == common.SymKindEnum
@@ -193,10 +214,6 @@ func (v ReceiverValidator) validatePrimitiveParam(
 		return nil
 	}
 
-	nameInSchema, err := metadata.GetParameterSchemaName(param.Name, param.Annotations)
-	if err != nil {
-		nameInSchema = "unknown"
-	}
 	diag := diagnostics.NewErrorDiagnostic(
 		receiver.Annotations.FileName(),
 		fmt.Sprintf(
@@ -204,7 +221,7 @@ func (v ReceiverValidator) validatePrimitiveParam(
 				"%s parameter '%s' (schema name '%s', type '%s') is of kind '%s'",
 			passedIn,
 			param.Name,
-			nameInSchema,
+			getParamSchemaNameOrFallback(param, "unknown"),
 			param.Type.Name,
 			param.Type.SymbolKind,
 		),
@@ -402,4 +419,12 @@ func getDiagForRetSig(receiver *metadata.ReceiverMeta) (int, *diagnostics.Resolv
 	}
 
 	return errorRetTypeIndex, nil
+}
+
+func getParamSchemaNameOrFallback(param metadata.FuncParam, fallback string) string {
+	nameInSchema, err := metadata.GetParameterSchemaName(param.Name, param.Annotations)
+	if err != nil {
+		return fallback
+	}
+	return nameInSchema
 }
