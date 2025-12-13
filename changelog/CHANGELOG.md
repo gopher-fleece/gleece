@@ -82,6 +82,26 @@ Previously, alias support was limited and resulted in the aliased type effective
 * Added a global `ApiValidator` as the entry point to the HIR validation subsystem.</br>
   This currently includes a URL conflict detection algorithm to emit diagnostics upon route conflicts such as between `POST /a/b/c` and `POST /a/{foo}/c`
 
+* Added an explicit visitor error when using interfaces in general and `interface{}` in particular
+
+* Added a validation error when passing arrays via inputs that do not accept them (i.e., a URL parameter)
+
+
+### Bugfixes
+
+* Fixed array/slice support. Previously resulted in broken generated code
+
+* Fixed cases where model fields were named after the type rather than the field name or JSON tag
+
+* Fixed an issue where `any` yielded an `object` schema entity rather than a 'map-like' one, i.e.,
+```json
+ "someField": {
+	"additionalProperties": {
+    	"type": "object"
+	},
+	"type": "object"
+}
+```
 
 ------------------
 

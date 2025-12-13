@@ -91,7 +91,7 @@ func (v ReceiverValidator) validateParams(receiver *metadata.ReceiverMeta) ([]di
 			return diags, err
 		}
 
-		common.AppendIfNotNil(diags, diag)
+		diags = common.AppendIfNotNil(diags, diag)
 		if passedIn == nil {
 			// If we couldn't process the passedIn portion, no reason in continuing.
 			// An error or error diagnostic will have been added, at this point.
@@ -100,12 +100,12 @@ func (v ReceiverValidator) validateParams(receiver *metadata.ReceiverMeta) ([]di
 
 		switch *passedIn {
 		case definitions.PassedInBody:
-			common.AppendIfNotNil(diags, v.validateBodyParam(receiver, param))
+			diags = common.AppendIfNotNil(diags, v.validateBodyParam(receiver, param))
 		default:
-			common.AppendIfNotNil(diags, v.validateNonBodyParam(receiver, param, *passedIn))
+			diags = common.AppendIfNotNil(diags, v.validateNonBodyParam(receiver, param, *passedIn))
 		}
 
-		common.AppendIfNotNil(diags, v.validateParamsCombinations(processedParams, param, *passedIn))
+		diags = common.AppendIfNotNil(diags, v.validateParamsCombinations(processedParams, param, *passedIn))
 
 		processedParams = append(processedParams, funcParamEx{FuncParam: param, PassedIn: *passedIn})
 	}
@@ -155,21 +155,15 @@ func (v ReceiverValidator) validateBodyParam(
 	receiver *metadata.ReceiverMeta,
 	param metadata.FuncParam,
 ) *diagnostics.ResolvedDiagnostic {
-	// Verify the body is a struct
-	if param.SymbolKind != common.SymKindStruct {
-		nameInSchema, err := metadata.GetParameterSchemaName(param.Name, param.Annotations)
-		if err != nil {
-			nameInSchema = "unknown"
-		}
-
+	// Verify the body is not a built-in
+	if param.Type.SymbolKind.IsBuiltin() {
 		diag := diagnostics.NewErrorDiagnostic(
 			receiver.Annotations.FileName(),
 			fmt.Sprintf(
-				"body parameters must be structs but '%s' (schema name '%s', type '%s') is of kind '%s'",
+				"body parameter '%s' (schema name '%s', type '%s') is a built-in primitive or special (e.g. time.Time) which is not allowed",
 				param.Name,
-				nameInSchema,
+				getParamSchemaNameOrFallback(param, "unknown"),
 				param.Type.Name,
-				param.Type.SymbolKind,
 			),
 			diagnostics.DiagReceiverInvalidBody,
 			param.Range,
