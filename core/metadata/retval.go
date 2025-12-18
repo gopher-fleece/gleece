@@ -13,7 +13,7 @@ type FuncReturnValue struct {
 }
 
 func (v FuncReturnValue) Reduce(ctx ReductionContext) (definitions.FuncReturnValue, error) {
-	typeMeta, err := v.Type.Resolve(ctx)
+	typeMeta, err := v.Type.Reduce(ctx)
 	if err != nil {
 		return definitions.FuncReturnValue{}, err
 	}

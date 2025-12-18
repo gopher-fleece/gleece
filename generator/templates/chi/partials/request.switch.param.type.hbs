@@ -1,15 +1,15 @@
 if is{{Name}}Exists {
 
 {{#if (IsArray TypeMeta.Name)}}
-    {{ToLowerCamel Name}} := make({{SlicePrefix TypeMeta.Name}}{{#ifEqual TypeMeta.SymbolKind "Builtin"}}{{else}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/ifEqual}}{{SliceSlice TypeMeta.Name}}, 0, len({{ToLowerCamel Name}}RawArray))
+    {{ToLowerCamel Name}} := make({{GetArrayPrefixes TypeMeta.Name}}{{#ifEqual TypeMeta.SymbolKind "Builtin"}}{{else}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/ifEqual}}{{StripArrayPrefixes TypeMeta.Name}}, 0, len({{ToLowerCamel Name}}RawArray))
     for _, {{ToLowerCamel Name}}Raw := range {{ToLowerCamel Name}}RawArray {
 {{/if}}
 
-{{#if (OrEqual (SliceSlice TypeMeta.Name) "string" (SliceSlice TypeMeta.AliasMetadata.AliasType) "string")}}
+{{#if (OrEqual (StripArrayPrefixes TypeMeta.Name) "string" (StripArrayPrefixes TypeMeta.AliasMetadata.AliasType) "string")}}
     {{ToLowerCamel Name}}{{#if (IsArray TypeMeta.Name)}}Item{{/if}} := {{ToLowerCamel Name}}Raw
 {{/if}}
 
-{{#if (OrEqual (SliceSlice TypeMeta.Name) "int" (SliceSlice TypeMeta.AliasMetadata.AliasType) "int")}}
+{{#if (OrEqual (StripArrayPrefixes TypeMeta.Name) "int" (StripArrayPrefixes TypeMeta.AliasMetadata.AliasType) "int")}}
     {{ToLowerCamel Name}}Uint64, conversionErr := strconv.Atoi({{ToLowerCamel Name}}Raw)
     if conversionErr != nil {
     {{> ParamsValidationErrorResponse }}
@@ -17,7 +17,7 @@ if is{{Name}}Exists {
     {{ToLowerCamel Name}}{{#if (IsArray TypeMeta.Name)}}Item{{/if}} := int({{ToLowerCamel Name}}Uint64)
 {{/if}}
 
-{{#if (OrEqual (SliceSlice TypeMeta.Name) "int8" (SliceSlice TypeMeta.AliasMetadata.AliasType) "int8")}}
+{{#if (OrEqual (StripArrayPrefixes TypeMeta.Name) "int8" (StripArrayPrefixes TypeMeta.AliasMetadata.AliasType) "int8")}}
     {{ToLowerCamel Name}}Uint64, conversionErr := strconv.ParseInt({{ToLowerCamel Name}}Raw, 10, 8)
     if conversionErr != nil {
     {{> ParamsValidationErrorResponse }}
@@ -26,7 +26,7 @@ if is{{Name}}Exists {
 
 {{/if}}
 
-{{#if (OrEqual (SliceSlice TypeMeta.Name) "int16" (SliceSlice TypeMeta.AliasMetadata.AliasType) "int16")}}
+{{#if (OrEqual (StripArrayPrefixes TypeMeta.Name) "int16" (StripArrayPrefixes TypeMeta.AliasMetadata.AliasType) "int16")}}
     {{ToLowerCamel Name}}Uint64, conversionErr := strconv.ParseInt({{ToLowerCamel Name}}Raw, 10, 16)
     if conversionErr != nil {
     {{> ParamsValidationErrorResponse }}
@@ -35,7 +35,7 @@ if is{{Name}}Exists {
 
 {{/if}}
 
-{{#if (OrEqual (SliceSlice TypeMeta.Name) "int32" (SliceSlice TypeMeta.AliasMetadata.AliasType) "int32")}}
+{{#if (OrEqual (StripArrayPrefixes TypeMeta.Name) "int32" (StripArrayPrefixes TypeMeta.AliasMetadata.AliasType) "int32")}}
     {{ToLowerCamel Name}}Uint64, conversionErr := strconv.ParseInt({{ToLowerCamel Name}}Raw, 10, 32)
     if conversionErr != nil {
     {{> ParamsValidationErrorResponse }}
@@ -44,7 +44,7 @@ if is{{Name}}Exists {
 
 {{/if}}
 
-{{#if (OrEqual (SliceSlice TypeMeta.Name) "int64" (SliceSlice TypeMeta.AliasMetadata.AliasType) "int64")}}
+{{#if (OrEqual (StripArrayPrefixes TypeMeta.Name) "int64" (StripArrayPrefixes TypeMeta.AliasMetadata.AliasType) "int64")}}
     {{ToLowerCamel Name}}Uint64, conversionErr := strconv.ParseInt({{ToLowerCamel Name}}Raw, 10, 64)
     if conversionErr != nil {
     {{> ParamsValidationErrorResponse }}
@@ -53,7 +53,7 @@ if is{{Name}}Exists {
 
 {{/if}}
 
-{{#if (OrEqual (SliceSlice TypeMeta.Name) "uint" (SliceSlice TypeMeta.AliasMetadata.AliasType) "uint")}}
+{{#if (OrEqual (StripArrayPrefixes TypeMeta.Name) "uint" (StripArrayPrefixes TypeMeta.AliasMetadata.AliasType) "uint")}}
     {{ToLowerCamel Name}}Uint64, conversionErr := strconv.ParseUint({{ToLowerCamel Name}}Raw, 10, 32)
     if conversionErr != nil {
     {{> ParamsValidationErrorResponse }}
@@ -62,7 +62,7 @@ if is{{Name}}Exists {
 
 {{/if}}
 
-{{#if (OrEqual (SliceSlice TypeMeta.Name) "uint8" (SliceSlice TypeMeta.AliasMetadata.AliasType) "uint8")}}
+{{#if (OrEqual (StripArrayPrefixes TypeMeta.Name) "uint8" (StripArrayPrefixes TypeMeta.AliasMetadata.AliasType) "uint8")}}
     {{ToLowerCamel Name}}Uint64, conversionErr := strconv.ParseUint({{ToLowerCamel Name}}Raw, 10, 8)
     if conversionErr != nil {
     {{> ParamsValidationErrorResponse }}
@@ -71,7 +71,7 @@ if is{{Name}}Exists {
 
 {{/if}}
 
-{{#if (OrEqual (SliceSlice TypeMeta.Name) "uint16" (SliceSlice TypeMeta.AliasMetadata.AliasType) "uint16")}}
+{{#if (OrEqual (StripArrayPrefixes TypeMeta.Name) "uint16" (StripArrayPrefixes TypeMeta.AliasMetadata.AliasType) "uint16")}}
     {{ToLowerCamel Name}}Uint64, conversionErr := strconv.ParseUint({{ToLowerCamel Name}}Raw, 10, 16)
     if conversionErr != nil {
     {{> ParamsValidationErrorResponse }}
@@ -80,7 +80,7 @@ if is{{Name}}Exists {
 
 {{/if}}
 
-{{#if (OrEqual (SliceSlice TypeMeta.Name) "uint32" (SliceSlice TypeMeta.AliasMetadata.AliasType) "uint32")}}
+{{#if (OrEqual (StripArrayPrefixes TypeMeta.Name) "uint32" (StripArrayPrefixes TypeMeta.AliasMetadata.AliasType) "uint32")}}
     {{ToLowerCamel Name}}Uint64, conversionErr := strconv.ParseUint({{ToLowerCamel Name}}Raw, 10, 32)
     if conversionErr != nil {
     {{> ParamsValidationErrorResponse }}
@@ -89,7 +89,7 @@ if is{{Name}}Exists {
 
 {{/if}}
 
-{{#if (OrEqual (SliceSlice TypeMeta.Name) "uint64" (SliceSlice TypeMeta.AliasMetadata.AliasType) "uint64")}}
+{{#if (OrEqual (StripArrayPrefixes TypeMeta.Name) "uint64" (StripArrayPrefixes TypeMeta.AliasMetadata.AliasType) "uint64")}}
     {{ToLowerCamel Name}}Uint64, conversionErr := strconv.ParseUint({{ToLowerCamel Name}}Raw, 10, 64)
     if conversionErr != nil {
     {{> ParamsValidationErrorResponse }}
@@ -98,7 +98,7 @@ if is{{Name}}Exists {
 
 {{/if}}
 
-{{#if (OrEqual (SliceSlice TypeMeta.Name) "bool" (SliceSlice TypeMeta.AliasMetadata.AliasType) "bool")}}
+{{#if (OrEqual (StripArrayPrefixes TypeMeta.Name) "bool" (StripArrayPrefixes TypeMeta.AliasMetadata.AliasType) "bool")}}
     {{ToLowerCamel Name}}Bool, conversionErr := strconv.ParseBool({{ToLowerCamel Name}}Raw)
     if conversionErr != nil {
     {{> ParamsValidationErrorResponse }}
@@ -107,7 +107,7 @@ if is{{Name}}Exists {
 
 {{/if}}
 
-{{#if (OrEqual (SliceSlice TypeMeta.Name) "float32" (SliceSlice TypeMeta.AliasMetadata.AliasType) "float32")}}
+{{#if (OrEqual (StripArrayPrefixes TypeMeta.Name) "float32" (StripArrayPrefixes TypeMeta.AliasMetadata.AliasType) "float32")}}
     {{ToLowerCamel Name}}Float64, conversionErr := strconv.ParseFloat({{ToLowerCamel Name}}Raw, 32)
     if conversionErr != nil {
     {{> ParamsValidationErrorResponse }}
@@ -116,7 +116,7 @@ if is{{Name}}Exists {
 
 {{/if}}
 
-{{#if (OrEqual (SliceSlice TypeMeta.Name) "float64" (SliceSlice TypeMeta.AliasMetadata.AliasType) "float64")}}
+{{#if (OrEqual (StripArrayPrefixes TypeMeta.Name) "float64" (StripArrayPrefixes TypeMeta.AliasMetadata.AliasType) "float64")}}
     {{ToLowerCamel Name}}Float64, conversionErr := strconv.ParseFloat({{ToLowerCamel Name}}Raw, 64)
     if conversionErr != nil {
     {{> ParamsValidationErrorResponse }}
@@ -132,7 +132,7 @@ if is{{Name}}Exists {
         {{#if (IsArray TypeMeta.Name)}}
             break
         {{else}}
-            {{ToLowerCamel Name}}Var := Param{{{UniqueImportSerial}}}{{{Name}}}.{{SliceSlice TypeMeta.Name}}({{ToLowerCamel Name}})
+            {{ToLowerCamel Name}}Var := Param{{{UniqueImportSerial}}}{{{Name}}}.{{StripArrayPrefixes TypeMeta.Name}}({{ToLowerCamel Name}})
             {{ToLowerCamel Name}}RawPtr = &{{ToLowerCamel Name}}Var
         {{/if}}
         default:
@@ -143,7 +143,7 @@ if is{{Name}}Exists {
 {{/ifEqual}}
 
 {{#if (IsArray TypeMeta.Name)}}
-    {{ToLowerCamel Name}} = append({{ToLowerCamel Name}}, {{#if TypeMeta.PkgPath}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{SliceSlice TypeMeta.Name}}({{ToLowerCamel Name}}Item))
+    {{ToLowerCamel Name}} = append({{ToLowerCamel Name}}, {{#if TypeMeta.PkgPath}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{StripArrayPrefixes TypeMeta.Name}}({{ToLowerCamel Name}}Item))
     }
     {{ToLowerCamel Name}}RawPtr = &{{ToLowerCamel Name}}
 {{/if}}
@@ -154,13 +154,13 @@ if is{{Name}}Exists {
     {{!--The ValidateTopLevelOnlyEnum section alredy put the nessesary vars --}}
     {{else}}
     {{!-- Enum without validation --}}
-        {{ToLowerCamel Name}}Var := {{SlicePrefix TypeMeta.Name}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{SliceSlice TypeMeta.Name}}({{ToLowerCamel Name}})
+        {{ToLowerCamel Name}}Var := {{GetArrayPrefixes TypeMeta.Name}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{StripArrayPrefixes TypeMeta.Name}}({{ToLowerCamel Name}})
         {{ToLowerCamel Name}}RawPtr = &{{ToLowerCamel Name}}Var
     {{/if}}
 {{else}}
 {{!-- Case of Alias --}}
     {{#ifEqual TypeMeta.SymbolKind "Alias"}}
-        {{ToLowerCamel Name}}Var := {{SlicePrefix TypeMeta.Name}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{SliceSlice TypeMeta.Name}}({{ToLowerCamel Name}})
+        {{ToLowerCamel Name}}Var := {{GetArrayPrefixes TypeMeta.Name}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{StripArrayPrefixes TypeMeta.Name}}({{ToLowerCamel Name}})
         {{ToLowerCamel Name}}RawPtr = &{{ToLowerCamel Name}}Var
     {{else}}
     {{!-- Default case for primitive types --}}

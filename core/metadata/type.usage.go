@@ -10,6 +10,21 @@ import (
 	"github.com/gopher-fleece/gleece/graphs"
 )
 
+// Represents a type usage site's metadata.
+//
+// Example:
+// The type usage for:
+//
+//	m := map[string]int
+//
+// is
+//
+//	map[string]int
+//
+// Metadata includes the usage's location in code, how it's imported and any modifiers like pointers/slices.
+//
+// This structure is part of the HIR in that it's linked to the source AST but also also serves as a high level abstraction that can be reduced
+// to a flatter, simpler IR that's used by the downstream generators to emit routing and schema code.
 type TypeUsageMeta struct {
 	SymNodeMeta
 	Import common.ImportType
@@ -18,7 +33,12 @@ type TypeUsageMeta struct {
 	Root TypeRef
 }
 
-func (t TypeUsageMeta) Resolve(ctx ReductionContext) (definitions.TypeMetadata, error) {
+// Reduce returns the IR for the type usage.
+// This IR is a simpler and flatter TypeMetadata that can be used by downstream generators to emit the final code.
+func (t TypeUsageMeta) Reduce(ctx ReductionContext) (definitions.TypeMetadata, error) {
+	// First, we need to get the cache key for this usage. This allows us to better understand
+	// what we're looking at and pull off related info from the graph.
+	// Not an ideal situation but good enough for now.
 	symKey, err := t.Root.CacheLookupKey(t.FVersion)
 	if err != nil {
 		return definitions.TypeMetadata{}, fmt.Errorf(
@@ -28,6 +48,8 @@ func (t TypeUsageMeta) Resolve(ctx ReductionContext) (definitions.TypeMetadata, 
 		)
 	}
 
+	// The Symbol Key is the easiest way to tell whether something is a 'universe' or 'builtin' type.
+	// Universe are a special case as they never have PkgPath, imports, annotations etc.
 	if symKey.IsUniverse {
 		return definitions.TypeMetadata{
 			Name:           t.Root.SimpleTypeString(),
@@ -52,16 +74,19 @@ func (t TypeUsageMeta) Resolve(ctx ReductionContext) (definitions.TypeMetadata, 
 	}, nil
 }
 
+// IsContext returns a boolean indicating whether this usage is of Go's context.Context.
+// Context is a special object and has specific treatment at both visitation and validation layers.
 func (t TypeUsageMeta) IsContext() bool {
 	return t.Name == "Context" && t.PkgPath == "context"
 }
 
+// IsIterable returns a boolean indicating whether this usage is of a slice or an array
 func (t TypeUsageMeta) IsIterable() bool {
 	return t.Root.Kind() == TypeRefKindSlice || t.Root.Kind() == TypeRefKindArray
 }
 
-// getAliasMeta attempts to retrieve Alias metadata for the given type.
-// Alias metadata is relevant for enums and true aliases. For other kinds, it'll remain empty.
+// getAliasMeta attempts to retrieve alias metadata for the given type.
+// Returns a populated AliasMetadata, if the type is an enum or alias, otherwise returns an empty AliasMetadata
 func getAliasMeta(
 	ctx ReductionContext,
 	typeSymKey graphs.SymbolKey,

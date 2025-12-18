@@ -32,12 +32,14 @@ func splitSliceBracket(input string) (brackets string, name string) {
 }
 
 func registerHandlebarsHelpers() {
-	raymond.RegisterHelper("SlicePrefix", func(arg string) string {
+	// Given a string like '[][][]something' returns '[][][]'
+	raymond.RegisterHelper("GetArrayPrefixes", func(arg string) string {
 		brackets, _ := splitSliceBracket(arg)
 		return brackets
 	})
 
-	raymond.RegisterHelper("SliceSlice", func(arg string) string {
+	// Given a string like '[][][]something' returns 'something'
+	raymond.RegisterHelper("StripArrayPrefixes", func(arg string) string {
 		_, name := splitSliceBracket(arg)
 		return name
 	})

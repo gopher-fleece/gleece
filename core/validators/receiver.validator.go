@@ -93,7 +93,8 @@ func (v ReceiverValidator) validateParams(receiver *metadata.ReceiverMeta) ([]di
 
 		if passedIn == nil {
 			// If we couldn't process the passedIn portion, no reason in continuing.
-			// An error or error diagnostic will have been added, at this point.
+			// An error or error diagnostic will have been added, at this point
+			// or later on by the annotation link validator.
 			continue
 		}
 

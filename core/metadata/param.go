@@ -13,7 +13,7 @@ type FuncParam struct {
 }
 
 func (v FuncParam) Reduce(ctx ReductionContext) (definitions.FuncParam, error) {
-	typeMeta, err := v.Type.Resolve(ctx)
+	typeMeta, err := v.Type.Reduce(ctx)
 	if err != nil {
 		return definitions.FuncParam{}, err
 	}

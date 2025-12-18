@@ -25,7 +25,7 @@ var _ = Describe("Unit Tests - TypeUsage", func() {
 					Root: utils.MakeUniverseRoot("string"),
 				}
 
-				result, err := usage.Resolve(metadata.ReductionContext{})
+				result, err := usage.Reduce(metadata.ReductionContext{})
 				Expect(err).To(BeNil())
 				Expect(result.Name).To(Equal("string"))
 				Expect(result.Import).To(Equal(common.ImportTypeNone))
@@ -50,7 +50,7 @@ var _ = Describe("Unit Tests - TypeUsage", func() {
 					},
 				}
 
-				result, err := usage.Resolve(metadata.ReductionContext{})
+				result, err := usage.Reduce(metadata.ReductionContext{})
 				Expect(err).To(BeNil())
 				Expect(result.Name).To(Equal("string"))
 				Expect(result.Import).To(Equal(common.ImportTypeNone))

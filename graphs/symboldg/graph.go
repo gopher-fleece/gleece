@@ -1064,7 +1064,7 @@ func (g *SymbolGraph) conditionalEnsureTypeParamNode(
 	node := &SymbolNode{
 		Id:   key,
 		Kind: common.SymKindTypeParam,
-		Data: metadata.TypeParamMeta{
+		Data: metadata.TypeParamDeclMeta{
 			Name:  key.Name,
 			Index: index,
 		},

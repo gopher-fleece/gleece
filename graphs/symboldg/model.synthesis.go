@@ -186,7 +186,7 @@ func instantiateGenericModel(
 		if tParamNode.Kind.IsBuiltin() {
 			return tParamNode.Id.Name
 		}
-		return tParamNode.Data.(*metadata.TypeParamMeta).Name
+		return tParamNode.Data.(*metadata.TypeParamDeclMeta).Name
 	})
 
 	if modelNameTransformer != nil {

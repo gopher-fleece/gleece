@@ -7,7 +7,7 @@
 {{/equal}}
 
 {{#equal PassedIn "Query"}}
-	var {{ToLowerCamel Name}}RawPtr *{{SlicePrefix TypeMeta.Name}}{{#if TypeMeta.PkgPath}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{SliceSlice TypeMeta.Name}} = nil
+	var {{ToLowerCamel Name}}RawPtr *{{GetArrayPrefixes TypeMeta.Name}}{{#if TypeMeta.PkgPath}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{StripArrayPrefixes TypeMeta.Name}} = nil
     {{ToLowerCamel Name}}Raw{{#if (IsArray TypeMeta.Name)}}Array{{/if}}, is{{Name}}Exists := ginCtx.GetQuery{{#if (IsArray TypeMeta.Name)}}Array{{/if}}("{{{NameInSchema}}}")
 	{{> RequestSwitchParamType}}
 	{{> RunValidator}}
@@ -29,7 +29,7 @@
 {{/equal}}
 
 {{#equal PassedIn "Body"}}
-	var {{ToLowerCamel Name}}RawPtr *{{SlicePrefix TypeMeta.Name}}{{#if TypeMeta.PkgPath}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{SliceSlice TypeMeta.Name}} = nil
+	var {{ToLowerCamel Name}}RawPtr *{{GetArrayPrefixes TypeMeta.Name}}{{#if TypeMeta.PkgPath}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{StripArrayPrefixes TypeMeta.Name}} = nil
 	conversionErr = bindAndValidateBody(ginCtx, "{{{ResponseContentType}}}", "{{Validator}}",&{{ToLowerCamel Name}}RawPtr)
 	if conversionErr != nil {
 		{{> JsonBodyValidationErrorResponse }}
