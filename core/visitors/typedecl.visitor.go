@@ -10,7 +10,7 @@ import (
 	"github.com/gopher-fleece/gleece/graphs"
 )
 
-// TypeDeclVisitor dispatches type declarations to specialized decl visitors.
+// TypeDeclVisitor dispatches type declarations to specialized visitors for processing
 type TypeDeclVisitor struct {
 	BaseVisitor
 
@@ -53,18 +53,17 @@ func (v *TypeDeclVisitor) VisitTypeDecl(
 	v.enterFmt("TypeDeclVisitor.VisitTypeDecl %s in %s", typeSpec.Name.Name, pkg.PkgPath)
 	defer v.exit()
 
-	// Must obtain file version for this file (strict).
 	fileVersion, fvErr := v.context.MetadataCache.GetFileVersion(file, pkg.Fset)
 	if fvErr != nil || fileVersion == nil {
 		return graphs.SymbolKey{}, fmt.Errorf("could not obtain file version for type %s: %w", typeSpec.Name.Name, fvErr)
 	}
 
-	// Alias: `type Foo = Bar`
+	// An assigned type, e.g. `type Foo = Bar`
 	if typeSpec.Assign != 0 {
 		return v.visitAssignedType(pkg, file, fileVersion, genDecl, typeSpec)
 	}
 
-	// Dispatch by syntactic type
+	// Dispatch the node to the relevant visitor
 	switch typeSpec.Type.(type) {
 	case *ast.StructType:
 		// StructVisitor is responsible for materializing the struct + fields in graph
@@ -72,14 +71,17 @@ func (v *TypeDeclVisitor) VisitTypeDecl(
 		return symKey, err
 
 	case *ast.Ident:
-		// Could be an enum-like alias to a basic type (e.g., type X string)
+		// Idents here may be enums or assigned aliases.
+		// Since Go's AST does not actually have a concept of enum or even an alias, we have to
+		// do some heuristics here.
+		//
+		// We basically try extracting an enum for the declaration; If it works, we're looking at an enum.
+		// If it doesn't, we're looking at an alias (or a logic error)
 		if gast.IsEnumLike(pkg, typeSpec) {
 			_, enumSymKey, err := v.enumVisitor.VisitEnumType(pkg, file, fileVersion, genDecl, typeSpec)
 			return enumSymKey, err
 		}
-		// Not enum-like (or no enumVisitor): return stable key but don't materialize
 		return v.visitAssignedType(pkg, file, fileVersion, genDecl, typeSpec)
-		// return graphs.NewSymbolKey(typeSpec, fileVersion), nil
 
 	case *ast.SelectorExpr:
 		// An alias for a type import like
@@ -88,7 +90,7 @@ func (v *TypeDeclVisitor) VisitTypeDecl(
 		return v.aliasVisitor.VisitAlias(pkg, file, genDecl, typeSpec)
 
 	case *ast.InterfaceType:
-		// Currently, the only interface we care about is context.Context
+		// Currently, the only interface we care about or support is context.Context
 		specName := gast.GetIdentNameOrFallback(typeSpec.Name, "")
 		if pkg.PkgPath == "context" && specName == "Context" {
 			return graphs.NewNonUniverseBuiltInSymbolKey("context.Context"), nil
@@ -102,6 +104,13 @@ func (v *TypeDeclVisitor) VisitTypeDecl(
 	)
 }
 
+// visitAssignedType attempts to parse an assigned type declaration like
+//
+//	type Something = string
+//
+// into either an enum or an alias.
+//
+// This process is somewhat heuristic due to Go's AST not including a true 'enum' or 'alias' type nodes.
 func (v *TypeDeclVisitor) visitAssignedType(
 	pkg *packages.Package,
 	file *ast.File,
@@ -109,6 +118,10 @@ func (v *TypeDeclVisitor) visitAssignedType(
 	genDecl *ast.GenDecl,
 	typeSpec *ast.TypeSpec,
 ) (graphs.SymbolKey, error) {
+	// Aliases are logically a subset of enums. As such, we have to first see if a declaration is an enum before deciding its an alias.
+	//
+	// As enum parsing is generally pretty expensive we actually try the full enum extraction here instead of having a dedicated check (which wouldn't be much cheaper)
+	// If it works, great, we're done. If it doesn't we try parsing as an alias.
 	_, enumKey, err := v.enumVisitor.VisitEnumType(pkg, file, fileVersion, genDecl, typeSpec)
 	if err == nil {
 		return enumKey, nil
@@ -145,7 +158,7 @@ func (v *TypeDeclVisitor) EnsureDeclMaterialized(
 
 	declKey := graphs.NewSymbolKey(typeSpec, fileVersion)
 
-	// Fast path: already materialized/visited
+	// Fast path - already materialized/visited
 	if v.context.MetadataCache.HasVisited(declKey) {
 		return declKey, nil
 	}
@@ -160,12 +173,12 @@ func (v *TypeDeclVisitor) EnsureDeclMaterialized(
 	// We are now the materializer for this declaration.
 	symKey, err := v.VisitTypeDecl(pkg, file, genDecl, typeSpec)
 	if err != nil {
-		// mark finish with failure so retries are possible later
+		// Mark the materialization as 'failed'
 		v.context.MetadataCache.FinishMaterializing(declKey, false)
 		return declKey, err
 	}
 
-	// Success: finish and ensure visited is set.
+	// Mark the materialization as 'successful'
 	v.context.MetadataCache.FinishMaterializing(declKey, true)
 	return symKey, nil
 }
