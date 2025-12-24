@@ -86,26 +86,26 @@ func (v ReceiverValidator) validateParams(receiver *metadata.ReceiverMeta) ([]di
 			continue
 		}
 
-		passedIn, diag, err := v.getPassedInValue(param)
+		passedIn, err := v.getPassedInValue(param)
 		if err != nil {
 			return diags, err
 		}
 
-		common.AppendIfNotNil(diags, diag)
 		if passedIn == nil {
 			// If we couldn't process the passedIn portion, no reason in continuing.
-			// An error or error diagnostic will have been added, at this point.
+			// An error or error diagnostic will have been added, at this point
+			// or later on by the annotation link validator.
 			continue
 		}
 
 		switch *passedIn {
 		case definitions.PassedInBody:
-			common.AppendIfNotNil(diags, v.validateBodyParam(receiver, param))
+			diags = common.AppendIfNotNil(diags, v.validateBodyParam(receiver, param))
 		default:
-			common.AppendIfNotNil(diags, v.validatePrimitiveParam(receiver, param, *passedIn))
+			diags = common.AppendIfNotNil(diags, v.validateNonBodyParam(receiver, param, *passedIn))
 		}
 
-		common.AppendIfNotNil(diags, v.validateParamsCombinations(processedParams, param, *passedIn))
+		diags = common.AppendIfNotNil(diags, v.validateParamsCombinations(processedParams, param, *passedIn))
 
 		processedParams = append(processedParams, funcParamEx{FuncParam: param, PassedIn: *passedIn})
 	}
@@ -113,37 +113,26 @@ func (v ReceiverValidator) validateParams(receiver *metadata.ReceiverMeta) ([]di
 	return diags, nil
 }
 
-func (v ReceiverValidator) getPassedInValue(param metadata.FuncParam) (
-	*definitions.ParamPassedIn,
-	*diagnostics.ResolvedDiagnostic,
-	error,
-) {
+func (v ReceiverValidator) getPassedInValue(param metadata.FuncParam) (*definitions.ParamPassedIn, error) {
 	// This function gets the parameter's passed-in value (e.g. passed-in-body or passed-in-header)
 	// If it fails, it may return a standard error or an InvalidAnnotation error.
 	passedIn, err := metadata.GetParamPassedIn(param.Name, param.Annotations)
 	if err == nil {
-		return &passedIn, nil, nil
+		return &passedIn, nil
 	}
 
 	// If we didn't get a value, it generally means a missing annotation which is a 'diagnostic'
 	// or an outright malformed one which we consider an 'error'.
 	// InvalidAnnotation error is the former.
+	// In such a case, we return a nil here to halt further checks.
+	//
+	// The relevant diagnostic will be emitted by a subsequent call to validators.AnnotationLinkValidator
 	if _, isInvalidAnnotationErr := err.(metadata.InvalidAnnotationError); isInvalidAnnotationErr {
-		diag := diagnostics.NewErrorDiagnostic(
-			v.receiver.Annotations.FileName(),
-			fmt.Sprintf(
-				"Parameter '%s' in receiver '%s' is not referenced by any annotation",
-				param.Name,
-				v.receiver.Name,
-			),
-			diagnostics.DiagLinkerUnreferencedParameter,
-			v.receiver.RetValsRange(),
-		)
-		return nil, &diag, nil
+		return nil, nil
 	}
 
 	// A true error or a grossly malformed annotation. Regardless, this is a flow-terminating error.
-	return nil, nil, fmt.Errorf(
+	return nil, fmt.Errorf(
 		"failed to determine 'passed-in' type for parameter '%s' in receiver '%s' - %w",
 		param.Name,
 		v.receiver.Name,
@@ -155,21 +144,15 @@ func (v ReceiverValidator) validateBodyParam(
 	receiver *metadata.ReceiverMeta,
 	param metadata.FuncParam,
 ) *diagnostics.ResolvedDiagnostic {
-	// Verify the body is a struct
-	if param.SymbolKind != common.SymKindStruct {
-		nameInSchema, err := metadata.GetParameterSchemaName(param.Name, param.Annotations)
-		if err != nil {
-			nameInSchema = "unknown"
-		}
-
+	// Currently, body parameters cannot be a non-array/slice primitive/built-in special
+	if param.Type.SymbolKind.IsBuiltin() && !param.Type.IsIterable() {
 		diag := diagnostics.NewErrorDiagnostic(
 			receiver.Annotations.FileName(),
 			fmt.Sprintf(
-				"body parameters must be structs but '%s' (schema name '%s', type '%s') is of kind '%s'",
+				"body parameter '%s' (schema name '%s', type '%s') is a built-in primitive or special (e.g. time.Time) which is not allowed",
 				param.Name,
-				nameInSchema,
+				getParamSchemaNameOrFallback(param, "unknown"),
 				param.Type.Name,
-				param.Type.SymbolKind,
 			),
 			diagnostics.DiagReceiverInvalidBody,
 			param.Range,
@@ -180,32 +163,54 @@ func (v ReceiverValidator) validateBodyParam(
 	return nil
 }
 
-func (v ReceiverValidator) validatePrimitiveParam(
+func (v ReceiverValidator) validateNonBodyParam(
 	receiver *metadata.ReceiverMeta,
 	param metadata.FuncParam,
 	passedIn definitions.ParamPassedIn,
 ) *diagnostics.ResolvedDiagnostic {
+	// First - any arrays in anything other than query
+	// (remember that this validates non-body parameters)
+	// is automatically invalid - Neither URL parameters
+	if param.Type.IsIterable() && passedIn != definitions.PassedInQuery && passedIn != definitions.PassedInBody {
+		diag := diagnostics.NewErrorDiagnostic(
+			receiver.Annotations.FileName(),
+			fmt.Sprintf(
+				"parameter '%s' (schema name '%s', type '%s') is an array/slice and can only be passed in a query or a body",
+				param.Name,
+				getParamSchemaNameOrFallback(param, "unknown"),
+				param.Type.Name,
+			),
+			diagnostics.DiagReceiverParamNotPrimitive,
+			param.Range,
+		)
+		return &diag
+	}
+
 	isErrType := param.Type.PkgPath == "" && param.Type.Name == "error"
 	isMapType := param.Type.PkgPath == "" && strings.HasPrefix(param.Type.Name, "map[")
 	isAnEnum := param.Type.SymbolKind == common.SymKindEnum
 
-	if (param.Type.IsUniverseType() || isAnEnum) && !isErrType && !isMapType {
+	isAnAlias, isAPrimitiveAlias := isPrimitiveAlias(param)
+
+	if (param.Type.IsUniverseType() || isAnEnum || (isAnAlias && isAPrimitiveAlias)) && !isErrType && !isMapType {
 		return nil
 	}
 
-	nameInSchema, err := metadata.GetParameterSchemaName(param.Name, param.Annotations)
-	if err != nil {
-		nameInSchema = "unknown"
+	isIterableMsg := ""
+	if param.Type.IsIterable() {
+		isIterableMsg = "an iterable "
 	}
+
 	diag := diagnostics.NewErrorDiagnostic(
 		receiver.Annotations.FileName(),
 		fmt.Sprintf(
-			"header, path and query parameters are currently limited to primitives only but "+
-				"%s parameter '%s' (schema name '%s', type '%s') is of kind '%s'",
+			"header/path/query parameters may only be primitives but "+
+				"%s parameter '%s' (schema name '%s', type '%s') is %sof kind '%s'",
 			passedIn,
 			param.Name,
-			nameInSchema,
+			getParamSchemaNameOrFallback(param, "unknown"),
 			param.Type.Name,
+			isIterableMsg,
 			param.Type.SymbolKind,
 		),
 		diagnostics.DiagReceiverParamNotPrimitive,
@@ -402,4 +407,29 @@ func getDiagForRetSig(receiver *metadata.ReceiverMeta) (int, *diagnostics.Resolv
 	}
 
 	return errorRetTypeIndex, nil
+}
+
+func getParamSchemaNameOrFallback(param metadata.FuncParam, fallback string) string {
+	nameInSchema, err := metadata.GetParameterSchemaName(param.Name, param.Annotations)
+	if err != nil {
+		return fallback
+	}
+	return nameInSchema
+}
+
+func isPrimitiveAlias(param metadata.FuncParam) (bool, bool) {
+	if param.Type.SymbolKind != common.SymKindAlias {
+		return false, false
+	}
+
+	flattenedTypeRef := param.Type.Root.Flatten()
+
+	switch len(flattenedTypeRef) {
+	case 0:
+		return true, true
+	case 1:
+		return true, flattenedTypeRef[0].Kind() == metadata.TypeRefKindNamed
+	default:
+		return true, flattenedTypeRef[len(flattenedTypeRef)-1].Kind() == metadata.TypeRefKindNamed
+	}
 }

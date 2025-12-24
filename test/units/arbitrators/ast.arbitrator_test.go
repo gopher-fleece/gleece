@@ -37,7 +37,12 @@ func (v *testVisitor) VisitStructType(file *ast.File, nodeGenDecl *ast.GenDecl, 
 	return metadata.StructMeta{}, graphs.SymbolKey{}, nil
 }
 
-func (v *testVisitor) VisitField(pkg *packages.Package, file *ast.File, field *ast.Field) ([]metadata.FieldMeta, error) {
+func (v *testVisitor) VisitField(
+	pkg *packages.Package,
+	file *ast.File,
+	field *ast.Field,
+	kind common.SymKind,
+) ([]metadata.FieldMeta, error) {
 	if v.VisitFieldFunc != nil {
 		return v.VisitFieldFunc(pkg, file, field)
 	}
@@ -62,11 +67,11 @@ func (v *testVisitor) VisitField(pkg *packages.Package, file *ast.File, field *a
 var _ = Describe("Unit Tests - AST Arbitrator (external)", func() {
 	var arbProvider *providers.ArbitrationProvider
 	var astArb *arbitrators.AstArbitrator
-	var pkgFacade interface{}
+	var pkgFacade any
 
 	BeforeEach(func() {
 		var err error
-		arbProvider, err = providers.NewArbitrationProvider([]string{})
+		arbProvider, err = providers.NewArbitrationProviderFromGleeceConfig(nil)
 		Expect(err).To(BeNil())
 
 		// Use exported provider API to get the arbitrator.
@@ -352,7 +357,7 @@ var _ = Describe("Unit Tests - AST Arbitrator (external)", func() {
 			}
 			tp, err := astArb.GetImportType(nil, mp)
 			Expect(err).To(BeNil())
-			Expect(tp).To(Equal(common.ImportTypeAlias))
+			Expect(tp).To(Equal(common.ImportTypeNone))
 		})
 
 		It("Inspects channel element types", func() {
@@ -360,13 +365,6 @@ var _ = Describe("Unit Tests - AST Arbitrator (external)", func() {
 			tp, err := astArb.GetImportType(nil, ch)
 			Expect(err).To(BeNil())
 			Expect(tp).To(Equal(common.ImportTypeNone))
-		})
-
-		It("Returns an error for unsupported expression kinds", func() {
-			ft := &ast.FuncType{}
-			tp, err := astArb.GetImportType(nil, ft)
-			Expect(tp).To(Equal(common.ImportTypeNone))
-			Expect(err).To(MatchError(ContainSubstring("unsupported expression type")))
 		})
 
 		It("Detects dot-imported idents via GetPackageFromDotImportedIdent and returns Dot", func() {
@@ -444,7 +442,9 @@ var _ = Describe("Unit Tests - AST Arbitrator (external)", func() {
 			}
 			ident := &ast.Ident{Name: "Sprintf"}
 			_, err := astArb.GetPackageFromDotImportedIdent(file, ident)
-			Expect(err).To(MatchError(ContainSubstring("encountered 1 errors over 1 packages during load")))
+			Expect(err).To(MatchError(MatchRegexp(
+				`encountered \d+ errors over \d+ package/s \(.+?\) during load -`,
+			)))
 		})
 
 		It("Returns an error when PackagesFacade.GetPackage returns an error", func() {

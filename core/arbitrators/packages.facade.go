@@ -15,6 +15,8 @@ import (
 )
 
 type PackagesFacade struct {
+	config PackageFacadeConfig
+
 	fileSet       *token.FileSet
 	files         map[string]*ast.File         // filename → *ast.File
 	fileToPackage map[string]*packages.Package // filename → owning *packages.Package
@@ -24,8 +26,9 @@ type PackagesFacade struct {
 
 }
 
-func NewPackagesFacade(globs []string) (PackagesFacade, error) {
+func NewPackagesFacade(config PackageFacadeConfig) (PackagesFacade, error) {
 	facade := PackagesFacade{
+		config:  config,
 		fileSet: token.NewFileSet(),
 
 		files:         make(map[string]*ast.File),
@@ -35,7 +38,7 @@ func NewPackagesFacade(globs []string) (PackagesFacade, error) {
 		packageToFiles: map[string][]*ast.File{},
 	}
 
-	err := facade.initWithGlobs(globs)
+	err := facade.initWithGlobs()
 	return facade, err
 }
 
@@ -51,7 +54,7 @@ func (facade *PackagesFacade) GetAllSourceFiles() []*ast.File {
 	return result
 }
 
-func (facade *PackagesFacade) initWithGlobs(globs []string) error {
+func (facade *PackagesFacade) initWithGlobs() error {
 
 	pkgPathsToLoad := MapSet.NewSet[string]()
 
@@ -65,7 +68,7 @@ func (facade *PackagesFacade) initWithGlobs(globs []string) error {
 	matchedAbsPaths := map[string]struct{}{}
 
 	// For each glob expression (provided via gleece.config), parse all matching files
-	for _, globExpr := range globs {
+	for _, globExpr := range facade.config.Globs {
 		globbedSources, err := doublestar.FilepathGlob(globExpr)
 		if err != nil {
 			return err
@@ -172,21 +175,38 @@ func (facade *PackagesFacade) loadAndCacheExpressions(
 	}
 
 	var pkgErrs []packages.Error
+	var failedPackageNames []string
+
 	failedPkgCount := 0
 	for _, p := range matchingPackages {
 		if len(p.Errors) > 0 {
 			failedPkgCount++
 			pkgErrs = append(pkgErrs, p.Errors...)
+			failedPackageNames = append(failedPackageNames, p.Name)
 		}
 	}
 
 	if len(pkgErrs) > 0 {
-		return nil, fmt.Errorf(
-			"encountered %d errors over %d packages during load - %v",
-			len(pkgErrs),
-			failedPkgCount,
+		failMessage := fmt.Sprintf(
+			"Failed to fully load the following packages: %v. Reported errors: %v",
+			failedPackageNames,
 			pkgErrs,
 		)
+
+		if facade.config.AllowPackageLoadFailures {
+			logger.Warn(failMessage)
+		} else {
+			skipMessage := "To ignore package load failures, set 'commonConfig->allowPackageLoadFailures' to 'true' in the gleece config file."
+			logger.Fatal(failMessage + skipMessage)
+			return nil, fmt.Errorf(
+				"encountered %d errors over %d package/s (%v) during load - %v. %s",
+				len(pkgErrs),
+				failedPkgCount,
+				failedPackageNames,
+				pkgErrs,
+				skipMessage,
+			)
+		}
 	}
 
 	// Note that packages.Load does *not* guarantee order
