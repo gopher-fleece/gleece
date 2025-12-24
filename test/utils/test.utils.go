@@ -17,22 +17,15 @@ import (
 	"github.com/gopher-fleece/gleece/core/annotations"
 	"github.com/gopher-fleece/gleece/core/arbitrators/caching"
 	"github.com/gopher-fleece/gleece/core/metadata"
-	"github.com/gopher-fleece/gleece/core/metadata/typeref"
 	"github.com/gopher-fleece/gleece/core/pipeline"
 	"github.com/gopher-fleece/gleece/core/visitors"
 	"github.com/gopher-fleece/gleece/core/visitors/providers"
 	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/gast"
-	"github.com/gopher-fleece/gleece/graphs"
 	"github.com/gopher-fleece/gleece/graphs/symboldg"
 	. "github.com/onsi/ginkgo/v2"
 	"golang.org/x/tools/go/packages"
 )
-
-type StdTestCtx struct {
-	VisitCtx visitors.VisitContext
-	Orc      *visitors.VisitorOrchestrator
-}
 
 func GetMetadataByRelativeConfig(relativeConfigPath string) (pipeline.GleeceFlattenedMetadata, error) {
 	_, meta, err := cmd.GetConfigAndMetadata(
@@ -279,7 +272,14 @@ func GetVisitContextByRelativeConfigOrFail(relativeConfigPath string) visitors.V
 		Fail(fmt.Sprintf("could not load Gleece Config - %v", err))
 	}
 
-	arbProvider, err := providers.NewArbitrationProviderFromGleeceConfig(config)
+	var globs []string
+	if len(config.CommonConfig.ControllerGlobs) > 0 {
+		globs = config.CommonConfig.ControllerGlobs
+	} else {
+		globs = []string{"./*.go", "./**/*.go"}
+	}
+
+	arbProvider, err := providers.NewArbitrationProvider(globs)
 	if err != nil {
 		Fail(fmt.Sprintf("could not create an arbitration provider - %v", err))
 	}
@@ -291,8 +291,7 @@ func GetVisitContextByRelativeConfigOrFail(relativeConfigPath string) visitors.V
 		GleeceConfig:        config,
 		ArbitrationProvider: arbProvider,
 		MetadataCache:       metaCache,
-		Graph:               &symGraph,
-		SyncedProvider:      common.Ptr(providers.NewSyncedProvider()),
+		GraphBuilder:        &symGraph,
 	}
 }
 
@@ -399,37 +398,4 @@ func GetMockRetVals(number int) []metadata.FuncReturnValue {
 		)
 	}
 	return retVals
-}
-
-// MakeUniverseRoot is a tiny test helper that builds a NamedTypeRef pointing at a universe type.
-func MakeUniverseRoot(universeName string) *typeref.NamedTypeRef {
-	k := graphs.NewUniverseSymbolKey(universeName)
-	r := typeref.NewNamedTypeRef(&k, nil)
-	return &r
-}
-
-// MakeNonUniverseBuiltinRoot is a tiny test helper that builds a NamedTypeRef pointing at a built-in though non-universe type.
-func MakeNonUniverseBuiltinRoot(typeName string) *typeref.NamedTypeRef {
-	k := graphs.NewNonUniverseBuiltInSymbolKey(typeName)
-	r := typeref.NewNamedTypeRef(&k, nil)
-	return &r
-}
-
-func CreateStdTestCtx(configRelPath string) StdTestCtx {
-	testCtx := StdTestCtx{
-		VisitCtx: GetVisitContextByRelativeConfigOrFail(configRelPath),
-	}
-
-	orc, err := visitors.NewVisitorOrchestrator(&testCtx.VisitCtx)
-	if err != nil {
-		Fail("Failed to create a VisitorOrchestrator for test setup")
-		return testCtx
-	}
-
-	testCtx.Orc = orc
-	if err != nil {
-		Fail("Failed to construct a new controller visitor")
-	}
-
-	return testCtx
 }

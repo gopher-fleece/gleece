@@ -6,9 +6,3 @@ func Ptr[T any](v T) *T {
 	return &v
 }
 
-func Ternary[T any](condition bool, left, right T) T {
-	if condition {
-		return left
-	}
-	return right
-}

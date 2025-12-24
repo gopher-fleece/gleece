@@ -44,7 +44,7 @@ type RouteVisitor struct {
 
 	parent RouteParentContext
 
-	fieldVisitor *FieldVisitor
+	typeVisitor *RecursiveTypeVisitor
 }
 
 func NewRouteVisitor(
@@ -58,28 +58,13 @@ func NewRouteVisitor(
 		return &visitor, err
 	}
 
+	typeVisitor, err := NewRecursiveTypeVisitor(visitor.context)
+	if err != nil {
+		return &visitor, err
+	}
+
+	visitor.typeVisitor = typeVisitor
 	return &visitor, err
-}
-
-func NewRouteVisitorFromVisitor(
-	context *VisitContext,
-	parent RouteParentContext,
-	fieldVisitor *FieldVisitor,
-) (*RouteVisitor, error) {
-	if fieldVisitor == nil {
-		return nil, fmt.Errorf("NewRouteVisitorFromVisitor constructor was given a nil FieldVisitor")
-	}
-
-	visitor, err := NewRouteVisitor(context, parent)
-	if err == nil {
-		visitor.setFieldVisitor(fieldVisitor)
-	}
-
-	return visitor, err
-}
-
-func (v *RouteVisitor) setFieldVisitor(visitor *FieldVisitor) {
-	v.fieldVisitor = visitor
 }
 
 // visitMethod Visits a controller route given as a FuncDecl and returns its metadata and whether it is an API endpoint
@@ -189,8 +174,8 @@ func (v *RouteVisitor) constructRouteMetadata(ctx executionContext) (*metadata.R
 			PkgPath:     ctx.CurrentPkg.PkgPath,
 			Annotations: ctx.Annotations,
 			FVersion:    ctx.FVersion,
+			Range:       common.ResolveNodeRange(ctx.CurrentPkg.Fset, ctx.FuncDecl),
 			// Range here encapsulates the entire function, from "func" to closing brace
-			Range: common.ResolveNodeRange(ctx.CurrentPkg.Fset, ctx.FuncDecl),
 		},
 		Params:  params,
 		RetVals: retVals,
@@ -198,7 +183,7 @@ func (v *RouteVisitor) constructRouteMetadata(ctx executionContext) (*metadata.R
 
 	v.context.MetadataCache.AddReceiver(meta)
 
-	_, err = v.context.Graph.AddRoute(
+	_, err = v.context.GraphBuilder.AddRoute(
 		symboldg.CreateRouteNode{
 			Data: meta,
 			ParentController: symboldg.KeyableNodeMeta{
@@ -213,7 +198,7 @@ func (v *RouteVisitor) constructRouteMetadata(ctx executionContext) (*metadata.R
 	}
 
 	for _, param := range params {
-		v.context.Graph.AddRouteParam(symboldg.CreateParameterNode{
+		v.context.GraphBuilder.AddRouteParam(symboldg.CreateParameterNode{
 			Data: param,
 			ParentRoute: symboldg.KeyableNodeMeta{
 				Decl:     meta.Node,
@@ -223,7 +208,7 @@ func (v *RouteVisitor) constructRouteMetadata(ctx executionContext) (*metadata.R
 	}
 
 	for _, retVal := range retVals {
-		v.context.Graph.AddRouteRetVal(symboldg.CreateReturnValueNode{
+		v.context.GraphBuilder.AddRouteRetVal(symboldg.CreateReturnValueNode{
 			Data: retVal,
 			ParentRoute: symboldg.KeyableNodeMeta{
 				Decl:     meta.Node,
@@ -240,7 +225,7 @@ func (v *RouteVisitor) getFuncParams(ctx executionContext) ([]metadata.FuncParam
 	defer v.exit()
 
 	paramTypes, err := v.context.ArbitrationProvider.Ast().GetFuncParametersMeta(
-		v.fieldVisitor,
+		v.typeVisitor,
 		ctx.CurrentPkg,
 		ctx.SourceFile,
 		ctx.FuncDecl,
@@ -255,7 +240,7 @@ func (v *RouteVisitor) getFuncRetVals(ctx executionContext) ([]metadata.FuncRetu
 	defer v.exit()
 
 	retVals, err := v.context.ArbitrationProvider.Ast().GetFuncRetValMeta(
-		v.fieldVisitor,
+		v.typeVisitor,
 		ctx.CurrentPkg,
 		ctx.SourceFile,
 		ctx.FuncDecl,

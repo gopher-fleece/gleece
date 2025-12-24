@@ -1,10 +1,6 @@
 package symboldg
 
-import (
-	"slices"
-
-	"github.com/gopher-fleece/gleece/common"
-)
+import "github.com/gopher-fleece/gleece/common"
 
 type TraversalResultSorting int
 
@@ -15,8 +11,8 @@ const (
 )
 
 type TraversalFilter struct {
-	NodeKinds  []common.SymKind       // Only include nodes of this kind (optional)
-	EdgeKinds  []SymbolEdgeKind       // Only follow edges of this kind (optional)
+	NodeKind   *common.SymKind        // Only include nodes of this kind (optional)
+	EdgeKind   *SymbolEdgeKind        // Only follow edges of this kind (optional)
 	FilterFunc func(*SymbolNode) bool // Optional user-defined predicate
 }
 
@@ -26,11 +22,7 @@ type TraversalBehavior struct {
 }
 
 func shouldIncludeEdge(edge SymbolEdge, behavior *TraversalBehavior) bool {
-	if behavior == nil || behavior.Filtering.EdgeKinds == nil {
-		return true
-	}
-
-	return slices.Contains(behavior.Filtering.EdgeKinds, edge.Kind)
+	return behavior == nil || behavior.Filtering.EdgeKind == nil || edge.Kind == *behavior.Filtering.EdgeKind
 }
 
 func shouldIncludeNode(node *SymbolNode, behavior *TraversalBehavior) bool {
@@ -38,13 +30,11 @@ func shouldIncludeNode(node *SymbolNode, behavior *TraversalBehavior) bool {
 		return true
 	}
 
-	if behavior.Filtering.NodeKinds != nil && !slices.Contains(behavior.Filtering.NodeKinds, node.Kind) {
+	if behavior.Filtering.NodeKind != nil && node.Kind != *behavior.Filtering.NodeKind {
 		return false
 	}
-
 	if behavior.Filtering.FilterFunc != nil && !behavior.Filtering.FilterFunc(node) {
 		return false
 	}
-
 	return true
 }

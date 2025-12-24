@@ -1,6 +1,8 @@
 package dot
 
 import (
+	"sort"
+
 	"github.com/gopher-fleece/gleece/common"
 )
 
@@ -29,7 +31,6 @@ type OrderedNodeStyle struct {
 }
 
 type DotTheme struct {
-	LegendEnabled  bool
 	NodeStyles     map[common.SymKind]DotStyle
 	EdgeStyles     map[string]DotStyle
 	EdgeLabels     map[string]string
@@ -37,41 +38,56 @@ type DotTheme struct {
 	Direction      RankDir
 }
 
+func (t DotTheme) NodeStylesOrdered() []OrderedNodeStyle {
+	var kinds []common.SymKind
+	for k := range t.NodeStyles {
+		kinds = append(kinds, k)
+	}
+
+	// Sort the kinds alphabetically (or by some other stable order)
+	sort.Slice(kinds, func(i, j int) bool {
+		return kinds[i] < kinds[j]
+	})
+
+	// Build ordered slice
+	ordered := make([]OrderedNodeStyle, len(kinds))
+	for i, k := range kinds {
+		ordered[i] = OrderedNodeStyle{
+			Kind:  k,
+			Style: t.NodeStyles[k],
+		}
+	}
+	return ordered
+}
+
 var DefaultDotTheme = DotTheme{
-	LegendEnabled: true,
 	NodeStyles: map[common.SymKind]DotStyle{
-		common.SymKindStruct:         {Color: "lightblue", Shape: "box"},
-		common.SymKindField:          {Color: "gold", Shape: "ellipse"},
-		common.SymKindEnum:           {Color: "mediumpurple", Shape: "folder"},
-		common.SymKindEnumValue:      {Color: "plum", Shape: "note"},
-		common.SymKindReceiver:       {Color: "orange", Shape: "signature"},
-		common.SymKindFunction:       {Color: "darkseagreen", Shape: "oval"},
-		common.SymKindParameter:      {Color: "khaki", Shape: "parallelogram"},
-		common.SymKindTypeParam:      {Color: "lightslateblue", Shape: "rect"},
-		common.SymKindReturnType:     {Color: "lightgrey", Shape: "cds"},
-		common.SymKindAlias:          {Color: "palegreen", Shape: "note"},
-		common.SymKindComposite:      {Color: "lightcoral", Shape: "component"},
-		common.SymKindConstant:       {Color: "plum", Shape: "egg"},
-		common.SymKindBuiltin:        {Color: "green3", Shape: "box"},
-		common.SymKindSpecialBuiltin: {Color: "greenyellow", Shape: "box"},
-		common.SymKindUnknown:        {Color: "lightcoral", Shape: "triangle"},
-		common.SymKindInterface:      {Color: "lightskyblue", Shape: "component"},
-		common.SymKindPackage:        {Color: "lightyellow", Shape: "folder"},
-		common.SymKindController:     {Color: "lightcyan", Shape: "octagon"},
-		common.SymKindVariable:       {Color: "lightsteelblue", Shape: "circle"},
+		common.SymKindStruct:     {Color: "lightblue", Shape: "box"},
+		common.SymKindField:      {Color: "gold", Shape: "ellipse"},
+		common.SymKindEnum:       {Color: "mediumpurple", Shape: "folder"},
+		common.SymKindEnumValue:  {Color: "plum", Shape: "note"},
+		common.SymKindReceiver:   {Color: "orange", Shape: "hexagon"},
+		common.SymKindFunction:   {Color: "darkseagreen", Shape: "oval"},
+		common.SymKindParameter:  {Color: "khaki", Shape: "parallelogram"},
+		common.SymKindReturnType: {Color: "lightgrey", Shape: "diamond"},
+		common.SymKindAlias:      {Color: "palegreen", Shape: "note"},
+		common.SymKindConstant:   {Color: "plum", Shape: "egg"},
+		common.SymKindBuiltin:    {Color: "gray80", Shape: "box"},
+		common.SymKindUnknown:    {Color: "lightcoral", Shape: "triangle"},
+		common.SymKindInterface:  {Color: "lightskyblue", Shape: "component"},
+		common.SymKindPackage:    {Color: "lightyellow", Shape: "folder"},
+		common.SymKindController: {Color: "lightcyan", Shape: "octagon"},
+		common.SymKindVariable:   {Color: "lightsteelblue", Shape: "circle"},
 	},
 	EdgeLabels: map[string]string{
-		"ty":      "Type",
-		"typaram": "Type Parameter",
-		"ret":     "Return Value",
-		"param":   "Parameter",
-		"fld":     "Field",
-		"recv":    "Receiver",
-		"val":     "Value",
-		"init":    "Initialize",
-		"ref":     "Reference",
-		"inst":    "Instantiates",
-		"alias":   "Alias",
+		"ty":    "Type",
+		"ret":   "Return Value",
+		"param": "Parameter",
+		"fld":   "Field",
+		"recv":  "Receiver",
+		"val":   "Value",
+		"init":  "Initialize",
+		"ref":   "Reference",
 	},
 	EdgeStyles: map[string]DotStyle{
 		"ty":    {EdgeColor: "black", EdgeStyle: "solid", ArrowHead: "vee"},
