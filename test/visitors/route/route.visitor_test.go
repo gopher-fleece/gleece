@@ -8,9 +8,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gopher-fleece/gleece/core/arbitrators/caching"
 	"github.com/gopher-fleece/gleece/core/metadata"
 	"github.com/gopher-fleece/gleece/core/visitors"
+	"github.com/gopher-fleece/gleece/core/visitors/providers"
+	"github.com/gopher-fleece/gleece/definitions"
 	"github.com/gopher-fleece/gleece/gast"
+	"github.com/gopher-fleece/gleece/graphs/symboldg"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
 	"github.com/gopher-fleece/gleece/test/utils"
 	"github.com/titanous/json5"
@@ -19,33 +23,47 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-const configRelPath = "gleece.test.config.json"
+const controllerFileRelPath = "./resources/micro.valid.controller.go"
 const controllerName = "RouteVisitorTestController"
 const receiver1Name = "Receiver1"
 const receiver2Name = "Receiver2"
 const receiver3Name = "Receiver3"
 
-type ExtendedTestCtx struct {
-	utils.StdTestCtx
-
+type TestCtx struct {
 	controllerAstFile *ast.File
 	receiver1Decl     *ast.FuncDecl
 	receiver2Decl     *ast.FuncDecl
 	receiver3Decl     *ast.FuncDecl
-	parentCtx         visitors.RouteParentContext
-	routeVisitor      *visitors.RouteVisitor
+
+	arbProvider  *providers.ArbitrationProvider
+	metaCache    *caching.MetadataCache
+	symGraph     symboldg.SymbolGraph
+	visitCtx     *visitors.VisitContext
+	parentCtx    visitors.RouteParentContext
+	routeVisitor *visitors.RouteVisitor
 }
 
 var _ = Describe("RouteVisitor", func() {
-	var ctx ExtendedTestCtx
+	var ctx TestCtx
 	BeforeEach(func() {
-		ctx = createTestCtx(configRelPath)
+		ctx = createTestCtx([]string{controllerFileRelPath})
 	})
 
 	Context("NewRouteVisitor", func() {
 		It("Returns an error if initialization with arbitration provider fails", func() {
 			_, err := visitors.NewRouteVisitor(nil, ctx.parentCtx)
 			Expect(err).To(MatchError(ContainSubstring("nil context was given to contextInitGuard")))
+		})
+
+		It("Returns an error if nested TypeVisitor initialization fails", func() {
+			ctx.visitCtx.ArbitrationProvider = nil
+			ctx.visitCtx.GleeceConfig = &definitions.GleeceConfig{
+				CommonConfig: definitions.CommonConfig{
+					ControllerGlobs: []string{"./non.go.file.txt"},
+				},
+			}
+			_, err := visitors.NewRouteVisitor(ctx.visitCtx, ctx.parentCtx)
+			Expect(err).To(MatchError(ContainSubstring("failed to parse file")))
 		})
 	})
 
@@ -194,7 +212,7 @@ var _ = Describe("RouteVisitor", func() {
 
 			// Next, copy the original controller file to a temp file - we'll be locking it and we don't want
 			// to potentially affect other tests
-			originalControllerFile := utils.ReadFileByRelativePathOrFail("resources/micro.valid.controller.go")
+			originalControllerFile := utils.ReadFileByRelativePathOrFail(controllerFileRelPath)
 			tempFile := "./temp/locked.controller.go"
 			utils.WriteFileByRelativePathOrFail(tempFile, []byte(originalControllerFile))
 
@@ -202,7 +220,7 @@ var _ = Describe("RouteVisitor", func() {
 			defer utils.DeleteRelativeFolderOrFail(tempDir)
 
 			// Create a new context for this specific test
-			thisCtx := createTestCtx("gleece.test.config.pointing.to.locked.json")
+			thisCtx := createTestCtx([]string{tempFile})
 
 			// Chmod the temp file so FileVersion's hash calculation fails downstream
 			err := os.Chmod(tempFile, 0)
@@ -221,37 +239,43 @@ var _ = Describe("RouteVisitor", func() {
 		It("Returns a proper error if a receiver parameter has an invalid type", func() {
 			_, err := ctx.routeVisitor.VisitMethod(ctx.receiver2Decl, ctx.controllerAstFile)
 			Expect(err).To(MatchError(ContainSubstring(
-				"cannot visit field type expression for field/s [paramWithInvalidType] - " +
-					"unsupported type expression '*ast.ChanType'",
+				"could not create type usage metadata for field paramWithInvalidType - " +
+					"failed to build type layers for expression with type name 'string' - " +
+					"unsupported type expression: *ast.ChanType",
 			)))
 		})
 
 		It("Returns a proper error if a receiver return value has ann invalid type", func() {
 			_, err := ctx.routeVisitor.VisitMethod(ctx.receiver3Decl, ctx.controllerAstFile)
 			Expect(err).To(MatchError(ContainSubstring(
-				"cannot visit field type expression for an anonymous field - " +
-					"unsupported type expression '*ast.ChanType'",
+				"could not create type usage metadata for field string - " +
+					"failed to build type layers for expression with type name 'string' - " +
+					"unsupported type expression: *ast.ChanType",
 			)))
 		})
 
 		It("Returns a proper error if a receiver return value has ann invalid type", func() {
 			_, err := ctx.routeVisitor.VisitMethod(ctx.receiver3Decl, ctx.controllerAstFile)
 			Expect(err).To(MatchError(ContainSubstring(
-				"cannot visit field type expression for an anonymous field - " +
-					"unsupported type expression '*ast.ChanType'",
+				"could not create type usage metadata for field string - " +
+					"failed to build type layers for expression with type name 'string' - " +
+					"unsupported type expression: *ast.ChanType",
 			)))
 		})
 	})
 
 })
 
-func createTestCtx(configRelPath string) ExtendedTestCtx {
-	ctx := ExtendedTestCtx{
-		StdTestCtx: utils.CreateStdTestCtx(configRelPath),
-	}
+func createTestCtx(fileGlobs []string) TestCtx {
+	ctx := TestCtx{}
+
+	// Pass the real controller file so the providers actually load it
+	arbProvider, err := providers.NewArbitrationProvider(fileGlobs)
+	Expect(err).To(BeNil())
+	ctx.arbProvider = arbProvider
 
 	// Verify files were properly loaded
-	srcFiles := ctx.VisitCtx.ArbitrationProvider.Pkg().GetAllSourceFiles()
+	srcFiles := arbProvider.Pkg().GetAllSourceFiles()
 	Expect(srcFiles).ToNot(BeEmpty(), "Arbitration provider parsed zero files; check glob and file contents")
 
 	// Get the controller's source file so we can use it directly with the visitor
@@ -276,6 +300,15 @@ func createTestCtx(configRelPath string) ExtendedTestCtx {
 	Expect(ctx.controllerAstFile).ToNot(BeNil(), fmt.Sprintf("Expected to find %s in parsed AST", receiver1Name))
 	Expect(ctx.receiver1Decl).ToNot(BeNil(), fmt.Sprintf("Expected to find %s func in parsed AST", receiver1Name))
 
+	// Build the VisitContext and routeVisitor as before using arbProvider
+	ctx.metaCache = caching.NewMetadataCache()
+	ctx.symGraph = symboldg.NewSymbolGraph()
+	ctx.visitCtx = &visitors.VisitContext{
+		ArbitrationProvider: arbProvider,
+		MetadataCache:       ctx.metaCache,
+		GraphBuilder:        &ctx.symGraph,
+	}
+
 	ctx.parentCtx = visitors.RouteParentContext{
 		Controller: &metadata.ControllerMeta{
 			Struct: metadata.StructMeta{
@@ -287,15 +320,9 @@ func createTestCtx(configRelPath string) ExtendedTestCtx {
 		},
 	}
 
-	rVisitor, err := visitors.NewRouteVisitorFromVisitor(
-		&ctx.VisitCtx,
-		ctx.parentCtx,
-		ctx.Orc.GetFieldVisitor(),
-	)
-
+	ctx.routeVisitor, err = visitors.NewRouteVisitor(ctx.visitCtx, ctx.parentCtx)
 	Expect(err).To(BeNil())
-	Expect(rVisitor).ToNot(BeNil())
-	ctx.routeVisitor = rVisitor
+	Expect(ctx.routeVisitor).ToNot(BeNil())
 
 	return ctx
 }

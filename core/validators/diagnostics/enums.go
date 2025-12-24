@@ -62,5 +62,4 @@ const (
 	DiagReceiverRetValsIsNotError              DiagnosticCode = "receiver-return-value-is-not-an-error"
 	DiagReceiverMissingSecurity                DiagnosticCode = "receiver-missing-security"
 	DiagFeatureUnsupported                     DiagnosticCode = "unsupported-feature"
-	DiagRouteConflict                          DiagnosticCode = "route-conflict"
 )

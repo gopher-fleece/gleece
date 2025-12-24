@@ -22,20 +22,14 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 
 	Context("AddController", func() {
 		It("Adds a controller node successfully", func() {
-			structMeta := metadata.StructMeta{
+			controllerMeta := metadata.StructMeta{
 				SymNodeMeta: metadata.SymNodeMeta{
 					Node:     utils.MakeIdent("MyController"),
 					FVersion: fVersion,
 				},
 			}
-
-			data := metadata.ControllerMeta{
-				Struct:    structMeta,
-				Receivers: []metadata.ReceiverMeta{},
-			}
-
 			request := symboldg.CreateControllerNode{
-				Data:        data,
+				Data:        controllerMeta,
 				Annotations: nil,
 			}
 
@@ -43,22 +37,19 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(node).ToNot(BeNil())
 			Expect(node.Kind).To(Equal(common.SymKindController))
-			Expect(node.Data).To(Equal(data))
+			Expect(node.Data).To(Equal(controllerMeta))
 		})
 
 		It("Returns an error when createAndAddSymNode returns an error", func() {
 			// Pass a request with nil node to cause idempotencyGuard error
-			structMeta := metadata.StructMeta{
+			controllerMeta := metadata.StructMeta{
 				SymNodeMeta: metadata.SymNodeMeta{
 					Node:     nil,
 					FVersion: fVersion,
 				},
 			}
 			request := symboldg.CreateControllerNode{
-				Data: metadata.ControllerMeta{
-					Struct:    structMeta,
-					Receivers: []metadata.ReceiverMeta{},
-				},
+				Data:        controllerMeta,
 				Annotations: nil,
 			}
 
@@ -102,7 +93,7 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 				&symboldg.SymbolNode{Id: ctrlMeta.SymbolKey()},
 				&symboldg.TraversalBehavior{
 					Filtering: symboldg.TraversalFilter{
-						EdgeKinds: []symboldg.SymbolEdgeKind{symboldg.EdgeKindReceiver},
+						EdgeKind: common.Ptr(symboldg.EdgeKindReceiver),
 					},
 				})
 			Expect(children).To(HaveLen(1))
@@ -152,9 +143,7 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 					},
 				},
 			}
-			_, err := graph.AddController(symboldg.CreateControllerNode{
-				Data: *controllerMeta,
-			})
+			_, err := graph.AddController(symboldg.CreateControllerNode{Data: controllerMeta.Struct})
 			Expect(err).ToNot(HaveOccurred())
 
 			// create a route (parent for params)
@@ -191,6 +180,9 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 						Node:     nil,
 						FVersion: fVersion,
 					},
+					Layers: []metadata.TypeLayer{
+						metadata.NewBaseLayer(common.Ptr(graphs.NewUniverseSymbolKey("int"))),
+					},
 				},
 			}
 
@@ -215,7 +207,7 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 			// Route should have the param as a child via EdgeKindParam
 			children := graph.Children(routeNode, &symboldg.TraversalBehavior{
 				Filtering: symboldg.TraversalFilter{
-					EdgeKinds: []symboldg.SymbolEdgeKind{symboldg.EdgeKindParam},
+					EdgeKind: common.Ptr(symboldg.EdgeKindParam),
 				},
 			})
 			Expect(children).To(HaveLen(1))
@@ -267,7 +259,7 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 				Receivers: nil,
 			}
 			_, err := graph.AddController(symboldg.CreateControllerNode{
-				Data: *controllerMeta,
+				Data: controllerMeta.Struct,
 			})
 			Expect(err).ToNot(HaveOccurred())
 
@@ -305,6 +297,9 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 						Node:     nil,
 						FVersion: fVersion,
 					},
+					Layers: []metadata.TypeLayer{
+						metadata.NewBaseLayer(common.Ptr(graphs.NewUniverseSymbolKey("string"))),
+					},
 				},
 			}
 
@@ -325,7 +320,7 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 
 			children := graph.Children(routeNode, &symboldg.TraversalBehavior{
 				Filtering: symboldg.TraversalFilter{
-					EdgeKinds: []symboldg.SymbolEdgeKind{symboldg.EdgeKindRetVal},
+					EdgeKind: common.Ptr(symboldg.EdgeKindRetVal),
 				},
 			})
 			Expect(children).To(HaveLen(1))
@@ -365,6 +360,9 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 				SymNodeMeta: metadata.SymNodeMeta{Node: utils.MakeIdent("FieldA"), FVersion: fVersion},
 				Type: metadata.TypeUsageMeta{
 					SymNodeMeta: metadata.SymNodeMeta{Name: "int", FVersion: fVersion},
+					Layers: []metadata.TypeLayer{
+						metadata.NewBaseLayer(common.Ptr(graphs.NewUniverseSymbolKey("int"))),
+					},
 				},
 			}
 
@@ -443,7 +441,7 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 			// Enum should have Value edges to its constants
 			valueChildren := graph.Children(enumNode, &symboldg.TraversalBehavior{
 				Filtering: symboldg.TraversalFilter{
-					EdgeKinds: []symboldg.SymbolEdgeKind{symboldg.EdgeKindValue},
+					EdgeKind: common.Ptr(symboldg.EdgeKindValue),
 				},
 			})
 			Expect(valueChildren).To(HaveLen(len(enumMeta.Values)))
@@ -453,7 +451,7 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 			for _, valueChild := range valueChildren {
 				referenceEdges := graph.Children(valueChild, &symboldg.TraversalBehavior{
 					Filtering: symboldg.TraversalFilter{
-						EdgeKinds: []symboldg.SymbolEdgeKind{symboldg.EdgeKindReference},
+						EdgeKind: common.Ptr(symboldg.EdgeKindReference),
 					},
 				})
 				Expect(referenceEdges).To(HaveLen(1))
@@ -537,8 +535,10 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 						Node:     nil,
 						FVersion: fVersion,
 					},
-					Root:   utils.MakeUniverseRoot("float32"),
 					Import: common.ImportTypeNone,
+					Layers: []metadata.TypeLayer{
+						metadata.NewBaseLayer(&baseTypeKey),
+					},
 				},
 				IsEmbedded: false,
 			}
@@ -549,16 +549,15 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 				Data:        fieldMeta,
 				Annotations: nil,
 			})
-
 			Expect(err).ToNot(HaveOccurred())
 			Expect(fieldNode).ToNot(BeNil())
 
 			// Add the type node so links actually exist
-			graph.AddPrimitive(common.PrimitiveTypeFloat32)
+			graph.AddPrimitive(symboldg.PrimitiveTypeFloat32)
 
 			children := graph.Children(fieldNode, &symboldg.TraversalBehavior{
 				Filtering: symboldg.TraversalFilter{
-					EdgeKinds: []symboldg.SymbolEdgeKind{symboldg.EdgeKindType},
+					EdgeKind: common.Ptr(symboldg.EdgeKindType),
 				},
 			})
 			Expect(children).To(HaveLen(1))
@@ -579,14 +578,13 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 
 		It("Returns an error when getTypeRef fails due to missing base type", func() {
 			badMeta := fieldMeta
-			badMeta.Type.Root = nil
+			badMeta.Type.Layers = nil // no base layer → getTypeRef error
 
 			fieldNode, err := graph.AddField(symboldg.CreateFieldNode{
 				Data:        badMeta,
 				Annotations: nil,
 			})
-
-			Expect(err).To(MatchError(ContainSubstring("missing Root TypeRef")))
+			Expect(err).To(HaveOccurred())
 			Expect(fieldNode).To(BeNil())
 		})
 	})
@@ -603,6 +601,9 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 					Value: "some value",
 					Type: metadata.TypeUsageMeta{
 						SymNodeMeta: metadata.SymNodeMeta{Name: "string", FVersion: fVersion},
+						Layers: []metadata.TypeLayer{
+							metadata.NewBaseLayer(common.Ptr(graphs.NewUniverseSymbolKey("string"))),
+						},
 					},
 				},
 			})
@@ -617,14 +618,14 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 	Context("AddPrimitive", func() {
 		It("Adds a primitive and returns a non-nil node", func() {
 			graph := symboldg.NewSymbolGraph()
-			node := graph.AddPrimitive(common.PrimitiveTypeBool)
+			node := graph.AddPrimitive(symboldg.PrimitiveTypeBool)
 			Expect(node).ToNot(BeNil())
 		})
 
 		It("Returns the same node when adding a duplicate primitive", func() {
 			graph := symboldg.NewSymbolGraph()
-			n1 := graph.AddPrimitive(common.PrimitiveTypeBool)
-			n2 := graph.AddPrimitive(common.PrimitiveTypeBool)
+			n1 := graph.AddPrimitive(symboldg.PrimitiveTypeBool)
+			n2 := graph.AddPrimitive(symboldg.PrimitiveTypeBool)
 			Expect(n2).To(Equal(n1))
 		})
 	})
@@ -632,7 +633,7 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 	Context("AddSpecial", func() {
 		It("Adds a special type and returns a non-nil node", func() {
 			graph := symboldg.NewSymbolGraph()
-			node := graph.AddSpecial(common.SpecialTypeError)
+			node := graph.AddSpecial(symboldg.SpecialTypeError)
 			Expect(node).ToNot(BeNil())
 		})
 	})
@@ -690,13 +691,10 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 			// dependent -> other (so dependent should NOT be orphaned when target removed)
 			target, err := graph.AddField(symboldg.CreateFieldNode{
 				Data: metadata.FieldMeta{
-					SymNodeMeta: metadata.SymNodeMeta{
-						Node:     utils.MakeIdent("TargetField"),
-						FVersion: fVersion,
-					},
+					SymNodeMeta: metadata.SymNodeMeta{Node: utils.MakeIdent("TargetField"), FVersion: fVersion},
 					Type: metadata.TypeUsageMeta{
 						SymNodeMeta: metadata.SymNodeMeta{FVersion: fVersion},
-						Root:        utils.MakeUniverseRoot("float32"),
+						Layers:      []metadata.TypeLayer{metadata.NewBaseLayer(common.Ptr(graphs.NewUniverseSymbolKey("int")))},
 					},
 				},
 			})
@@ -709,7 +707,7 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 			})
 			Expect(err).ToNot(HaveOccurred())
 
-			other := graph.AddPrimitive(common.PrimitiveTypeBool) // another node for dep to point to
+			other := graph.AddPrimitive(symboldg.PrimitiveTypeBool) // another node for dep to point to
 			Expect(other).ToNot(BeNil())
 
 			// Add dependent->target and dependent->other
@@ -743,7 +741,7 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 					SymNodeMeta: metadata.SymNodeMeta{Node: utils.MakeIdent("A_field"), FVersion: fVersion},
 					Type: metadata.TypeUsageMeta{
 						SymNodeMeta: metadata.SymNodeMeta{FVersion: fVersion},
-						Root:        utils.MakeUniverseRoot("float32"),
+						Layers:      []metadata.TypeLayer{metadata.NewBaseLayer(common.Ptr(graphs.NewUniverseSymbolKey("int")))},
 					},
 				},
 			})
@@ -818,7 +816,7 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 					SymNodeMeta: metadata.SymNodeMeta{Node: utils.MakeIdent("CleanupChild"), FVersion: fVersion},
 					Type: metadata.TypeUsageMeta{
 						SymNodeMeta: metadata.SymNodeMeta{FVersion: fVersion},
-						Root:        utils.MakeUniverseRoot("float32"),
+						Layers:      []metadata.TypeLayer{metadata.NewBaseLayer(common.Ptr(graphs.NewUniverseSymbolKey("int")))},
 					},
 				},
 			})
@@ -831,7 +829,7 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 			})
 			Expect(err).ToNot(HaveOccurred())
 
-			p := graph.AddPrimitive(common.PrimitiveTypeInt)
+			p := graph.AddPrimitive(symboldg.PrimitiveTypeInt)
 			Expect(p).ToNot(BeNil())
 
 			// Parent -> Child and Parent -> p

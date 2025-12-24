@@ -21,7 +21,7 @@ func (ec *ContextController) MethodWithContext(ctx context.Context, id string) e
 }
 
 // @Method(POST)
-// @Route(/context-as-last-param/{id})
+// @Route(/{id}/context-as-last-param)
 // @Path(id)
 func (ec *ContextController) MethodWithLastParamContext(id string, ctx context.Context) error {
 	return nil
