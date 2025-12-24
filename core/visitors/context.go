@@ -1,10 +1,10 @@
 package visitors
 
 import (
-	"github.com/gopher-fleece/gleece/core/arbitrators/caching"
-	"github.com/gopher-fleece/gleece/core/visitors/providers"
-	"github.com/gopher-fleece/gleece/definitions"
-	"github.com/gopher-fleece/gleece/graphs/symboldg"
+	"github.com/gopher-fleece/gleece/v2/core/arbitrators/caching"
+	"github.com/gopher-fleece/gleece/v2/core/visitors/providers"
+	"github.com/gopher-fleece/gleece/v2/definitions"
+	"github.com/gopher-fleece/gleece/v2/graphs/symboldg"
 )
 
 type VisitContext struct {

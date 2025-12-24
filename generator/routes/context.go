@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gopher-fleece/gleece/core/pipeline"
-	"github.com/gopher-fleece/gleece/definitions"
+	"github.com/gopher-fleece/gleece/v2/core/pipeline"
+	"github.com/gopher-fleece/gleece/v2/definitions"
 )
 
 type Argument struct {

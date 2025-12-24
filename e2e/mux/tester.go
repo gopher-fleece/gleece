@@ -9,7 +9,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/gopher-fleece/gleece/e2e/common"
+	"github.com/gopher-fleece/gleece/v2/e2e/common"
 	"github.com/gorilla/mux"
 )
 

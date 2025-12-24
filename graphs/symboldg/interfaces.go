@@ -1,10 +1,10 @@
 package symboldg
 
 import (
-	"github.com/gopher-fleece/gleece/common"
-	"github.com/gopher-fleece/gleece/core/metadata"
-	"github.com/gopher-fleece/gleece/graphs"
-	"github.com/gopher-fleece/gleece/graphs/dot"
+	"github.com/gopher-fleece/gleece/v2/common"
+	"github.com/gopher-fleece/gleece/v2/core/metadata"
+	"github.com/gopher-fleece/gleece/v2/graphs"
+	"github.com/gopher-fleece/gleece/v2/graphs/dot"
 )
 
 type TreeWalker func(node *SymbolNode, edges map[string]SymbolEdgeDescriptor) *SymbolNode

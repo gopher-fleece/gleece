@@ -3,13 +3,13 @@ package validators_test
 import (
 	"fmt"
 
-	"github.com/gopher-fleece/gleece/common"
-	"github.com/gopher-fleece/gleece/core/annotations"
-	"github.com/gopher-fleece/gleece/core/metadata"
-	"github.com/gopher-fleece/gleece/core/validators"
-	"github.com/gopher-fleece/gleece/core/validators/diagnostics"
-	"github.com/gopher-fleece/gleece/test/utils"
-	. "github.com/gopher-fleece/gleece/test/utils/matchers"
+	"github.com/gopher-fleece/gleece/v2/common"
+	"github.com/gopher-fleece/gleece/v2/core/annotations"
+	"github.com/gopher-fleece/gleece/v2/core/metadata"
+	"github.com/gopher-fleece/gleece/v2/core/validators"
+	"github.com/gopher-fleece/gleece/v2/core/validators/diagnostics"
+	"github.com/gopher-fleece/gleece/v2/test/utils"
+	. "github.com/gopher-fleece/gleece/v2/test/utils/matchers"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )

@@ -6,7 +6,7 @@ import (
 	"slices"
 	"strconv"
 
-	"github.com/gopher-fleece/gleece/common"
+	"github.com/gopher-fleece/gleece/v2/common"
 	"github.com/gopher-fleece/runtime"
 )
 

@@ -11,16 +11,16 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/gopher-fleece/gleece/gast"
-	"github.com/gopher-fleece/gleece/infrastructure/logger"
-	"github.com/gopher-fleece/gleece/test/utils"
-	"github.com/gopher-fleece/gleece/test/utils/matchers"
+	"github.com/gopher-fleece/gleece/v2/gast"
+	"github.com/gopher-fleece/gleece/v2/infrastructure/logger"
+	"github.com/gopher-fleece/gleece/v2/test/utils"
+	"github.com/gopher-fleece/gleece/v2/test/utils/matchers"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"golang.org/x/tools/go/packages"
 )
 
-const auxTypesPackageName = "github.com/gopher-fleece/gleece/test/units"
+const auxTypesPackageName = "github.com/gopher-fleece/gleece/v2/test/units"
 
 var typesPkgLoadOnly *packages.Package
 var typesPkgFullSyntax *packages.Package

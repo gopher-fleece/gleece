@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/gopher-fleece/gleece/infrastructure/utils"
+	"github.com/gopher-fleece/gleece/v2/infrastructure/utils"
 )
 
 type FileVersion struct {

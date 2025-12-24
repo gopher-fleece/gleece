@@ -3,15 +3,15 @@ package generics_test
 import (
 	"testing"
 
-	"github.com/gopher-fleece/gleece/common"
-	"github.com/gopher-fleece/gleece/common/linq"
-	"github.com/gopher-fleece/gleece/core/pipeline"
-	"github.com/gopher-fleece/gleece/definitions"
-	"github.com/gopher-fleece/gleece/graphs"
-	"github.com/gopher-fleece/gleece/graphs/symboldg"
-	"github.com/gopher-fleece/gleece/infrastructure/logger"
-	"github.com/gopher-fleece/gleece/test/utils"
-	"github.com/gopher-fleece/gleece/test/utils/matchers"
+	"github.com/gopher-fleece/gleece/v2/common"
+	"github.com/gopher-fleece/gleece/v2/common/linq"
+	"github.com/gopher-fleece/gleece/v2/core/pipeline"
+	"github.com/gopher-fleece/gleece/v2/definitions"
+	"github.com/gopher-fleece/gleece/v2/graphs"
+	"github.com/gopher-fleece/gleece/v2/graphs/symboldg"
+	"github.com/gopher-fleece/gleece/v2/infrastructure/logger"
+	"github.com/gopher-fleece/gleece/v2/test/utils"
+	"github.com/gopher-fleece/gleece/v2/test/utils/matchers"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -64,7 +64,7 @@ var _ = Describe("Generics Controller", func() {
 					{
 
 						Name:    "MonoGenericStructString",
-						PkgPath: "github.com/gopher-fleece/gleece/test/generics",
+						PkgPath: "github.com/gopher-fleece/gleece/v2/test/generics",
 						Fields: []definitions.FieldMetadata{{
 							Name:        "Value",
 							Type:        "string",
@@ -73,7 +73,7 @@ var _ = Describe("Generics Controller", func() {
 					},
 					{
 						Name:    "MultiGenericStructBoolInt",
-						PkgPath: "github.com/gopher-fleece/gleece/test/generics",
+						PkgPath: "github.com/gopher-fleece/gleece/v2/test/generics",
 						Fields: []definitions.FieldMetadata{
 							{
 								Name:        "ValueA",
@@ -89,7 +89,7 @@ var _ = Describe("Generics Controller", func() {
 					},
 					{
 						Name:    "MultiGenericStructStringInt",
-						PkgPath: "github.com/gopher-fleece/gleece/test/generics",
+						PkgPath: "github.com/gopher-fleece/gleece/v2/test/generics",
 						Fields: []definitions.FieldMetadata{
 							{
 								Name:        "ValueA",

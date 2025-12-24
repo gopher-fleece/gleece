@@ -10,15 +10,15 @@ import (
 
 	"github.com/aymerick/raymond"
 
-	"github.com/gopher-fleece/gleece/core/pipeline"
-	"github.com/gopher-fleece/gleece/definitions"
-	"github.com/gopher-fleece/gleece/generator/compilation"
-	"github.com/gopher-fleece/gleece/generator/templates/chi"
-	"github.com/gopher-fleece/gleece/generator/templates/echo"
-	"github.com/gopher-fleece/gleece/generator/templates/fiber"
-	"github.com/gopher-fleece/gleece/generator/templates/gin"
-	"github.com/gopher-fleece/gleece/generator/templates/mux"
-	"github.com/gopher-fleece/gleece/infrastructure/logger"
+	"github.com/gopher-fleece/gleece/v2/core/pipeline"
+	"github.com/gopher-fleece/gleece/v2/definitions"
+	"github.com/gopher-fleece/gleece/v2/generator/compilation"
+	"github.com/gopher-fleece/gleece/v2/generator/templates/chi"
+	"github.com/gopher-fleece/gleece/v2/generator/templates/echo"
+	"github.com/gopher-fleece/gleece/v2/generator/templates/fiber"
+	"github.com/gopher-fleece/gleece/v2/generator/templates/gin"
+	"github.com/gopher-fleece/gleece/v2/generator/templates/mux"
+	"github.com/gopher-fleece/gleece/v2/infrastructure/logger"
 )
 
 var RoutesTemplateName = "Routes"

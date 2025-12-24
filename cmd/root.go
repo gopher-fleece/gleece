@@ -6,8 +6,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/gopher-fleece/gleece/cmd/arguments"
-	"github.com/gopher-fleece/gleece/infrastructure/logger"
+	"github.com/gopher-fleece/gleece/v2/cmd/arguments"
+	"github.com/gopher-fleece/gleece/v2/infrastructure/logger"
 	"github.com/spf13/cobra"
 )
 

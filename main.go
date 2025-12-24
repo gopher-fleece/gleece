@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/gopher-fleece/gleece/cmd"
+	"github.com/gopher-fleece/gleece/v2/cmd"
 )
 
 func main() {

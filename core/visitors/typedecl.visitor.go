@@ -6,8 +6,8 @@ import (
 
 	"golang.org/x/tools/go/packages"
 
-	"github.com/gopher-fleece/gleece/gast"
-	"github.com/gopher-fleece/gleece/graphs"
+	"github.com/gopher-fleece/gleece/v2/gast"
+	"github.com/gopher-fleece/gleece/v2/graphs"
 )
 
 // TypeDeclVisitor dispatches type declarations to specialized visitors for processing

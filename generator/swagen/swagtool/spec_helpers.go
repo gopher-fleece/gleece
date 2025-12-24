@@ -3,7 +3,7 @@ package swagtool
 import (
 	"strings"
 
-	"github.com/gopher-fleece/gleece/definitions"
+	"github.com/gopher-fleece/gleece/v2/definitions"
 )
 
 func AppendErrorSchema(models *[]definitions.StructMetadata, hasAnyErrorTypes bool) {

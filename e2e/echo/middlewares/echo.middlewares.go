@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/gopher-fleece/gleece/e2e/assets"
+	"github.com/gopher-fleece/gleece/v2/e2e/assets"
 	"github.com/labstack/echo/v4"
 )
 

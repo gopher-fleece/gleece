@@ -1,6 +1,6 @@
 package gast
 
-import "github.com/gopher-fleece/gleece/common"
+import "github.com/gopher-fleece/gleece/v2/common"
 
 // CommentPosition contains resolved start/end coordinates for the comment (1-based).
 type CommentPosition struct {

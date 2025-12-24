@@ -9,7 +9,7 @@
 		"outputPath": "./chi/routes/chi.e2e.gleece.go",
 		"outputFilePerms": "0644",
 		"authorizationConfig": {
-			"authFileFullPackageName": "github.com/gopher-fleece/gleece/e2e/chi/auth",
+			"authFileFullPackageName": "github.com/gopher-fleece/gleece/v2/e2e/chi/auth",
 			"enforceSecurityOnAllRoutes": true
 		},
 		"templateOverrides": {

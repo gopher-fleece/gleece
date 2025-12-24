@@ -1,7 +1,7 @@
 package matchers
 
 import (
-	"github.com/gopher-fleece/gleece/core/metadata"
+	"github.com/gopher-fleece/gleece/v2/core/metadata"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/types"
 )

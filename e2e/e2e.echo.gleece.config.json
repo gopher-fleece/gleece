@@ -9,7 +9,7 @@
 		"outputPath": "./echo/routes/echo.e2e.gleece.go",
 		"outputFilePerms": "0644",
 		"authorizationConfig": {
-			"authFileFullPackageName": "github.com/gopher-fleece/gleece/e2e/echo/auth",
+			"authFileFullPackageName": "github.com/gopher-fleece/gleece/v2/e2e/echo/auth",
 			"enforceSecurityOnAllRoutes": true
 		},
 		"templateOverrides": {

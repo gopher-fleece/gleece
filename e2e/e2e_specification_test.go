@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/gopher-fleece/gleece/definitions"
-	"github.com/gopher-fleece/gleece/generator/swagen/swagtool"
+	"github.com/gopher-fleece/gleece/v2/definitions"
+	"github.com/gopher-fleece/gleece/v2/generator/swagen/swagtool"
 	"github.com/nsf/jsondiff"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"

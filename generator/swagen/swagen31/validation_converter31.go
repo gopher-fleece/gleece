@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gopher-fleece/gleece/generator/swagen/swagtool"
+	"github.com/gopher-fleece/gleece/v2/generator/swagen/swagtool"
 	"github.com/pb33f/libopenapi/datamodel/high/base"
 	"go.yaml.in/yaml/v4"
 )

@@ -9,7 +9,7 @@
 		"outputPath": "./fiber/routes/fiber.e2e.gleece.go",
 		"outputFilePerms": "0644",
 		"authorizationConfig": {
-			"authFileFullPackageName": "github.com/gopher-fleece/gleece/e2e/fiber/auth",
+			"authFileFullPackageName": "github.com/gopher-fleece/gleece/v2/e2e/fiber/auth",
 			"enforceSecurityOnAllRoutes": true
 		},
 		"templateOverrides": {

@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/aymerick/raymond"
-	"github.com/gopher-fleece/gleece/common"
-	"github.com/gopher-fleece/gleece/definitions"
+	"github.com/gopher-fleece/gleece/v2/common"
+	"github.com/gopher-fleece/gleece/v2/definitions"
 	"github.com/iancoleman/strcase"
 )
 

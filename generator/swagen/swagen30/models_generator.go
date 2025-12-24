@@ -2,8 +2,8 @@ package swagen30
 
 import (
 	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/gopher-fleece/gleece/definitions"
-	"github.com/gopher-fleece/gleece/generator/swagen/swagtool"
+	"github.com/gopher-fleece/gleece/v2/definitions"
+	"github.com/gopher-fleece/gleece/v2/generator/swagen/swagtool"
 )
 
 var objectType = &openapi3.Types{"object"}

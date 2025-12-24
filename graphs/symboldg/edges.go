@@ -1,6 +1,6 @@
 package symboldg
 
-import "github.com/gopher-fleece/gleece/graphs"
+import "github.com/gopher-fleece/gleece/v2/graphs"
 
 type SymbolEdgeKind string
 

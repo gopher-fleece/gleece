@@ -1,7 +1,7 @@
 package e2e
 
 import (
-	"github.com/gopher-fleece/gleece/e2e/common"
+	"github.com/gopher-fleece/gleece/v2/e2e/common"
 	. "github.com/onsi/ginkgo/v2"
 )
 

@@ -3,7 +3,7 @@ package graph_test
 import (
 	"context"
 
-	"github.com/gopher-fleece/gleece/test/units"
+	"github.com/gopher-fleece/gleece/v2/test/units"
 	"github.com/gopher-fleece/runtime"
 )
 

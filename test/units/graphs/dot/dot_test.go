@@ -4,11 +4,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gopher-fleece/gleece/common"
-	"github.com/gopher-fleece/gleece/graphs"
-	"github.com/gopher-fleece/gleece/graphs/dot"
-	"github.com/gopher-fleece/gleece/graphs/symboldg"
-	"github.com/gopher-fleece/gleece/infrastructure/logger"
+	"github.com/gopher-fleece/gleece/v2/common"
+	"github.com/gopher-fleece/gleece/v2/graphs"
+	"github.com/gopher-fleece/gleece/v2/graphs/dot"
+	"github.com/gopher-fleece/gleece/v2/graphs/symboldg"
+	"github.com/gopher-fleece/gleece/v2/infrastructure/logger"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )

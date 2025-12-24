@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"go/types"
 
-	"github.com/gopher-fleece/gleece/core/metadata"
+	"github.com/gopher-fleece/gleece/v2/core/metadata"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )

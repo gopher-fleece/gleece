@@ -5,11 +5,11 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/gopher-fleece/gleece/common"
-	"github.com/gopher-fleece/gleece/core/arbitrators"
-	"github.com/gopher-fleece/gleece/core/metadata"
-	"github.com/gopher-fleece/gleece/core/validators/diagnostics"
-	"github.com/gopher-fleece/gleece/definitions"
+	"github.com/gopher-fleece/gleece/v2/common"
+	"github.com/gopher-fleece/gleece/v2/core/arbitrators"
+	"github.com/gopher-fleece/gleece/v2/core/metadata"
+	"github.com/gopher-fleece/gleece/v2/core/validators/diagnostics"
+	"github.com/gopher-fleece/gleece/v2/definitions"
 )
 
 type funcParamEx struct {

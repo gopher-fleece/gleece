@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	mapset "github.com/deckarep/golang-set/v2"
-	"github.com/gopher-fleece/gleece/common"
-	"github.com/gopher-fleece/gleece/graphs"
+	"github.com/gopher-fleece/gleece/v2/common"
+	"github.com/gopher-fleece/gleece/v2/graphs"
 )
 
 const errorNodeId = "N_ERROR"
