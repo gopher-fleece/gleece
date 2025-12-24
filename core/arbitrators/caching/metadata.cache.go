@@ -15,9 +15,11 @@ type MetadataCache struct {
 	receivers   map[graphs.SymbolKey]*metadata.ReceiverMeta
 	structs     map[graphs.SymbolKey]*metadata.StructMeta
 	enums       map[graphs.SymbolKey]*metadata.EnumMeta
+	aliases     map[graphs.SymbolKey]*metadata.AliasMeta
 	visited     map[graphs.SymbolKey]struct{}
+	inProgress  map[graphs.SymbolKey]struct{}
 
-	FileVersions map[*ast.File]*gast.FileVersion
+	fileVersions map[*ast.File]*gast.FileVersion
 }
 
 func NewMetadataCache() *MetadataCache {
@@ -26,8 +28,10 @@ func NewMetadataCache() *MetadataCache {
 		receivers:    make(map[graphs.SymbolKey]*metadata.ReceiverMeta),
 		structs:      make(map[graphs.SymbolKey]*metadata.StructMeta),
 		enums:        make(map[graphs.SymbolKey]*metadata.EnumMeta),
+		aliases:      make(map[graphs.SymbolKey]*metadata.AliasMeta),
 		visited:      make(map[graphs.SymbolKey]struct{}),
-		FileVersions: map[*ast.File]*gast.FileVersion{},
+		inProgress:   make(map[graphs.SymbolKey]struct{}),
+		fileVersions: map[*ast.File]*gast.FileVersion{},
 	}
 }
 
@@ -41,6 +45,10 @@ func (c *MetadataCache) GetReceiver(key graphs.SymbolKey) *metadata.ReceiverMeta
 
 func (c *MetadataCache) GetEnum(key graphs.SymbolKey) *metadata.EnumMeta {
 	return c.enums[key]
+}
+
+func (c *MetadataCache) GetAlias(key graphs.SymbolKey) *metadata.AliasMeta {
+	return c.aliases[key]
 }
 
 func (c *MetadataCache) HasController(meta *metadata.ControllerMeta) bool {
@@ -60,13 +68,17 @@ func (c *MetadataCache) HasEnum(key graphs.SymbolKey) bool {
 	return c.enums[key] != nil
 }
 
+func (c *MetadataCache) HasAlias(key graphs.SymbolKey) bool {
+	return c.aliases[key] != nil
+}
+
 func (c *MetadataCache) HasVisited(key graphs.SymbolKey) bool {
 	_, ok := c.visited[key]
 	return ok
 }
 
 func (c *MetadataCache) GetFileVersion(file *ast.File, fileSet *token.FileSet) (*gast.FileVersion, error) {
-	fVersion := c.FileVersions[file]
+	fVersion := c.fileVersions[file]
 	if fVersion != nil {
 		return fVersion, nil
 	}
@@ -76,7 +88,7 @@ func (c *MetadataCache) GetFileVersion(file *ast.File, fileSet *token.FileSet) (
 		return nil, err
 	}
 
-	c.FileVersions[file] = &version
+	c.fileVersions[file] = &version
 	return &version, nil
 
 }
@@ -99,6 +111,32 @@ func (c *MetadataCache) AddStruct(meta *metadata.StructMeta) error {
 func (c *MetadataCache) AddEnum(meta *metadata.EnumMeta) error {
 	key := graphs.NewSymbolKey(meta.Node, meta.FVersion)
 	return addEntity(key, c.enums, c.visited, meta)
+}
+
+func (c *MetadataCache) AddAlias(meta *metadata.AliasMeta) error {
+	key := graphs.NewSymbolKey(meta.Node, meta.FVersion)
+	return addEntity(key, c.aliases, c.visited, meta)
+}
+
+// StartMaterializing claims the key for materialization.
+// Returns true if the caller should proceed (not visited, not already in-progress).
+func (c *MetadataCache) StartMaterializing(key graphs.SymbolKey) bool {
+	if _, seen := c.visited[key]; seen {
+		return false // already done
+	}
+	if _, doing := c.inProgress[key]; doing {
+		return false // someone else is already working on it
+	}
+	c.inProgress[key] = struct{}{}
+	return true
+}
+
+// FinishMaterializing clears in-progress. If success==true, also mark visited.
+func (c *MetadataCache) FinishMaterializing(key graphs.SymbolKey, success bool) {
+	delete(c.inProgress, key)
+	if success {
+		c.visited[key] = struct{}{}
+	}
 }
 
 func addEntity[TMeta any](

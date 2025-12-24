@@ -21,7 +21,7 @@ type SanityController struct {
 
 // A sanity test controller method
 // @Method(POST)
-// @Route(/{routeParamAlias})
+// @Route(/valid-method-simple-route-query-and-header-params/{routeParamAlias})
 // @Path(routeParam, {name: "routeParamAlias"})
 // @Query(queryParam)
 // @Header(headerParam)

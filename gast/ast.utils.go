@@ -14,6 +14,8 @@ import (
 	"golang.org/x/tools/go/packages"
 )
 
+type GetPackageMethod func(string) (*packages.Package, error)
+
 // IsFuncDeclReceiverForStruct determines if the given FuncDecl is a receiver for a struct with the given name
 func IsFuncDeclReceiverForStruct(structName string, funcDecl *ast.FuncDecl) bool {
 	if funcDecl.Recv == nil || len(funcDecl.Recv.List) <= 0 {
@@ -372,6 +374,22 @@ func GetIdentFromExpr(expr ast.Expr) *ast.Ident {
 	return nil
 }
 
+func GetIdentNameFromExpr(expr ast.Expr) *string {
+	ident := GetIdentFromExpr(expr)
+	if ident != nil {
+		return common.Ptr(ident.Name)
+	}
+	return nil
+}
+
+func GetIdentNameOrFallback(ident *ast.Ident, fallback string) string {
+	if ident != nil {
+		return ident.Name
+	}
+
+	return fallback
+}
+
 type TypeSpecResolution struct {
 	IsUniverse       bool
 	TypeName         string
@@ -390,20 +408,33 @@ func (t TypeSpecResolution) String() string {
 	return fmt.Sprintf("Type %s.%s", t.DeclaringPackage.PkgPath, t.TypeName)
 }
 
-// ResolveTypeSpecFromField Resolves type information from the given field.
-// Returns the declaring *packages.Package, *ast.File and the associated *ast.TypeSpec
-// Has 3 possible outcomes:
-//
-// * Returns all of the above (the field references a concrete type somewhere)
-// * Returns 4 nils - the field's type is a 'Universe' one
-// * Returns an error
-func ResolveTypeSpecFromField(
-	declaringPkg *packages.Package, // <<<< Used only for locally defined type references
-	declaringFile *ast.File,
-	field *ast.Field,
-	pkgResolver func(pkgPath string) (*packages.Package, error),
-) (TypeSpecResolution, error) {
-	return ResolveTypeSpecFromExpr(declaringPkg, declaringFile, field.Type, pkgResolver)
+func (t TypeSpecResolution) IsPrimitive() bool {
+	_, isPrimitive := common.ToPrimitiveType(t.GetQualifiedName())
+	return isPrimitive
+}
+
+func (t TypeSpecResolution) IsSpecial() bool {
+	_, isSpecial := common.ToSpecialType(t.GetQualifiedName())
+	return isSpecial
+}
+
+func (t TypeSpecResolution) IsBuiltin() bool {
+	return t.IsUniverse || t.IsPrimitive() || t.IsSpecial()
+}
+
+func (t TypeSpecResolution) IsContext() bool {
+	if t.DeclaringPackage == nil || t.TypeSpec.Name == nil {
+		return false
+	}
+
+	return t.TypeSpec.Name.Name == "Context" && t.DeclaringPackage.PkgPath == "context"
+}
+
+func (t TypeSpecResolution) GetQualifiedName() string {
+	if t.DeclaringPackage != nil {
+		return fmt.Sprintf("%s.%s", t.DeclaringPackage.Name, t.TypeName)
+	}
+	return t.TypeName
 }
 
 // ResolveTypeSpecFromExpr resolves a type expression to its defining TypeSpec,
@@ -412,7 +443,7 @@ func ResolveTypeSpecFromExpr(
 	pkg *packages.Package,
 	file *ast.File,
 	expr ast.Expr,
-	getPkg func(pkgPath string) (*packages.Package, error), // typically your package resolver
+	getPkg GetPackageMethod,
 ) (TypeSpecResolution, error) {
 	ident := GetIdentFromExpr(expr)
 	if ident == nil {
@@ -609,6 +640,15 @@ func IsEnumLike(pkg *packages.Package, spec *ast.TypeSpec) bool {
 		if !ok {
 			continue
 		}
+
+		// To avoid clobbering consts that happen to have the same type under aliases/enums,
+		// we check the actual underlying type name as well.
+		if curObjAlias, isCurObjAlias := constVal.Type().(*types.Alias); isCurObjAlias {
+			if typeName.Name() != curObjAlias.Obj().Name() {
+				continue
+			}
+		}
+
 		if types.Identical(constVal.Type(), typeName.Type()) {
 			return true
 		}
@@ -769,4 +809,183 @@ func GetCommentsFromTypeSpec(
 	return CommentBlock{
 		Comments: []CommentNode{},
 	}
+}
+
+// GetBaseIdent returns the base identifier for an expression.
+// Examples:
+//
+//	Ident          -> ident
+//	IndexExpr(X[Arg]) -> base of X
+//	SelectorExpr(Pkg.Type) -> sel (Type)
+//
+// Returns nil when there is no base ident (inline struct, func type, etc).
+func GetBaseIdent(expr ast.Expr) *ast.Ident {
+	switch t := expr.(type) {
+	case *ast.Ident:
+		return t
+	case *ast.SelectorExpr:
+		// we return the selector identifier (Type in pkg.Type)
+		return t.Sel
+	case *ast.IndexExpr:
+		return GetBaseIdent(t.X)
+	case *ast.IndexListExpr:
+		return GetBaseIdent(t.X)
+	case *ast.StarExpr:
+		return GetBaseIdent(t.X)
+	case *ast.ArrayType:
+		return GetBaseIdent(t.Elt)
+	default:
+		return nil
+	}
+}
+
+// ResolveNamedType resolves the named type behind expr (if any).
+// Returns (TypeSpecResolution, ok, err).
+// ok==false means "no named type found or not resolvable" (not an error).
+func ResolveNamedType(
+	pkg *packages.Package,
+	file *ast.File,
+	expr ast.Expr,
+	getPkg GetPackageMethod,
+) (TypeSpecResolution, bool, error) {
+
+	ident := GetBaseIdent(expr)
+	if ident == nil {
+		// Not a named type expression (inline, func, etc).
+		return TypeSpecResolution{}, false, nil
+	}
+
+	// Prefer Uses map.
+	if obj := pkg.TypesInfo.Uses[ident]; obj != nil {
+		return buildResolutionFromObject(obj, getPkg)
+	}
+
+	// Fallback to package scope lookup (dot-imports etc).
+	if obj := pkg.Types.Scope().Lookup(ident.Name); obj != nil {
+		return buildResolutionFromObject(obj, getPkg)
+	}
+
+	// Not resolved here; caller may try other packages or treat as unknown.
+	return TypeSpecResolution{}, false, nil
+}
+
+func buildResolutionFromObject(obj types.Object, getPkg GetPackageMethod) (TypeSpecResolution, bool, error) {
+	_, ok := obj.(*types.TypeName)
+	if !ok {
+		return TypeSpecResolution{}, false,
+			fmt.Errorf("resolved object is not a type: %T", obj)
+	}
+
+	// Universe / builtin
+	if obj.Pkg() == nil && types.Universe.Lookup(obj.Name()) == obj {
+		return TypeSpecResolution{
+			TypeName:   obj.Name(),
+			IsUniverse: true,
+		}, true, nil
+	}
+
+	declPkg, err := getPkg(obj.Pkg().Path())
+	if err != nil || declPkg == nil {
+		return TypeSpecResolution{}, false,
+			fmt.Errorf("could not locate declaring package: %s", obj.Pkg().Path())
+	}
+
+	pos := obj.Pos()
+	if pos != token.NoPos && declPkg.Fset != nil {
+		// get filename that contains the object's position
+		targetName := declPkg.Fset.Position(pos).Filename
+
+		for _, file := range declPkg.Syntax {
+			// compare filenames derived from positions
+			filename := declPkg.Fset.Position(file.Pos()).Filename
+			if filename != targetName {
+				continue
+			}
+			if typeSpec, genDecl := findTypeSpecInFile(file, obj.Name()); typeSpec != nil {
+				return TypeSpecResolution{
+					DeclaringPackage: declPkg,
+					DeclaringAstFile: file,
+					TypeSpec:         typeSpec,
+					GenDecl:          genDecl,
+					TypeName:         obj.Name(),
+					IsUniverse:       false,
+				}, true, nil
+			}
+			// matched file but not found in it -> stop searching by filename
+			break
+		}
+	}
+
+	// fallback: scan whole package
+	if file, typeSpec, genDecl, ok := scanPackageForTypeSpec(declPkg, obj.Name()); ok {
+		return TypeSpecResolution{
+			DeclaringPackage: declPkg,
+			DeclaringAstFile: file,
+			TypeSpec:         typeSpec,
+			GenDecl:          genDecl,
+			TypeName:         obj.Name(),
+			IsUniverse:       false,
+		}, true, nil
+	}
+
+	return TypeSpecResolution{}, false, nil
+}
+
+// scanPackageForTypeSpec scans all files in the package to find the named type.
+// Returns (astFile, TypeSpec, GenDecl, ok).
+func scanPackageForTypeSpec(
+	p *packages.Package,
+	name string,
+) (*ast.File, *ast.TypeSpec, *ast.GenDecl, bool) {
+	for _, f := range p.Syntax {
+		if ts, gd := findTypeSpecInFile(f, name); ts != nil {
+			return f, ts, gd, true
+		}
+	}
+	return nil, nil, nil, false
+}
+
+// findTypeSpecInFile searches the given ast.File for type spec with the given name.
+func findTypeSpecInFile(f *ast.File, name string) (*ast.TypeSpec, *ast.GenDecl) {
+	for _, decl := range f.Decls {
+		gen, ok := decl.(*ast.GenDecl)
+		if !ok || gen.Tok != token.TYPE {
+			continue
+		}
+		for _, s := range gen.Specs {
+			ts, ok := s.(*ast.TypeSpec)
+			if !ok {
+				continue
+			}
+			if ts.Name != nil && ts.Name.Name == name {
+				return ts, gen
+			}
+		}
+	}
+	return nil, nil
+}
+
+func IsEmbeddedOrAnonymousField(field *ast.Field) bool {
+	return len(field.Names) == 0
+}
+
+// GetFieldNames returns the declared names for the field, or an empty slice for embedded/anonymous fields
+func GetFieldNames(field *ast.Field) []string {
+	if field == nil {
+		return nil
+	}
+
+	if IsEmbeddedOrAnonymousField(field) {
+		return []string{}
+	}
+
+	out := make([]string, 0, len(field.Names))
+	for _, id := range field.Names {
+		if id == nil {
+			out = append(out, "")
+		} else {
+			out = append(out, id.Name)
+		}
+	}
+	return out
 }

@@ -79,6 +79,14 @@ func (a AliasMetadata) Equals(other AliasMetadata) bool {
 	return true
 }
 
+type NakedAliasMetadata struct {
+	Name        string // e.g. MyStringAlias
+	PkgPath     string
+	Type        string // e.g. string, int, etc.
+	Description string
+	Deprecation DeprecationOptions
+}
+
 type TypeMetadata struct {
 	Name                string
 	PkgPath             string
@@ -249,6 +257,36 @@ type StructMetadata struct {
 	Deprecation DeprecationOptions
 }
 
+func (s StructMetadata) Clone() StructMetadata {
+	fields := make([]FieldMetadata, 0, len(s.Fields))
+	for _, field := range s.Fields {
+		var deprecationOpts *DeprecationOptions
+		if field.Deprecation != nil {
+			deprecationOpts = &DeprecationOptions{
+				Deprecated:  field.Deprecation.Deprecated,
+				Description: field.Deprecation.Description,
+			}
+		}
+
+		fields = append(fields, FieldMetadata{
+			Name:        field.Name,
+			Type:        field.Type,
+			Description: field.Description,
+			Tag:         field.Tag,
+			IsEmbedded:  field.IsEmbedded,
+			Deprecation: deprecationOpts,
+		})
+	}
+
+	return StructMetadata{
+		Name:        s.Name,
+		PkgPath:     s.PkgPath,
+		Description: s.Description,
+		Fields:      fields,
+		Deprecation: s.Deprecation,
+	}
+}
+
 type EnumMetadata struct {
 	Name        string
 	PkgPath     string
@@ -275,6 +313,7 @@ type EnumValidator struct {
 type Models struct {
 	Structs        []StructMetadata
 	Enums          []EnumMetadata
+	Aliases        []NakedAliasMetadata
 	EnumValidators []EnumValidator
 }
 
@@ -357,7 +396,8 @@ type AuthorizationConfig struct {
 }
 
 type CommonConfig struct {
-	ControllerGlobs []string `json:"controllerGlobs" validate:"omitempty,min=1"`
+	ControllerGlobs          []string `json:"controllerGlobs" validate:"omitempty,min=1"`
+	AllowPackageLoadFailures bool     `json:"allowPackageLoadFailures"`
 }
 
 type ExperimentalConfig struct {

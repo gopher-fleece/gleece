@@ -7,10 +7,7 @@ import (
 	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/core/arbitrators/caching"
 	"github.com/gopher-fleece/gleece/core/metadata"
-	"github.com/gopher-fleece/gleece/core/visitors"
-	"github.com/gopher-fleece/gleece/core/visitors/providers"
 	"github.com/gopher-fleece/gleece/graphs"
-	"github.com/gopher-fleece/gleece/graphs/symboldg"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
 	"github.com/gopher-fleece/gleece/test/utils"
 
@@ -18,20 +15,10 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-const controllerFileRelPath = "./resources/micro.valid.controller.go"
-
-type TestCtx struct {
-	arbProvider       *providers.ArbitrationProvider
-	metaCache         *caching.MetadataCache
-	symGraph          symboldg.SymbolGraph
-	visitCtx          *visitors.VisitContext
-	controllerVisitor *visitors.ControllerVisitor
-}
-
 var _ = Describe("MetadataCache", func() {
-	var ctx TestCtx
+	var ctx utils.StdTestCtx
 	BeforeEach(func() {
-		ctx = createTestCtx([]string{controllerFileRelPath})
+		ctx = utils.CreateStdTestCtx("gleece.test.config.json")
 	})
 
 	Context("NewMetadataCache", func() {
@@ -57,14 +44,16 @@ var _ = Describe("MetadataCache", func() {
 		})
 
 		It("Returns controller when it exists in the cache", func() {
-			for _, file := range ctx.controllerVisitor.GetAllSourceFiles() {
-				ast.Walk(ctx.controllerVisitor, file)
+			for _, file := range ctx.Orc.GetAllSourceFiles() {
+				ast.Walk(ctx.Orc, file)
 			}
 
-			controllers := ctx.controllerVisitor.GetControllers()
+			controllers := ctx.VisitCtx.Graph.FindByKind(common.SymKindController)
 			Expect(controllers).To(HaveLen(1))
 
-			hasController := ctx.metaCache.HasController(&controllers[0])
+			meta := controllers[0].Data.(metadata.ControllerMeta)
+
+			hasController := ctx.VisitCtx.MetadataCache.HasController(&meta)
 			Expect(hasController).To(BeTrue())
 		})
 	})
@@ -80,15 +69,15 @@ var _ = Describe("MetadataCache", func() {
 		})
 
 		It("Returns receiver when it exists in the cache", func() {
-			for _, file := range ctx.controllerVisitor.GetAllSourceFiles() {
-				ast.Walk(ctx.controllerVisitor, file)
+			for _, file := range ctx.Orc.GetAllSourceFiles() {
+				ast.Walk(ctx.Orc, file)
 			}
 
-			structType := ctx.visitCtx.GraphBuilder.FindByKind(common.SymKindStruct)
+			structType := ctx.VisitCtx.Graph.FindByKind(common.SymKindStruct)
 			Expect(structType).To(HaveLen(1))
 
-			hasRoute := ctx.metaCache.HasStruct(structType[0].Id)
-			Expect(hasRoute).To(BeTrue())
+			hasStruct := ctx.VisitCtx.MetadataCache.HasStruct(structType[0].Id)
+			Expect(hasStruct).To(BeTrue())
 		})
 	})
 
@@ -103,14 +92,14 @@ var _ = Describe("MetadataCache", func() {
 		})
 
 		It("Returns struct when it exists in the cache", func() {
-			for _, file := range ctx.controllerVisitor.GetAllSourceFiles() {
-				ast.Walk(ctx.controllerVisitor, file)
+			for _, file := range ctx.Orc.GetAllSourceFiles() {
+				ast.Walk(ctx.Orc, file)
 			}
 
-			receivers := ctx.visitCtx.GraphBuilder.FindByKind(common.SymKindStruct)
+			receivers := ctx.VisitCtx.Graph.FindByKind(common.SymKindStruct)
 			Expect(receivers).To(HaveLen(1))
 
-			hasRoute := ctx.metaCache.HasStruct(receivers[0].Id)
+			hasRoute := ctx.VisitCtx.MetadataCache.HasStruct(receivers[0].Id)
 			Expect(hasRoute).To(BeTrue())
 		})
 	})
@@ -126,21 +115,21 @@ var _ = Describe("MetadataCache", func() {
 		})
 
 		It("Returns enum when it exists in the cache", func() {
-			for _, file := range ctx.controllerVisitor.GetAllSourceFiles() {
-				ast.Walk(ctx.controllerVisitor, file)
+			for _, file := range ctx.Orc.GetAllSourceFiles() {
+				ast.Walk(ctx.Orc, file)
 			}
 
-			enums := ctx.visitCtx.GraphBuilder.FindByKind(common.SymKindEnum)
+			enums := ctx.VisitCtx.Graph.FindByKind(common.SymKindEnum)
 			Expect(enums).To(HaveLen(1))
 
-			hasEnum := ctx.metaCache.HasEnum(enums[0].Id)
+			hasEnum := ctx.VisitCtx.MetadataCache.HasEnum(enums[0].Id)
 			Expect(hasEnum).To(BeTrue())
 		})
 	})
 
 	Context("GetFileVersion", func() {
 		It("Returns an error when unable to construct a FileVersion", func() {
-			_, err := ctx.metaCache.GetFileVersion(&ast.File{}, nil)
+			_, err := ctx.VisitCtx.MetadataCache.GetFileVersion(&ast.File{}, nil)
 			Expect(err).To(MatchError(ContainSubstring("GetFileFullPath was provided nil file or fileSet")))
 		})
 	})
@@ -176,40 +165,14 @@ var _ = Describe("MetadataCache", func() {
 				},
 			}
 
-			err := ctx.metaCache.AddEnum(&enumMeta)
+			err := ctx.VisitCtx.MetadataCache.AddEnum(&enumMeta)
 			Expect(err).To(BeNil())
 
-			err = ctx.metaCache.AddEnum(&enumMeta)
+			err = ctx.VisitCtx.MetadataCache.AddEnum(&enumMeta)
 			Expect(err).To(MatchError(ContainSubstring("already exists in cache")))
 		})
 	})
 })
-
-func createTestCtx(fileGlobs []string) TestCtx {
-	ctx := TestCtx{}
-
-	// Pass the real controller file so the providers actually load it
-	arbProvider, err := providers.NewArbitrationProvider(fileGlobs)
-	Expect(err).To(BeNil())
-	ctx.arbProvider = arbProvider
-
-	// Verify files were properly loaded
-	srcFiles := arbProvider.Pkg().GetAllSourceFiles()
-	Expect(srcFiles).ToNot(BeEmpty(), "Arbitration provider parsed zero files; check glob and file contents")
-
-	// Build the VisitContext and routeVisitor as before using arbProvider
-	ctx.metaCache = caching.NewMetadataCache()
-	ctx.symGraph = symboldg.NewSymbolGraph()
-	ctx.visitCtx = &visitors.VisitContext{
-		ArbitrationProvider: arbProvider,
-		MetadataCache:       ctx.metaCache,
-		GraphBuilder:        &ctx.symGraph,
-	}
-
-	ctx.controllerVisitor, err = visitors.NewControllerVisitor(ctx.visitCtx)
-	Expect(err).To(BeNil(), "Failed to construct a new controller visitor")
-	return ctx
-}
 
 func TestMetadataCacheVisitor(t *testing.T) {
 	logger.SetLogLevel(logger.LogLevelNone)

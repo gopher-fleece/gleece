@@ -18,7 +18,7 @@ var _ = BeforeSuite(func() {
 	ctx = utils.GetVisitContextByRelativeConfigOrFail("gleece.test.config.json")
 })
 
-func TestUnitCommons(t *testing.T) {
+func TestUnitMetadata(t *testing.T) {
 	logger.SetLogLevel(logger.LogLevelNone)
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Unit Tests - Metadata")

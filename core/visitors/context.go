@@ -17,7 +17,7 @@ type VisitContext struct {
 	SyncedProvider *providers.SyncedProvider
 
 	// An interface used to build a symbol graph for the processed code
-	GraphBuilder symboldg.SymbolGraphBuilder
+	Graph symboldg.SymbolGraphBuilder
 
 	// The project's configuration, as specified in the user's gleece.config.json
 	GleeceConfig *definitions.GleeceConfig

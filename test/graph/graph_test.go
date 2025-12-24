@@ -33,7 +33,7 @@ var _ = Describe("Graph Controller", func() {
 		Expect(receiver1Children[0].Id.Name).To(Equal("routeParam"))
 		Expect(receiver1Children[0].Id.IsUniverse).To(BeFalse())
 		Expect(receiver1Children[0].Id.IsBuiltIn).To(BeFalse())
-		Expect(receiver1Children[0].Kind).To(Equal(common.SymKindField))
+		Expect(receiver1Children[0].Kind).To(Equal(common.SymKindParameter))
 
 		routeParamChildren := pipe.Graph().Children(receiver1Children[0], orderTraversalBehavior)
 		Expect(routeParamChildren).To(HaveLen(1))
@@ -46,7 +46,7 @@ var _ = Describe("Graph Controller", func() {
 		Expect(receiver1Children[1].Id.Name).To(Equal("queryParam"))
 		Expect(receiver1Children[1].Id.IsUniverse).To(BeFalse())
 		Expect(receiver1Children[1].Id.IsBuiltIn).To(BeFalse())
-		Expect(receiver1Children[1].Kind).To(Equal(common.SymKindField))
+		Expect(receiver1Children[1].Kind).To(Equal(common.SymKindParameter))
 
 		queryParamChildren := pipe.Graph().Children(receiver1Children[1], orderTraversalBehavior)
 		Expect(queryParamChildren).To(HaveLen(1))
@@ -59,7 +59,7 @@ var _ = Describe("Graph Controller", func() {
 		Expect(receiver1Children[2].Id.Name).To(Equal("headerParam"))
 		Expect(receiver1Children[2].Id.IsUniverse).To(BeFalse())
 		Expect(receiver1Children[2].Id.IsBuiltIn).To(BeFalse())
-		Expect(receiver1Children[2].Kind).To(Equal(common.SymKindField))
+		Expect(receiver1Children[2].Kind).To(Equal(common.SymKindParameter))
 
 		headerParamChildren := pipe.Graph().Children(receiver1Children[2], orderTraversalBehavior)
 		Expect(headerParamChildren).To(HaveLen(1))
@@ -72,7 +72,7 @@ var _ = Describe("Graph Controller", func() {
 		Expect(receiver1Children[3].Id.Name).To(Equal(""))
 		Expect(receiver1Children[3].Id.IsUniverse).To(BeFalse())
 		Expect(receiver1Children[3].Id.IsBuiltIn).To(BeFalse())
-		Expect(receiver1Children[3].Kind).To(Equal(common.SymKindField))
+		Expect(receiver1Children[3].Kind).To(Equal(common.SymKindReturnType))
 
 		retValChildren := pipe.Graph().Children(receiver1Children[3], orderTraversalBehavior)
 		Expect(retValChildren).To(HaveLen(1))

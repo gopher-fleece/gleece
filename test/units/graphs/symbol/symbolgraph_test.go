@@ -5,6 +5,7 @@ import (
 
 	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/core/metadata"
+	"github.com/gopher-fleece/gleece/core/metadata/typeref"
 	"github.com/gopher-fleece/gleece/graphs"
 	"github.com/gopher-fleece/gleece/graphs/symboldg"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
@@ -18,7 +19,7 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 		It("Creates a usable SymbolGraph", func() {
 			g := symboldg.NewSymbolGraph()
 			// Graph should be usable: add a primitive and check presence
-			p := symboldg.PrimitiveTypeString
+			p := common.PrimitiveTypeString
 			n := g.AddPrimitive(p)
 			Expect(n).ToNot(BeNil())
 			Expect(g.IsPrimitivePresent(p)).To(BeTrue())
@@ -33,6 +34,10 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 		})
 
 		It("Returns an error from the idempotency guard when the given FileVersion is nil", func() {
+			// Build a TypeUsageMeta using the new Root-based representation (universe "string")
+			k := graphs.NewUniverseSymbolKey("string")
+			root := typeref.NewNamedTypeRef(&k, nil)
+
 			_, err := graph.AddConst(symboldg.CreateConstNode{
 				Data: metadata.ConstMeta{
 					SymNodeMeta: metadata.SymNodeMeta{
@@ -42,10 +47,11 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 					},
 					Value: "some value",
 					Type: metadata.TypeUsageMeta{
-						SymNodeMeta: metadata.SymNodeMeta{Name: "string", FVersion: nil},
-						Layers: []metadata.TypeLayer{
-							metadata.NewBaseLayer(common.Ptr(graphs.NewUniverseSymbolKey("string"))),
+						SymNodeMeta: metadata.SymNodeMeta{
+							Name:     "string",
+							FVersion: nil,
 						},
+						Root: &root,
 					},
 				},
 			})
@@ -69,6 +75,10 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 			Expect(n1).ToNot(BeNil())
 
 			// Add a dependent: add a field belonging to this struct (so revDeps get populated)
+			// Field type -> universe "int"
+			intKey := graphs.NewUniverseSymbolKey("int")
+			intRoot := typeref.NewNamedTypeRef(&intKey, nil)
+
 			fieldMeta := metadata.FieldMeta{
 				SymNodeMeta: metadata.SymNodeMeta{
 					Node:     utils.MakeIdent("F1"),
@@ -78,9 +88,7 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 					SymNodeMeta: metadata.SymNodeMeta{
 						FVersion: fv1,
 					},
-					Layers: []metadata.TypeLayer{
-						metadata.NewBaseLayer(common.Ptr(graphs.NewUniverseSymbolKey("int"))),
-					},
+					Root: &intRoot,
 				},
 			}
 			_, err = graph.AddField(symboldg.CreateFieldNode{Data: fieldMeta})
