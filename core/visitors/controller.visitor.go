@@ -33,6 +33,8 @@ type ControllerVisitor struct {
 
 	// A list of fully processed controller metadata, ready to be passed to the routes/spec generators
 	controllers []metadata.ControllerMeta
+
+	fieldVisitor *FieldVisitor
 }
 
 // NewControllerVisitor Instantiates a new Gleece Controller visitor.
@@ -40,6 +42,10 @@ func NewControllerVisitor(context *VisitContext) (*ControllerVisitor, error) {
 	visitor := ControllerVisitor{}
 	err := visitor.initialize((context))
 	return &visitor, err
+}
+
+func (v *ControllerVisitor) setFieldVisitor(visitor *FieldVisitor) {
+	v.fieldVisitor = visitor
 }
 
 // GetControllers returns all controllers known by this visitor.
@@ -88,9 +94,9 @@ func (v *ControllerVisitor) addSelfToGraph(meta metadata.ControllerMeta) error {
 	v.enter(fmt.Sprintf("Graph insertion - Controller %s", meta.Struct.Name))
 	defer v.exit()
 
-	_, err := v.context.GraphBuilder.AddController(
+	_, err := v.context.Graph.AddController(
 		symboldg.CreateControllerNode{
-			Data:        meta.Struct,
+			Data:        meta,
 			Annotations: meta.Struct.Annotations,
 		},
 	)
@@ -125,8 +131,10 @@ func (v *ControllerVisitor) visitController(controllerNode *ast.TypeSpec) (metad
 	}
 
 	routeVisitor, err := NewRouteVisitor(
-		v.context, RouteParentContext{Controller: &controllerMeta},
+		v.context,
+		RouteParentContext{Controller: &controllerMeta},
 	)
+	routeVisitor.setFieldVisitor(v.fieldVisitor)
 
 	if err != nil {
 		logger.Error("Could not initialize a new route visitor - %v", err)

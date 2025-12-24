@@ -218,7 +218,7 @@ var _ = Describe("Unit Tests - Commons", func() {
 				multiLine := "first line\nsecond line\nthird line"
 				err := &common.ContextualError{
 					Context: "multi",
-					Errors:  []error{fmt.Errorf(multiLine)},
+					Errors:  []error{fmt.Errorf("%s", multiLine)},
 				}
 				msg := err.Error()
 				Expect(msg).To(ContainSubstring("- first line"))

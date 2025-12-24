@@ -22,7 +22,7 @@ func (k KeyableNodeMeta) SymbolKey() graphs.SymbolKey {
 }
 
 type CreateControllerNode struct {
-	Data        metadata.StructMeta
+	Data        metadata.ControllerMeta
 	Annotations *annotations.AnnotationHolder
 }
 
@@ -60,4 +60,17 @@ type CreateFieldNode struct {
 type CreateConstNode struct {
 	Data        metadata.ConstMeta
 	Annotations *annotations.AnnotationHolder
+}
+
+type CreateAliasNode struct {
+	Data        metadata.AliasMeta
+	Annotations *annotations.AnnotationHolder
+}
+
+// CreateCompositeNode is the request used to add a canonical composite node.
+type CreateCompositeNode struct {
+	Key       graphs.SymbolKey
+	Base      graphs.SymbolKey // optional: declared base for instantiations (empty == none)
+	Canonical string
+	Operands  []graphs.SymbolKey
 }

@@ -7,52 +7,16 @@ import (
 	"slices"
 	"strings"
 
+	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/gopher-fleece/gleece/common"
 	"github.com/gopher-fleece/gleece/common/linq"
 	"github.com/gopher-fleece/gleece/core/annotations"
 	"github.com/gopher-fleece/gleece/core/metadata"
+	"github.com/gopher-fleece/gleece/core/metadata/typeref"
 	"github.com/gopher-fleece/gleece/gast"
 	"github.com/gopher-fleece/gleece/graphs"
 	"github.com/gopher-fleece/gleece/graphs/dot"
 )
-
-type SymbolGraphBuilder interface {
-	AddController(request CreateControllerNode) (*SymbolNode, error)
-	AddRoute(request CreateRouteNode) (*SymbolNode, error)
-	AddRouteParam(request CreateParameterNode) (*SymbolNode, error)
-	AddRouteRetVal(request CreateReturnValueNode) (*SymbolNode, error)
-	AddStruct(request CreateStructNode) (*SymbolNode, error)
-	AddEnum(request CreateEnumNode) (*SymbolNode, error)
-	AddField(request CreateFieldNode) (*SymbolNode, error)
-	AddConst(request CreateConstNode) (*SymbolNode, error)
-	AddPrimitive(kind PrimitiveType) *SymbolNode
-	AddSpecial(special SpecialType) *SymbolNode
-	AddEdge(from, to graphs.SymbolKey, kind SymbolEdgeKind, meta map[string]string)
-	RemoveEdge(from, to graphs.SymbolKey, kind *SymbolEdgeKind)
-	RemoveNode(key graphs.SymbolKey)
-
-	Structs() []metadata.StructMeta
-	Enums() []metadata.EnumMeta
-	FindByKind(kind common.SymKind) []*SymbolNode
-
-	IsPrimitivePresent(primitive PrimitiveType) bool
-	IsSpecialPresent(special SpecialType) bool
-
-	// Children returns direct outward SymbolNode dependencies from the given node,
-	// applying the given traversal behavior if non-nil.
-	Children(node *SymbolNode, behavior *TraversalBehavior) []*SymbolNode
-
-	// Parents returns nodes that have edges pointing to the given node,
-	// applying the given traversal behavior if non-nil.
-	Parents(node *SymbolNode, behavior *TraversalBehavior) []*SymbolNode
-
-	// Descendants returns all transitive children reachable from root,
-	// applying the behavior at each step to decide traversal and inclusion.
-	Descendants(root *SymbolNode, behavior *TraversalBehavior) []*SymbolNode
-
-	ToDot(theme *dot.DotTheme) string
-	String() string
-}
 
 type SymbolGraph struct {
 	// A map for retrieving full symbol keys from their comparable, non-versioned IDs
@@ -165,9 +129,9 @@ func (g *SymbolGraph) RemoveEdge(from, to graphs.SymbolKey, kind *SymbolEdgeKind
 
 func (g *SymbolGraph) AddController(request CreateControllerNode) (*SymbolNode, error) {
 	symNode, err := g.createAndAddSymNode(
-		request.Data.Node,
+		request.Data.Struct.Node,
 		common.SymKindController,
-		request.Data.FVersion,
+		request.Data.Struct.FVersion,
 		request.Annotations,
 		request.Data,
 	)
@@ -291,7 +255,7 @@ func (g *SymbolGraph) AddEnum(request CreateEnumNode) (*SymbolNode, error) {
 	// This is not strictly necessary due to how the visitor code is built but it serves as a bit of
 	// an extra layer of 'protection' against malformed graphs.
 	if g.nodes[typeRef.BaseId()] == nil {
-		primitive, isPrimitive := ToPrimitiveType(string(request.Data.ValueKind))
+		primitive, isPrimitive := common.ToPrimitiveType(string(request.Data.ValueKind))
 		if !isPrimitive {
 			return nil, fmt.Errorf(
 				"value kind for enum '%s' is '%s' which is unexpected",
@@ -328,7 +292,7 @@ func (g *SymbolGraph) AddEnum(request CreateEnumNode) (*SymbolNode, error) {
 func (g *SymbolGraph) AddField(request CreateFieldNode) (*SymbolNode, error) {
 	symNode, err := g.createAndAddSymNode(
 		request.Data.Node,
-		common.SymKindField,
+		request.Data.SymbolKind,
 		request.Data.FVersion,
 		request.Annotations,
 		request.Data,
@@ -337,12 +301,17 @@ func (g *SymbolGraph) AddField(request CreateFieldNode) (*SymbolNode, error) {
 		return nil, err
 	}
 
-	typeRef, err := getTypeRef(request.Data.Type)
+	typeRef, err := g.getKeyForUsage(request.Data.Type)
 	if err != nil {
 		return nil, err
 	}
 
-	g.AddEdge(symNode.Id, typeRef, EdgeKindType, nil)
+	edgeKind := EdgeKindType
+	if request.Data.Type.Root.Kind() == metadata.TypeRefKindParam {
+		edgeKind = EdgeKindTypeParameter
+	}
+
+	g.AddEdge(symNode.Id, typeRef, edgeKind, nil)
 	return symNode, err
 }
 
@@ -354,6 +323,67 @@ func (g *SymbolGraph) AddConst(request CreateConstNode) (*SymbolNode, error) {
 		request.Annotations,
 		request.Data,
 	)
+}
+
+func (g *SymbolGraph) AddAlias(request CreateAliasNode) (*SymbolNode, error) {
+	return g.createAndAddSymNode(
+		request.Data.Node,
+		common.SymKindAlias,
+		request.Data.FVersion,
+		request.Annotations,
+		request.Data,
+	)
+}
+
+func (g *SymbolGraph) Get(key graphs.SymbolKey) *SymbolNode {
+	return g.nodes[key.BaseId()]
+}
+
+// GetEdges returns a map of edge descriptors involving 'key'.
+// It includes both outgoing edges (key -> X) and incoming edges (Y -> key).
+// If 'kinds' is non-empty, only edges whose kind matches one of the kinds are returned.
+// Returned map keys are stable and unique: "<fromBaseId>::<innerEdgeKey>".
+func (g *SymbolGraph) GetEdges(key graphs.SymbolKey, kinds []SymbolEdgeKind) map[string]SymbolEdgeDescriptor {
+	mapKey := key.BaseId()
+	out := make(map[string]SymbolEdgeDescriptor)
+
+	requestedKinds := mapset.NewSet(kinds...)
+
+	// 1) Outgoing edges from `key`
+	if outgoing, ok := g.edges[mapKey]; ok {
+		for innerKey, desc := range outgoing {
+			if !requestedKinds.IsEmpty() && !requestedKinds.ContainsOne(desc.Edge.Kind) {
+				continue
+			}
+			// Use fromBaseId prefix to guarantee uniqueness when aggregating from many sources
+			out[mapKey+"::"+innerKey] = desc
+		}
+	}
+
+	// 2) Incoming edges (parents -> key). Use revDeps to find parents.
+	if parents, ok := g.revDeps[mapKey]; ok {
+		for parentKey := range parents {
+			parentBase := parentKey.BaseId()
+			if parentEdges, ok := g.edges[parentBase]; ok {
+				for innerKey, desc := range parentEdges {
+					// we only want those edges whose 'To' is our key
+					if desc.Edge.To.BaseId() != mapKey {
+						continue
+					}
+					if !requestedKinds.IsEmpty() && !requestedKinds.ContainsOne(desc.Edge.Kind) {
+						continue
+					}
+					out[parentBase+"::"+innerKey] = desc
+				}
+			}
+		}
+	}
+
+	return out
+}
+
+func (g *SymbolGraph) Exists(key graphs.SymbolKey) bool {
+	return g.Get(key) != nil
 }
 
 func (g *SymbolGraph) FindByKind(kind common.SymKind) []*SymbolNode {
@@ -392,21 +422,59 @@ func (g *SymbolGraph) Structs() []metadata.StructMeta {
 	return results
 }
 
-func (g *SymbolGraph) IsPrimitivePresent(primitive PrimitiveType) bool {
+func (g *SymbolGraph) IsPrimitivePresent(primitive common.PrimitiveType) bool {
 	return g.builtinSymbolExists(string(primitive), true)
 }
 
-func (g *SymbolGraph) AddPrimitive(p PrimitiveType) *SymbolNode {
+func (g *SymbolGraph) AddPrimitive(p common.PrimitiveType) *SymbolNode {
 	// Primitives are always 'universe' types
 	return g.addBuiltinSymbol(string(p), common.SymKindBuiltin, true)
 }
 
-func (g *SymbolGraph) IsSpecialPresent(special SpecialType) bool {
+func (g *SymbolGraph) IsSpecialPresent(special common.SpecialType) bool {
 	return g.builtinSymbolExists(string(special), special.IsUniverse())
 }
 
-func (g *SymbolGraph) AddSpecial(special SpecialType) *SymbolNode {
+func (g *SymbolGraph) AddSpecial(special common.SpecialType) *SymbolNode {
 	return g.addBuiltinSymbol(string(special), common.SymKindSpecialBuiltin, special.IsUniverse())
+}
+
+// addComposite creates (or returns existing) a composite-type SymbolNode and wires edges to operands.
+// It's idempotent.
+func (g *SymbolGraph) addComposite(req CreateCompositeNode) (*SymbolNode, error) {
+	// Return existing node if present
+	if node, exists := g.nodes[req.Key.BaseId()]; exists {
+		return node, nil
+	}
+
+	node := &SymbolNode{
+		Id:   req.Key,
+		Kind: common.SymKindComposite,
+		Data: &metadata.CompositeMeta{
+			Canonical: req.Canonical,
+			Operands:  req.Operands,
+		},
+	}
+
+	g.addNode(node)
+
+	// Add edges from composite -> operand nodes (type-parameter edges)
+	for _, op := range req.Operands {
+		g.AddEdge(node.Id, op, EdgeKindTypeParameter, nil)
+	}
+
+	// If this composite is an instantiation of a declared base, create the instantiation edge.
+	if !req.Base.Equals(graphs.SymbolKey{}) {
+		// we expect the base to be present (ensureInstantiatedBasePresent enforces this).
+		if g.Exists(req.Base) {
+			g.AddEdge(node.Id, req.Base, EdgeKindInstantiates, nil)
+		} else {
+			// defensive: this should not happen if ensureInstantiatedBasePresent ran.
+			return nil, fmt.Errorf("addComposite: base missing for instantiation: %s", req.Base.Id())
+		}
+	}
+
+	return node, nil
 }
 
 func (g *SymbolGraph) Children(node *SymbolNode, behavior *TraversalBehavior) []*SymbolNode {
@@ -535,6 +603,16 @@ func (g *SymbolGraph) Descendants(root *SymbolNode, behavior *TraversalBehavior)
 	walk(root)
 
 	return result
+}
+
+func (g *SymbolGraph) Walk(node *SymbolNode, walker TreeWalker) {
+	edges := g.edges[node.Id.BaseId()]
+	for {
+		next := walker(node, edges)
+		if next == nil {
+			break
+		}
+	}
 }
 
 func (g *SymbolGraph) builtinSymbolExists(name string, isUniverse bool) bool {
@@ -749,27 +827,283 @@ func (g *SymbolGraph) ToDot(theme *dot.DotTheme) string {
 	// Add all edges
 	for fromKey, edges := range g.edges {
 		for _, edgeDescriptor := range edges {
-			builder.AddEdge(g.lookupKeys[fromKey], edgeDescriptor.Edge.To, string(edgeDescriptor.Edge.Kind))
+			builder.AddEdge(
+				g.lookupKeys[fromKey],
+				edgeDescriptor.Edge.To,
+				string(edgeDescriptor.Edge.Kind),
+				g.getParamIndexesLabelSuffix(edgeDescriptor),
+			)
 		}
 	}
-
-	// Add legend if theme requests it
-	builder.RenderLegend()
 
 	return builder.Finish()
 }
 
-func getTypeRef(typeUsage metadata.TypeUsageMeta) (graphs.SymbolKey, error) {
-	if !typeUsage.SymbolKind.IsBuiltin() {
-
-		return typeUsage.GetBaseTypeRefKey()
+func (g *SymbolGraph) getParamIndexesLabelSuffix(edgeDescriptor SymbolEdgeDescriptor) *string {
+	if edgeDescriptor.Edge.Kind != EdgeKindTypeParameter {
+		return nil
 	}
 
-	if typeUsage.IsUniverseType() {
-		return graphs.NewUniverseSymbolKey(typeUsage.Name), nil
+	indices := g.getTypeParamIndex(edgeDescriptor.Edge.From, edgeDescriptor.Edge.To)
+	if len(indices) <= 0 {
+		return nil
 	}
 
-	return graphs.NewNonUniverseBuiltInSymbolKey(fmt.Sprintf("%s.%s", typeUsage.PkgPath, typeUsage.Name)), nil
+	indexStrings := linq.Map(indices, func(idx int) string {
+		return fmt.Sprint(idx)
+	})
+
+	formattedIndices := fmt.Sprintf(
+		" %s",
+		strings.Join(indexStrings, ", "),
+	)
+	return &formattedIndices
+}
+
+func (g *SymbolGraph) getTypeParamIndex(from, to graphs.SymbolKey) []int {
+	// Get the actual node that uses the 'to' key
+	fromNode := g.nodes[from.BaseId()]
+	if fromNode == nil {
+		return nil
+	}
+
+	composite, isComposite := fromNode.Data.(*metadata.CompositeMeta)
+	if !isComposite {
+		// Shouldn't happen - we should get here only if we're inspecting a composite node
+		return nil
+	}
+
+	paramIndices := []int{}
+
+	for idx, typeParam := range composite.Operands {
+		if to == typeParam {
+			paramIndices = append(paramIndices, idx)
+		}
+	}
+
+	if len(paramIndices) > 0 {
+		return paramIndices
+	}
+
+	return nil
+}
+
+// getKeyForUsage is a thin wrapper used by callers (AddField, AddRouteRetVal, ...).
+// It validates the input and delegates to ensureTypeNode.
+func (g *SymbolGraph) getKeyForUsage(typeUsage metadata.TypeUsageMeta) (graphs.SymbolKey, error) {
+	if typeUsage.Root == nil {
+		return graphs.SymbolKey{}, fmt.Errorf("getKeyForUsage: TypeUsage '%s' missing Root TypeRef", typeUsage.Name)
+	}
+	return g.ensureTypeNode(typeUsage.Root, typeUsage.FVersion)
+}
+
+// ensureTypeNode ensures a graph node exists for the given metadata.TypeRef and returns its SymbolKey.
+// - idempotent
+// - creates primitive / special universe nodes when needed
+// - creates composite nodes (ptr/slice/map/func/instantiation) and edges to operands
+// - does NOT attempt automatic materialization of declared base types; it errors if those are missing
+func (g *SymbolGraph) ensureTypeNode(root metadata.TypeRef, fileVersion *gast.FileVersion) (graphs.SymbolKey, error) {
+	if root == nil {
+		return graphs.SymbolKey{}, fmt.Errorf("ensureTypeNode: nil TypeRef")
+	}
+
+	// derive key for this usage
+	key, err := root.ToSymKey(fileVersion)
+	if err != nil {
+		return graphs.SymbolKey{}, fmt.Errorf(
+			"ensureTypeNode: ToSymKey failed for '%s': %w",
+			root.CanonicalString(),
+			err,
+		)
+	}
+
+	// 1) Universe / builtin -> ensure primitive/special node and return that key immediately.
+	if key.IsUniverse || key.IsBuiltIn {
+		if err := g.conditionalEnsureBuiltInNode(key); err != nil {
+			return graphs.SymbolKey{}, fmt.Errorf("ensureTypeNode: ensureUniverseNode failed '%s': %w",
+				key.Name, err)
+		}
+		return key, nil
+	}
+
+	// 2) Named (plain) that points to a declared base: prefer the declared base node.
+	//    This prevents creating a zero-operand composite node for plain namedRef types.
+	namedRef, isNamedRef := root.(*typeref.NamedTypeRef)
+
+	if isNamedRef && len(namedRef.TypeArgs) == 0 && !namedRef.Key.Empty() {
+		// If declared base exists in graph - return it (preserve declared identity).
+		if g.Exists(namedRef.Key) {
+			return namedRef.Key, nil
+		}
+		// Declared base missing -> that's a policy error (we don't auto-materialize).
+		return graphs.SymbolKey{}, fmt.Errorf(
+			"ensureTypeNode: declared base not present for named type usage %s -> base %s",
+			root.CanonicalString(),
+			namedRef.Key.Id(),
+		)
+	}
+
+	// 3) If node already exists for this exact key, return it.
+	if g.Exists(key) {
+		return key, nil
+	}
+
+	// 4) Type parameter nodes: produce a TypeParam node (idempotent helper).
+	if root.Kind() == metadata.TypeRefKindParam {
+		castRef := root.(*typeref.ParamTypeRef)
+		tNode, err := g.conditionalEnsureTypeParamNode(key, castRef.Index)
+		if err != nil {
+			return graphs.SymbolKey{}, fmt.Errorf("ensureTypeNode: ensure type-param node failed: %w", err)
+		}
+		return tNode.Id, nil
+	}
+
+	// 5) For instantiated named types ensure the declared base exists (no auto-materialize).
+	if err := g.conditionalEnsureInstantiatedBase(root); err != nil {
+		return graphs.SymbolKey{}, err
+	}
+
+	// 6) Now ensure composite placement (recursively ensures operand nodes and creates composite).
+	if err := g.conditionalEnsureComposite(root, fileVersion, key); err != nil {
+		return graphs.SymbolKey{}, fmt.Errorf("ensureTypeNode: failed to ensure composite '%s' placement in graph - %w", key.Id(), err)
+	}
+
+	// final: key should now be present (addComposite is responsible for inserting node)
+	return key, nil
+}
+
+func (g *SymbolGraph) conditionalEnsureComposite(
+	root metadata.TypeRef,
+	fileVersion *gast.FileVersion,
+	rootKey graphs.SymbolKey,
+) error {
+
+	// Ensure operand nodes recursively
+	operands := gatherOperandTypeRefs(root)
+	operandKeys := make([]graphs.SymbolKey, 0, len(operands))
+	for _, op := range operands {
+		opKey, err := g.ensureTypeNode(op, fileVersion)
+		if err != nil {
+			return fmt.Errorf("ensureTypeNode: ensuring operand '%s' failed: %w",
+				op.CanonicalString(),
+				err,
+			)
+		}
+		operandKeys = append(operandKeys, opKey)
+	}
+
+	// Create composite node and wire operands
+	create := CreateCompositeNode{
+		Key:       rootKey,
+		Canonical: root.CanonicalString(),
+		Operands:  operandKeys,
+	}
+
+	// attach declared base if root is NamedTypeRef with base key
+	if named, ok := root.(*typeref.NamedTypeRef); ok {
+		if !named.Key.Equals(graphs.SymbolKey{}) && len(named.TypeArgs) > 0 {
+			create.Base = named.Key
+		}
+	}
+
+	if _, err := g.addComposite(create); err != nil {
+		return fmt.Errorf("ensureComposite: AddComposite failed for '%s': %w", rootKey.Id(), err)
+	}
+
+	return nil
+}
+
+// conditionalEnsureInstantiatedBase checks that for NamedTypeRef instantiations the base exists.
+// It does NOT attempt to auto-materialize declared bases; it returns an error when a declared base is absent.
+func (g *SymbolGraph) conditionalEnsureInstantiatedBase(root metadata.TypeRef) error {
+	// We only care about instantiated NamedTypeRef with a declared base key.
+	named, ok := root.(*typeref.NamedTypeRef)
+	if !ok {
+		return nil
+	}
+
+	// If there's no base key or no type args -> nothing to check.
+	if named.Key.Equals(graphs.SymbolKey{}) || len(named.TypeArgs) == 0 {
+		return nil
+	}
+
+	// Universe/builtin bases are always fine.
+	if named.Key.IsUniverse || named.Key.IsBuiltIn {
+		return nil
+	}
+
+	// Declared base must already exist in graph (no auto materialize policy).
+	if !g.Exists(named.Key) {
+		return fmt.Errorf("ensureInstantiatedBasePresent: declared base not present for instantiation: %s", named.Key.Id())
+	}
+
+	return nil
+}
+
+// conditionalEnsureBuiltInNode creates primitives/special nodes (idempotent).
+func (g *SymbolGraph) conditionalEnsureBuiltInNode(key graphs.SymbolKey) error {
+	if prim, ok := common.ToPrimitiveType(key.Name); ok {
+		g.AddPrimitive(prim)
+		return nil
+	}
+	if sp, ok := common.ToSpecialType(key.Name); ok {
+		g.AddSpecial(sp)
+		return nil
+	}
+	return fmt.Errorf("ensureUniverseNode: unknown universe type '%s'", key.Name)
+}
+
+func (g *SymbolGraph) conditionalEnsureTypeParamNode(
+	key graphs.SymbolKey,
+	index int,
+) (*SymbolNode, error) {
+	if existing := g.Get(key); existing != nil {
+		return existing, nil
+	}
+
+	node := &SymbolNode{
+		Id:   key,
+		Kind: common.SymKindTypeParam,
+		Data: metadata.TypeParamDeclMeta{
+			Name:  key.Name,
+			Index: index,
+		},
+	}
+
+	g.addNode(node)
+	return node, nil
+}
+
+// gatherOperandTypeRefs returns deterministic operand TypeRefs for a composite root.
+func gatherOperandTypeRefs(root metadata.TypeRef) []metadata.TypeRef {
+	switch t := root.(type) {
+	case *typeref.PtrTypeRef:
+		return []metadata.TypeRef{t.Elem}
+	case *typeref.SliceTypeRef:
+		return []metadata.TypeRef{t.Elem}
+	case *typeref.ArrayTypeRef:
+		return []metadata.TypeRef{t.Elem}
+	case *typeref.MapTypeRef:
+		return []metadata.TypeRef{t.Key, t.Value}
+	case *typeref.FuncTypeRef:
+		out := make([]metadata.TypeRef, 0, len(t.Params)+len(t.Results))
+		out = append(out, t.Params...)
+		out = append(out, t.Results...)
+		return out
+	case *typeref.NamedTypeRef:
+		// For instantiation, the explicit TypeArgs are operands (base handled separately)
+		return t.TypeArgs
+	case *typeref.InlineStructTypeRef:
+		out := make([]metadata.TypeRef, 0, len(t.Fields))
+		for _, f := range t.Fields {
+			if f.Type.Root != nil {
+				out = append(out, f.Type.Root)
+			}
+		}
+		return out
+	default:
+		return nil
+	}
 }
 
 func edgeMapKey(kind SymbolEdgeKind, toBaseId string) string {
