@@ -7,7 +7,7 @@ import (
 
 	"github.com/gopher-fleece/gleece/generator/swagen/swagtool"
 	"github.com/pb33f/libopenapi/datamodel/high/base"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v4"
 )
 
 func BuildSchemaValidationV31(schema *base.Schema, validationString string, fieldInterface string) {

@@ -14,21 +14,13 @@ Repository: https://github.com/gopher-fleece/gleece
 --
 */
 package routes
+
 import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
-	"net/textproto"
-	"reflect"
-	"regexp"
-	"strconv"
-	"strings"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	RequestAuth "github.com/gopher-fleece/gleece/e2e/gin/auth"
-	"github.com/gopher-fleece/runtime"
 	E2EClassSecController "github.com/gopher-fleece/gleece/e2e/assets"
 	E2EController "github.com/gopher-fleece/gleece/e2e/assets"
 	Param11value3 "github.com/gopher-fleece/gleece/e2e/assets"
@@ -42,23 +34,45 @@ import (
 	Param20data "github.com/gopher-fleece/gleece/e2e/assets"
 	Param22arrive "github.com/gopher-fleece/gleece/e2e/assets"
 	Param23arrive "github.com/gopher-fleece/gleece/e2e/assets"
+	Param24object "github.com/gopher-fleece/gleece/e2e/assets"
+	Param25num "github.com/gopher-fleece/gleece/e2e/assets"
+	Param26str "github.com/gopher-fleece/gleece/e2e/assets"
+	Param27values "github.com/gopher-fleece/gleece/e2e/assets"
+	Param28values2 "github.com/gopher-fleece/gleece/e2e/assets"
+	Param29values2 "github.com/gopher-fleece/gleece/e2e/assets"
+	Param31values "github.com/gopher-fleece/gleece/e2e/assets"
+	Param32values2 "github.com/gopher-fleece/gleece/e2e/assets"
 	Param4value2 "github.com/gopher-fleece/gleece/e2e/assets"
 	Param5theBody "github.com/gopher-fleece/gleece/e2e/assets"
 	Response6CustomError "github.com/gopher-fleece/gleece/e2e/assets"
+	RequestAuth "github.com/gopher-fleece/gleece/e2e/gin/auth"
+	"github.com/gopher-fleece/runtime"
 	Param13data "github.com/haimkastner/unitsnet-go/units"
 	Param14unit "github.com/haimkastner/unitsnet-go/units"
+	"io"
+	"net/http"
+	"net/textproto"
+	"reflect"
+	"regexp"
+	"strconv"
+	"strings"
 	// ImportsExtension - test
 )
+
 var validatorInstance = validator.New()
 var urlParamRegex *regexp.Regexp
+
 type SecurityListRelation string
+
 const (
 	SecurityListRelationAnd SecurityListRelation = "AND"
 )
+
 type SecurityCheckList struct {
 	Checks   []runtime.SecurityCheck
 	Relation SecurityListRelation
 }
+
 // TypeDeclarationsExtension - test
 func getRequestContext(ginCtx *gin.Context) context.Context {
 	return ginCtx.Request.Context()
@@ -268,14 +282,17 @@ func wrapValidatorError(validatorErr error, operationId string, fieldName string
 		Instance: fmt.Sprintf("/validation/error/%s", operationId),
 	}
 }
+
 // FunctionDeclarationsExtension - test
 type MiddlewareFunc func(ctx context.Context, ginCtx *gin.Context) (context.Context, bool)
 type ErrorMiddlewareFunc func(ctx context.Context, ginCtx *gin.Context, err error) (context.Context, bool)
+
 var beforeOperationMiddlewares []MiddlewareFunc
 var afterOperationSuccessMiddlewares []MiddlewareFunc
 var onErrorMiddlewares []ErrorMiddlewareFunc
 var onInputValidationMiddlewares []ErrorMiddlewareFunc
 var onOutputValidationMiddlewares []ErrorMiddlewareFunc
+
 func RegisterMiddleware(executionType runtime.MiddlewareExecutionType, middlewareFunc MiddlewareFunc) {
 	switch executionType {
 	case runtime.BeforeOperation:
@@ -301,7 +318,10 @@ func RegisterCustomValidator(validateTagName string, validateFunc runtime.Valida
 }
 func RegisterRoutes(engine *gin.Engine) {
 	urlParamRegex = regexp.MustCompile(`\{([\w\d-_]+)\}`)
+	registerEnumValidation(validatorInstance, "bool_enum_enum", []string{"false", "true"})
 	registerEnumValidation(validatorInstance, "length_units_enum", []string{"Angstrom", "AstronomicalUnit", "Centimeter", "Chain", "DataMile", "Decameter", "Decimeter", "DtpPica", "DtpPoint", "Fathom", "Femtometer", "Foot", "Gigameter", "Hand", "Hectometer", "Inch", "Kilofoot", "KilolightYear", "Kilometer", "Kiloparsec", "Kiloyard", "LightYear", "MegalightYear", "Megameter", "Megaparsec", "Meter", "Microinch", "Micrometer", "Mil", "Mile", "Millimeter", "Nanometer", "NauticalMile", "Parsec", "Picometer", "PrinterPica", "PrinterPoint", "Shackle", "SolarRadius", "Twip", "UsSurveyFoot", "Yard"})
+	registerEnumValidation(validatorInstance, "myemamium_enum", []string{"one", "two"})
+	registerEnumValidation(validatorInstance, "number_enum_enum", []string{"1", "2"})
 	registerEnumValidation(validatorInstance, "number_enumeration_enum", []string{"1", "2"})
 	registerEnumValidation(validatorInstance, "speed_units_enum", []string{"CentimeterPerHour", "CentimeterPerMinute", "CentimeterPerSecond", "DecimeterPerMinute", "DecimeterPerSecond", "FootPerHour", "FootPerMinute", "FootPerSecond", "InchPerHour", "InchPerMinute", "InchPerSecond", "KilometerPerHour", "KilometerPerMinute", "KilometerPerSecond", "Knot", "Mach", "MeterPerHour", "MeterPerMinute", "MeterPerSecond", "MicrometerPerMinute", "MicrometerPerSecond", "MilePerHour", "MillimeterPerHour", "MillimeterPerMinute", "MillimeterPerSecond", "NanometerPerMinute", "NanometerPerSecond", "UsSurveyFootPerHour", "UsSurveyFootPerMinute", "UsSurveyFootPerSecond", "YardPerHour", "YardPerMinute", "YardPerSecond"})
 	registerEnumValidation(validatorInstance, "status_enumeration_enum", []string{"active", "inactive"})
@@ -4091,6 +4111,202 @@ func RegisterRoutes(engine *gin.Engine) {
 		ginCtx.JSON(statusCode, value)
 		ginCtx.Header("x-RouteEndRoutesExtension", "TestForm")
 	})
+	engine.POST(toGinUrl("/e2e/form-extra"), func(ginCtx *gin.Context) {
+		ginCtx.Header("x-RouteStartRoutesExtension", "TestFormExtra")
+		authErr := authorize(
+			ginCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(ginCtx, authErr, "TestFormExtra")
+			return
+		}
+		controller := E2EController.E2EController{}
+		controller.InitController(ginCtx)
+		var item1RawPtr *int64 = nil
+		item1Raw, isitem1Exists := ginCtx.GetPostForm("item1")
+		if isitem1Exists {
+			item1Uint64, conversionErr := strconv.ParseInt(item1Raw, 10, 64)
+			if conversionErr != nil {
+				// Middlewares onInputValidationMiddlewares section
+				for _, middleware := range onInputValidationMiddlewares {
+					middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, conversionErr)
+					setRequestContext(ginCtx, middlewareCtx)
+					if !continueOperation {
+						return
+					}
+				}
+				// End middlewares onInputValidationMiddlewares section
+				validationError := runtime.Rfc7807Error{
+					Type: http.StatusText(http.StatusUnprocessableEntity),
+					Detail: fmt.Sprintf(
+						"A request was made to operation 'TestFormExtra' but parameter '%s' was not properly sent - Expected %s but got %s",
+						"item1",
+						"int64",
+						reflect.TypeOf(item1Raw).String(),
+					),
+					Status:     http.StatusUnprocessableEntity,
+					Instance:   "/validation/error/TestFormExtra",
+					Extensions: map[string]string{"error": conversionErr.Error()},
+				}
+				ginCtx.Header("x-ParamsValidationErrorResponseExtension", "TestFormExtra")
+				ginCtx.JSON(http.StatusUnprocessableEntity, validationError)
+				return
+			}
+			item1 := int64(item1Uint64)
+			item1RawPtr = &item1
+		}
+		if validatorErr := validatorInstance.Var(item1RawPtr, "required,gte=80"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, validatorErr)
+				setRequestContext(ginCtx, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "item1"
+			validationError := wrapValidatorError(validatorErr, "TestFormExtra", fieldName)
+			ginCtx.Header("x-RunValidatorExtension", "TestFormExtra")
+			ginCtx.JSON(http.StatusUnprocessableEntity, validationError)
+			return
+		}
+		var item2RawPtr *string = nil
+		item2Raw, isitem2Exists := ginCtx.GetPostForm("item2")
+		if isitem2Exists {
+			item2 := item2Raw
+			item2RawPtr = &item2
+		}
+		if validatorErr := validatorInstance.Var(item2RawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, validatorErr)
+				setRequestContext(ginCtx, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "item2"
+			validationError := wrapValidatorError(validatorErr, "TestFormExtra", fieldName)
+			ginCtx.Header("x-RunValidatorExtension", "TestFormExtra")
+			ginCtx.JSON(http.StatusUnprocessableEntity, validationError)
+			return
+		}
+		var item3RawPtr *int64 = nil
+		item3Raw, isitem3Exists := ginCtx.GetQuery("item3")
+		if isitem3Exists {
+			item3Uint64, conversionErr := strconv.ParseInt(item3Raw, 10, 64)
+			if conversionErr != nil {
+				// Middlewares onInputValidationMiddlewares section
+				for _, middleware := range onInputValidationMiddlewares {
+					middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, conversionErr)
+					setRequestContext(ginCtx, middlewareCtx)
+					if !continueOperation {
+						return
+					}
+				}
+				// End middlewares onInputValidationMiddlewares section
+				validationError := runtime.Rfc7807Error{
+					Type: http.StatusText(http.StatusUnprocessableEntity),
+					Detail: fmt.Sprintf(
+						"A request was made to operation 'TestFormExtra' but parameter '%s' was not properly sent - Expected %s but got %s",
+						"item3",
+						"int64",
+						reflect.TypeOf(item3Raw).String(),
+					),
+					Status:     http.StatusUnprocessableEntity,
+					Instance:   "/validation/error/TestFormExtra",
+					Extensions: map[string]string{"error": conversionErr.Error()},
+				}
+				ginCtx.Header("x-ParamsValidationErrorResponseExtension", "TestFormExtra")
+				ginCtx.JSON(http.StatusUnprocessableEntity, validationError)
+				return
+			}
+			item3 := int64(item3Uint64)
+			item3RawPtr = &item3
+		}
+		if validatorErr := validatorInstance.Var(item3RawPtr, "required,gte=80"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, validatorErr)
+				setRequestContext(ginCtx, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "item3"
+			validationError := wrapValidatorError(validatorErr, "TestFormExtra", fieldName)
+			ginCtx.Header("x-RunValidatorExtension", "TestFormExtra")
+			ginCtx.JSON(http.StatusUnprocessableEntity, validationError)
+			return
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx)
+			setRequestContext(ginCtx, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		ginCtx.Header("x-BeforeOperationRoutesExtension", "TestFormExtra")
+		value, opError := controller.TestFormExtra(*item1RawPtr, *item2RawPtr, *item3RawPtr)
+		for key, value := range controller.GetHeaders() {
+			ginCtx.Header(key, value)
+		}
+		ginCtx.Header("x-inject", "true")
+		ginCtx.Header("x-ResponseHeadersExtension", "TestFormExtra")
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, opError)
+				setRequestContext(ginCtx, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'TestFormExtra'",
+				Status:     statusCode,
+				Instance:   "/controller/error/TestFormExtra",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			ginCtx.Header("x-JsonErrorResponseExtension", "TestFormExtra")
+			ginCtx.JSON(statusCode, stdError)
+			return
+		}
+		ginCtx.Header("x-JsonResponseExtension", "TestFormExtra")
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx)
+			setRequestContext(ginCtx, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		ginCtx.Header("x-AfterOperationRoutesExtension", "TestFormExtra")
+		ginCtx.JSON(statusCode, value)
+		ginCtx.Header("x-RouteEndRoutesExtension", "TestFormExtra")
+	})
 	engine.POST(toGinUrl("/e2e/test-response-validation"), func(ginCtx *gin.Context) {
 		ginCtx.Header("x-RouteStartRoutesExtension", "TestResponseValidation")
 		authErr := authorize(
@@ -4472,7 +4688,7 @@ func RegisterRoutes(engine *gin.Engine) {
 		var value2RawPtr *bool = nil
 		value2Raw, isvalue2Exists := ginCtx.GetQuery("value2")
 		if isvalue2Exists {
-			value2, conversionErr := strconv.ParseBool(value2Raw)
+			value2Bool, conversionErr := strconv.ParseBool(value2Raw)
 			if conversionErr != nil {
 				// Middlewares onInputValidationMiddlewares section
 				for _, middleware := range onInputValidationMiddlewares {
@@ -4499,6 +4715,7 @@ func RegisterRoutes(engine *gin.Engine) {
 				ginCtx.JSON(http.StatusUnprocessableEntity, validationError)
 				return
 			}
+			value2 := value2Bool
 			value2RawPtr = &value2
 		}
 		if validatorErr := validatorInstance.Var(value2RawPtr, "required"); validatorErr != nil {
@@ -4569,7 +4786,7 @@ func RegisterRoutes(engine *gin.Engine) {
 		var value4RawPtr *float64 = nil
 		value4Raw, isvalue4Exists := ginCtx.GetQuery("value4")
 		if isvalue4Exists {
-			value4, conversionErr := strconv.ParseFloat(value4Raw, 64)
+			value4Float64, conversionErr := strconv.ParseFloat(value4Raw, 64)
 			if conversionErr != nil {
 				// Middlewares onInputValidationMiddlewares section
 				for _, middleware := range onInputValidationMiddlewares {
@@ -4596,6 +4813,7 @@ func RegisterRoutes(engine *gin.Engine) {
 				ginCtx.JSON(http.StatusUnprocessableEntity, validationError)
 				return
 			}
+			value4 := float64(value4Float64)
 			value4RawPtr = &value4
 		}
 		if validatorErr := validatorInstance.Var(value4RawPtr, "required"); validatorErr != nil {
@@ -6776,5 +6994,1275 @@ func RegisterRoutes(engine *gin.Engine) {
 		ginCtx.Header("x-AfterOperationRoutesExtension", "ReturnsStructWithSpecialPrimitives")
 		ginCtx.JSON(statusCode, value)
 		ginCtx.Header("x-RouteEndRoutesExtension", "ReturnsStructWithSpecialPrimitives")
+	})
+	engine.POST(toGinUrl("/e2e/alias-of-primitive"), func(ginCtx *gin.Context) {
+		ginCtx.Header("x-RouteStartRoutesExtension", "AliasOfString")
+		authErr := authorize(
+			ginCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(ginCtx, authErr, "AliasOfString")
+			return
+		}
+		controller := E2EController.E2EController{}
+		controller.InitController(ginCtx)
+		var conversionErr error
+		var objectRawPtr *Param24object.ObjectWithAliasOfString = nil
+		conversionErr = bindAndValidateBody(ginCtx, "application/json", "required", &objectRawPtr)
+		if conversionErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, conversionErr)
+				setRequestContext(ginCtx, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			validationError := runtime.Rfc7807Error{
+				Type: http.StatusText(http.StatusUnprocessableEntity),
+				Detail: fmt.Sprintf(
+					"A request was made to operation 'AliasOfString' but body parameter '%s' did not pass validation of '%s' - %s",
+					"object",
+					"ObjectWithAliasOfString",
+					extractValidationErrorMessage(conversionErr, nil),
+				),
+				Status:   http.StatusUnprocessableEntity,
+				Instance: "/validation/error/AliasOfString",
+			}
+			ginCtx.Header("x-JsonBodyValidationErrorResponseExtension", "AliasOfString")
+			ginCtx.JSON(http.StatusUnprocessableEntity, validationError)
+			return
+		}
+		var numRawPtr *Param25num.AliasOfInt = nil
+		numRaw, isnumExists := ginCtx.GetQuery("num")
+		if isnumExists {
+			numUint64, conversionErr := strconv.Atoi(numRaw)
+			if conversionErr != nil {
+				// Middlewares onInputValidationMiddlewares section
+				for _, middleware := range onInputValidationMiddlewares {
+					middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, conversionErr)
+					setRequestContext(ginCtx, middlewareCtx)
+					if !continueOperation {
+						return
+					}
+				}
+				// End middlewares onInputValidationMiddlewares section
+				validationError := runtime.Rfc7807Error{
+					Type: http.StatusText(http.StatusUnprocessableEntity),
+					Detail: fmt.Sprintf(
+						"A request was made to operation 'AliasOfString' but parameter '%s' was not properly sent - Expected %s but got %s",
+						"num",
+						"AliasOfInt",
+						reflect.TypeOf(numRaw).String(),
+					),
+					Status:     http.StatusUnprocessableEntity,
+					Instance:   "/validation/error/AliasOfString",
+					Extensions: map[string]string{"error": conversionErr.Error()},
+				}
+				ginCtx.Header("x-ParamsValidationErrorResponseExtension", "AliasOfString")
+				ginCtx.JSON(http.StatusUnprocessableEntity, validationError)
+				return
+			}
+			num := int(numUint64)
+			numVar := Param25num.AliasOfInt(num)
+			numRawPtr = &numVar
+		}
+		if validatorErr := validatorInstance.Var(numRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, validatorErr)
+				setRequestContext(ginCtx, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "num"
+			validationError := wrapValidatorError(validatorErr, "AliasOfString", fieldName)
+			ginCtx.Header("x-RunValidatorExtension", "AliasOfString")
+			ginCtx.JSON(http.StatusUnprocessableEntity, validationError)
+			return
+		}
+		var strRawPtr *Param26str.AliasOfDirectString = nil
+		strRaw, isstrExists := ginCtx.GetQuery("str")
+		if isstrExists {
+			str := strRaw
+			strVar := Param26str.AliasOfDirectString(str)
+			strRawPtr = &strVar
+		}
+		if validatorErr := validatorInstance.Var(strRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, validatorErr)
+				setRequestContext(ginCtx, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "str"
+			validationError := wrapValidatorError(validatorErr, "AliasOfString", fieldName)
+			ginCtx.Header("x-RunValidatorExtension", "AliasOfString")
+			ginCtx.JSON(http.StatusUnprocessableEntity, validationError)
+			return
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx)
+			setRequestContext(ginCtx, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		ginCtx.Header("x-BeforeOperationRoutesExtension", "AliasOfString")
+		value, opError := controller.AliasOfString(objectRawPtr, *numRawPtr, *strRawPtr)
+		for key, value := range controller.GetHeaders() {
+			ginCtx.Header(key, value)
+		}
+		ginCtx.Header("x-inject", "true")
+		ginCtx.Header("x-ResponseHeadersExtension", "AliasOfString")
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, opError)
+				setRequestContext(ginCtx, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'AliasOfString'",
+				Status:     statusCode,
+				Instance:   "/controller/error/AliasOfString",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			ginCtx.Header("x-JsonErrorResponseExtension", "AliasOfString")
+			ginCtx.JSON(statusCode, stdError)
+			return
+		}
+		ginCtx.Header("x-JsonResponseExtension", "AliasOfString")
+		var outputValidationErr error
+		if value == nil {
+			outputValidationErr = fmt.Errorf("Response payload is nil")
+		} else {
+			outputValidationErr = validateDataRecursive(value, "")
+		}
+		if outputValidationErr != nil {
+			// Middlewares onOutputValidationMiddlewares section
+			for _, middleware := range onOutputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, outputValidationErr)
+				setRequestContext(ginCtx, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onOutputValidationMiddlewares section
+			outputValidationStatusCode := http.StatusInternalServerError
+			outputValidationRfc7807Error := runtime.Rfc7807Error{
+				Type:       http.StatusText(outputValidationStatusCode),
+				Detail:     "Encountered an error during operation 'AliasOfString'",
+				Status:     outputValidationStatusCode,
+				Instance:   "/controller/error/AliasOfString",
+				Extensions: map[string]string{},
+			}
+			ginCtx.JSON(outputValidationStatusCode, outputValidationRfc7807Error)
+			return
+		}
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx)
+			setRequestContext(ginCtx, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		ginCtx.Header("x-AfterOperationRoutesExtension", "AliasOfString")
+		ginCtx.JSON(statusCode, value)
+		ginCtx.Header("x-RouteEndRoutesExtension", "AliasOfString")
+	})
+	engine.POST(toGinUrl("/e2e/body-array-of-string"), func(ginCtx *gin.Context) {
+		ginCtx.Header("x-RouteStartRoutesExtension", "BodyArrayOfString")
+		authErr := authorize(
+			ginCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(ginCtx, authErr, "BodyArrayOfString")
+			return
+		}
+		controller := E2EController.E2EController{}
+		controller.InitController(ginCtx)
+		var conversionErr error
+		var valuesRawPtr *[]string = nil
+		conversionErr = bindAndValidateBody(ginCtx, "application/json", "required", &valuesRawPtr)
+		if conversionErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, conversionErr)
+				setRequestContext(ginCtx, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			validationError := runtime.Rfc7807Error{
+				Type: http.StatusText(http.StatusUnprocessableEntity),
+				Detail: fmt.Sprintf(
+					"A request was made to operation 'BodyArrayOfString' but body parameter '%s' did not pass validation of '%s' - %s",
+					"values",
+					"[]string",
+					extractValidationErrorMessage(conversionErr, nil),
+				),
+				Status:   http.StatusUnprocessableEntity,
+				Instance: "/validation/error/BodyArrayOfString",
+			}
+			ginCtx.Header("x-JsonBodyValidationErrorResponseExtension", "BodyArrayOfString")
+			ginCtx.JSON(http.StatusUnprocessableEntity, validationError)
+			return
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx)
+			setRequestContext(ginCtx, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		ginCtx.Header("x-BeforeOperationRoutesExtension", "BodyArrayOfString")
+		value, opError := controller.BodyArrayOfString(*valuesRawPtr)
+		for key, value := range controller.GetHeaders() {
+			ginCtx.Header(key, value)
+		}
+		ginCtx.Header("x-inject", "true")
+		ginCtx.Header("x-ResponseHeadersExtension", "BodyArrayOfString")
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, opError)
+				setRequestContext(ginCtx, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'BodyArrayOfString'",
+				Status:     statusCode,
+				Instance:   "/controller/error/BodyArrayOfString",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			ginCtx.Header("x-JsonErrorResponseExtension", "BodyArrayOfString")
+			ginCtx.JSON(statusCode, stdError)
+			return
+		}
+		ginCtx.Header("x-JsonResponseExtension", "BodyArrayOfString")
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx)
+			setRequestContext(ginCtx, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		ginCtx.Header("x-AfterOperationRoutesExtension", "BodyArrayOfString")
+		ginCtx.JSON(statusCode, value)
+		ginCtx.Header("x-RouteEndRoutesExtension", "BodyArrayOfString")
+	})
+	engine.POST(toGinUrl("/e2e/body-array-of-enum-string"), func(ginCtx *gin.Context) {
+		ginCtx.Header("x-RouteStartRoutesExtension", "BodyArrayOfStringEnum")
+		authErr := authorize(
+			ginCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(ginCtx, authErr, "BodyArrayOfStringEnum")
+			return
+		}
+		controller := E2EController.E2EController{}
+		controller.InitController(ginCtx)
+		var conversionErr error
+		var valuesRawPtr *[]Param27values.Myemamium = nil
+		conversionErr = bindAndValidateBody(ginCtx, "application/json", "required", &valuesRawPtr)
+		if conversionErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, conversionErr)
+				setRequestContext(ginCtx, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			validationError := runtime.Rfc7807Error{
+				Type: http.StatusText(http.StatusUnprocessableEntity),
+				Detail: fmt.Sprintf(
+					"A request was made to operation 'BodyArrayOfStringEnum' but body parameter '%s' did not pass validation of '%s' - %s",
+					"values",
+					"[]Myemamium",
+					extractValidationErrorMessage(conversionErr, nil),
+				),
+				Status:   http.StatusUnprocessableEntity,
+				Instance: "/validation/error/BodyArrayOfStringEnum",
+			}
+			ginCtx.Header("x-JsonBodyValidationErrorResponseExtension", "BodyArrayOfStringEnum")
+			ginCtx.JSON(http.StatusUnprocessableEntity, validationError)
+			return
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx)
+			setRequestContext(ginCtx, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		ginCtx.Header("x-BeforeOperationRoutesExtension", "BodyArrayOfStringEnum")
+		value, opError := controller.BodyArrayOfStringEnum(*valuesRawPtr)
+		for key, value := range controller.GetHeaders() {
+			ginCtx.Header(key, value)
+		}
+		ginCtx.Header("x-inject", "true")
+		ginCtx.Header("x-ResponseHeadersExtension", "BodyArrayOfStringEnum")
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, opError)
+				setRequestContext(ginCtx, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'BodyArrayOfStringEnum'",
+				Status:     statusCode,
+				Instance:   "/controller/error/BodyArrayOfStringEnum",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			ginCtx.Header("x-JsonErrorResponseExtension", "BodyArrayOfStringEnum")
+			ginCtx.JSON(statusCode, stdError)
+			return
+		}
+		ginCtx.Header("x-JsonResponseExtension", "BodyArrayOfStringEnum")
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx)
+			setRequestContext(ginCtx, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		ginCtx.Header("x-AfterOperationRoutesExtension", "BodyArrayOfStringEnum")
+		ginCtx.JSON(statusCode, value)
+		ginCtx.Header("x-RouteEndRoutesExtension", "BodyArrayOfStringEnum")
+	})
+	engine.POST(toGinUrl("/e2e/query-array-of-string"), func(ginCtx *gin.Context) {
+		ginCtx.Header("x-RouteStartRoutesExtension", "QueryArrayOfString")
+		authErr := authorize(
+			ginCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(ginCtx, authErr, "QueryArrayOfString")
+			return
+		}
+		controller := E2EController.E2EController{}
+		controller.InitController(ginCtx)
+		var valuesRawPtr *[]string = nil
+		valuesRawArray, isvaluesExists := ginCtx.GetQueryArray("values")
+		if isvaluesExists {
+			values := make([]string, 0, len(valuesRawArray))
+			for _, valuesRaw := range valuesRawArray {
+				valuesItem := valuesRaw
+				values = append(values, string(valuesItem))
+			}
+			valuesRawPtr = &values
+			valuesRawPtr = &values
+		}
+		if validatorErr := validatorInstance.Var(valuesRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, validatorErr)
+				setRequestContext(ginCtx, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "values"
+			validationError := wrapValidatorError(validatorErr, "QueryArrayOfString", fieldName)
+			ginCtx.Header("x-RunValidatorExtension", "QueryArrayOfString")
+			ginCtx.JSON(http.StatusUnprocessableEntity, validationError)
+			return
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx)
+			setRequestContext(ginCtx, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		ginCtx.Header("x-BeforeOperationRoutesExtension", "QueryArrayOfString")
+		value, opError := controller.QueryArrayOfString(*valuesRawPtr)
+		for key, value := range controller.GetHeaders() {
+			ginCtx.Header(key, value)
+		}
+		ginCtx.Header("x-inject", "true")
+		ginCtx.Header("x-ResponseHeadersExtension", "QueryArrayOfString")
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, opError)
+				setRequestContext(ginCtx, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'QueryArrayOfString'",
+				Status:     statusCode,
+				Instance:   "/controller/error/QueryArrayOfString",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			ginCtx.Header("x-JsonErrorResponseExtension", "QueryArrayOfString")
+			ginCtx.JSON(statusCode, stdError)
+			return
+		}
+		ginCtx.Header("x-JsonResponseExtension", "QueryArrayOfString")
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx)
+			setRequestContext(ginCtx, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		ginCtx.Header("x-AfterOperationRoutesExtension", "QueryArrayOfString")
+		ginCtx.JSON(statusCode, value)
+		ginCtx.Header("x-RouteEndRoutesExtension", "QueryArrayOfString")
+	})
+	engine.POST(toGinUrl("/e2e/query-array-of-enum"), func(ginCtx *gin.Context) {
+		ginCtx.Header("x-RouteStartRoutesExtension", "QueryArrayOfEnum")
+		authErr := authorize(
+			ginCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(ginCtx, authErr, "QueryArrayOfEnum")
+			return
+		}
+		controller := E2EController.E2EController{}
+		controller.InitController(ginCtx)
+		var valuesRawPtr *[]Param27values.Myemamium = nil
+		valuesRawArray, isvaluesExists := ginCtx.GetQueryArray("values")
+		if isvaluesExists {
+			values := make([]Param27values.Myemamium, 0, len(valuesRawArray))
+			for _, valuesRaw := range valuesRawArray {
+				valuesItem := valuesRaw
+				switch valuesRaw {
+				case "one", "two":
+					break
+				default:
+					conversionErr := fmt.Errorf("values must be one of \"one, two\" options only but got \"%s\"", valuesRaw)
+					// Middlewares onInputValidationMiddlewares section
+					for _, middleware := range onInputValidationMiddlewares {
+						middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, conversionErr)
+						setRequestContext(ginCtx, middlewareCtx)
+						if !continueOperation {
+							return
+						}
+					}
+					// End middlewares onInputValidationMiddlewares section
+					validationError := runtime.Rfc7807Error{
+						Type: http.StatusText(http.StatusUnprocessableEntity),
+						Detail: fmt.Sprintf(
+							"A request was made to operation 'QueryArrayOfEnum' but parameter '%s' was not properly sent - Expected %s but got %s",
+							"values",
+							"[]Myemamium",
+							reflect.TypeOf(valuesRaw).String(),
+						),
+						Status:     http.StatusUnprocessableEntity,
+						Instance:   "/validation/error/QueryArrayOfEnum",
+						Extensions: map[string]string{"error": conversionErr.Error()},
+					}
+					ginCtx.Header("x-ParamsValidationErrorResponseExtension", "QueryArrayOfEnum")
+					ginCtx.JSON(http.StatusUnprocessableEntity, validationError)
+					return
+				}
+				values = append(values, Param27values.Myemamium(valuesItem))
+			}
+			valuesRawPtr = &values
+		}
+		if validatorErr := validatorInstance.Var(valuesRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, validatorErr)
+				setRequestContext(ginCtx, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "values"
+			validationError := wrapValidatorError(validatorErr, "QueryArrayOfEnum", fieldName)
+			ginCtx.Header("x-RunValidatorExtension", "QueryArrayOfEnum")
+			ginCtx.JSON(http.StatusUnprocessableEntity, validationError)
+			return
+		}
+		var values2RawPtr *[]Param28values2.MyaliasString = nil
+		values2RawArray, isvalues2Exists := ginCtx.GetQueryArray("values2")
+		if isvalues2Exists {
+			values2 := make([]Param28values2.MyaliasString, 0, len(values2RawArray))
+			for _, values2Raw := range values2RawArray {
+				values2Item := values2Raw
+				values2 = append(values2, Param28values2.MyaliasString(values2Item))
+			}
+			values2RawPtr = &values2
+			values2Var := []Param28values2.MyaliasString(values2)
+			values2RawPtr = &values2Var
+		}
+		if validatorErr := validatorInstance.Var(values2RawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, validatorErr)
+				setRequestContext(ginCtx, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "values2"
+			validationError := wrapValidatorError(validatorErr, "QueryArrayOfEnum", fieldName)
+			ginCtx.Header("x-RunValidatorExtension", "QueryArrayOfEnum")
+			ginCtx.JSON(http.StatusUnprocessableEntity, validationError)
+			return
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx)
+			setRequestContext(ginCtx, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		ginCtx.Header("x-BeforeOperationRoutesExtension", "QueryArrayOfEnum")
+		value, opError := controller.QueryArrayOfEnum(*valuesRawPtr, *values2RawPtr)
+		for key, value := range controller.GetHeaders() {
+			ginCtx.Header(key, value)
+		}
+		ginCtx.Header("x-inject", "true")
+		ginCtx.Header("x-ResponseHeadersExtension", "QueryArrayOfEnum")
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, opError)
+				setRequestContext(ginCtx, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'QueryArrayOfEnum'",
+				Status:     statusCode,
+				Instance:   "/controller/error/QueryArrayOfEnum",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			ginCtx.Header("x-JsonErrorResponseExtension", "QueryArrayOfEnum")
+			ginCtx.JSON(statusCode, stdError)
+			return
+		}
+		ginCtx.Header("x-JsonResponseExtension", "QueryArrayOfEnum")
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx)
+			setRequestContext(ginCtx, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		ginCtx.Header("x-AfterOperationRoutesExtension", "QueryArrayOfEnum")
+		ginCtx.JSON(statusCode, value)
+		ginCtx.Header("x-RouteEndRoutesExtension", "QueryArrayOfEnum")
+	})
+	engine.POST(toGinUrl("/e2e/query-array-of-others"), func(ginCtx *gin.Context) {
+		ginCtx.Header("x-RouteStartRoutesExtension", "QueryArrayOfOthers")
+		authErr := authorize(
+			ginCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(ginCtx, authErr, "QueryArrayOfOthers")
+			return
+		}
+		controller := E2EController.E2EController{}
+		controller.InitController(ginCtx)
+		var valuesRawPtr *[]int = nil
+		valuesRawArray, isvaluesExists := ginCtx.GetQueryArray("values")
+		if isvaluesExists {
+			values := make([]int, 0, len(valuesRawArray))
+			for _, valuesRaw := range valuesRawArray {
+				valuesUint64, conversionErr := strconv.Atoi(valuesRaw)
+				if conversionErr != nil {
+					// Middlewares onInputValidationMiddlewares section
+					for _, middleware := range onInputValidationMiddlewares {
+						middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, conversionErr)
+						setRequestContext(ginCtx, middlewareCtx)
+						if !continueOperation {
+							return
+						}
+					}
+					// End middlewares onInputValidationMiddlewares section
+					validationError := runtime.Rfc7807Error{
+						Type: http.StatusText(http.StatusUnprocessableEntity),
+						Detail: fmt.Sprintf(
+							"A request was made to operation 'QueryArrayOfOthers' but parameter '%s' was not properly sent - Expected %s but got %s",
+							"values",
+							"[]int",
+							reflect.TypeOf(valuesRaw).String(),
+						),
+						Status:     http.StatusUnprocessableEntity,
+						Instance:   "/validation/error/QueryArrayOfOthers",
+						Extensions: map[string]string{"error": conversionErr.Error()},
+					}
+					ginCtx.Header("x-ParamsValidationErrorResponseExtension", "QueryArrayOfOthers")
+					ginCtx.JSON(http.StatusUnprocessableEntity, validationError)
+					return
+				}
+				valuesItem := int(valuesUint64)
+				values = append(values, int(valuesItem))
+			}
+			valuesRawPtr = &values
+			valuesRawPtr = &values
+		}
+		if validatorErr := validatorInstance.Var(valuesRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, validatorErr)
+				setRequestContext(ginCtx, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "values"
+			validationError := wrapValidatorError(validatorErr, "QueryArrayOfOthers", fieldName)
+			ginCtx.Header("x-RunValidatorExtension", "QueryArrayOfOthers")
+			ginCtx.JSON(http.StatusUnprocessableEntity, validationError)
+			return
+		}
+		var values2RawPtr *[]Param29values2.MyaliasInt = nil
+		values2RawArray, isvalues2Exists := ginCtx.GetQueryArray("values2")
+		if isvalues2Exists {
+			values2 := make([]Param29values2.MyaliasInt, 0, len(values2RawArray))
+			for _, values2Raw := range values2RawArray {
+				values2Uint64, conversionErr := strconv.Atoi(values2Raw)
+				if conversionErr != nil {
+					// Middlewares onInputValidationMiddlewares section
+					for _, middleware := range onInputValidationMiddlewares {
+						middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, conversionErr)
+						setRequestContext(ginCtx, middlewareCtx)
+						if !continueOperation {
+							return
+						}
+					}
+					// End middlewares onInputValidationMiddlewares section
+					validationError := runtime.Rfc7807Error{
+						Type: http.StatusText(http.StatusUnprocessableEntity),
+						Detail: fmt.Sprintf(
+							"A request was made to operation 'QueryArrayOfOthers' but parameter '%s' was not properly sent - Expected %s but got %s",
+							"values2",
+							"[]MyaliasInt",
+							reflect.TypeOf(values2Raw).String(),
+						),
+						Status:     http.StatusUnprocessableEntity,
+						Instance:   "/validation/error/QueryArrayOfOthers",
+						Extensions: map[string]string{"error": conversionErr.Error()},
+					}
+					ginCtx.Header("x-ParamsValidationErrorResponseExtension", "QueryArrayOfOthers")
+					ginCtx.JSON(http.StatusUnprocessableEntity, validationError)
+					return
+				}
+				values2Item := int(values2Uint64)
+				values2 = append(values2, Param29values2.MyaliasInt(values2Item))
+			}
+			values2RawPtr = &values2
+			values2Var := []Param29values2.MyaliasInt(values2)
+			values2RawPtr = &values2Var
+		}
+		if validatorErr := validatorInstance.Var(values2RawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, validatorErr)
+				setRequestContext(ginCtx, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "values2"
+			validationError := wrapValidatorError(validatorErr, "QueryArrayOfOthers", fieldName)
+			ginCtx.Header("x-RunValidatorExtension", "QueryArrayOfOthers")
+			ginCtx.JSON(http.StatusUnprocessableEntity, validationError)
+			return
+		}
+		var values3RawPtr *[]bool = nil
+		values3RawArray, isvalues3Exists := ginCtx.GetQueryArray("values3")
+		if isvalues3Exists {
+			values3 := make([]bool, 0, len(values3RawArray))
+			for _, values3Raw := range values3RawArray {
+				values3Bool, conversionErr := strconv.ParseBool(values3Raw)
+				if conversionErr != nil {
+					// Middlewares onInputValidationMiddlewares section
+					for _, middleware := range onInputValidationMiddlewares {
+						middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, conversionErr)
+						setRequestContext(ginCtx, middlewareCtx)
+						if !continueOperation {
+							return
+						}
+					}
+					// End middlewares onInputValidationMiddlewares section
+					validationError := runtime.Rfc7807Error{
+						Type: http.StatusText(http.StatusUnprocessableEntity),
+						Detail: fmt.Sprintf(
+							"A request was made to operation 'QueryArrayOfOthers' but parameter '%s' was not properly sent - Expected %s but got %s",
+							"values3",
+							"[]bool",
+							reflect.TypeOf(values3Raw).String(),
+						),
+						Status:     http.StatusUnprocessableEntity,
+						Instance:   "/validation/error/QueryArrayOfOthers",
+						Extensions: map[string]string{"error": conversionErr.Error()},
+					}
+					ginCtx.Header("x-ParamsValidationErrorResponseExtension", "QueryArrayOfOthers")
+					ginCtx.JSON(http.StatusUnprocessableEntity, validationError)
+					return
+				}
+				values3Item := values3Bool
+				values3 = append(values3, bool(values3Item))
+			}
+			values3RawPtr = &values3
+			values3RawPtr = &values3
+		}
+		if validatorErr := validatorInstance.Var(values3RawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, validatorErr)
+				setRequestContext(ginCtx, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "values3"
+			validationError := wrapValidatorError(validatorErr, "QueryArrayOfOthers", fieldName)
+			ginCtx.Header("x-RunValidatorExtension", "QueryArrayOfOthers")
+			ginCtx.JSON(http.StatusUnprocessableEntity, validationError)
+			return
+		}
+		var values4RawPtr *[]int32 = nil
+		values4RawArray, isvalues4Exists := ginCtx.GetQueryArray("values4")
+		if isvalues4Exists {
+			values4 := make([]int32, 0, len(values4RawArray))
+			for _, values4Raw := range values4RawArray {
+				values4Uint64, conversionErr := strconv.ParseInt(values4Raw, 10, 32)
+				if conversionErr != nil {
+					// Middlewares onInputValidationMiddlewares section
+					for _, middleware := range onInputValidationMiddlewares {
+						middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, conversionErr)
+						setRequestContext(ginCtx, middlewareCtx)
+						if !continueOperation {
+							return
+						}
+					}
+					// End middlewares onInputValidationMiddlewares section
+					validationError := runtime.Rfc7807Error{
+						Type: http.StatusText(http.StatusUnprocessableEntity),
+						Detail: fmt.Sprintf(
+							"A request was made to operation 'QueryArrayOfOthers' but parameter '%s' was not properly sent - Expected %s but got %s",
+							"values4",
+							"[]int32",
+							reflect.TypeOf(values4Raw).String(),
+						),
+						Status:     http.StatusUnprocessableEntity,
+						Instance:   "/validation/error/QueryArrayOfOthers",
+						Extensions: map[string]string{"error": conversionErr.Error()},
+					}
+					ginCtx.Header("x-ParamsValidationErrorResponseExtension", "QueryArrayOfOthers")
+					ginCtx.JSON(http.StatusUnprocessableEntity, validationError)
+					return
+				}
+				values4Item := int32(values4Uint64)
+				values4 = append(values4, int32(values4Item))
+			}
+			values4RawPtr = &values4
+			values4RawPtr = &values4
+		}
+		if validatorErr := validatorInstance.Var(values4RawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, validatorErr)
+				setRequestContext(ginCtx, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "values4"
+			validationError := wrapValidatorError(validatorErr, "QueryArrayOfOthers", fieldName)
+			ginCtx.Header("x-RunValidatorExtension", "QueryArrayOfOthers")
+			ginCtx.JSON(http.StatusUnprocessableEntity, validationError)
+			return
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx)
+			setRequestContext(ginCtx, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		ginCtx.Header("x-BeforeOperationRoutesExtension", "QueryArrayOfOthers")
+		value, opError := controller.QueryArrayOfOthers(*valuesRawPtr, *values2RawPtr, *values3RawPtr, *values4RawPtr)
+		for key, value := range controller.GetHeaders() {
+			ginCtx.Header(key, value)
+		}
+		ginCtx.Header("x-inject", "true")
+		ginCtx.Header("x-ResponseHeadersExtension", "QueryArrayOfOthers")
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, opError)
+				setRequestContext(ginCtx, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'QueryArrayOfOthers'",
+				Status:     statusCode,
+				Instance:   "/controller/error/QueryArrayOfOthers",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			ginCtx.Header("x-JsonErrorResponseExtension", "QueryArrayOfOthers")
+			ginCtx.JSON(statusCode, stdError)
+			return
+		}
+		ginCtx.Header("x-JsonResponseExtension", "QueryArrayOfOthers")
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx)
+			setRequestContext(ginCtx, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		ginCtx.Header("x-AfterOperationRoutesExtension", "QueryArrayOfOthers")
+		ginCtx.JSON(statusCode, value)
+		ginCtx.Header("x-RouteEndRoutesExtension", "QueryArrayOfOthers")
+	})
+	engine.POST(toGinUrl("/e2e/query-array-of-others-enum"), func(ginCtx *gin.Context) {
+		ginCtx.Header("x-RouteStartRoutesExtension", "QueryArrayOfOthersEnum")
+		authErr := authorize(
+			ginCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(ginCtx, authErr, "QueryArrayOfOthersEnum")
+			return
+		}
+		controller := E2EController.E2EController{}
+		controller.InitController(ginCtx)
+		var valuesRawPtr *[]Param31values.NumberEnum = nil
+		valuesRawArray, isvaluesExists := ginCtx.GetQueryArray("values")
+		if isvaluesExists {
+			values := make([]Param31values.NumberEnum, 0, len(valuesRawArray))
+			for _, valuesRaw := range valuesRawArray {
+				valuesUint64, conversionErr := strconv.ParseInt(valuesRaw, 10, 16)
+				if conversionErr != nil {
+					// Middlewares onInputValidationMiddlewares section
+					for _, middleware := range onInputValidationMiddlewares {
+						middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, conversionErr)
+						setRequestContext(ginCtx, middlewareCtx)
+						if !continueOperation {
+							return
+						}
+					}
+					// End middlewares onInputValidationMiddlewares section
+					validationError := runtime.Rfc7807Error{
+						Type: http.StatusText(http.StatusUnprocessableEntity),
+						Detail: fmt.Sprintf(
+							"A request was made to operation 'QueryArrayOfOthersEnum' but parameter '%s' was not properly sent - Expected %s but got %s",
+							"values",
+							"[]NumberEnum",
+							reflect.TypeOf(valuesRaw).String(),
+						),
+						Status:     http.StatusUnprocessableEntity,
+						Instance:   "/validation/error/QueryArrayOfOthersEnum",
+						Extensions: map[string]string{"error": conversionErr.Error()},
+					}
+					ginCtx.Header("x-ParamsValidationErrorResponseExtension", "QueryArrayOfOthersEnum")
+					ginCtx.JSON(http.StatusUnprocessableEntity, validationError)
+					return
+				}
+				valuesItem := int16(valuesUint64)
+				switch valuesRaw {
+				case "1", "2":
+					break
+				default:
+					conversionErr := fmt.Errorf("values must be one of \"1, 2\" options only but got \"%s\"", valuesRaw)
+					// Middlewares onInputValidationMiddlewares section
+					for _, middleware := range onInputValidationMiddlewares {
+						middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, conversionErr)
+						setRequestContext(ginCtx, middlewareCtx)
+						if !continueOperation {
+							return
+						}
+					}
+					// End middlewares onInputValidationMiddlewares section
+					validationError := runtime.Rfc7807Error{
+						Type: http.StatusText(http.StatusUnprocessableEntity),
+						Detail: fmt.Sprintf(
+							"A request was made to operation 'QueryArrayOfOthersEnum' but parameter '%s' was not properly sent - Expected %s but got %s",
+							"values",
+							"[]NumberEnum",
+							reflect.TypeOf(valuesRaw).String(),
+						),
+						Status:     http.StatusUnprocessableEntity,
+						Instance:   "/validation/error/QueryArrayOfOthersEnum",
+						Extensions: map[string]string{"error": conversionErr.Error()},
+					}
+					ginCtx.Header("x-ParamsValidationErrorResponseExtension", "QueryArrayOfOthersEnum")
+					ginCtx.JSON(http.StatusUnprocessableEntity, validationError)
+					return
+				}
+				values = append(values, Param31values.NumberEnum(valuesItem))
+			}
+			valuesRawPtr = &values
+		}
+		if validatorErr := validatorInstance.Var(valuesRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, validatorErr)
+				setRequestContext(ginCtx, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "values"
+			validationError := wrapValidatorError(validatorErr, "QueryArrayOfOthersEnum", fieldName)
+			ginCtx.Header("x-RunValidatorExtension", "QueryArrayOfOthersEnum")
+			ginCtx.JSON(http.StatusUnprocessableEntity, validationError)
+			return
+		}
+		var values2RawPtr *[]Param32values2.BoolEnum = nil
+		values2RawArray, isvalues2Exists := ginCtx.GetQueryArray("values2")
+		if isvalues2Exists {
+			values2 := make([]Param32values2.BoolEnum, 0, len(values2RawArray))
+			for _, values2Raw := range values2RawArray {
+				values2Item := values2Raw
+				switch values2Raw {
+				case "false", "true":
+					break
+				default:
+					conversionErr := fmt.Errorf("values2 must be one of \"false, true\" options only but got \"%s\"", values2Raw)
+					// Middlewares onInputValidationMiddlewares section
+					for _, middleware := range onInputValidationMiddlewares {
+						middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, conversionErr)
+						setRequestContext(ginCtx, middlewareCtx)
+						if !continueOperation {
+							return
+						}
+					}
+					// End middlewares onInputValidationMiddlewares section
+					validationError := runtime.Rfc7807Error{
+						Type: http.StatusText(http.StatusUnprocessableEntity),
+						Detail: fmt.Sprintf(
+							"A request was made to operation 'QueryArrayOfOthersEnum' but parameter '%s' was not properly sent - Expected %s but got %s",
+							"values2",
+							"[]BoolEnum",
+							reflect.TypeOf(values2Raw).String(),
+						),
+						Status:     http.StatusUnprocessableEntity,
+						Instance:   "/validation/error/QueryArrayOfOthersEnum",
+						Extensions: map[string]string{"error": conversionErr.Error()},
+					}
+					ginCtx.Header("x-ParamsValidationErrorResponseExtension", "QueryArrayOfOthersEnum")
+					ginCtx.JSON(http.StatusUnprocessableEntity, validationError)
+					return
+				}
+				values2 = append(values2, Param32values2.BoolEnum(values2Item))
+			}
+			values2RawPtr = &values2
+		}
+		if validatorErr := validatorInstance.Var(values2RawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, validatorErr)
+				setRequestContext(ginCtx, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "values2"
+			validationError := wrapValidatorError(validatorErr, "QueryArrayOfOthersEnum", fieldName)
+			ginCtx.Header("x-RunValidatorExtension", "QueryArrayOfOthersEnum")
+			ginCtx.JSON(http.StatusUnprocessableEntity, validationError)
+			return
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx)
+			setRequestContext(ginCtx, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		ginCtx.Header("x-BeforeOperationRoutesExtension", "QueryArrayOfOthersEnum")
+		value, opError := controller.QueryArrayOfOthersEnum(*valuesRawPtr, *values2RawPtr)
+		for key, value := range controller.GetHeaders() {
+			ginCtx.Header(key, value)
+		}
+		ginCtx.Header("x-inject", "true")
+		ginCtx.Header("x-ResponseHeadersExtension", "QueryArrayOfOthersEnum")
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, opError)
+				setRequestContext(ginCtx, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'QueryArrayOfOthersEnum'",
+				Status:     statusCode,
+				Instance:   "/controller/error/QueryArrayOfOthersEnum",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			ginCtx.Header("x-JsonErrorResponseExtension", "QueryArrayOfOthersEnum")
+			ginCtx.JSON(statusCode, stdError)
+			return
+		}
+		ginCtx.Header("x-JsonResponseExtension", "QueryArrayOfOthersEnum")
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx)
+			setRequestContext(ginCtx, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		ginCtx.Header("x-AfterOperationRoutesExtension", "QueryArrayOfOthersEnum")
+		ginCtx.JSON(statusCode, value)
+		ginCtx.Header("x-RouteEndRoutesExtension", "QueryArrayOfOthersEnum")
+	})
+	engine.POST(toGinUrl("/e2e/query-pointer-to-array"), func(ginCtx *gin.Context) {
+		ginCtx.Header("x-RouteStartRoutesExtension", "QueryArrayOfPointers")
+		authErr := authorize(
+			ginCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			handleAuthorizationError(ginCtx, authErr, "QueryArrayOfPointers")
+			return
+		}
+		controller := E2EController.E2EController{}
+		controller.InitController(ginCtx)
+		var values07RawPtr *[]string = nil
+		values07RawArray, isvalues07Exists := ginCtx.GetQueryArray("values07")
+		if isvalues07Exists {
+			values07 := make([]string, 0, len(values07RawArray))
+			for _, values07Raw := range values07RawArray {
+				values07Item := values07Raw
+				values07 = append(values07, string(values07Item))
+			}
+			values07RawPtr = &values07
+			values07RawPtr = &values07
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx)
+			setRequestContext(ginCtx, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		ginCtx.Header("x-BeforeOperationRoutesExtension", "QueryArrayOfPointers")
+		value, opError := controller.QueryArrayOfPointers(values07RawPtr)
+		for key, value := range controller.GetHeaders() {
+			ginCtx.Header(key, value)
+		}
+		ginCtx.Header("x-inject", "true")
+		ginCtx.Header("x-ResponseHeadersExtension", "QueryArrayOfPointers")
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx, opError)
+				setRequestContext(ginCtx, middlewareCtx)
+				if !continueOperation {
+					return
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'QueryArrayOfPointers'",
+				Status:     statusCode,
+				Instance:   "/controller/error/QueryArrayOfPointers",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			ginCtx.Header("x-JsonErrorResponseExtension", "QueryArrayOfPointers")
+			ginCtx.JSON(statusCode, stdError)
+			return
+		}
+		ginCtx.Header("x-JsonResponseExtension", "QueryArrayOfPointers")
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(ginCtx), ginCtx)
+			setRequestContext(ginCtx, middlewareCtx)
+			if !continueOperation {
+				return
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		ginCtx.Header("x-AfterOperationRoutesExtension", "QueryArrayOfPointers")
+		ginCtx.JSON(statusCode, value)
+		ginCtx.Header("x-RouteEndRoutesExtension", "QueryArrayOfPointers")
 	})
 }

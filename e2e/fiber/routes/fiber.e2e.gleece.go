@@ -14,19 +14,13 @@ Repository: https://github.com/gopher-fleece/gleece
 --
 */
 package routes
+
 import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
-	"reflect"
-	"regexp"
-	"strconv"
-	"strings"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
-	RequestAuth "github.com/gopher-fleece/gleece/e2e/fiber/auth"
-	"github.com/gopher-fleece/runtime"
 	E2EClassSecController "github.com/gopher-fleece/gleece/e2e/assets"
 	E2EController "github.com/gopher-fleece/gleece/e2e/assets"
 	Param11value3 "github.com/gopher-fleece/gleece/e2e/assets"
@@ -40,23 +34,43 @@ import (
 	Param20data "github.com/gopher-fleece/gleece/e2e/assets"
 	Param22arrive "github.com/gopher-fleece/gleece/e2e/assets"
 	Param23arrive "github.com/gopher-fleece/gleece/e2e/assets"
+	Param24object "github.com/gopher-fleece/gleece/e2e/assets"
+	Param25num "github.com/gopher-fleece/gleece/e2e/assets"
+	Param26str "github.com/gopher-fleece/gleece/e2e/assets"
+	Param27values "github.com/gopher-fleece/gleece/e2e/assets"
+	Param28values2 "github.com/gopher-fleece/gleece/e2e/assets"
+	Param29values2 "github.com/gopher-fleece/gleece/e2e/assets"
+	Param31values "github.com/gopher-fleece/gleece/e2e/assets"
+	Param32values2 "github.com/gopher-fleece/gleece/e2e/assets"
 	Param4value2 "github.com/gopher-fleece/gleece/e2e/assets"
 	Param5theBody "github.com/gopher-fleece/gleece/e2e/assets"
 	Response6CustomError "github.com/gopher-fleece/gleece/e2e/assets"
+	RequestAuth "github.com/gopher-fleece/gleece/e2e/fiber/auth"
+	"github.com/gopher-fleece/runtime"
 	Param13data "github.com/haimkastner/unitsnet-go/units"
 	Param14unit "github.com/haimkastner/unitsnet-go/units"
+	"net/http"
+	"reflect"
+	"regexp"
+	"strconv"
+	"strings"
 	// ImportsExtension - test
 )
+
 var validatorInstance = validator.New()
 var urlParamRegex *regexp.Regexp
+
 type SecurityListRelation string
+
 const (
 	SecurityListRelationAnd SecurityListRelation = "AND"
 )
+
 type SecurityCheckList struct {
 	Checks   []runtime.SecurityCheck
 	Relation SecurityListRelation
 }
+
 // TypeDeclarationsExtension - test
 func getRequestContext(fiberCtx *fiber.Ctx) context.Context {
 	return fiberCtx.UserContext()
@@ -265,14 +279,17 @@ func wrapValidatorError(validatorErr error, operationId string, fieldName string
 		Instance: fmt.Sprintf("/validation/error/%s", operationId),
 	}
 }
+
 // FunctionDeclarationsExtension - test
 type MiddlewareFunc func(ctx context.Context, fiberCtx *fiber.Ctx) (context.Context, bool)
 type ErrorMiddlewareFunc func(ctx context.Context, fiberCtx *fiber.Ctx, err error) (context.Context, bool)
+
 var beforeOperationMiddlewares []MiddlewareFunc
 var afterOperationSuccessMiddlewares []MiddlewareFunc
 var onErrorMiddlewares []ErrorMiddlewareFunc
 var onInputValidationMiddlewares []ErrorMiddlewareFunc
 var onOutputValidationMiddlewares []ErrorMiddlewareFunc
+
 func RegisterMiddleware(executionType runtime.MiddlewareExecutionType, middlewareFunc MiddlewareFunc) {
 	switch executionType {
 	case runtime.BeforeOperation:
@@ -298,7 +315,10 @@ func RegisterCustomValidator(validateTagName string, validateFunc runtime.Valida
 }
 func RegisterRoutes(engine *fiber.App) {
 	urlParamRegex = regexp.MustCompile(`\{([\w\d-_]+)\}`)
+	registerEnumValidation(validatorInstance, "bool_enum_enum", []string{"false", "true"})
 	registerEnumValidation(validatorInstance, "length_units_enum", []string{"Angstrom", "AstronomicalUnit", "Centimeter", "Chain", "DataMile", "Decameter", "Decimeter", "DtpPica", "DtpPoint", "Fathom", "Femtometer", "Foot", "Gigameter", "Hand", "Hectometer", "Inch", "Kilofoot", "KilolightYear", "Kilometer", "Kiloparsec", "Kiloyard", "LightYear", "MegalightYear", "Megameter", "Megaparsec", "Meter", "Microinch", "Micrometer", "Mil", "Mile", "Millimeter", "Nanometer", "NauticalMile", "Parsec", "Picometer", "PrinterPica", "PrinterPoint", "Shackle", "SolarRadius", "Twip", "UsSurveyFoot", "Yard"})
+	registerEnumValidation(validatorInstance, "myemamium_enum", []string{"one", "two"})
+	registerEnumValidation(validatorInstance, "number_enum_enum", []string{"1", "2"})
 	registerEnumValidation(validatorInstance, "number_enumeration_enum", []string{"1", "2"})
 	registerEnumValidation(validatorInstance, "speed_units_enum", []string{"CentimeterPerHour", "CentimeterPerMinute", "CentimeterPerSecond", "DecimeterPerMinute", "DecimeterPerSecond", "FootPerHour", "FootPerMinute", "FootPerSecond", "InchPerHour", "InchPerMinute", "InchPerSecond", "KilometerPerHour", "KilometerPerMinute", "KilometerPerSecond", "Knot", "Mach", "MeterPerHour", "MeterPerMinute", "MeterPerSecond", "MicrometerPerMinute", "MicrometerPerSecond", "MilePerHour", "MillimeterPerHour", "MillimeterPerMinute", "MillimeterPerSecond", "NanometerPerMinute", "NanometerPerSecond", "UsSurveyFootPerHour", "UsSurveyFootPerMinute", "UsSurveyFootPerSecond", "YardPerHour", "YardPerMinute", "YardPerSecond"})
 	registerEnumValidation(validatorInstance, "status_enumeration_enum", []string{"active", "inactive"})
@@ -4029,6 +4049,199 @@ func RegisterRoutes(engine *fiber.App) {
 		fiberCtx.Set("x-RouteEndRoutesExtension", "TestForm")
 		return nil
 	})
+	engine.Post(toFiberUrl("/e2e/form-extra"), func(fiberCtx *fiber.Ctx) error {
+		fiberCtx.Set("x-RouteStartRoutesExtension", "TestFormExtra")
+		authErr := authorize(
+			fiberCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(fiberCtx, authErr, "TestFormExtra")
+		}
+		controller := E2EController.E2EController{}
+		controller.InitController(fiberCtx)
+		var item1RawPtr *int64 = nil
+		item1Raw := fiberCtx.FormValue("item1")
+		isitem1Exists := fiberCtx.Context().PostArgs().Has("item1")
+		if isitem1Exists {
+			item1Uint64, conversionErr := strconv.ParseInt(item1Raw, 10, 64)
+			if conversionErr != nil {
+				// Middlewares onInputValidationMiddlewares section
+				for _, middleware := range onInputValidationMiddlewares {
+					middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, conversionErr)
+					setRequestContext(fiberCtx, middlewareCtx)
+					if !continueOperation {
+						return nil
+					}
+				}
+				// End middlewares onInputValidationMiddlewares section
+				validationError := runtime.Rfc7807Error{
+					Type: http.StatusText(http.StatusUnprocessableEntity),
+					Detail: fmt.Sprintf(
+						"A request was made to operation 'TestFormExtra' but parameter '%s' was not properly sent - Expected %s but got %s",
+						"item1",
+						"int64",
+						reflect.TypeOf(item1Raw).String(),
+					),
+					Status:     http.StatusUnprocessableEntity,
+					Instance:   "/validation/error/TestFormExtra",
+					Extensions: map[string]string{"error": conversionErr.Error()},
+				}
+				fiberCtx.Set("x-ParamsValidationErrorResponseExtension", "TestFormExtra")
+				return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+			}
+			item1 := int64(item1Uint64)
+			item1RawPtr = &item1
+		}
+		if validatorErr := validatorInstance.Var(item1RawPtr, "required,gte=80"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, validatorErr)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "item1"
+			validationError := wrapValidatorError(validatorErr, "TestFormExtra", fieldName)
+			fiberCtx.Set("x-RunValidatorExtension", "TestFormExtra")
+			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+		}
+		var item2RawPtr *string = nil
+		item2Raw := fiberCtx.FormValue("item2")
+		isitem2Exists := fiberCtx.Context().PostArgs().Has("item2")
+		if isitem2Exists {
+			item2 := item2Raw
+			item2RawPtr = &item2
+		}
+		if validatorErr := validatorInstance.Var(item2RawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, validatorErr)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "item2"
+			validationError := wrapValidatorError(validatorErr, "TestFormExtra", fieldName)
+			fiberCtx.Set("x-RunValidatorExtension", "TestFormExtra")
+			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+		}
+		var item3RawPtr *int64 = nil
+		item3Raw := fiberCtx.Query("item3")
+		isitem3Exists := fiberCtx.Context().QueryArgs().Has("item3")
+		if isitem3Exists {
+			item3Uint64, conversionErr := strconv.ParseInt(item3Raw, 10, 64)
+			if conversionErr != nil {
+				// Middlewares onInputValidationMiddlewares section
+				for _, middleware := range onInputValidationMiddlewares {
+					middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, conversionErr)
+					setRequestContext(fiberCtx, middlewareCtx)
+					if !continueOperation {
+						return nil
+					}
+				}
+				// End middlewares onInputValidationMiddlewares section
+				validationError := runtime.Rfc7807Error{
+					Type: http.StatusText(http.StatusUnprocessableEntity),
+					Detail: fmt.Sprintf(
+						"A request was made to operation 'TestFormExtra' but parameter '%s' was not properly sent - Expected %s but got %s",
+						"item3",
+						"int64",
+						reflect.TypeOf(item3Raw).String(),
+					),
+					Status:     http.StatusUnprocessableEntity,
+					Instance:   "/validation/error/TestFormExtra",
+					Extensions: map[string]string{"error": conversionErr.Error()},
+				}
+				fiberCtx.Set("x-ParamsValidationErrorResponseExtension", "TestFormExtra")
+				return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+			}
+			item3 := int64(item3Uint64)
+			item3RawPtr = &item3
+		}
+		if validatorErr := validatorInstance.Var(item3RawPtr, "required,gte=80"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, validatorErr)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "item3"
+			validationError := wrapValidatorError(validatorErr, "TestFormExtra", fieldName)
+			fiberCtx.Set("x-RunValidatorExtension", "TestFormExtra")
+			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		fiberCtx.Set("x-BeforeOperationRoutesExtension", "TestFormExtra")
+		value, opError := controller.TestFormExtra(*item1RawPtr, *item2RawPtr, *item3RawPtr)
+		for key, value := range controller.GetHeaders() {
+			fiberCtx.Set(key, value)
+		}
+		fiberCtx.Set("x-inject", "true")
+		fiberCtx.Set("x-ResponseHeadersExtension", "TestFormExtra")
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'TestFormExtra'",
+				Status:     statusCode,
+				Instance:   "/controller/error/TestFormExtra",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			fiberCtx.Set("x-JsonErrorResponseExtension", "TestFormExtra")
+			return fiberCtx.Status(statusCode).JSON(stdError)
+		}
+		fiberCtx.Set("x-JsonResponseExtension", "TestFormExtra")
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		fiberCtx.Set("x-AfterOperationRoutesExtension", "TestFormExtra")
+		fiberCtx.Status(statusCode).JSON(value)
+		fiberCtx.Set("x-RouteEndRoutesExtension", "TestFormExtra")
+		return nil
+	})
 	engine.Post(toFiberUrl("/e2e/test-response-validation"), func(fiberCtx *fiber.Ctx) error {
 		fiberCtx.Set("x-RouteStartRoutesExtension", "TestResponseValidation")
 		authErr := authorize(
@@ -4403,7 +4616,7 @@ func RegisterRoutes(engine *fiber.App) {
 		value2Raw := fiberCtx.Query("value2")
 		isvalue2Exists := fiberCtx.Context().QueryArgs().Has("value2")
 		if isvalue2Exists {
-			value2, conversionErr := strconv.ParseBool(value2Raw)
+			value2Bool, conversionErr := strconv.ParseBool(value2Raw)
 			if conversionErr != nil {
 				// Middlewares onInputValidationMiddlewares section
 				for _, middleware := range onInputValidationMiddlewares {
@@ -4429,6 +4642,7 @@ func RegisterRoutes(engine *fiber.App) {
 				fiberCtx.Set("x-ParamsValidationErrorResponseExtension", "TestPrimitiveConversions")
 				return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
 			}
+			value2 := value2Bool
 			value2RawPtr = &value2
 		}
 		if validatorErr := validatorInstance.Var(value2RawPtr, "required"); validatorErr != nil {
@@ -4498,7 +4712,7 @@ func RegisterRoutes(engine *fiber.App) {
 		value4Raw := fiberCtx.Query("value4")
 		isvalue4Exists := fiberCtx.Context().QueryArgs().Has("value4")
 		if isvalue4Exists {
-			value4, conversionErr := strconv.ParseFloat(value4Raw, 64)
+			value4Float64, conversionErr := strconv.ParseFloat(value4Raw, 64)
 			if conversionErr != nil {
 				// Middlewares onInputValidationMiddlewares section
 				for _, middleware := range onInputValidationMiddlewares {
@@ -4524,6 +4738,7 @@ func RegisterRoutes(engine *fiber.App) {
 				fiberCtx.Set("x-ParamsValidationErrorResponseExtension", "TestPrimitiveConversions")
 				return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
 			}
+			value4 := float64(value4Float64)
 			value4RawPtr = &value4
 		}
 		if validatorErr := validatorInstance.Var(value4RawPtr, "required"); validatorErr != nil {
@@ -6657,6 +6872,1296 @@ func RegisterRoutes(engine *fiber.App) {
 		fiberCtx.Set("x-AfterOperationRoutesExtension", "ReturnsStructWithSpecialPrimitives")
 		fiberCtx.Status(statusCode).JSON(value)
 		fiberCtx.Set("x-RouteEndRoutesExtension", "ReturnsStructWithSpecialPrimitives")
+		return nil
+	})
+	engine.Post(toFiberUrl("/e2e/alias-of-primitive"), func(fiberCtx *fiber.Ctx) error {
+		fiberCtx.Set("x-RouteStartRoutesExtension", "AliasOfString")
+		authErr := authorize(
+			fiberCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(fiberCtx, authErr, "AliasOfString")
+		}
+		controller := E2EController.E2EController{}
+		controller.InitController(fiberCtx)
+		var conversionErr error
+		var objectRawPtr *Param24object.ObjectWithAliasOfString = nil
+		conversionErr = bindAndValidateBody(fiberCtx, "application/json", "required", &objectRawPtr)
+		if conversionErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, conversionErr)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			validationError := runtime.Rfc7807Error{
+				Type: http.StatusText(http.StatusUnprocessableEntity),
+				Detail: fmt.Sprintf(
+					"A request was made to operation 'AliasOfString' but body parameter '%s' did not pass validation of '%s' - %s",
+					"object",
+					"ObjectWithAliasOfString",
+					extractValidationErrorMessage(conversionErr, nil),
+				),
+				Status:   http.StatusUnprocessableEntity,
+				Instance: "/validation/error/AliasOfString",
+			}
+			fiberCtx.Set("x-JsonBodyValidationErrorResponseExtension", "AliasOfString")
+			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+		}
+		var numRawPtr *Param25num.AliasOfInt = nil
+		numRaw := fiberCtx.Query("num")
+		isnumExists := fiberCtx.Context().QueryArgs().Has("num")
+		if isnumExists {
+			numUint64, conversionErr := strconv.Atoi(numRaw)
+			if conversionErr != nil {
+				// Middlewares onInputValidationMiddlewares section
+				for _, middleware := range onInputValidationMiddlewares {
+					middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, conversionErr)
+					setRequestContext(fiberCtx, middlewareCtx)
+					if !continueOperation {
+						return nil
+					}
+				}
+				// End middlewares onInputValidationMiddlewares section
+				validationError := runtime.Rfc7807Error{
+					Type: http.StatusText(http.StatusUnprocessableEntity),
+					Detail: fmt.Sprintf(
+						"A request was made to operation 'AliasOfString' but parameter '%s' was not properly sent - Expected %s but got %s",
+						"num",
+						"AliasOfInt",
+						reflect.TypeOf(numRaw).String(),
+					),
+					Status:     http.StatusUnprocessableEntity,
+					Instance:   "/validation/error/AliasOfString",
+					Extensions: map[string]string{"error": conversionErr.Error()},
+				}
+				fiberCtx.Set("x-ParamsValidationErrorResponseExtension", "AliasOfString")
+				return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+			}
+			num := int(numUint64)
+			numVar := Param25num.AliasOfInt(num)
+			numRawPtr = &numVar
+		}
+		if validatorErr := validatorInstance.Var(numRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, validatorErr)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "num"
+			validationError := wrapValidatorError(validatorErr, "AliasOfString", fieldName)
+			fiberCtx.Set("x-RunValidatorExtension", "AliasOfString")
+			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+		}
+		var strRawPtr *Param26str.AliasOfDirectString = nil
+		strRaw := fiberCtx.Query("str")
+		isstrExists := fiberCtx.Context().QueryArgs().Has("str")
+		if isstrExists {
+			str := strRaw
+			strVar := Param26str.AliasOfDirectString(str)
+			strRawPtr = &strVar
+		}
+		if validatorErr := validatorInstance.Var(strRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, validatorErr)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "str"
+			validationError := wrapValidatorError(validatorErr, "AliasOfString", fieldName)
+			fiberCtx.Set("x-RunValidatorExtension", "AliasOfString")
+			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		fiberCtx.Set("x-BeforeOperationRoutesExtension", "AliasOfString")
+		value, opError := controller.AliasOfString(objectRawPtr, *numRawPtr, *strRawPtr)
+		for key, value := range controller.GetHeaders() {
+			fiberCtx.Set(key, value)
+		}
+		fiberCtx.Set("x-inject", "true")
+		fiberCtx.Set("x-ResponseHeadersExtension", "AliasOfString")
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'AliasOfString'",
+				Status:     statusCode,
+				Instance:   "/controller/error/AliasOfString",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			fiberCtx.Set("x-JsonErrorResponseExtension", "AliasOfString")
+			return fiberCtx.Status(statusCode).JSON(stdError)
+		}
+		fiberCtx.Set("x-JsonResponseExtension", "AliasOfString")
+		var outputValidationErr error
+		if value == nil {
+			outputValidationErr = fmt.Errorf("Response payload is nil")
+		} else {
+			outputValidationErr = validateDataRecursive(value, "")
+		}
+		if outputValidationErr != nil {
+			// Middlewares onOutputValidationMiddlewares section
+			for _, middleware := range onOutputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, outputValidationErr)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onOutputValidationMiddlewares section
+			outputValidationStatusCode := http.StatusInternalServerError
+			outputValidationRfc7807Error := runtime.Rfc7807Error{
+				Type:       http.StatusText(outputValidationStatusCode),
+				Detail:     "Encountered an error during operation 'AliasOfString'",
+				Status:     outputValidationStatusCode,
+				Instance:   "/controller/error/AliasOfString",
+				Extensions: map[string]string{},
+			}
+			return fiberCtx.Status(outputValidationStatusCode).JSON(outputValidationRfc7807Error)
+		}
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		fiberCtx.Set("x-AfterOperationRoutesExtension", "AliasOfString")
+		fiberCtx.Status(statusCode).JSON(value)
+		fiberCtx.Set("x-RouteEndRoutesExtension", "AliasOfString")
+		return nil
+	})
+	engine.Post(toFiberUrl("/e2e/body-array-of-string"), func(fiberCtx *fiber.Ctx) error {
+		fiberCtx.Set("x-RouteStartRoutesExtension", "BodyArrayOfString")
+		authErr := authorize(
+			fiberCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(fiberCtx, authErr, "BodyArrayOfString")
+		}
+		controller := E2EController.E2EController{}
+		controller.InitController(fiberCtx)
+		var conversionErr error
+		var valuesRawPtr *[]string = nil
+		conversionErr = bindAndValidateBody(fiberCtx, "application/json", "required", &valuesRawPtr)
+		if conversionErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, conversionErr)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			validationError := runtime.Rfc7807Error{
+				Type: http.StatusText(http.StatusUnprocessableEntity),
+				Detail: fmt.Sprintf(
+					"A request was made to operation 'BodyArrayOfString' but body parameter '%s' did not pass validation of '%s' - %s",
+					"values",
+					"[]string",
+					extractValidationErrorMessage(conversionErr, nil),
+				),
+				Status:   http.StatusUnprocessableEntity,
+				Instance: "/validation/error/BodyArrayOfString",
+			}
+			fiberCtx.Set("x-JsonBodyValidationErrorResponseExtension", "BodyArrayOfString")
+			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		fiberCtx.Set("x-BeforeOperationRoutesExtension", "BodyArrayOfString")
+		value, opError := controller.BodyArrayOfString(*valuesRawPtr)
+		for key, value := range controller.GetHeaders() {
+			fiberCtx.Set(key, value)
+		}
+		fiberCtx.Set("x-inject", "true")
+		fiberCtx.Set("x-ResponseHeadersExtension", "BodyArrayOfString")
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'BodyArrayOfString'",
+				Status:     statusCode,
+				Instance:   "/controller/error/BodyArrayOfString",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			fiberCtx.Set("x-JsonErrorResponseExtension", "BodyArrayOfString")
+			return fiberCtx.Status(statusCode).JSON(stdError)
+		}
+		fiberCtx.Set("x-JsonResponseExtension", "BodyArrayOfString")
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		fiberCtx.Set("x-AfterOperationRoutesExtension", "BodyArrayOfString")
+		fiberCtx.Status(statusCode).JSON(value)
+		fiberCtx.Set("x-RouteEndRoutesExtension", "BodyArrayOfString")
+		return nil
+	})
+	engine.Post(toFiberUrl("/e2e/body-array-of-enum-string"), func(fiberCtx *fiber.Ctx) error {
+		fiberCtx.Set("x-RouteStartRoutesExtension", "BodyArrayOfStringEnum")
+		authErr := authorize(
+			fiberCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(fiberCtx, authErr, "BodyArrayOfStringEnum")
+		}
+		controller := E2EController.E2EController{}
+		controller.InitController(fiberCtx)
+		var conversionErr error
+		var valuesRawPtr *[]Param27values.Myemamium = nil
+		conversionErr = bindAndValidateBody(fiberCtx, "application/json", "required", &valuesRawPtr)
+		if conversionErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, conversionErr)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			validationError := runtime.Rfc7807Error{
+				Type: http.StatusText(http.StatusUnprocessableEntity),
+				Detail: fmt.Sprintf(
+					"A request was made to operation 'BodyArrayOfStringEnum' but body parameter '%s' did not pass validation of '%s' - %s",
+					"values",
+					"[]Myemamium",
+					extractValidationErrorMessage(conversionErr, nil),
+				),
+				Status:   http.StatusUnprocessableEntity,
+				Instance: "/validation/error/BodyArrayOfStringEnum",
+			}
+			fiberCtx.Set("x-JsonBodyValidationErrorResponseExtension", "BodyArrayOfStringEnum")
+			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		fiberCtx.Set("x-BeforeOperationRoutesExtension", "BodyArrayOfStringEnum")
+		value, opError := controller.BodyArrayOfStringEnum(*valuesRawPtr)
+		for key, value := range controller.GetHeaders() {
+			fiberCtx.Set(key, value)
+		}
+		fiberCtx.Set("x-inject", "true")
+		fiberCtx.Set("x-ResponseHeadersExtension", "BodyArrayOfStringEnum")
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'BodyArrayOfStringEnum'",
+				Status:     statusCode,
+				Instance:   "/controller/error/BodyArrayOfStringEnum",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			fiberCtx.Set("x-JsonErrorResponseExtension", "BodyArrayOfStringEnum")
+			return fiberCtx.Status(statusCode).JSON(stdError)
+		}
+		fiberCtx.Set("x-JsonResponseExtension", "BodyArrayOfStringEnum")
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		fiberCtx.Set("x-AfterOperationRoutesExtension", "BodyArrayOfStringEnum")
+		fiberCtx.Status(statusCode).JSON(value)
+		fiberCtx.Set("x-RouteEndRoutesExtension", "BodyArrayOfStringEnum")
+		return nil
+	})
+	engine.Post(toFiberUrl("/e2e/query-array-of-string"), func(fiberCtx *fiber.Ctx) error {
+		fiberCtx.Set("x-RouteStartRoutesExtension", "QueryArrayOfString")
+		authErr := authorize(
+			fiberCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(fiberCtx, authErr, "QueryArrayOfString")
+		}
+		controller := E2EController.E2EController{}
+		controller.InitController(fiberCtx)
+		var valuesRawPtr *[]string = nil
+		valuesRawArrayBytes := fiberCtx.Context().QueryArgs().PeekMulti("values")
+		valuesRawArray := make([]string, len(valuesRawArrayBytes))
+		for i, v := range valuesRawArrayBytes {
+			valuesRawArray[i] = string(v)
+		}
+		isvaluesExists := fiberCtx.Context().QueryArgs().Has("values")
+		if isvaluesExists {
+			values := make([]string, 0, len(valuesRawArray))
+			for _, valuesRaw := range valuesRawArray {
+				valuesItem := valuesRaw
+				values = append(values, string(valuesItem))
+			}
+			valuesRawPtr = &values
+			valuesRawPtr = &values
+		}
+		if validatorErr := validatorInstance.Var(valuesRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, validatorErr)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "values"
+			validationError := wrapValidatorError(validatorErr, "QueryArrayOfString", fieldName)
+			fiberCtx.Set("x-RunValidatorExtension", "QueryArrayOfString")
+			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		fiberCtx.Set("x-BeforeOperationRoutesExtension", "QueryArrayOfString")
+		value, opError := controller.QueryArrayOfString(*valuesRawPtr)
+		for key, value := range controller.GetHeaders() {
+			fiberCtx.Set(key, value)
+		}
+		fiberCtx.Set("x-inject", "true")
+		fiberCtx.Set("x-ResponseHeadersExtension", "QueryArrayOfString")
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'QueryArrayOfString'",
+				Status:     statusCode,
+				Instance:   "/controller/error/QueryArrayOfString",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			fiberCtx.Set("x-JsonErrorResponseExtension", "QueryArrayOfString")
+			return fiberCtx.Status(statusCode).JSON(stdError)
+		}
+		fiberCtx.Set("x-JsonResponseExtension", "QueryArrayOfString")
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		fiberCtx.Set("x-AfterOperationRoutesExtension", "QueryArrayOfString")
+		fiberCtx.Status(statusCode).JSON(value)
+		fiberCtx.Set("x-RouteEndRoutesExtension", "QueryArrayOfString")
+		return nil
+	})
+	engine.Post(toFiberUrl("/e2e/query-array-of-enum"), func(fiberCtx *fiber.Ctx) error {
+		fiberCtx.Set("x-RouteStartRoutesExtension", "QueryArrayOfEnum")
+		authErr := authorize(
+			fiberCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(fiberCtx, authErr, "QueryArrayOfEnum")
+		}
+		controller := E2EController.E2EController{}
+		controller.InitController(fiberCtx)
+		var valuesRawPtr *[]Param27values.Myemamium = nil
+		valuesRawArrayBytes := fiberCtx.Context().QueryArgs().PeekMulti("values")
+		valuesRawArray := make([]string, len(valuesRawArrayBytes))
+		for i, v := range valuesRawArrayBytes {
+			valuesRawArray[i] = string(v)
+		}
+		isvaluesExists := fiberCtx.Context().QueryArgs().Has("values")
+		if isvaluesExists {
+			values := make([]Param27values.Myemamium, 0, len(valuesRawArray))
+			for _, valuesRaw := range valuesRawArray {
+				valuesItem := valuesRaw
+				switch valuesRaw {
+				case "one", "two":
+					break
+				default:
+					conversionErr := fmt.Errorf("values must be one of \"one, two\" options only but got \"%s\"", valuesRaw)
+					// Middlewares onInputValidationMiddlewares section
+					for _, middleware := range onInputValidationMiddlewares {
+						middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, conversionErr)
+						setRequestContext(fiberCtx, middlewareCtx)
+						if !continueOperation {
+							return nil
+						}
+					}
+					// End middlewares onInputValidationMiddlewares section
+					validationError := runtime.Rfc7807Error{
+						Type: http.StatusText(http.StatusUnprocessableEntity),
+						Detail: fmt.Sprintf(
+							"A request was made to operation 'QueryArrayOfEnum' but parameter '%s' was not properly sent - Expected %s but got %s",
+							"values",
+							"[]Myemamium",
+							reflect.TypeOf(valuesRaw).String(),
+						),
+						Status:     http.StatusUnprocessableEntity,
+						Instance:   "/validation/error/QueryArrayOfEnum",
+						Extensions: map[string]string{"error": conversionErr.Error()},
+					}
+					fiberCtx.Set("x-ParamsValidationErrorResponseExtension", "QueryArrayOfEnum")
+					return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+				}
+				values = append(values, Param27values.Myemamium(valuesItem))
+			}
+			valuesRawPtr = &values
+		}
+		if validatorErr := validatorInstance.Var(valuesRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, validatorErr)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "values"
+			validationError := wrapValidatorError(validatorErr, "QueryArrayOfEnum", fieldName)
+			fiberCtx.Set("x-RunValidatorExtension", "QueryArrayOfEnum")
+			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+		}
+		var values2RawPtr *[]Param28values2.MyaliasString = nil
+		values2RawArrayBytes := fiberCtx.Context().QueryArgs().PeekMulti("values2")
+		values2RawArray := make([]string, len(values2RawArrayBytes))
+		for i, v := range values2RawArrayBytes {
+			values2RawArray[i] = string(v)
+		}
+		isvalues2Exists := fiberCtx.Context().QueryArgs().Has("values2")
+		if isvalues2Exists {
+			values2 := make([]Param28values2.MyaliasString, 0, len(values2RawArray))
+			for _, values2Raw := range values2RawArray {
+				values2Item := values2Raw
+				values2 = append(values2, Param28values2.MyaliasString(values2Item))
+			}
+			values2RawPtr = &values2
+			values2Var := []Param28values2.MyaliasString(values2)
+			values2RawPtr = &values2Var
+		}
+		if validatorErr := validatorInstance.Var(values2RawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, validatorErr)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "values2"
+			validationError := wrapValidatorError(validatorErr, "QueryArrayOfEnum", fieldName)
+			fiberCtx.Set("x-RunValidatorExtension", "QueryArrayOfEnum")
+			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		fiberCtx.Set("x-BeforeOperationRoutesExtension", "QueryArrayOfEnum")
+		value, opError := controller.QueryArrayOfEnum(*valuesRawPtr, *values2RawPtr)
+		for key, value := range controller.GetHeaders() {
+			fiberCtx.Set(key, value)
+		}
+		fiberCtx.Set("x-inject", "true")
+		fiberCtx.Set("x-ResponseHeadersExtension", "QueryArrayOfEnum")
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'QueryArrayOfEnum'",
+				Status:     statusCode,
+				Instance:   "/controller/error/QueryArrayOfEnum",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			fiberCtx.Set("x-JsonErrorResponseExtension", "QueryArrayOfEnum")
+			return fiberCtx.Status(statusCode).JSON(stdError)
+		}
+		fiberCtx.Set("x-JsonResponseExtension", "QueryArrayOfEnum")
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		fiberCtx.Set("x-AfterOperationRoutesExtension", "QueryArrayOfEnum")
+		fiberCtx.Status(statusCode).JSON(value)
+		fiberCtx.Set("x-RouteEndRoutesExtension", "QueryArrayOfEnum")
+		return nil
+	})
+	engine.Post(toFiberUrl("/e2e/query-array-of-others"), func(fiberCtx *fiber.Ctx) error {
+		fiberCtx.Set("x-RouteStartRoutesExtension", "QueryArrayOfOthers")
+		authErr := authorize(
+			fiberCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(fiberCtx, authErr, "QueryArrayOfOthers")
+		}
+		controller := E2EController.E2EController{}
+		controller.InitController(fiberCtx)
+		var valuesRawPtr *[]int = nil
+		valuesRawArrayBytes := fiberCtx.Context().QueryArgs().PeekMulti("values")
+		valuesRawArray := make([]string, len(valuesRawArrayBytes))
+		for i, v := range valuesRawArrayBytes {
+			valuesRawArray[i] = string(v)
+		}
+		isvaluesExists := fiberCtx.Context().QueryArgs().Has("values")
+		if isvaluesExists {
+			values := make([]int, 0, len(valuesRawArray))
+			for _, valuesRaw := range valuesRawArray {
+				valuesUint64, conversionErr := strconv.Atoi(valuesRaw)
+				if conversionErr != nil {
+					// Middlewares onInputValidationMiddlewares section
+					for _, middleware := range onInputValidationMiddlewares {
+						middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, conversionErr)
+						setRequestContext(fiberCtx, middlewareCtx)
+						if !continueOperation {
+							return nil
+						}
+					}
+					// End middlewares onInputValidationMiddlewares section
+					validationError := runtime.Rfc7807Error{
+						Type: http.StatusText(http.StatusUnprocessableEntity),
+						Detail: fmt.Sprintf(
+							"A request was made to operation 'QueryArrayOfOthers' but parameter '%s' was not properly sent - Expected %s but got %s",
+							"values",
+							"[]int",
+							reflect.TypeOf(valuesRaw).String(),
+						),
+						Status:     http.StatusUnprocessableEntity,
+						Instance:   "/validation/error/QueryArrayOfOthers",
+						Extensions: map[string]string{"error": conversionErr.Error()},
+					}
+					fiberCtx.Set("x-ParamsValidationErrorResponseExtension", "QueryArrayOfOthers")
+					return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+				}
+				valuesItem := int(valuesUint64)
+				values = append(values, int(valuesItem))
+			}
+			valuesRawPtr = &values
+			valuesRawPtr = &values
+		}
+		if validatorErr := validatorInstance.Var(valuesRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, validatorErr)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "values"
+			validationError := wrapValidatorError(validatorErr, "QueryArrayOfOthers", fieldName)
+			fiberCtx.Set("x-RunValidatorExtension", "QueryArrayOfOthers")
+			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+		}
+		var values2RawPtr *[]Param29values2.MyaliasInt = nil
+		values2RawArrayBytes := fiberCtx.Context().QueryArgs().PeekMulti("values2")
+		values2RawArray := make([]string, len(values2RawArrayBytes))
+		for i, v := range values2RawArrayBytes {
+			values2RawArray[i] = string(v)
+		}
+		isvalues2Exists := fiberCtx.Context().QueryArgs().Has("values2")
+		if isvalues2Exists {
+			values2 := make([]Param29values2.MyaliasInt, 0, len(values2RawArray))
+			for _, values2Raw := range values2RawArray {
+				values2Uint64, conversionErr := strconv.Atoi(values2Raw)
+				if conversionErr != nil {
+					// Middlewares onInputValidationMiddlewares section
+					for _, middleware := range onInputValidationMiddlewares {
+						middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, conversionErr)
+						setRequestContext(fiberCtx, middlewareCtx)
+						if !continueOperation {
+							return nil
+						}
+					}
+					// End middlewares onInputValidationMiddlewares section
+					validationError := runtime.Rfc7807Error{
+						Type: http.StatusText(http.StatusUnprocessableEntity),
+						Detail: fmt.Sprintf(
+							"A request was made to operation 'QueryArrayOfOthers' but parameter '%s' was not properly sent - Expected %s but got %s",
+							"values2",
+							"[]MyaliasInt",
+							reflect.TypeOf(values2Raw).String(),
+						),
+						Status:     http.StatusUnprocessableEntity,
+						Instance:   "/validation/error/QueryArrayOfOthers",
+						Extensions: map[string]string{"error": conversionErr.Error()},
+					}
+					fiberCtx.Set("x-ParamsValidationErrorResponseExtension", "QueryArrayOfOthers")
+					return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+				}
+				values2Item := int(values2Uint64)
+				values2 = append(values2, Param29values2.MyaliasInt(values2Item))
+			}
+			values2RawPtr = &values2
+			values2Var := []Param29values2.MyaliasInt(values2)
+			values2RawPtr = &values2Var
+		}
+		if validatorErr := validatorInstance.Var(values2RawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, validatorErr)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "values2"
+			validationError := wrapValidatorError(validatorErr, "QueryArrayOfOthers", fieldName)
+			fiberCtx.Set("x-RunValidatorExtension", "QueryArrayOfOthers")
+			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+		}
+		var values3RawPtr *[]bool = nil
+		values3RawArrayBytes := fiberCtx.Context().QueryArgs().PeekMulti("values3")
+		values3RawArray := make([]string, len(values3RawArrayBytes))
+		for i, v := range values3RawArrayBytes {
+			values3RawArray[i] = string(v)
+		}
+		isvalues3Exists := fiberCtx.Context().QueryArgs().Has("values3")
+		if isvalues3Exists {
+			values3 := make([]bool, 0, len(values3RawArray))
+			for _, values3Raw := range values3RawArray {
+				values3Bool, conversionErr := strconv.ParseBool(values3Raw)
+				if conversionErr != nil {
+					// Middlewares onInputValidationMiddlewares section
+					for _, middleware := range onInputValidationMiddlewares {
+						middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, conversionErr)
+						setRequestContext(fiberCtx, middlewareCtx)
+						if !continueOperation {
+							return nil
+						}
+					}
+					// End middlewares onInputValidationMiddlewares section
+					validationError := runtime.Rfc7807Error{
+						Type: http.StatusText(http.StatusUnprocessableEntity),
+						Detail: fmt.Sprintf(
+							"A request was made to operation 'QueryArrayOfOthers' but parameter '%s' was not properly sent - Expected %s but got %s",
+							"values3",
+							"[]bool",
+							reflect.TypeOf(values3Raw).String(),
+						),
+						Status:     http.StatusUnprocessableEntity,
+						Instance:   "/validation/error/QueryArrayOfOthers",
+						Extensions: map[string]string{"error": conversionErr.Error()},
+					}
+					fiberCtx.Set("x-ParamsValidationErrorResponseExtension", "QueryArrayOfOthers")
+					return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+				}
+				values3Item := values3Bool
+				values3 = append(values3, bool(values3Item))
+			}
+			values3RawPtr = &values3
+			values3RawPtr = &values3
+		}
+		if validatorErr := validatorInstance.Var(values3RawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, validatorErr)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "values3"
+			validationError := wrapValidatorError(validatorErr, "QueryArrayOfOthers", fieldName)
+			fiberCtx.Set("x-RunValidatorExtension", "QueryArrayOfOthers")
+			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+		}
+		var values4RawPtr *[]int32 = nil
+		values4RawArrayBytes := fiberCtx.Context().QueryArgs().PeekMulti("values4")
+		values4RawArray := make([]string, len(values4RawArrayBytes))
+		for i, v := range values4RawArrayBytes {
+			values4RawArray[i] = string(v)
+		}
+		isvalues4Exists := fiberCtx.Context().QueryArgs().Has("values4")
+		if isvalues4Exists {
+			values4 := make([]int32, 0, len(values4RawArray))
+			for _, values4Raw := range values4RawArray {
+				values4Uint64, conversionErr := strconv.ParseInt(values4Raw, 10, 32)
+				if conversionErr != nil {
+					// Middlewares onInputValidationMiddlewares section
+					for _, middleware := range onInputValidationMiddlewares {
+						middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, conversionErr)
+						setRequestContext(fiberCtx, middlewareCtx)
+						if !continueOperation {
+							return nil
+						}
+					}
+					// End middlewares onInputValidationMiddlewares section
+					validationError := runtime.Rfc7807Error{
+						Type: http.StatusText(http.StatusUnprocessableEntity),
+						Detail: fmt.Sprintf(
+							"A request was made to operation 'QueryArrayOfOthers' but parameter '%s' was not properly sent - Expected %s but got %s",
+							"values4",
+							"[]int32",
+							reflect.TypeOf(values4Raw).String(),
+						),
+						Status:     http.StatusUnprocessableEntity,
+						Instance:   "/validation/error/QueryArrayOfOthers",
+						Extensions: map[string]string{"error": conversionErr.Error()},
+					}
+					fiberCtx.Set("x-ParamsValidationErrorResponseExtension", "QueryArrayOfOthers")
+					return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+				}
+				values4Item := int32(values4Uint64)
+				values4 = append(values4, int32(values4Item))
+			}
+			values4RawPtr = &values4
+			values4RawPtr = &values4
+		}
+		if validatorErr := validatorInstance.Var(values4RawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, validatorErr)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "values4"
+			validationError := wrapValidatorError(validatorErr, "QueryArrayOfOthers", fieldName)
+			fiberCtx.Set("x-RunValidatorExtension", "QueryArrayOfOthers")
+			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		fiberCtx.Set("x-BeforeOperationRoutesExtension", "QueryArrayOfOthers")
+		value, opError := controller.QueryArrayOfOthers(*valuesRawPtr, *values2RawPtr, *values3RawPtr, *values4RawPtr)
+		for key, value := range controller.GetHeaders() {
+			fiberCtx.Set(key, value)
+		}
+		fiberCtx.Set("x-inject", "true")
+		fiberCtx.Set("x-ResponseHeadersExtension", "QueryArrayOfOthers")
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'QueryArrayOfOthers'",
+				Status:     statusCode,
+				Instance:   "/controller/error/QueryArrayOfOthers",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			fiberCtx.Set("x-JsonErrorResponseExtension", "QueryArrayOfOthers")
+			return fiberCtx.Status(statusCode).JSON(stdError)
+		}
+		fiberCtx.Set("x-JsonResponseExtension", "QueryArrayOfOthers")
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		fiberCtx.Set("x-AfterOperationRoutesExtension", "QueryArrayOfOthers")
+		fiberCtx.Status(statusCode).JSON(value)
+		fiberCtx.Set("x-RouteEndRoutesExtension", "QueryArrayOfOthers")
+		return nil
+	})
+	engine.Post(toFiberUrl("/e2e/query-array-of-others-enum"), func(fiberCtx *fiber.Ctx) error {
+		fiberCtx.Set("x-RouteStartRoutesExtension", "QueryArrayOfOthersEnum")
+		authErr := authorize(
+			fiberCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(fiberCtx, authErr, "QueryArrayOfOthersEnum")
+		}
+		controller := E2EController.E2EController{}
+		controller.InitController(fiberCtx)
+		var valuesRawPtr *[]Param31values.NumberEnum = nil
+		valuesRawArrayBytes := fiberCtx.Context().QueryArgs().PeekMulti("values")
+		valuesRawArray := make([]string, len(valuesRawArrayBytes))
+		for i, v := range valuesRawArrayBytes {
+			valuesRawArray[i] = string(v)
+		}
+		isvaluesExists := fiberCtx.Context().QueryArgs().Has("values")
+		if isvaluesExists {
+			values := make([]Param31values.NumberEnum, 0, len(valuesRawArray))
+			for _, valuesRaw := range valuesRawArray {
+				valuesUint64, conversionErr := strconv.ParseInt(valuesRaw, 10, 16)
+				if conversionErr != nil {
+					// Middlewares onInputValidationMiddlewares section
+					for _, middleware := range onInputValidationMiddlewares {
+						middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, conversionErr)
+						setRequestContext(fiberCtx, middlewareCtx)
+						if !continueOperation {
+							return nil
+						}
+					}
+					// End middlewares onInputValidationMiddlewares section
+					validationError := runtime.Rfc7807Error{
+						Type: http.StatusText(http.StatusUnprocessableEntity),
+						Detail: fmt.Sprintf(
+							"A request was made to operation 'QueryArrayOfOthersEnum' but parameter '%s' was not properly sent - Expected %s but got %s",
+							"values",
+							"[]NumberEnum",
+							reflect.TypeOf(valuesRaw).String(),
+						),
+						Status:     http.StatusUnprocessableEntity,
+						Instance:   "/validation/error/QueryArrayOfOthersEnum",
+						Extensions: map[string]string{"error": conversionErr.Error()},
+					}
+					fiberCtx.Set("x-ParamsValidationErrorResponseExtension", "QueryArrayOfOthersEnum")
+					return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+				}
+				valuesItem := int16(valuesUint64)
+				switch valuesRaw {
+				case "1", "2":
+					break
+				default:
+					conversionErr := fmt.Errorf("values must be one of \"1, 2\" options only but got \"%s\"", valuesRaw)
+					// Middlewares onInputValidationMiddlewares section
+					for _, middleware := range onInputValidationMiddlewares {
+						middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, conversionErr)
+						setRequestContext(fiberCtx, middlewareCtx)
+						if !continueOperation {
+							return nil
+						}
+					}
+					// End middlewares onInputValidationMiddlewares section
+					validationError := runtime.Rfc7807Error{
+						Type: http.StatusText(http.StatusUnprocessableEntity),
+						Detail: fmt.Sprintf(
+							"A request was made to operation 'QueryArrayOfOthersEnum' but parameter '%s' was not properly sent - Expected %s but got %s",
+							"values",
+							"[]NumberEnum",
+							reflect.TypeOf(valuesRaw).String(),
+						),
+						Status:     http.StatusUnprocessableEntity,
+						Instance:   "/validation/error/QueryArrayOfOthersEnum",
+						Extensions: map[string]string{"error": conversionErr.Error()},
+					}
+					fiberCtx.Set("x-ParamsValidationErrorResponseExtension", "QueryArrayOfOthersEnum")
+					return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+				}
+				values = append(values, Param31values.NumberEnum(valuesItem))
+			}
+			valuesRawPtr = &values
+		}
+		if validatorErr := validatorInstance.Var(valuesRawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, validatorErr)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "values"
+			validationError := wrapValidatorError(validatorErr, "QueryArrayOfOthersEnum", fieldName)
+			fiberCtx.Set("x-RunValidatorExtension", "QueryArrayOfOthersEnum")
+			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+		}
+		var values2RawPtr *[]Param32values2.BoolEnum = nil
+		values2RawArrayBytes := fiberCtx.Context().QueryArgs().PeekMulti("values2")
+		values2RawArray := make([]string, len(values2RawArrayBytes))
+		for i, v := range values2RawArrayBytes {
+			values2RawArray[i] = string(v)
+		}
+		isvalues2Exists := fiberCtx.Context().QueryArgs().Has("values2")
+		if isvalues2Exists {
+			values2 := make([]Param32values2.BoolEnum, 0, len(values2RawArray))
+			for _, values2Raw := range values2RawArray {
+				values2Item := values2Raw
+				switch values2Raw {
+				case "false", "true":
+					break
+				default:
+					conversionErr := fmt.Errorf("values2 must be one of \"false, true\" options only but got \"%s\"", values2Raw)
+					// Middlewares onInputValidationMiddlewares section
+					for _, middleware := range onInputValidationMiddlewares {
+						middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, conversionErr)
+						setRequestContext(fiberCtx, middlewareCtx)
+						if !continueOperation {
+							return nil
+						}
+					}
+					// End middlewares onInputValidationMiddlewares section
+					validationError := runtime.Rfc7807Error{
+						Type: http.StatusText(http.StatusUnprocessableEntity),
+						Detail: fmt.Sprintf(
+							"A request was made to operation 'QueryArrayOfOthersEnum' but parameter '%s' was not properly sent - Expected %s but got %s",
+							"values2",
+							"[]BoolEnum",
+							reflect.TypeOf(values2Raw).String(),
+						),
+						Status:     http.StatusUnprocessableEntity,
+						Instance:   "/validation/error/QueryArrayOfOthersEnum",
+						Extensions: map[string]string{"error": conversionErr.Error()},
+					}
+					fiberCtx.Set("x-ParamsValidationErrorResponseExtension", "QueryArrayOfOthersEnum")
+					return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+				}
+				values2 = append(values2, Param32values2.BoolEnum(values2Item))
+			}
+			values2RawPtr = &values2
+		}
+		if validatorErr := validatorInstance.Var(values2RawPtr, "required"); validatorErr != nil {
+			// Middlewares onInputValidationMiddlewares section
+			for _, middleware := range onInputValidationMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, validatorErr)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onInputValidationMiddlewares section
+			fieldName := "values2"
+			validationError := wrapValidatorError(validatorErr, "QueryArrayOfOthersEnum", fieldName)
+			fiberCtx.Set("x-RunValidatorExtension", "QueryArrayOfOthersEnum")
+			return fiberCtx.Status(http.StatusUnprocessableEntity).JSON(validationError)
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		fiberCtx.Set("x-BeforeOperationRoutesExtension", "QueryArrayOfOthersEnum")
+		value, opError := controller.QueryArrayOfOthersEnum(*valuesRawPtr, *values2RawPtr)
+		for key, value := range controller.GetHeaders() {
+			fiberCtx.Set(key, value)
+		}
+		fiberCtx.Set("x-inject", "true")
+		fiberCtx.Set("x-ResponseHeadersExtension", "QueryArrayOfOthersEnum")
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'QueryArrayOfOthersEnum'",
+				Status:     statusCode,
+				Instance:   "/controller/error/QueryArrayOfOthersEnum",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			fiberCtx.Set("x-JsonErrorResponseExtension", "QueryArrayOfOthersEnum")
+			return fiberCtx.Status(statusCode).JSON(stdError)
+		}
+		fiberCtx.Set("x-JsonResponseExtension", "QueryArrayOfOthersEnum")
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		fiberCtx.Set("x-AfterOperationRoutesExtension", "QueryArrayOfOthersEnum")
+		fiberCtx.Status(statusCode).JSON(value)
+		fiberCtx.Set("x-RouteEndRoutesExtension", "QueryArrayOfOthersEnum")
+		return nil
+	})
+	engine.Post(toFiberUrl("/e2e/query-pointer-to-array"), func(fiberCtx *fiber.Ctx) error {
+		fiberCtx.Set("x-RouteStartRoutesExtension", "QueryArrayOfPointers")
+		authErr := authorize(
+			fiberCtx,
+			[]SecurityCheckList{
+				{
+					Relation: SecurityListRelationAnd,
+					Checks: []runtime.SecurityCheck{
+						{
+							SchemaName: "securitySchemaName2",
+							Scopes: []string{
+								"config",
+							},
+						},
+					},
+				},
+			},
+		)
+		if authErr != nil {
+			return handleAuthorizationError(fiberCtx, authErr, "QueryArrayOfPointers")
+		}
+		controller := E2EController.E2EController{}
+		controller.InitController(fiberCtx)
+		var values07RawPtr *[]string = nil
+		values07RawArrayBytes := fiberCtx.Context().QueryArgs().PeekMulti("values07")
+		values07RawArray := make([]string, len(values07RawArrayBytes))
+		for i, v := range values07RawArrayBytes {
+			values07RawArray[i] = string(v)
+		}
+		isvalues07Exists := fiberCtx.Context().QueryArgs().Has("values07")
+		if isvalues07Exists {
+			values07 := make([]string, 0, len(values07RawArray))
+			for _, values07Raw := range values07RawArray {
+				values07Item := values07Raw
+				values07 = append(values07, string(values07Item))
+			}
+			values07RawPtr = &values07
+			values07RawPtr = &values07
+		}
+		// Middlewares beforeOperationMiddlewares section
+		for _, middleware := range beforeOperationMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares beforeOperationMiddlewares section
+		fiberCtx.Set("x-BeforeOperationRoutesExtension", "QueryArrayOfPointers")
+		value, opError := controller.QueryArrayOfPointers(values07RawPtr)
+		for key, value := range controller.GetHeaders() {
+			fiberCtx.Set(key, value)
+		}
+		fiberCtx.Set("x-inject", "true")
+		fiberCtx.Set("x-ResponseHeadersExtension", "QueryArrayOfPointers")
+		statusCode := getStatusCode(&controller, true, opError)
+		if opError != nil {
+			// Middlewares onErrorMiddlewares section
+			for _, middleware := range onErrorMiddlewares {
+				middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx, opError)
+				setRequestContext(fiberCtx, middlewareCtx)
+				if !continueOperation {
+					return nil
+				}
+			}
+			// End middlewares onErrorMiddlewares section
+			stdError := runtime.Rfc7807Error{
+				Type:       http.StatusText(statusCode),
+				Detail:     "Encountered an error during operation 'QueryArrayOfPointers'",
+				Status:     statusCode,
+				Instance:   "/controller/error/QueryArrayOfPointers",
+				Extensions: map[string]string{"error": opError.Error()},
+			}
+			fiberCtx.Set("x-JsonErrorResponseExtension", "QueryArrayOfPointers")
+			return fiberCtx.Status(statusCode).JSON(stdError)
+		}
+		fiberCtx.Set("x-JsonResponseExtension", "QueryArrayOfPointers")
+		// Middlewares afterOperationSuccessMiddlewares section
+		for _, middleware := range afterOperationSuccessMiddlewares {
+			middlewareCtx, continueOperation := middleware(getRequestContext(fiberCtx), fiberCtx)
+			setRequestContext(fiberCtx, middlewareCtx)
+			if !continueOperation {
+				return nil
+			}
+		}
+		// End middlewares afterOperationSuccessMiddlewares section
+		fiberCtx.Set("x-AfterOperationRoutesExtension", "QueryArrayOfPointers")
+		fiberCtx.Status(statusCode).JSON(value)
+		fiberCtx.Set("x-RouteEndRoutesExtension", "QueryArrayOfPointers")
 		return nil
 	})
 }

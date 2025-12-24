@@ -32,12 +32,14 @@ func splitSliceBracket(input string) (brackets string, name string) {
 }
 
 func registerHandlebarsHelpers() {
-	raymond.RegisterHelper("SlicePrefix", func(arg string) string {
+	// Given a string like '[][][]something' returns '[][][]'
+	raymond.RegisterHelper("GetArrayPrefixes", func(arg string) string {
 		brackets, _ := splitSliceBracket(arg)
 		return brackets
 	})
 
-	raymond.RegisterHelper("SliceSlice", func(arg string) string {
+	// Given a string like '[][][]something' returns 'something'
+	raymond.RegisterHelper("StripArrayPrefixes", func(arg string) string {
 		_, name := splitSliceBracket(arg)
 		return name
 	})
@@ -84,8 +86,14 @@ func registerHandlebarsHelpers() {
 				// The CTX param is not come from the http "input" and should not be converted from anything
 				continue
 			}
-			if param.TypeMeta.Name != "string" && param.TypeMeta.PkgPath != "" && param.TypeMeta.SymbolKind != common.SymKindEnum {
+
+			_, name := splitSliceBracket(param.TypeMeta.Name)
+			if name != "string" && param.TypeMeta.PkgPath != "" && param.TypeMeta.SymbolKind != common.SymKindEnum && param.TypeMeta.SymbolKind != common.SymKindAlias {
 				// Currently, only 'string' parameters don't undergo any validation
+				return options.Fn()
+			}
+			if (strings.HasPrefix(param.TypeMeta.Name, "[]") || strings.HasPrefix(param.TypeMeta.Name, "*[]")) && param.PassedIn == definitions.PassedInBody {
+				// Body of array needs conversion
 				return options.Fn()
 			}
 		}
@@ -118,6 +126,10 @@ func registerHandlebarsHelpers() {
 		isEqual1 := (val1 == comp1)
 		isEqual2 := (val2 == comp2)
 		return isEqual1 || isEqual2
+	})
+
+	raymond.RegisterHelper("IsArray", func(value string) bool {
+		return strings.HasPrefix(value, "[]")
 	})
 
 	raymond.RegisterHelper("CollapseMultiline", func(options *raymond.Options) string {

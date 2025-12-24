@@ -434,12 +434,24 @@ func (ec *E2EController) TemplateContext2() (string, error) {
 // @Description Create a new user
 // @Method(POST) This text is not part of the OpenAPI spec
 // @Route(/form) Same here
-// @FormField(item1) The user's ID
-// @FormField(item2) The user's ID
+// @FormField(item1) The item 1 of the form
+// @FormField(item2) The item 2 of the form
 // @Response(200) The ID of the newly created user
 // @ErrorResponse(500) The error when process failed
 func (ec *E2EController) TestForm(item1 string, item2 string) (string, error) {
 	return item1 + item2, nil
+}
+
+// @Description Create a new user
+// @Method(POST) This text is not part of the OpenAPI spec
+// @Route(/form-extra) Same here
+// @FormField(item1, { validate:"required,gte=80" }) The item 1 of the form
+// @FormField(item2) The item 2 of the form
+// @Query(item3, { validate:"required,gte=80" }) The item 3 of the form
+// @Response(200) The ID of the newly created user
+// @ErrorResponse(500) The error when process failed
+func (ec *E2EController) TestFormExtra(item1 int64, item2 string, item3 int64) (string, error) {
+	return fmt.Sprintf("%d|%s|%d", item1, item2, item3), nil
 }
 
 type ResponseTest struct {
@@ -732,4 +744,120 @@ func (ec *E2EController) ReturnsStructWithSpecialPrimitives(arrive *ObjectWithSp
 	return ObjectWithSpecialPrimitives{
 		Value: newValue,
 	}, nil
+}
+
+// AliasOfString types for testing
+type AliasOfString = string
+
+// Bla Bla
+// @Deprecated
+type AliasOfDirectString string
+
+// AliasOfInt types for testing
+// @Deprecated bla bla
+type AliasOfInt int
+
+type AssignedAliasOfInt = int
+
+type ObjectWithAliasOfString struct {
+	Value              AliasOfString       `json:"value"`
+	ValueDirect        AliasOfDirectString `json:"valueDirect"`
+	Number             AliasOfInt          `json:"number"`
+	AssignedInt        AssignedAliasOfInt  `json:"assignedInt"`
+	ValueWithTag       AliasOfString       `json:"value_with_tag" validate:"required,min=3"`
+	ValueDirectWithTag AliasOfDirectString `json:"value_direct_with_tag" validate:"required,min=3"`
+	NumberWithTag      AliasOfInt          `json:"number_with_tag" validate:"required,gte=10"`
+}
+
+// @Method(POST)
+// @Body(object, { validate: "required" })
+// @Query(num)
+// @Query(str)
+// @Route(/alias-of-primitive)
+func (ec *E2EController) AliasOfString(object *ObjectWithAliasOfString, num AliasOfInt, str AliasOfDirectString) (*ObjectWithAliasOfString, error) {
+	object.Value = AliasOfString(str) + object.Value
+	object.ValueDirect = AliasOfDirectString(str) + object.ValueDirect
+	object.Number = object.Number + num
+	return object, nil
+}
+
+// @Method(POST)
+// @Body(values)
+// @Route(/body-array-of-string)
+func (ec *E2EController) BodyArrayOfString(values []string) (string, error) {
+	return fmt.Sprintf("received %d items", len(values)), nil
+}
+
+type Myemamium string
+
+const (
+	EmamiumOne Myemamium = "one"
+	EmamiumTwo Myemamium = "two"
+)
+
+type MyaliasString = string
+type MyaliasInt = int
+
+// @Method(POST)
+// @Body(values)
+// @Route(/body-array-of-enum-string)
+func (ec *E2EController) BodyArrayOfStringEnum(values []Myemamium) (string, error) {
+	return fmt.Sprintf("received %d items", len(values)), nil
+}
+
+// @Method(POST)
+// @Query(values)
+// @Route(/query-array-of-string)
+func (ec *E2EController) QueryArrayOfString(values []string) (string, error) {
+	return fmt.Sprintf("received %d items", len(values)), nil
+}
+
+// @Method(POST)
+// @Query(values)
+// @Query(values2)
+// @Route(/query-array-of-enum)
+func (ec *E2EController) QueryArrayOfEnum(values []Myemamium, values2 []MyaliasString) (string, error) {
+	return fmt.Sprintf("received %d items and %d items", len(values), len(values2)), nil
+}
+
+// @Method(POST)
+// @Query(values)
+// @Query(values2)
+// @Query(values3)
+// @Query(values4)
+// @Route(/query-array-of-others)
+func (ec *E2EController) QueryArrayOfOthers(values []int, values2 []MyaliasInt, values3 []bool, values4 []int32) (string, error) {
+	return fmt.Sprintf("received %d, %d, %d and %d items", len(values), len(values2), len(values3), len(values4)), nil
+}
+
+type BoolEnum string
+
+const (
+	BoolEnumTrue  BoolEnum = "true"
+	BoolEnumFalse BoolEnum = "false"
+)
+
+type NumberEnum = int16
+
+const (
+	NumberEnumOne NumberEnum = 1
+	NumberEnumTwo NumberEnum = 2
+)
+
+// @Method(POST)
+// @Query(values)
+// @Query(values2)
+// @Route(/query-array-of-others-enum)
+func (ec *E2EController) QueryArrayOfOthersEnum(values []NumberEnum, values2 []BoolEnum) (string, error) {
+	return fmt.Sprintf("received %d and %d items", len(values), len(values2)), nil
+}
+
+// @Method(POST)
+// @Query(values07)
+// @Route(/query-pointer-to-array)
+func (ec *E2EController) QueryArrayOfPointers(values07 *[]string) (string, error) {
+	if values07 == nil {
+		return "received nil items", nil
+	}
+	return fmt.Sprintf("received %d items", len(*values07)), nil
 }

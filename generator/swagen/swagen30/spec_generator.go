@@ -6,6 +6,7 @@ import (
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/gopher-fleece/gleece/definitions"
+	"github.com/gopher-fleece/gleece/generator/swagen/swagtool"
 	"github.com/gopher-fleece/gleece/infrastructure/logger"
 )
 
@@ -73,9 +74,15 @@ func GenerateSpec(config *definitions.OpenAPIGeneratorConfig, defs []definitions
 	logger.Info("OpenAPI specification validated successfully")
 
 	// Convert the spec to JSON with indentation for easy reading
-	jsonBytes, err := json.MarshalIndent(openapi, "", "  ")
+	jsonBytes, err := json.Marshal(openapi)
 	if err != nil {
 		logger.Error("Marshalling error:", err)
+		return nil, err
+	}
+
+	jsonBytes, err = swagtool.ForceOrderedJSON(jsonBytes)
+	if err != nil {
+		logger.Error("Error reordering JSON:", err)
 		return nil, err
 	}
 

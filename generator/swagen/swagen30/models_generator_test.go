@@ -587,4 +587,205 @@ var _ = Describe("Swagen", func() {
 			Expect(deprecatedRef.Value.Deprecated).To(BeTrue())
 		})
 	})
+
+	Describe("GenerateAliasSpec", func() {
+		It("should generate a string alias specification correctly", func() {
+			alias := definitions.NakedAliasMetadata{
+				Name:        "UserID",
+				Description: "A unique user identifier",
+				Type:        "string",
+				PkgPath:     "example.com/types",
+			}
+
+			generateAliasSpec(openapi, alias)
+
+			schemaRef := openapi.Components.Schemas["UserID"]
+			Expect(schemaRef).NotTo(BeNil())
+			Expect(schemaRef.Value.Title).To(Equal("UserID"))
+			Expect(schemaRef.Value.Description).To(Equal("A unique user identifier"))
+			Expect(schemaRef.Value.Type).To(Equal(&openapi3.Types{"string"}))
+			Expect(schemaRef.Value.Deprecated).To(BeFalse())
+		})
+
+		It("should generate an integer alias specification correctly", func() {
+			alias := definitions.NakedAliasMetadata{
+				Name:        "Count",
+				Description: "A count of items",
+				Type:        "int",
+				PkgPath:     "example.com/types",
+			}
+
+			generateAliasSpec(openapi, alias)
+
+			schemaRef := openapi.Components.Schemas["Count"]
+			Expect(schemaRef).NotTo(BeNil())
+			Expect(schemaRef.Value.Title).To(Equal("Count"))
+			Expect(schemaRef.Value.Description).To(Equal("A count of items"))
+			Expect(schemaRef.Value.Type).To(Equal(&openapi3.Types{"integer"}))
+		})
+
+		It("should set deprecation flag correctly for alias", func() {
+			deprecationInfo := "Use NewID instead"
+			alias := definitions.NakedAliasMetadata{
+				Name:        "OldID",
+				Description: "A deprecated identifier",
+				Type:        "string",
+				PkgPath:     "example.com/types",
+				Deprecation: definitions.DeprecationOptions{
+					Deprecated:  true,
+					Description: deprecationInfo,
+				},
+			}
+
+			generateAliasSpec(openapi, alias)
+
+			schemaRef := openapi.Components.Schemas["OldID"]
+			Expect(schemaRef).NotTo(BeNil())
+			Expect(schemaRef.Value.Deprecated).To(BeTrue())
+		})
+
+		It("should generate a float alias specification correctly", func() {
+			alias := definitions.NakedAliasMetadata{
+				Name:        "Price",
+				Description: "A price value",
+				Type:        "float64",
+				PkgPath:     "example.com/types",
+			}
+
+			generateAliasSpec(openapi, alias)
+
+			schemaRef := openapi.Components.Schemas["Price"]
+			Expect(schemaRef).NotTo(BeNil())
+			Expect(schemaRef.Value.Title).To(Equal("Price"))
+			Expect(schemaRef.Value.Description).To(Equal("A price value"))
+			Expect(schemaRef.Value.Type).To(Equal(&openapi3.Types{"number"}))
+		})
+
+		It("should generate a boolean alias specification correctly", func() {
+			alias := definitions.NakedAliasMetadata{
+				Name:        "IsActive",
+				Description: "Active status flag",
+				Type:        "bool",
+				PkgPath:     "example.com/types",
+			}
+
+			generateAliasSpec(openapi, alias)
+
+			schemaRef := openapi.Components.Schemas["IsActive"]
+			Expect(schemaRef).NotTo(BeNil())
+			Expect(schemaRef.Value.Title).To(Equal("IsActive"))
+			Expect(schemaRef.Value.Description).To(Equal("Active status flag"))
+			Expect(schemaRef.Value.Type).To(Equal(&openapi3.Types{"boolean"}))
+		})
+
+		It("should handle alias with empty description", func() {
+			alias := definitions.NakedAliasMetadata{
+				Name:    "EmptyDescAlias",
+				Type:    "string",
+				PkgPath: "example.com/types",
+			}
+
+			generateAliasSpec(openapi, alias)
+
+			schemaRef := openapi.Components.Schemas["EmptyDescAlias"]
+			Expect(schemaRef).NotTo(BeNil())
+			Expect(schemaRef.Value.Title).To(Equal("EmptyDescAlias"))
+			Expect(schemaRef.Value.Description).To(Equal(""))
+		})
+	})
+
+	Describe("GenerateModelsSpec with Aliases", func() {
+		It("should generate specifications for models with aliases", func() {
+			models := &definitions.Models{
+				Structs: []definitions.StructMetadata{
+					{
+						Name:        "User",
+						Description: "A user model",
+						Fields: []definitions.FieldMetadata{
+							{
+								Name:        "ID",
+								Type:        "UserID",
+								Description: "User identifier",
+								Tag:         `json:"id"`,
+							},
+							{
+								Name:        "Name",
+								Type:        "string",
+								Description: "User name",
+								Tag:         `json:"name"`,
+							},
+						},
+					},
+				},
+				Enums: []definitions.EnumMetadata{
+					{
+						Name:        "Role",
+						Description: "User role",
+						Type:        "string",
+						Values:      []string{"admin", "user"},
+					},
+				},
+				Aliases: []definitions.NakedAliasMetadata{
+					{
+						Name:        "UserID",
+						Description: "A unique user identifier",
+						Type:        "string",
+						PkgPath:     "example.com/types",
+					},
+					{
+						Name:        "Count",
+						Description: "A count value",
+						Type:        "int",
+						PkgPath:     "example.com/types",
+					},
+				},
+			}
+
+			err := GenerateModelsSpec(openapi, models)
+			Expect(err).To(BeNil())
+
+			// Verify struct was generated
+			userSchemaRef := openapi.Components.Schemas["User"]
+			Expect(userSchemaRef).NotTo(BeNil())
+			Expect(userSchemaRef.Value.Title).To(Equal("User"))
+
+			// Verify enum was generated
+			roleSchemaRef := openapi.Components.Schemas["Role"]
+			Expect(roleSchemaRef).NotTo(BeNil())
+			Expect(roleSchemaRef.Value.Title).To(Equal("Role"))
+
+			// Verify aliases were generated
+			userIDSchemaRef := openapi.Components.Schemas["UserID"]
+			Expect(userIDSchemaRef).NotTo(BeNil())
+			Expect(userIDSchemaRef.Value.Title).To(Equal("UserID"))
+			Expect(userIDSchemaRef.Value.Description).To(Equal("A unique user identifier"))
+			Expect(userIDSchemaRef.Value.Type).To(Equal(&openapi3.Types{"string"}))
+
+			countSchemaRef := openapi.Components.Schemas["Count"]
+			Expect(countSchemaRef).NotTo(BeNil())
+			Expect(countSchemaRef.Value.Title).To(Equal("Count"))
+			Expect(countSchemaRef.Value.Description).To(Equal("A count value"))
+			Expect(countSchemaRef.Value.Type).To(Equal(&openapi3.Types{"integer"}))
+		})
+
+		It("should handle empty aliases list", func() {
+			models := &definitions.Models{
+				Structs: []definitions.StructMetadata{
+					{
+						Name:        "Simple",
+						Description: "Simple model",
+						Fields:      []definitions.FieldMetadata{},
+					},
+				},
+				Enums:   []definitions.EnumMetadata{},
+				Aliases: []definitions.NakedAliasMetadata{},
+			}
+
+			err := GenerateModelsSpec(openapi, models)
+			Expect(err).To(BeNil())
+
+			simpleSchemaRef := openapi.Components.Schemas["Simple"]
+			Expect(simpleSchemaRef).NotTo(BeNil())
+		})
+	})
 })

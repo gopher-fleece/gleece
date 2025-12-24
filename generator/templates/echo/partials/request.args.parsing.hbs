@@ -8,8 +8,8 @@
 {{/equal}}
 
 {{#equal PassedIn "Query"}}
-	var {{ToLowerCamel Name}}RawPtr *{{#if TypeMeta.PkgPath}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{{TypeMeta.Name}}} = nil
-	{{ToLowerCamel Name}}Raw := echoCtx.QueryParam("{{{NameInSchema}}}")
+    var {{ToLowerCamel Name}}RawPtr *{{GetArrayPrefixes TypeMeta.Name}}{{#if TypeMeta.PkgPath}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{StripArrayPrefixes TypeMeta.Name}} = nil
+	{{ToLowerCamel Name}}Raw{{#if (IsArray TypeMeta.Name)}}Array{{/if}} := {{#if (IsArray TypeMeta.Name)}}echoCtx.QueryParams()["{{{NameInSchema}}}"]{{else}}echoCtx.QueryParam("{{{NameInSchema}}}"){{/if}}
 	is{{Name}}Exists := echoCtx.Request().URL.Query().Has("{{{NameInSchema}}}")
 	{{> RequestSwitchParamType}}
 	{{> RunValidator}}
@@ -42,7 +42,7 @@
 {{/equal}}
 
 {{#equal PassedIn "Body"}}
-	var {{ToLowerCamel Name}}RawPtr *{{SlicePrefix TypeMeta.Name}}{{#if TypeMeta.PkgPath}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{SliceSlice TypeMeta.Name}} = nil
+	var {{ToLowerCamel Name}}RawPtr *{{GetArrayPrefixes TypeMeta.Name}}{{#if TypeMeta.PkgPath}}Param{{{UniqueImportSerial}}}{{{Name}}}.{{/if}}{{StripArrayPrefixes TypeMeta.Name}} = nil
 	conversionErr = bindAndValidateBody(echoCtx, "{{{ResponseContentType}}}", "{{Validator}}",&{{ToLowerCamel Name}}RawPtr)
 	if conversionErr != nil {
 		{{> JsonBodyValidationErrorResponse }}

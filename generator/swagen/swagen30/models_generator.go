@@ -64,7 +64,7 @@ func generateStructSpec(openapi *openapi3.T, model definitions.StructMetadata) {
 		validationTag := swagtool.GetTagValue(field.Tag, "validate", "")
 		BuildSchemaValidation(fieldSchemaRef, validationTag, field.Type)
 
-		// OpenAPI 3.0 does not support the any extra field in the SchemaRef beside just ref, and we don't want to override the model properties themselves
+		// OpenAPI 3.0 does not support any extra field in the SchemaRef beside just ref, and we don't want to override the model properties themselves
 		if fieldSchemaRef.Value != nil && fieldSchemaRef.Ref == "" {
 			fieldSchemaRef.Value.Description = field.Description
 
@@ -121,6 +121,23 @@ func generateEnumSpec(openapi *openapi3.T, model definitions.EnumMetadata) {
 	}
 }
 
+func generateAliasSpec(openapi *openapi3.T, alias definitions.NakedAliasMetadata) {
+	aliasType := &openapi3.Types{swagtool.ToOpenApiType(alias.Type)}
+
+	// Create the alias schema
+	schema := &openapi3.Schema{
+		Title:       alias.Name,
+		Description: alias.Description,
+		Type:        aliasType,
+		Deprecated:  swagtool.IsDeprecated(&alias.Deprecation),
+	}
+
+	// Add schema to components
+	openapi.Components.Schemas[alias.Name] = &openapi3.SchemaRef{
+		Value: schema,
+	}
+}
+
 // Fill the schema references in the components
 func fillSchemaRef(openapi *openapi3.T) {
 	// Iterate over all EmptyRefSchemas
@@ -142,6 +159,10 @@ func GenerateModelsSpec(openapi *openapi3.T, models *definitions.Models) error {
 
 	for _, model := range models.Structs {
 		generateStructSpec(openapi, model)
+	}
+
+	for _, alias := range models.Aliases {
+		generateAliasSpec(openapi, alias)
 	}
 
 	fillSchemaRef(openapi)
