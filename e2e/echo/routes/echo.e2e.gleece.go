@@ -14,64 +14,58 @@ Repository: https://github.com/gopher-fleece/gleece
 --
 */
 package routes
-
 import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/go-playground/validator/v10"
-	E2EClassSecController "github.com/gopher-fleece/gleece/e2e/assets"
-	E2EController "github.com/gopher-fleece/gleece/e2e/assets"
-	Param11value3 "github.com/gopher-fleece/gleece/e2e/assets"
-	Param12value1 "github.com/gopher-fleece/gleece/e2e/assets"
-	Param12value3 "github.com/gopher-fleece/gleece/e2e/assets"
-	Param15data "github.com/gopher-fleece/gleece/e2e/assets"
-	Param16data "github.com/gopher-fleece/gleece/e2e/assets"
-	Param17data "github.com/gopher-fleece/gleece/e2e/assets"
-	Param18data "github.com/gopher-fleece/gleece/e2e/assets"
-	Param19data "github.com/gopher-fleece/gleece/e2e/assets"
-	Param20data "github.com/gopher-fleece/gleece/e2e/assets"
-	Param22arrive "github.com/gopher-fleece/gleece/e2e/assets"
-	Param23arrive "github.com/gopher-fleece/gleece/e2e/assets"
-	Param24object "github.com/gopher-fleece/gleece/e2e/assets"
-	Param25num "github.com/gopher-fleece/gleece/e2e/assets"
-	Param26str "github.com/gopher-fleece/gleece/e2e/assets"
-	Param27values "github.com/gopher-fleece/gleece/e2e/assets"
-	Param28values2 "github.com/gopher-fleece/gleece/e2e/assets"
-	Param29values2 "github.com/gopher-fleece/gleece/e2e/assets"
-	Param31values "github.com/gopher-fleece/gleece/e2e/assets"
-	Param32values2 "github.com/gopher-fleece/gleece/e2e/assets"
-	Param4value2 "github.com/gopher-fleece/gleece/e2e/assets"
-	Param5theBody "github.com/gopher-fleece/gleece/e2e/assets"
-	Response6CustomError "github.com/gopher-fleece/gleece/e2e/assets"
-	RequestAuth "github.com/gopher-fleece/gleece/e2e/echo/auth"
-	"github.com/gopher-fleece/runtime"
-	Param13data "github.com/haimkastner/unitsnet-go/units"
-	Param14unit "github.com/haimkastner/unitsnet-go/units"
-	"github.com/labstack/echo/v4"
 	"io"
 	"net/http"
 	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
+	"github.com/go-playground/validator/v10"
+	RequestAuth "github.com/gopher-fleece/gleece/v2/e2e/echo/auth"
+	"github.com/gopher-fleece/runtime"
+	"github.com/labstack/echo/v4"
+	E2EClassSecController "github.com/gopher-fleece/gleece/v2/e2e/assets"
+	E2EController "github.com/gopher-fleece/gleece/v2/e2e/assets"
+	Param11value3 "github.com/gopher-fleece/gleece/v2/e2e/assets"
+	Param12value1 "github.com/gopher-fleece/gleece/v2/e2e/assets"
+	Param12value3 "github.com/gopher-fleece/gleece/v2/e2e/assets"
+	Param15data "github.com/gopher-fleece/gleece/v2/e2e/assets"
+	Param16data "github.com/gopher-fleece/gleece/v2/e2e/assets"
+	Param17data "github.com/gopher-fleece/gleece/v2/e2e/assets"
+	Param18data "github.com/gopher-fleece/gleece/v2/e2e/assets"
+	Param19data "github.com/gopher-fleece/gleece/v2/e2e/assets"
+	Param20data "github.com/gopher-fleece/gleece/v2/e2e/assets"
+	Param22arrive "github.com/gopher-fleece/gleece/v2/e2e/assets"
+	Param23arrive "github.com/gopher-fleece/gleece/v2/e2e/assets"
+	Param24object "github.com/gopher-fleece/gleece/v2/e2e/assets"
+	Param25num "github.com/gopher-fleece/gleece/v2/e2e/assets"
+	Param26str "github.com/gopher-fleece/gleece/v2/e2e/assets"
+	Param27values "github.com/gopher-fleece/gleece/v2/e2e/assets"
+	Param28values2 "github.com/gopher-fleece/gleece/v2/e2e/assets"
+	Param29values2 "github.com/gopher-fleece/gleece/v2/e2e/assets"
+	Param31values "github.com/gopher-fleece/gleece/v2/e2e/assets"
+	Param32values2 "github.com/gopher-fleece/gleece/v2/e2e/assets"
+	Param4value2 "github.com/gopher-fleece/gleece/v2/e2e/assets"
+	Param5theBody "github.com/gopher-fleece/gleece/v2/e2e/assets"
+	Response6CustomError "github.com/gopher-fleece/gleece/v2/e2e/assets"
+	Param13data "github.com/haimkastner/unitsnet-go/units"
+	Param14unit "github.com/haimkastner/unitsnet-go/units"
 	// ImportsExtension - test
 )
-
 var validatorInstance = validator.New()
 var urlParamRegex *regexp.Regexp
-
 type SecurityListRelation string
-
 const (
 	SecurityListRelationAnd SecurityListRelation = "AND"
 )
-
 type SecurityCheckList struct {
 	Checks   []runtime.SecurityCheck
 	Relation SecurityListRelation
 }
-
 // TypeDeclarationsExtension - test
 func getRequestContext(echoCtx echo.Context) context.Context {
 	return echoCtx.Request().Context()
@@ -281,17 +275,14 @@ func wrapValidatorError(validatorErr error, operationId string, fieldName string
 		Instance: fmt.Sprintf("/validation/error/%s", operationId),
 	}
 }
-
 // FunctionDeclarationsExtension - test
 type MiddlewareFunc func(ctx context.Context, echoCtx echo.Context) (context.Context, bool)
 type ErrorMiddlewareFunc func(ctx context.Context, echoCtx echo.Context, err error) (context.Context, bool)
-
 var beforeOperationMiddlewares []MiddlewareFunc
 var afterOperationSuccessMiddlewares []MiddlewareFunc
 var onErrorMiddlewares []ErrorMiddlewareFunc
 var onInputValidationMiddlewares []ErrorMiddlewareFunc
 var onOutputValidationMiddlewares []ErrorMiddlewareFunc
-
 func RegisterMiddleware(executionType runtime.MiddlewareExecutionType, middlewareFunc MiddlewareFunc) {
 	switch executionType {
 	case runtime.BeforeOperation:

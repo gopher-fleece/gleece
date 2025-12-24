@@ -1,7 +1,7 @@
 package graphs_test
 
 import (
-	"github.com/gopher-fleece/gleece/common"
+	"github.com/gopher-fleece/gleece/v2/common"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )

@@ -3,10 +3,10 @@ package imports_test
 import (
 	"testing"
 
-	"github.com/gopher-fleece/gleece/common"
-	"github.com/gopher-fleece/gleece/definitions"
-	"github.com/gopher-fleece/gleece/infrastructure/logger"
-	"github.com/gopher-fleece/gleece/test/utils"
+	"github.com/gopher-fleece/gleece/v2/common"
+	"github.com/gopher-fleece/gleece/v2/definitions"
+	"github.com/gopher-fleece/gleece/v2/infrastructure/logger"
+	"github.com/gopher-fleece/gleece/v2/test/utils"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -26,7 +26,7 @@ var _ = Describe("Imports Controller", func() {
 
 		Expect(route.FuncParams).To(HaveLen(1))
 		Expect(route.FuncParams[0].TypeMeta.Name).To(Equal("ImportedWithDot"))
-		Expect(route.FuncParams[0].TypeMeta.PkgPath).To(Equal("github.com/gopher-fleece/gleece/test/types"))
+		Expect(route.FuncParams[0].TypeMeta.PkgPath).To(Equal("github.com/gopher-fleece/gleece/v2/test/types"))
 		Expect(route.FuncParams[0].TypeMeta.DefaultPackageAlias).To(Equal("types"))
 		Expect(route.FuncParams[0].TypeMeta.Import).To(Equal(common.ImportTypeDot))
 		Expect(route.FuncParams[0].TypeMeta.IsUniverseType).To(BeFalse())
@@ -35,7 +35,7 @@ var _ = Describe("Imports Controller", func() {
 
 		Expect(route.Responses).To(HaveLen(2))
 		Expect(route.Responses[0].TypeMetadata.Name).To(Equal("ImportedWithDot"))
-		Expect(route.Responses[0].TypeMetadata.PkgPath).To(Equal("github.com/gopher-fleece/gleece/test/types"))
+		Expect(route.Responses[0].TypeMetadata.PkgPath).To(Equal("github.com/gopher-fleece/gleece/v2/test/types"))
 		Expect(route.Responses[0].TypeMetadata.DefaultPackageAlias).To(Equal("types"))
 		Expect(route.Responses[0].TypeMetadata.Import).To(Equal(common.ImportTypeDot))
 		Expect(route.Responses[0].TypeMetadata.IsUniverseType).To(BeFalse())
@@ -48,7 +48,7 @@ var _ = Describe("Imports Controller", func() {
 
 		Expect(route.FuncParams).To(HaveLen(1))
 		Expect(route.FuncParams[0].TypeMeta.Name).To(Equal("ImportedWithDefaultAlias"))
-		Expect(route.FuncParams[0].TypeMeta.PkgPath).To(Equal("github.com/gopher-fleece/gleece/test/types"))
+		Expect(route.FuncParams[0].TypeMeta.PkgPath).To(Equal("github.com/gopher-fleece/gleece/v2/test/types"))
 		Expect(route.FuncParams[0].TypeMeta.DefaultPackageAlias).To(Equal("types"))
 		Expect(route.FuncParams[0].TypeMeta.Import).To(Equal(common.ImportTypeAlias))
 		Expect(route.FuncParams[0].TypeMeta.IsUniverseType).To(BeFalse())
@@ -57,7 +57,7 @@ var _ = Describe("Imports Controller", func() {
 
 		Expect(route.Responses).To(HaveLen(2))
 		Expect(route.Responses[0].TypeMetadata.Name).To(Equal("ImportedWithDefaultAlias"))
-		Expect(route.Responses[0].TypeMetadata.PkgPath).To(Equal("github.com/gopher-fleece/gleece/test/types"))
+		Expect(route.Responses[0].TypeMetadata.PkgPath).To(Equal("github.com/gopher-fleece/gleece/v2/test/types"))
 		Expect(route.Responses[0].TypeMetadata.DefaultPackageAlias).To(Equal("types"))
 		Expect(route.Responses[0].TypeMetadata.Import).To(Equal(common.ImportTypeAlias))
 		Expect(route.Responses[0].TypeMetadata.IsUniverseType).To(BeFalse())
@@ -70,7 +70,7 @@ var _ = Describe("Imports Controller", func() {
 
 		Expect(route.FuncParams).To(HaveLen(1))
 		Expect(route.FuncParams[0].TypeMeta.Name).To(Equal("ImportedWithCustomAlias"))
-		Expect(route.FuncParams[0].TypeMeta.PkgPath).To(Equal("github.com/gopher-fleece/gleece/test/types"))
+		Expect(route.FuncParams[0].TypeMeta.PkgPath).To(Equal("github.com/gopher-fleece/gleece/v2/test/types"))
 		Expect(route.FuncParams[0].TypeMeta.DefaultPackageAlias).To(Equal("types"))
 		Expect(route.FuncParams[0].TypeMeta.Import).To(Equal(common.ImportTypeAlias))
 		Expect(route.FuncParams[0].TypeMeta.IsUniverseType).To(BeFalse())
@@ -79,7 +79,7 @@ var _ = Describe("Imports Controller", func() {
 
 		Expect(route.Responses).To(HaveLen(2))
 		Expect(route.Responses[0].TypeMetadata.Name).To(Equal("ImportedWithCustomAlias"))
-		Expect(route.Responses[0].TypeMetadata.PkgPath).To(Equal("github.com/gopher-fleece/gleece/test/types"))
+		Expect(route.Responses[0].TypeMetadata.PkgPath).To(Equal("github.com/gopher-fleece/gleece/v2/test/types"))
 		Expect(route.Responses[0].TypeMetadata.DefaultPackageAlias).To(Equal("types"))
 		Expect(route.Responses[0].TypeMetadata.Import).To(Equal(common.ImportTypeAlias))
 		Expect(route.Responses[0].TypeMetadata.IsUniverseType).To(BeFalse())

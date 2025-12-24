@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"go/ast"
 
-	"github.com/gopher-fleece/gleece/common"
-	"github.com/gopher-fleece/gleece/core/annotations"
-	"github.com/gopher-fleece/gleece/core/metadata"
-	"github.com/gopher-fleece/gleece/gast"
-	"github.com/gopher-fleece/gleece/graphs/symboldg"
-	"github.com/gopher-fleece/gleece/infrastructure/logger"
+	"github.com/gopher-fleece/gleece/v2/common"
+	"github.com/gopher-fleece/gleece/v2/core/annotations"
+	"github.com/gopher-fleece/gleece/v2/core/metadata"
+	"github.com/gopher-fleece/gleece/v2/gast"
+	"github.com/gopher-fleece/gleece/v2/graphs/symboldg"
+	"github.com/gopher-fleece/gleece/v2/infrastructure/logger"
 )
 
 // ControllerVisitor locates and walks over Gleece controllers to extract metadata and route information

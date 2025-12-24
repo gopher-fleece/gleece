@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gopher-fleece/gleece/gast"
-	"github.com/gopher-fleece/gleece/graphs"
-	"github.com/gopher-fleece/gleece/infrastructure/logger"
+	"github.com/gopher-fleece/gleece/v2/gast"
+	"github.com/gopher-fleece/gleece/v2/graphs"
+	"github.com/gopher-fleece/gleece/v2/infrastructure/logger"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )

@@ -9,8 +9,8 @@ import (
 
 	"github.com/bmatcuk/doublestar/v4"
 	MapSet "github.com/deckarep/golang-set/v2"
-	"github.com/gopher-fleece/gleece/gast"
-	"github.com/gopher-fleece/gleece/infrastructure/logger"
+	"github.com/gopher-fleece/gleece/v2/gast"
+	"github.com/gopher-fleece/gleece/v2/infrastructure/logger"
 	"golang.org/x/tools/go/packages"
 )
 

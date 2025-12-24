@@ -1,6 +1,6 @@
 package configuration
 
-import "github.com/gopher-fleece/gleece/core/annotations"
+import "github.com/gopher-fleece/gleece/v2/core/annotations"
 
 var ValidatorConfigMap = map[string]AnnotationConfigDefinition{
 	// Controller (Class-Level) Annotations

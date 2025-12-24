@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/gopher-fleece/gleece/e2e/assets"
+	"github.com/gopher-fleece/gleece/v2/e2e/assets"
 )
 
 func MiddlewareBeforeOperation(ctx context.Context, w http.ResponseWriter, r *http.Request) (context.Context, bool) {

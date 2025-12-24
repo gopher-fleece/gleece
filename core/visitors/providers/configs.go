@@ -1,8 +1,8 @@
 package providers
 
 import (
-	"github.com/gopher-fleece/gleece/core/arbitrators"
-	"github.com/gopher-fleece/gleece/definitions"
+	"github.com/gopher-fleece/gleece/v2/core/arbitrators"
+	"github.com/gopher-fleece/gleece/v2/definitions"
 )
 
 type ArbitrationProviderConfig struct {

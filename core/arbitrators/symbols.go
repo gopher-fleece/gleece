@@ -4,7 +4,7 @@ import (
 	"go/ast"
 	"go/token"
 
-	"github.com/gopher-fleece/gleece/gast"
+	"github.com/gopher-fleece/gleece/v2/gast"
 )
 
 type DeclInfo struct {

@@ -1,8 +1,8 @@
 package matchers
 
 import (
-	"github.com/gopher-fleece/gleece/common/linq"
-	"github.com/gopher-fleece/gleece/graphs/symboldg"
+	"github.com/gopher-fleece/gleece/v2/common/linq"
+	"github.com/gopher-fleece/gleece/v2/graphs/symboldg"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/types"
 )

@@ -3,8 +3,8 @@ package e2e
 import (
 	"os"
 
-	"github.com/gopher-fleece/gleece/e2e/assets"
-	"github.com/gopher-fleece/gleece/e2e/common"
+	"github.com/gopher-fleece/gleece/v2/e2e/assets"
+	"github.com/gopher-fleece/gleece/v2/e2e/common"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )

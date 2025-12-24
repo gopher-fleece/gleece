@@ -5,8 +5,8 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/gopher-fleece/gleece/common"
-	"github.com/gopher-fleece/gleece/gast"
+	"github.com/gopher-fleece/gleece/v2/common"
+	"github.com/gopher-fleece/gleece/v2/gast"
 	"github.com/titanous/json5"
 )
 

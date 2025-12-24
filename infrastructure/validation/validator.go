@@ -8,7 +8,7 @@ import (
 	"unicode"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/gopher-fleece/gleece/definitions"
+	"github.com/gopher-fleece/gleece/v2/definitions"
 )
 
 var validatorInstance *validator.Validate

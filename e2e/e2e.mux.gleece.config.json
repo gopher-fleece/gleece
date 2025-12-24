@@ -9,7 +9,7 @@
 		"outputPath": "./mux/routes/mux.e2e.gleece.go",
 		"outputFilePerms": "0644",
 		"authorizationConfig": {
-			"authFileFullPackageName": "github.com/gopher-fleece/gleece/e2e/mux/auth",
+			"authFileFullPackageName": "github.com/gopher-fleece/gleece/v2/e2e/mux/auth",
 			"enforceSecurityOnAllRoutes": true
 		},
 		"templateOverrides": {

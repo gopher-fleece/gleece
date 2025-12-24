@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/gopher-fleece/gleece/definitions"
-	"github.com/gopher-fleece/gleece/generator/swagen/swagtool"
-	"github.com/gopher-fleece/gleece/infrastructure/logger"
+	"github.com/gopher-fleece/gleece/v2/definitions"
+	"github.com/gopher-fleece/gleece/v2/generator/swagen/swagtool"
+	"github.com/gopher-fleece/gleece/v2/infrastructure/logger"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -57,7 +57,7 @@ var _ = Describe("Spec Generator", func() {
 			},
 			Description: "Example controller",
 			Name:        "ExampleController",
-			PkgPath:     "github.com/gopher-fleece/gleece/definitions",
+			PkgPath:     "github.com/gopher-fleece/gleece/v2/definitions",
 			Routes: []definitions.RouteMetadata{
 				{
 					Security: []definitions.RouteSecurity{
@@ -765,7 +765,7 @@ var _ = Describe("Spec Generator", func() {
 			},
 			Description: "Example controller",
 			Name:        "ExampleController",
-			PkgPath:     "github.com/gopher-fleece/gleece/definitions",
+			PkgPath:     "github.com/gopher-fleece/gleece/v2/definitions",
 			Routes: []definitions.RouteMetadata{
 				{
 					HttpVerb: "GET",
@@ -828,7 +828,7 @@ var _ = Describe("Spec Generator", func() {
 			},
 			Description: "Example controller",
 			Name:        "ExampleController",
-			PkgPath:     "github.com/gopher-fleece/gleece/definitions",
+			PkgPath:     "github.com/gopher-fleece/gleece/v2/definitions",
 			Routes: []definitions.RouteMetadata{
 				{
 					Security: []definitions.RouteSecurity{

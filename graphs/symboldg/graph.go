@@ -8,14 +8,14 @@ import (
 	"strings"
 
 	mapset "github.com/deckarep/golang-set/v2"
-	"github.com/gopher-fleece/gleece/common"
-	"github.com/gopher-fleece/gleece/common/linq"
-	"github.com/gopher-fleece/gleece/core/annotations"
-	"github.com/gopher-fleece/gleece/core/metadata"
-	"github.com/gopher-fleece/gleece/core/metadata/typeref"
-	"github.com/gopher-fleece/gleece/gast"
-	"github.com/gopher-fleece/gleece/graphs"
-	"github.com/gopher-fleece/gleece/graphs/dot"
+	"github.com/gopher-fleece/gleece/v2/common"
+	"github.com/gopher-fleece/gleece/v2/common/linq"
+	"github.com/gopher-fleece/gleece/v2/core/annotations"
+	"github.com/gopher-fleece/gleece/v2/core/metadata"
+	"github.com/gopher-fleece/gleece/v2/core/metadata/typeref"
+	"github.com/gopher-fleece/gleece/v2/gast"
+	"github.com/gopher-fleece/gleece/v2/graphs"
+	"github.com/gopher-fleece/gleece/v2/graphs/dot"
 )
 
 type SymbolGraph struct {

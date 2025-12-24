@@ -3,8 +3,8 @@ package swagen
 import (
 	"os"
 
-	"github.com/gopher-fleece/gleece/definitions"
-	"github.com/gopher-fleece/gleece/generator/swagen/swagtool"
+	"github.com/gopher-fleece/gleece/v2/definitions"
+	"github.com/gopher-fleece/gleece/v2/generator/swagen/swagtool"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -86,7 +86,7 @@ var _ = Describe("Spec Preparing", func() {
 			},
 			Description: "Example controller",
 			Name:        "ExampleController",
-			PkgPath:     "github.com/gopher-fleece/gleece/definitions",
+			PkgPath:     "github.com/gopher-fleece/gleece/v2/definitions",
 			Routes: []definitions.RouteMetadata{
 				{
 					HttpVerb: "GET",

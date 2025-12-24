@@ -3,10 +3,10 @@ package sanity_test
 import (
 	"testing"
 
-	"github.com/gopher-fleece/gleece/common"
-	"github.com/gopher-fleece/gleece/definitions"
-	"github.com/gopher-fleece/gleece/infrastructure/logger"
-	"github.com/gopher-fleece/gleece/test/utils"
+	"github.com/gopher-fleece/gleece/v2/common"
+	"github.com/gopher-fleece/gleece/v2/definitions"
+	"github.com/gopher-fleece/gleece/v2/infrastructure/logger"
+	"github.com/gopher-fleece/gleece/v2/test/utils"
 	"github.com/gopher-fleece/runtime"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -35,7 +35,7 @@ var _ = Describe("Sanity Controller", func() {
 	It("Produces correct controller level metadata", func() {
 		controllerMeta := metadata[0]
 		Expect(controllerMeta.Name).To(Equal("SanityController"))
-		Expect(controllerMeta.PkgPath).To(Equal("github.com/gopher-fleece/gleece/test/sanity"))
+		Expect(controllerMeta.PkgPath).To(Equal("github.com/gopher-fleece/gleece/v2/test/sanity"))
 		Expect(controllerMeta.Tag).To(Equal("Sanity Controller Tag"))
 		Expect(controllerMeta.RestMetadata.Path).To(Equal("/test/sanity"))
 		Expect(controllerMeta.Description).To(Equal("Sanity Controller"))
@@ -134,7 +134,7 @@ var _ = Describe("Sanity Controller", func() {
 
 		Expect(route.Responses[0].UniqueImportSerial).To(Equal(uint64(0)))
 		Expect(route.Responses[0].TypeMetadata.Name).To(Equal("SimpleResponseModel"))
-		Expect(route.Responses[0].TypeMetadata.PkgPath).To(Equal("github.com/gopher-fleece/gleece/test/sanity"))
+		Expect(route.Responses[0].TypeMetadata.PkgPath).To(Equal("github.com/gopher-fleece/gleece/v2/test/sanity"))
 		Expect(route.Responses[0].TypeMetadata.DefaultPackageAlias).To(Equal("sanity"))
 		Expect(route.Responses[0].TypeMetadata.Description).To(Equal("This should be the actual description"))
 		Expect(route.Responses[0].TypeMetadata.Import).To(Equal(common.ImportTypeNone))
@@ -159,7 +159,7 @@ var _ = Describe("Sanity Controller", func() {
 		// Model 1
 		model1 := models[0]
 		Expect(model1.Name).To(Equal("SimpleResponseModel"))
-		Expect(model1.PkgPath).To(Equal("github.com/gopher-fleece/gleece/test/sanity"))
+		Expect(model1.PkgPath).To(Equal("github.com/gopher-fleece/gleece/v2/test/sanity"))
 		Expect(model1.Description).To(Equal("This should be the actual description"))
 		Expect(model1.Fields).To(HaveLen(1))
 		Expect(model1.Fields[0].Name).To(Equal("SomeValue"))
@@ -174,7 +174,7 @@ var _ = Describe("Sanity Controller", func() {
 		// Model 2
 		model2 := models[1]
 		Expect(model2.Name).To(Equal("SimpleStruct"))
-		Expect(model2.PkgPath).To(Equal("github.com/gopher-fleece/gleece/test/units"))
+		Expect(model2.PkgPath).To(Equal("github.com/gopher-fleece/gleece/v2/test/units"))
 		Expect(model2.Description).To(BeEmpty())
 
 		Expect(model2.Fields).To(HaveLen(2))
@@ -198,7 +198,7 @@ var _ = Describe("Sanity Controller", func() {
 		// Model 3
 		model3 := models[2]
 		Expect(model3.Name).To(Equal("StructWithStructSlice"))
-		Expect(model3.PkgPath).To(Equal("github.com/gopher-fleece/gleece/test/units"))
+		Expect(model3.PkgPath).To(Equal("github.com/gopher-fleece/gleece/v2/test/units"))
 		Expect(model3.Description).To(BeEmpty())
 
 		Expect(model3.Fields).To(HaveLen(2))

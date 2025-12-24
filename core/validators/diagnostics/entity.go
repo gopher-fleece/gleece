@@ -6,7 +6,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/gopher-fleece/gleece/common/linq"
+	"github.com/gopher-fleece/gleece/v2/common/linq"
 )
 
 type EntityDiagnostic struct {

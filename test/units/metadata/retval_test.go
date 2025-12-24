@@ -1,10 +1,10 @@
 package metadata_test
 
 import (
-	"github.com/gopher-fleece/gleece/common"
-	"github.com/gopher-fleece/gleece/core/metadata"
-	"github.com/gopher-fleece/gleece/core/metadata/typeref"
-	"github.com/gopher-fleece/gleece/definitions"
+	"github.com/gopher-fleece/gleece/v2/common"
+	"github.com/gopher-fleece/gleece/v2/core/metadata"
+	"github.com/gopher-fleece/gleece/v2/core/metadata/typeref"
+	"github.com/gopher-fleece/gleece/v2/definitions"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )

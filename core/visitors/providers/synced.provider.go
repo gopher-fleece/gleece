@@ -3,7 +3,7 @@ package providers
 import (
 	"sync/atomic"
 
-	"github.com/gopher-fleece/gleece/graphs"
+	"github.com/gopher-fleece/gleece/v2/graphs"
 )
 
 type SyncedProvider struct {

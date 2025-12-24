@@ -13,48 +13,48 @@ import (
 
 	"github.com/gopher-fleece/runtime"
 
-	"github.com/gopher-fleece/gleece/cmd"
-	"github.com/gopher-fleece/gleece/cmd/arguments"
-	"github.com/gopher-fleece/gleece/definitions"
-	"github.com/gopher-fleece/gleece/e2e/common"
+	"github.com/gopher-fleece/gleece/v2/cmd"
+	"github.com/gopher-fleece/gleece/v2/cmd/arguments"
+	"github.com/gopher-fleece/gleece/v2/definitions"
+	"github.com/gopher-fleece/gleece/v2/e2e/common"
 
-	gleeceChiRoutesExExtra "github.com/gopher-fleece/gleece/e2e/chi/ex_extra_routes"
-	gleeceChiRoutes "github.com/gopher-fleece/gleece/e2e/chi/routes"
+	gleeceChiRoutesExExtra "github.com/gopher-fleece/gleece/v2/e2e/chi/ex_extra_routes"
+	gleeceChiRoutes "github.com/gopher-fleece/gleece/v2/e2e/chi/routes"
 
-	gleeceEchoRoutesExExtra "github.com/gopher-fleece/gleece/e2e/echo/ex_extra_routes"
-	gleeceEchoRoutes "github.com/gopher-fleece/gleece/e2e/echo/routes"
+	gleeceEchoRoutesExExtra "github.com/gopher-fleece/gleece/v2/e2e/echo/ex_extra_routes"
+	gleeceEchoRoutes "github.com/gopher-fleece/gleece/v2/e2e/echo/routes"
 
-	gleeceFiberRoutesExExtra "github.com/gopher-fleece/gleece/e2e/fiber/ex_extra_routes"
-	gleeceFiberRoutes "github.com/gopher-fleece/gleece/e2e/fiber/routes"
+	gleeceFiberRoutesExExtra "github.com/gopher-fleece/gleece/v2/e2e/fiber/ex_extra_routes"
+	gleeceFiberRoutes "github.com/gopher-fleece/gleece/v2/e2e/fiber/routes"
 
-	gleeceGinRoutesExExtra "github.com/gopher-fleece/gleece/e2e/gin/ex_extra_routes"
-	gleeceGinRoutes "github.com/gopher-fleece/gleece/e2e/gin/routes"
+	gleeceGinRoutesExExtra "github.com/gopher-fleece/gleece/v2/e2e/gin/ex_extra_routes"
+	gleeceGinRoutes "github.com/gopher-fleece/gleece/v2/e2e/gin/routes"
 
-	gleeceMuxRoutesExExtra "github.com/gopher-fleece/gleece/e2e/mux/ex_extra_routes"
-	gleeceMuxRoutes "github.com/gopher-fleece/gleece/e2e/mux/routes"
+	gleeceMuxRoutesExExtra "github.com/gopher-fleece/gleece/v2/e2e/mux/ex_extra_routes"
+	gleeceMuxRoutes "github.com/gopher-fleece/gleece/v2/e2e/mux/routes"
 
-	chiTester "github.com/gopher-fleece/gleece/e2e/chi"
-	echoTester "github.com/gopher-fleece/gleece/e2e/echo"
-	fiberTester "github.com/gopher-fleece/gleece/e2e/fiber"
-	ginTester "github.com/gopher-fleece/gleece/e2e/gin"
-	muxTester "github.com/gopher-fleece/gleece/e2e/mux"
+	chiTester "github.com/gopher-fleece/gleece/v2/e2e/chi"
+	echoTester "github.com/gopher-fleece/gleece/v2/e2e/echo"
+	fiberTester "github.com/gopher-fleece/gleece/v2/e2e/fiber"
+	ginTester "github.com/gopher-fleece/gleece/v2/e2e/gin"
+	muxTester "github.com/gopher-fleece/gleece/v2/e2e/mux"
 
-	e2eAssets "github.com/gopher-fleece/gleece/e2e/assets"
-	chiMiddlewares "github.com/gopher-fleece/gleece/e2e/chi/middlewares"
-	echoMiddlewares "github.com/gopher-fleece/gleece/e2e/echo/middlewares"
-	fiberMiddlewares "github.com/gopher-fleece/gleece/e2e/fiber/middlewares"
-	ginMiddlewares "github.com/gopher-fleece/gleece/e2e/gin/middlewares"
-	muxMiddlewares "github.com/gopher-fleece/gleece/e2e/mux/middlewares"
+	e2eAssets "github.com/gopher-fleece/gleece/v2/e2e/assets"
+	chiMiddlewares "github.com/gopher-fleece/gleece/v2/e2e/chi/middlewares"
+	echoMiddlewares "github.com/gopher-fleece/gleece/v2/e2e/echo/middlewares"
+	fiberMiddlewares "github.com/gopher-fleece/gleece/v2/e2e/fiber/middlewares"
+	ginMiddlewares "github.com/gopher-fleece/gleece/v2/e2e/gin/middlewares"
+	muxMiddlewares "github.com/gopher-fleece/gleece/v2/e2e/mux/middlewares"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gopher-fleece/gleece/infrastructure/logger"
+	"github.com/gopher-fleece/gleece/v2/infrastructure/logger"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/gopher-fleece/gleece/generator/routes"
-	"github.com/gopher-fleece/gleece/generator/swagen"
+	"github.com/gopher-fleece/gleece/v2/generator/routes"
+	"github.com/gopher-fleece/gleece/v2/generator/swagen"
 )
 
 var exExtraRouting = common.RunOnVanillaRoutes

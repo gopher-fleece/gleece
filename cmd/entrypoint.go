@@ -5,13 +5,13 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/gopher-fleece/gleece/cmd/arguments"
-	"github.com/gopher-fleece/gleece/core/pipeline"
-	"github.com/gopher-fleece/gleece/definitions"
-	"github.com/gopher-fleece/gleece/generator/routes"
-	"github.com/gopher-fleece/gleece/generator/swagen"
-	"github.com/gopher-fleece/gleece/infrastructure/logger"
-	"github.com/gopher-fleece/gleece/infrastructure/validation"
+	"github.com/gopher-fleece/gleece/v2/cmd/arguments"
+	"github.com/gopher-fleece/gleece/v2/core/pipeline"
+	"github.com/gopher-fleece/gleece/v2/definitions"
+	"github.com/gopher-fleece/gleece/v2/generator/routes"
+	"github.com/gopher-fleece/gleece/v2/generator/swagen"
+	"github.com/gopher-fleece/gleece/v2/infrastructure/logger"
+	"github.com/gopher-fleece/gleece/v2/infrastructure/validation"
 	"github.com/titanous/json5"
 )
 

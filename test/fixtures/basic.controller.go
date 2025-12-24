@@ -2,9 +2,9 @@ package fixtures
 
 import (
 	"github.com/google/uuid"
-	"github.com/gopher-fleece/gleece/test/types"
-	. "github.com/gopher-fleece/gleece/test/types"
-	CustomAlias "github.com/gopher-fleece/gleece/test/types"
+	"github.com/gopher-fleece/gleece/v2/test/types"
+	. "github.com/gopher-fleece/gleece/v2/test/types"
+	CustomAlias "github.com/gopher-fleece/gleece/v2/test/types"
 	SomeRandomName "github.com/gopher-fleece/runtime"
 )
 

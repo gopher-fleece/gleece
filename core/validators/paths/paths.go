@@ -5,7 +5,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/gopher-fleece/gleece/core/metadata"
+	"github.com/gopher-fleece/gleece/v2/core/metadata"
 )
 
 type trieNode struct {

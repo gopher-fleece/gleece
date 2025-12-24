@@ -1,7 +1,7 @@
 package dot
 
 import (
-	"github.com/gopher-fleece/gleece/common"
+	"github.com/gopher-fleece/gleece/v2/common"
 )
 
 // RankDir represents Graphviz rankdir attribute options

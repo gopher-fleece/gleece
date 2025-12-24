@@ -3,11 +3,11 @@ package annotations_test
 import (
 	"testing"
 
-	"github.com/gopher-fleece/gleece/common"
-	"github.com/gopher-fleece/gleece/core/annotations"
-	"github.com/gopher-fleece/gleece/gast"
-	"github.com/gopher-fleece/gleece/infrastructure/logger"
-	"github.com/gopher-fleece/gleece/test/utils"
+	"github.com/gopher-fleece/gleece/v2/common"
+	"github.com/gopher-fleece/gleece/v2/core/annotations"
+	"github.com/gopher-fleece/gleece/v2/gast"
+	"github.com/gopher-fleece/gleece/v2/infrastructure/logger"
+	"github.com/gopher-fleece/gleece/v2/test/utils"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/titanous/json5"

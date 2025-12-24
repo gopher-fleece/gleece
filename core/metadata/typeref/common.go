@@ -3,8 +3,8 @@ package typeref
 import (
 	"fmt"
 
-	"github.com/gopher-fleece/gleece/core/metadata"
-	"github.com/gopher-fleece/gleece/graphs"
+	"github.com/gopher-fleece/gleece/v2/core/metadata"
+	"github.com/gopher-fleece/gleece/v2/graphs"
 )
 
 func flatten(root metadata.TypeRef) []metadata.TypeRef {

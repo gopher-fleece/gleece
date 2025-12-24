@@ -11,7 +11,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"github.com/gopher-fleece/gleece/e2e/common"
+	"github.com/gopher-fleece/gleece/v2/e2e/common"
 )
 
 var ChiRouter *chi.Mux

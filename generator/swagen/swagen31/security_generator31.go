@@ -1,7 +1,7 @@
 package swagen31
 
 import (
-	"github.com/gopher-fleece/gleece/definitions"
+	"github.com/gopher-fleece/gleece/v2/definitions"
 	v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
 	"github.com/pb33f/libopenapi/orderedmap"
 )

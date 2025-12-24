@@ -3,7 +3,7 @@ package metadata
 import (
 	"fmt"
 
-	"github.com/gopher-fleece/gleece/definitions"
+	"github.com/gopher-fleece/gleece/v2/definitions"
 )
 
 type FuncReturnValue struct {

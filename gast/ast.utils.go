@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/gopher-fleece/gleece/common"
+	"github.com/gopher-fleece/gleece/v2/common"
 	"golang.org/x/tools/go/packages"
 )
 

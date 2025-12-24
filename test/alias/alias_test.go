@@ -3,14 +3,14 @@ package generics_test
 import (
 	"testing"
 
-	"github.com/gopher-fleece/gleece/common"
-	"github.com/gopher-fleece/gleece/common/linq"
-	"github.com/gopher-fleece/gleece/core/metadata"
-	"github.com/gopher-fleece/gleece/core/pipeline"
-	"github.com/gopher-fleece/gleece/definitions"
-	"github.com/gopher-fleece/gleece/graphs/symboldg"
-	"github.com/gopher-fleece/gleece/infrastructure/logger"
-	"github.com/gopher-fleece/gleece/test/utils"
+	"github.com/gopher-fleece/gleece/v2/common"
+	"github.com/gopher-fleece/gleece/v2/common/linq"
+	"github.com/gopher-fleece/gleece/v2/core/metadata"
+	"github.com/gopher-fleece/gleece/v2/core/pipeline"
+	"github.com/gopher-fleece/gleece/v2/definitions"
+	"github.com/gopher-fleece/gleece/v2/graphs/symboldg"
+	"github.com/gopher-fleece/gleece/v2/infrastructure/logger"
+	"github.com/gopher-fleece/gleece/v2/test/utils"
 	"github.com/gopher-fleece/runtime"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -726,7 +726,7 @@ var _ = Describe("Alias Controller", func() {
 			Expect(intermediate.PlainErrorPresent).To(BeTrue())
 
 			// Imports assertions (core: package present and contains expected names)
-			Expect(intermediate.Imports).To(HaveKey("github.com/gopher-fleece/gleece/test/alias"))
+			Expect(intermediate.Imports).To(HaveKey("github.com/gopher-fleece/gleece/v2/test/alias"))
 			expectedImportNames := []string{
 				"Response1TypedefAlias",
 				"Param3alias",
@@ -744,7 +744,7 @@ var _ = Describe("Alias Controller", func() {
 				"Response5NestedTypedefAlias",
 				"Response7NestedAssignedAlias",
 			}
-			Expect(intermediate.Imports["github.com/gopher-fleece/gleece/test/alias"]).To(
+			Expect(intermediate.Imports["github.com/gopher-fleece/gleece/v2/test/alias"]).To(
 				ConsistOf(expectedImportNames),
 			)
 
@@ -763,7 +763,7 @@ var _ = Describe("Alias Controller", func() {
 
 			ctrl := findController(intermediate.Flat, "AliasController")
 			Expect(ctrl).NotTo(BeNil())
-			Expect(ctrl.PkgPath).To(Equal("github.com/gopher-fleece/gleece/test/alias"))
+			Expect(ctrl.PkgPath).To(Equal("github.com/gopher-fleece/gleece/v2/test/alias"))
 			Expect(ctrl.Tag).To(Equal("Alias Controller Tag"))
 			Expect(ctrl.Description).To(Equal("Alias Controller"))
 			Expect(ctrl.RestMetadata.Path).To(Equal("/test/alias"))
@@ -786,7 +786,7 @@ var _ = Describe("Alias Controller", func() {
 			fp := r.FuncParams[0]
 			Expect(fp.Name).To(Equal("alias"))
 			Expect(fp.TypeMeta.Name).To(Equal("TypedefAlias"))
-			Expect(fp.TypeMeta.PkgPath).To(Equal("github.com/gopher-fleece/gleece/test/alias"))
+			Expect(fp.TypeMeta.PkgPath).To(Equal("github.com/gopher-fleece/gleece/v2/test/alias"))
 			Expect(fp.Validator).To(Equal("required"))
 			Expect(fp.UniqueImportSerial).To(Equal(uint64(1)))
 
@@ -796,7 +796,7 @@ var _ = Describe("Alias Controller", func() {
 			Expect(rr.HasReturnValue).To(BeTrue())
 			Expect(len(rr.Responses)).To(BeNumerically(">=", 1))
 			Expect(rr.Responses[0].Name).To(Equal("TypedefAlias"))
-			Expect(rr.Responses[0].PkgPath).To(Equal("github.com/gopher-fleece/gleece/test/alias"))
+			Expect(rr.Responses[0].PkgPath).To(Equal("github.com/gopher-fleece/gleece/v2/test/alias"))
 			Expect(rr.ResponseSuccessCode).To(Equal(runtime.StatusOK))
 
 			// Another representative: assigned alias query
@@ -823,13 +823,13 @@ var _ = Describe("Alias Controller", func() {
 			// TypedefAlias
 			td, ok := aliasMap["TypedefAlias"]
 			Expect(ok).To(BeTrue())
-			Expect(td.PkgPath).To(Equal("github.com/gopher-fleece/gleece/test/alias"))
+			Expect(td.PkgPath).To(Equal("github.com/gopher-fleece/gleece/v2/test/alias"))
 			Expect(td.Type).To(Equal("string"))
 
 			// AssignedAlias
 			aa, ok := aliasMap["AssignedAlias"]
 			Expect(ok).To(BeTrue())
-			Expect(aa.PkgPath).To(Equal("github.com/gopher-fleece/gleece/test/alias"))
+			Expect(aa.PkgPath).To(Equal("github.com/gopher-fleece/gleece/v2/test/alias"))
 			Expect(aa.Type).To(Equal("string"))
 
 			// NestedTypedefAlias (embedded typedef)

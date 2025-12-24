@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 
 	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/gopher-fleece/gleece/definitions"
-	"github.com/gopher-fleece/gleece/generator/swagen/swagtool"
-	"github.com/gopher-fleece/gleece/infrastructure/logger"
+	"github.com/gopher-fleece/gleece/v2/definitions"
+	"github.com/gopher-fleece/gleece/v2/generator/swagen/swagtool"
+	"github.com/gopher-fleece/gleece/v2/infrastructure/logger"
 )
 
 // GenerateSpec generates the OpenAPI specification

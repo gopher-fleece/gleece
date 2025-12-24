@@ -11,7 +11,7 @@ import (
 	"unicode"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gopher-fleece/gleece/e2e/common"
+	"github.com/gopher-fleece/gleece/v2/e2e/common"
 )
 
 var FiberRouter *fiber.App

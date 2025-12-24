@@ -4,7 +4,7 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/gopher-fleece/gleece/e2e/assets"
+	"github.com/gopher-fleece/gleece/v2/e2e/assets"
 	"github.com/gopher-fleece/runtime"
 	"github.com/labstack/echo/v4"
 )

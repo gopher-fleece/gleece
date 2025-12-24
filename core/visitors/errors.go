@@ -3,7 +3,7 @@ package visitors
 import (
 	"fmt"
 
-	"github.com/gopher-fleece/gleece/common"
+	"github.com/gopher-fleece/gleece/v2/common"
 )
 
 // An error that indicates the given entity was not expected in this context.

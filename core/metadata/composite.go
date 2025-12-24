@@ -1,6 +1,6 @@
 package metadata
 
-import "github.com/gopher-fleece/gleece/graphs"
+import "github.com/gopher-fleece/gleece/v2/graphs"
 
 // CompositeMeta holds minimal metadata for composite-type nodes.
 // Stored in SymbolNode.Data when creating composite nodes.

@@ -9,12 +9,12 @@ import (
 	"unicode/utf8"
 
 	mapset "github.com/deckarep/golang-set/v2"
-	"github.com/gopher-fleece/gleece/common"
-	"github.com/gopher-fleece/gleece/common/language"
-	"github.com/gopher-fleece/gleece/common/linq"
-	"github.com/gopher-fleece/gleece/core/annotations"
-	"github.com/gopher-fleece/gleece/core/metadata"
-	"github.com/gopher-fleece/gleece/core/validators/diagnostics"
+	"github.com/gopher-fleece/gleece/v2/common"
+	"github.com/gopher-fleece/gleece/v2/common/language"
+	"github.com/gopher-fleece/gleece/v2/common/linq"
+	"github.com/gopher-fleece/gleece/v2/core/annotations"
+	"github.com/gopher-fleece/gleece/v2/core/metadata"
+	"github.com/gopher-fleece/gleece/v2/core/validators/diagnostics"
 )
 
 type classifiedAttributes struct {

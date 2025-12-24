@@ -6,10 +6,10 @@ import (
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/gopher-fleece/gleece/common"
-	"github.com/gopher-fleece/gleece/definitions"
-	"github.com/gopher-fleece/gleece/generator/swagen/swagtool"
-	"github.com/gopher-fleece/gleece/infrastructure/logger"
+	"github.com/gopher-fleece/gleece/v2/common"
+	"github.com/gopher-fleece/gleece/v2/definitions"
+	"github.com/gopher-fleece/gleece/v2/generator/swagen/swagtool"
+	"github.com/gopher-fleece/gleece/v2/infrastructure/logger"
 )
 
 func createOperation(def definitions.ControllerMetadata, route definitions.RouteMetadata) *openapi3.Operation {

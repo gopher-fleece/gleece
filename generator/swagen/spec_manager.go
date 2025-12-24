@@ -5,11 +5,11 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/gopher-fleece/gleece/definitions"
-	"github.com/gopher-fleece/gleece/generator/swagen/swagen30"
-	"github.com/gopher-fleece/gleece/generator/swagen/swagen31"
-	"github.com/gopher-fleece/gleece/generator/swagen/swagtool"
-	"github.com/gopher-fleece/gleece/infrastructure/logger"
+	"github.com/gopher-fleece/gleece/v2/definitions"
+	"github.com/gopher-fleece/gleece/v2/generator/swagen/swagen30"
+	"github.com/gopher-fleece/gleece/v2/generator/swagen/swagen31"
+	"github.com/gopher-fleece/gleece/v2/generator/swagen/swagtool"
+	"github.com/gopher-fleece/gleece/v2/infrastructure/logger"
 )
 
 // GenerateSpec generates the OpenAPI specification

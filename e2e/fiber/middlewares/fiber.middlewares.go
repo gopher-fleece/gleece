@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gopher-fleece/gleece/e2e/assets"
+	"github.com/gopher-fleece/gleece/v2/e2e/assets"
 )
 
 // MiddlewareBeforeOperation sets a header and optionally aborts the operation based on a request header.

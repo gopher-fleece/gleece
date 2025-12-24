@@ -1,8 +1,8 @@
 package metadata
 
 import (
-	"github.com/gopher-fleece/gleece/core/annotations"
-	"github.com/gopher-fleece/gleece/definitions"
+	"github.com/gopher-fleece/gleece/v2/core/annotations"
+	"github.com/gopher-fleece/gleece/v2/definitions"
 )
 
 type AliasKind int

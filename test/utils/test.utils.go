@@ -11,20 +11,20 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/gopher-fleece/gleece/cmd"
-	"github.com/gopher-fleece/gleece/cmd/arguments"
-	"github.com/gopher-fleece/gleece/common"
-	"github.com/gopher-fleece/gleece/core/annotations"
-	"github.com/gopher-fleece/gleece/core/arbitrators/caching"
-	"github.com/gopher-fleece/gleece/core/metadata"
-	"github.com/gopher-fleece/gleece/core/metadata/typeref"
-	"github.com/gopher-fleece/gleece/core/pipeline"
-	"github.com/gopher-fleece/gleece/core/visitors"
-	"github.com/gopher-fleece/gleece/core/visitors/providers"
-	"github.com/gopher-fleece/gleece/definitions"
-	"github.com/gopher-fleece/gleece/gast"
-	"github.com/gopher-fleece/gleece/graphs"
-	"github.com/gopher-fleece/gleece/graphs/symboldg"
+	"github.com/gopher-fleece/gleece/v2/cmd"
+	"github.com/gopher-fleece/gleece/v2/cmd/arguments"
+	"github.com/gopher-fleece/gleece/v2/common"
+	"github.com/gopher-fleece/gleece/v2/core/annotations"
+	"github.com/gopher-fleece/gleece/v2/core/arbitrators/caching"
+	"github.com/gopher-fleece/gleece/v2/core/metadata"
+	"github.com/gopher-fleece/gleece/v2/core/metadata/typeref"
+	"github.com/gopher-fleece/gleece/v2/core/pipeline"
+	"github.com/gopher-fleece/gleece/v2/core/visitors"
+	"github.com/gopher-fleece/gleece/v2/core/visitors/providers"
+	"github.com/gopher-fleece/gleece/v2/definitions"
+	"github.com/gopher-fleece/gleece/v2/gast"
+	"github.com/gopher-fleece/gleece/v2/graphs"
+	"github.com/gopher-fleece/gleece/v2/graphs/symboldg"
 	. "github.com/onsi/ginkgo/v2"
 	"golang.org/x/tools/go/packages"
 )
@@ -196,7 +196,7 @@ func LoadPackageOrFail(fullName string, loadMode packages.LoadMode) *packages.Pa
 }
 
 func LoadGleecePackageOrFail(loadMode packages.LoadMode) *packages.Package {
-	return LoadPackageOrFail("github.com/gopher-fleece/gleece", loadMode)
+	return LoadPackageOrFail("github.com/gopher-fleece/gleece/v2", loadMode)
 }
 
 func GetFunctionFromPackageOrFail(pkg *packages.Package, name string) *ast.FuncDecl {

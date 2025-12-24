@@ -3,9 +3,9 @@ package typeref
 import (
 	"fmt"
 
-	"github.com/gopher-fleece/gleece/core/metadata"
-	"github.com/gopher-fleece/gleece/gast"
-	"github.com/gopher-fleece/gleece/graphs"
+	"github.com/gopher-fleece/gleece/v2/core/metadata"
+	"github.com/gopher-fleece/gleece/v2/gast"
+	"github.com/gopher-fleece/gleece/v2/graphs"
 )
 
 // ParamTypeRef: placeholder inside declaration bodies (e.g. "T").

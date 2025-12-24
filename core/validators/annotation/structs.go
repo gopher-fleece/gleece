@@ -1,6 +1,6 @@
 package annotation
 
-import "github.com/gopher-fleece/gleece/core/annotations"
+import "github.com/gopher-fleece/gleece/v2/core/annotations"
 
 // PropertyDefinition defines the allowed properties for an annotation
 type PropertyDefinition struct {

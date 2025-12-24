@@ -3,7 +3,7 @@ package symboldg
 import (
 	"slices"
 
-	"github.com/gopher-fleece/gleece/common"
+	"github.com/gopher-fleece/gleece/v2/common"
 )
 
 type TraversalResultSorting int
