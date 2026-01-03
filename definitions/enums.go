@@ -11,6 +11,7 @@ const (
 	PassedInForm   ParamPassedIn = "Form"
 )
 
+// An HTTP verb such as POST or GET
 type HttpVerb string
 
 const (
@@ -25,6 +26,7 @@ const (
 	HttpConnect HttpVerb = "CONNECT"
 )
 
+// An HTTP Content-Type
 type ContentType string
 
 const (
@@ -44,11 +46,17 @@ const (
 	ContentTypeCSS            ContentType = "text/css"
 )
 
+// An API method's visibility in the generated OpenAPI schema
 type HideMethodType string
 
 const (
-	HideMethodNever     HideMethodType = "Never"
-	HideMethodAlways    HideMethodType = "Always"
+	// Never hide this endpoint
+	HideMethodNever HideMethodType = "Never"
+	// Always hide this endpoint
+	HideMethodAlways HideMethodType = "Always"
+	// ***NOT YET IMPLEMENTED***
+	//
+	// Hide this method if the given condition is met
 	HideMethodCondition HideMethodType = "Condition"
 )
 
@@ -79,6 +87,8 @@ const (
 	HttpAuthSchemeVapid HttpAuthScheme = "vapid"
 )
 
+// The security schema type for API authorization,
+// that is, the definition of authentication the API server
 type SecuritySchemeType string
 
 const (
@@ -88,6 +98,7 @@ const (
 	HTTP          SecuritySchemeType = "http"
 )
 
+// The way in which consumers are to pass authorization to the API server
 type SecuritySchemeIn string
 
 const (
@@ -97,6 +108,7 @@ const (
 	InCookie SecuritySchemeIn = "cookie"
 )
 
+// The API server's underlying routing engine
 type RoutingEngineType string
 
 const (

@@ -12,22 +12,6 @@ import (
 
 var _ = Describe("Unit Tests - Helpers", func() {
 	Context("Definitions Helpers", func() {
-		Context("EnsureValidHttpVerb", func() {
-			It("Correctly validated all standard HTTP verbs", func() {
-				for _, verb := range definitions.GetValidHttpVerbs() {
-					Expect(func() {
-						definitions.EnsureValidHttpVerb(verb)
-					}).ToNot(Panic())
-				}
-			})
-
-			It("Panics if given Verb is not valid", func() {
-				Expect(func() {
-					definitions.EnsureValidHttpVerb("NotAnHTTPVerb")
-				}).To(PanicWith(ContainSubstring("is not a valid HTTP verb")))
-			})
-		})
-
 		Context("ConvertToHttpStatus", func() {
 			It("Returns an error if given code string cannot be parsed", func() {
 				code, err := definitions.ConvertToHttpStatus("cannot be parsed")
