@@ -178,8 +178,8 @@ func instantiateGenericModel(
 	modelNameTransformer func(modelBaseName string, typeParamNames []string) string,
 ) (definitions.StructMetadata, error) {
 
-	// Clone the reduced struct - Fields is a slice and therefore the struct as a whole
-	// is not safe to modify.
+	// Clone the reduced struct - `Fields` is a slice and therefore the struct as a whole
+	// is not safe to mutate.
 	clonedStruct := reducedStruct.Clone()
 
 	rawParamNames := linq.Map(typeParamReplacementNodes, func(tParamNode *SymbolNode) string {
@@ -196,7 +196,8 @@ func instantiateGenericModel(
 	}
 
 	for fieldIdx, field := range rawStruct.Fields {
-		// Check if this is a generic field
+		// Check if this is a generic field. A bit of an ugly heuristic.
+		// Will need to re-work generic parameters later on.
 		if field.Type.Root != nil && field.Type.Root.Kind() == metadata.TypeRefKindParam {
 			nameParts := strings.SplitN(field.Type.Name, "#", 2)
 			if len(nameParts) != 2 {

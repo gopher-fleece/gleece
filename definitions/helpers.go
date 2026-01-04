@@ -97,6 +97,7 @@ var validHttpStatusCode = map[uint]struct{}{
 	uint(runtime.StatusNetworkAuthenticationRequired): {},
 }
 
+// GetValidHttpVerbs returns a list of all valid HTTP verbs
 func GetValidHttpVerbs() []string {
 	verbs := make([]string, 0, len(validHttpVerbs))
 	for verb := range validHttpVerbs {
@@ -105,12 +106,14 @@ func GetValidHttpVerbs() []string {
 	return verbs
 }
 
+// GetRouteSupportedHttpVerbs returns a list of all HTTP verbs that are valid in the context of an API Endpoint
 func GetRouteSupportedHttpVerbs() []string {
 	verbs := common.MapKeys(routeSupportedHttpVerbs)
 	slices.Sort(verbs)
 	return verbs
 }
 
+// GetValidHttpStatusCodes returns a list of all known/valid HTTP Status Codes
 func GetValidHttpStatusCodes() []uint {
 	codes := make([]uint, 0, len(validHttpStatusCode))
 	for code := range validHttpStatusCode {
@@ -119,28 +122,27 @@ func GetValidHttpStatusCodes() []uint {
 	return codes
 }
 
+// IsValidHttpVerb determines whether a given string is a valid HTTP verb
 func IsValidHttpVerb(verb string) bool {
 	_, exists := validHttpVerbs[verb]
 	return exists
 }
 
+// IsValidRouteHttpVerb determines whether a given string is an HTTP verb
+// that is valid in the context of an API endpoint
 func IsValidRouteHttpVerb(verb string) bool {
 	_, exists := routeSupportedHttpVerbs[verb]
 	return exists
 }
 
-func EnsureValidHttpVerb(verb string) HttpVerb {
-	if IsValidHttpVerb(verb) {
-		return HttpVerb(verb)
-	}
-	panic(fmt.Sprintf("'%s' is not a valid HTTP verb", verb))
-}
-
+// IsValidHttpStatusCode determines whether the given code is a known, valid HTTP Status Code
 func IsValidHttpStatusCode(code uint) bool {
 	_, exists := validHttpStatusCode[code]
 	return exists
 }
 
+// ConvertToHttpStatus attempts to convert the given code into an HTTP Status Code.
+// Returns an error if the given code is invalid.
 func ConvertToHttpStatus(code string) (runtime.HttpStatusCode, error) {
 	parsed, err := strconv.ParseUint(code, 10, 32)
 	if err != nil {
@@ -154,6 +156,9 @@ func ConvertToHttpStatus(code string) (runtime.HttpStatusCode, error) {
 	return runtime.HttpStatusCode(parsedCode), nil
 }
 
+// PermissionStringToFileMod converts the given permission string into a FileMode.
+//
+// Input is expected to be a valid octal permission value like '0777'
 func PermissionStringToFileMod(permissionString string) (os.FileMode, error) {
 	permission, err := strconv.ParseUint(permissionString, 8, 32)
 	// A proper mask needs to account for sticky/setuid/setgid bitflags

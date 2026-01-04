@@ -1,10 +1,10 @@
 # Gleece Changelog
 
-## Gleece v2.1.0
+## Gleece v2.0.0
 
 ### Summary
 
-*Gleece* 2.1 brings in concrete support for type aliases, map input/outputs and an overhauled type resolution system.
+*Gleece* 2.0 brings in concrete support for type aliases, map input/outputs and an overhauled type resolution system.
 
 ### Features
 
