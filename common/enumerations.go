@@ -1,5 +1,7 @@
 package common
 
+import "fmt"
+
 type SymKind string
 
 const (
@@ -148,5 +150,46 @@ func ToSpecialType(s string) (SpecialType, bool) {
 		return SpecialTypeUnsafePointer, true
 	default:
 		return "", false
+	}
+}
+
+func ToSymbolKind(value string) (SymKind, error) {
+	switch value {
+	case string(SymKindUnknown):
+		return SymKindUnknown, nil
+	case string(SymKindPackage):
+		return SymKindPackage, nil
+	case string(SymKindStruct):
+		return SymKindStruct, nil
+	case string(SymKindController):
+		return SymKindController, nil
+	case string(SymKindInterface):
+		return SymKindInterface, nil
+	case string(SymKindAlias):
+		return SymKindAlias, nil
+	case string(SymKindEnum):
+		return SymKindEnum, nil
+	case string(SymKindEnumValue):
+		return SymKindEnumValue, nil
+	case string(SymKindFunction):
+		return SymKindFunction, nil
+	case string(SymKindReceiver):
+		return SymKindReceiver, nil
+	case string(SymKindField):
+		return SymKindField, nil
+	case string(SymKindParameter):
+		return SymKindParameter, nil
+	case string(SymKindVariable):
+		return SymKindVariable, nil
+	case string(SymKindConstant):
+		return SymKindConstant, nil
+	case string(SymKindReturnType):
+		return SymKindReturnType, nil
+	case string(SymKindBuiltin):
+		return SymKindBuiltin, nil
+	case string(SymKindSpecialBuiltin):
+		return SymKindSpecialBuiltin, nil
+	default:
+		return "", fmt.Errorf("invalid SymKind '%q'", value)
 	}
 }

@@ -31,7 +31,7 @@ type SymbolGraphBuilder interface {
 	Exists(key graphs.SymbolKey) bool
 	Get(key graphs.SymbolKey) *SymbolNode
 	GetEdges(key graphs.SymbolKey, kinds []SymbolEdgeKind) map[string]SymbolEdgeDescriptor
-	FindByKind(kind common.SymKind) []*SymbolNode
+	FindByKind(kind... common.SymKind) []*SymbolNode
 
 	IsPrimitivePresent(primitive common.PrimitiveType) bool
 	IsSpecialPresent(special common.SpecialType) bool
