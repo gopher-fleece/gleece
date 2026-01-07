@@ -386,12 +386,29 @@ func (g *SymbolGraph) Exists(key graphs.SymbolKey) bool {
 	return g.Get(key) != nil
 }
 
-func (g *SymbolGraph) FindByKind(kind common.SymKind) []*SymbolNode {
-	var results []*SymbolNode
+// FindByKinds searches the graph for nodes of the given kinds.
+//
+// Returns an empty slice if no matches were found.
+//
+// Nodes are returned by address and are *not* safe to mutate.
+func (g *SymbolGraph) FindByKind(kinds ...common.SymKind) []*SymbolNode {
+	results := []*SymbolNode{}
 
-	for _, node := range g.nodes {
-		if node.Kind == kind {
-			results = append(results, node)
+	switch len(kinds) {
+	case 0:
+		return results
+	case 1:
+		for _, node := range g.nodes {
+			if node.Kind == kinds[0] {
+				results = append(results, node)
+			}
+		}
+	default:
+		kindsSet := mapset.NewThreadUnsafeSet(kinds...)
+		for _, node := range g.nodes {
+			if kindsSet.ContainsOne(node.Kind) {
+				results = append(results, node)
+			}
 		}
 	}
 

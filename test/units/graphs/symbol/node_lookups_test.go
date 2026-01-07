@@ -15,13 +15,32 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 	})
 
 	Context("FindByKind", func() {
+
+		It("Returns an empty slice when nothing was found", func() {
+			results := graph.FindByKind(common.SymKindSpecialBuiltin)
+			Expect(results).To(HaveLen(0))
+		})
+
+		It("Returns an slice with one node when only one node matches", func() {
+			// A relevant node
+			anyNode := graph.AddSpecial(common.SpecialTypeAny)
+
+			// Irrelevant nodes
+			graph.AddPrimitive(common.PrimitiveTypeBool)
+			graph.AddPrimitive(common.PrimitiveTypeString)
+
+			results := graph.FindByKind(common.SymKindSpecialBuiltin)
+
+			Expect(results).To(HaveLen(1))
+			Expect(results).To(ContainElements(anyNode))
+		})
+
 		It("Correctly finds elements by the symbol kind", func() {
 			// Add a couple of relevant nodes
 			anyNode := graph.AddSpecial(common.SpecialTypeAny)
 			errNode := graph.AddSpecial(common.SpecialTypeError)
 
 			// Add a couple unrelated nodes that should be ignored
-
 			graph.AddPrimitive(common.PrimitiveTypeBool)
 			graph.AddPrimitive(common.PrimitiveTypeString)
 
@@ -30,6 +49,7 @@ var _ = Describe("Unit Tests - SymbolGraph", func() {
 			Expect(results).To(HaveLen(2))
 			Expect(results).To(ContainElements(anyNode, errNode))
 		})
+
 	})
 
 	Context("IsPrimitivePresent", func() {

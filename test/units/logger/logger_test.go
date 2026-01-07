@@ -1,6 +1,8 @@
 package gast_test
 
 import (
+	"bytes"
+	"log"
 	"testing"
 
 	"github.com/gopher-fleece/gleece/v2/infrastructure/logger"
@@ -9,8 +11,53 @@ import (
 )
 
 var _ = Describe("Unit Tests - Logger", func() {
+	var buf *bytes.Buffer
+
 	BeforeEach(func() {
-		logger.SetLogLevel(logger.LogLevelNone)
+		buf = new(bytes.Buffer)
+		log.SetOutput(buf) // Redirect log output to capture it
+	})
+
+	AfterEach(func() {
+		log.SetOutput(GinkgoWriter) // Restore default output
+	})
+
+	Context("Logging behavior", func() {
+		BeforeEach(func() {
+			logger.SetLogLevel(logger.LogLevelInfo)
+			buf.Reset()
+		})
+
+		It("Should always print SYSTEM messages", func() {
+			logger.SetLogLevel(logger.LogLevelNone)
+			logger.System("System test")
+			Expect(buf.String()).To(ContainSubstring("[SYSTEM] System test"))
+		})
+
+		It("Should log messages at or above the set level", func() {
+			logger.Info("This is an info message")
+			Expect(buf.String()).To(ContainSubstring("[INFO]   This is an info message"))
+			buf.Reset()
+
+			logger.Warn("This is a warning")
+			Expect(buf.String()).To(ContainSubstring("[WARN]   This is a warning"))
+			buf.Reset()
+
+			logger.Error("This is an error")
+			Expect(buf.String()).To(ContainSubstring("[ERROR]  This is an error"))
+		})
+
+		It("Should not log messages below the set level", func() {
+			logger.Debug("This debug message should not appear")
+			Expect(buf.String()).NotTo(ContainSubstring("[DEBUG]"))
+		})
+
+		It("Should log fatal messages even at high log levels", func() {
+			logger.SetLogLevel(logger.LogLevelFatal)
+			buf.Reset()
+			logger.Fatal("This is a fatal error")
+			Expect(buf.String()).To(ContainSubstring("[FATAL]  This is a fatal error"))
+		})
 	})
 
 	It("Sets and get log level", func() {
