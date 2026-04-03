@@ -28,3 +28,4 @@ dist/
 temp/
 
 __debug*
+.idea
