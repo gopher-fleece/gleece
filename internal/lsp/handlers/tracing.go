@@ -5,7 +5,7 @@ import (
 	protocol "github.com/tliron/glsp/protocol_3_16"
 )
 
-func setTrace(context *glsp.Context, params *protocol.SetTraceParams) error {
+func (h *ProtocolHandler) setTrace(ctx *glsp.Context, params *protocol.SetTraceParams) error {
 	protocol.SetTraceValue(params.Value)
 	return nil
 }

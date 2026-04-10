@@ -3,6 +3,7 @@ package symboldg
 import (
 	"github.com/gopher-fleece/gleece/v2/common"
 	"github.com/gopher-fleece/gleece/v2/core/metadata"
+	"github.com/gopher-fleece/gleece/v2/gast"
 	"github.com/gopher-fleece/gleece/v2/graphs"
 	"github.com/gopher-fleece/gleece/v2/graphs/dot"
 )
@@ -25,13 +26,15 @@ type SymbolGraphBuilder interface {
 	RemoveEdge(from, to graphs.SymbolKey, kind *SymbolEdgeKind)
 	RemoveNode(key graphs.SymbolKey)
 
+	InvalidateFileVersion(fVersion gast.FileVersion)
+
 	Structs() []metadata.StructMeta
 	Enums() []metadata.EnumMeta
 
 	Exists(key graphs.SymbolKey) bool
 	Get(key graphs.SymbolKey) *SymbolNode
 	GetEdges(key graphs.SymbolKey, kinds []SymbolEdgeKind) map[string]SymbolEdgeDescriptor
-	FindByKind(kind... common.SymKind) []*SymbolNode
+	FindByKind(kind ...common.SymKind) []*SymbolNode
 
 	IsPrimitivePresent(primitive common.PrimitiveType) bool
 	IsSpecialPresent(special common.SpecialType) bool

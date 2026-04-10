@@ -5,7 +5,7 @@ import (
 	protocol "github.com/tliron/glsp/protocol_3_16"
 )
 
-func shutdown(context *glsp.Context) error {
+func (h *ProtocolHandler) shutdown(ctx *glsp.Context) error {
 	protocol.SetTraceValue(protocol.TraceValueOff)
 	return nil
 }

@@ -5,6 +5,7 @@ import (
 
 	"github.com/gopher-fleece/gleece/v2/internal/lsp/common"
 	"github.com/gopher-fleece/gleece/v2/internal/lsp/handlers"
+	"github.com/gopher-fleece/gleece/v2/internal/lsp/state"
 	"github.com/tliron/glsp/server"
 )
 
@@ -17,7 +18,7 @@ type LanguageServer struct {
 }
 
 func NewLanguageServer(opts LangServerOptions) (*LanguageServer, error) {
-	if opts.Ipc == "" || opts.Ipc != LangServerIpcStdIo {
+	if opts.Ipc == "" || (opts.Ipc != LangServerIpcStdIo) {
 		return nil, fmt.Errorf("ipc type '%s' is not currently supported", opts.Ipc)
 	}
 
@@ -26,9 +27,9 @@ func NewLanguageServer(opts LangServerOptions) (*LanguageServer, error) {
 	}, nil
 }
 
-// Run starts the language server over stdio.
 func (s *LanguageServer) Run() error {
-	handler := handlers.GetProtocolHandler()
+	state := state.WorkspaceState{}
+	handler := handlers.GetProtocolHandler(&state)
 	srv := server.NewServer(&handler, common.LangSrvName, false)
 
 	switch s.ipcType {

@@ -6,19 +6,17 @@ import (
 	protocol "github.com/tliron/glsp/protocol_3_16"
 )
 
-func initialize(ctx *glsp.Context, params *protocol.InitializeParams) (any, error) {
-	caps := protocol.ServerCapabilities{
-		TextDocumentSync: protocol.TextDocumentSyncKindFull, // Can move to incremental sync later on
-	}
-
+func (h *ProtocolHandler) initialize(ctx *glsp.Context, params *protocol.InitializeParams) (any, error) {
 	return protocol.InitializeResult{
-		Capabilities: caps,
+		Capabilities: protocol.ServerCapabilities{
+			TextDocumentSync: protocol.TextDocumentSyncKindFull,
+		},
 		ServerInfo: &protocol.InitializeResultServerInfo{
 			Name: common.LangSrvName,
 		},
 	}, nil
 }
 
-func initialized(context *glsp.Context, params *protocol.InitializedParams) error {
+func (h *ProtocolHandler) initialized(ctx *glsp.Context, params *protocol.InitializedParams) error {
 	return nil
 }

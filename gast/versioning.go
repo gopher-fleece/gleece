@@ -16,8 +16,8 @@ type FileVersion struct {
 	Hash    string    // Content hash, used when ModTime differs
 }
 
-func (fv FileVersion) String() string {
-	return fmt.Sprintf("%s|%d|%s", fv.Path, fv.ModTime.Unix(), fv.Hash)
+func (v FileVersion) String() string {
+	return fmt.Sprintf("%s|%d|%s", v.Path, v.ModTime.Unix(), v.Hash)
 }
 
 func NewFileVersion(fullPath string) (FileVersion, error) {

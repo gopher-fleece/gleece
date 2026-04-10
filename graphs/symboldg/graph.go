@@ -24,6 +24,8 @@ type SymbolGraph struct {
 
 	nodes map[string]*SymbolNode // keyed by ast node
 
+	nodeFVersions map[gast.FileVersion][]*SymbolNode
+
 	// A counter used to assign ordinals to new outgoing edges
 	nextEdgeSeq uint32
 	edges       map[string]map[string]SymbolEdgeDescriptor // Node relations
@@ -46,6 +48,13 @@ func (g *SymbolGraph) addNode(n *SymbolNode) {
 	baseId := n.Id.BaseId()
 	g.nodes[baseId] = n
 	g.lookupKeys[baseId] = n.Id
+
+	fVerValue := *n.Version
+	if existing, exists := g.nodeFVersions[fVerValue]; exists {
+		g.nodeFVersions[fVerValue] = append(existing, n)
+	} else {
+		g.nodeFVersions[fVerValue] = []*SymbolNode{n}
+	}
 }
 
 func (g *SymbolGraph) getAndIncrementNextEdgeOrdinal() uint32 {
@@ -714,7 +723,7 @@ func (g *SymbolGraph) idempotencyGuard(decl ast.Node, version *gast.FileVersion)
 	return nil, key, nil
 }
 
-// Evict removes the given node and conservatively evicts dependents that
+// RemoveNode removes the given node and conservatively evicts dependents that
 // become orphaned as a result. It uses RemoveEdge to keep the graph indices
 // (edges, deps, revDeps) consistent.
 func (g *SymbolGraph) RemoveNode(key graphs.SymbolKey) {
@@ -776,11 +785,22 @@ func (g *SymbolGraph) RemoveNode(key graphs.SymbolKey) {
 		g.RemoveEdge(key, e.To, &e.Kind)
 	}
 
-	// Finally clean up any remaining indices for this node and remove the node.
+	// Finally, clean up any remaining indices for this node and remove the node.
 	delete(g.deps, idToRemove)
 	delete(g.revDeps, idToRemove)
 	delete(g.lookupKeys, idToRemove)
 	delete(g.nodes, idToRemove)
+}
+
+func (g *SymbolGraph) InvalidateFileVersion(version gast.FileVersion) {
+	nodes, anyExist := g.nodeFVersions[version]
+	if !anyExist {
+		return
+	}
+
+	for _, node := range nodes {
+		g.RemoveNode(node.Id)
+	}
 }
 
 func (g *SymbolGraph) String() string {
