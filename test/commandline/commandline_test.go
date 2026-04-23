@@ -29,14 +29,14 @@ var _ = Describe("Commandline", func() {
 	Context("PersistentPreRun", func() {
 		It("Prints banner if no-banner is not specified", func() {
 			logger.SetLogLevel(logger.LogLevelAll)
-			result := cmd.ExecuteWithArgs([]string{"version"}, true)
+			result := cmd.ExecuteWithArgs([]string{"version"})
 			Expect(result.StdOut).To(ContainSubstring("▒▒▒██████  █▒▒▒▒"))
 		})
 	})
 
 	Context("Run", func() {
 		It("Correctly detects, runs and returns when called with no parameters", func() {
-			result := cmd.ExecuteWithArgs([]string{}, true)
+			result := cmd.ExecuteWithArgs([]string{})
 			// We expect a failure since there's not gleece.config.file here - doesn't matter, we just need to verify the no-params case.
 			Expect(result.Logs).To(ContainSubstring("Gleece called with no parameters"))
 		})
@@ -45,7 +45,7 @@ var _ = Describe("Commandline", func() {
 	It("Generate spec should complete successfully", func() {
 		absPath := utils.GetAbsPathByRelativeOrFail("./gleece.test.config.json")
 
-		result := cmd.ExecuteWithArgs([]string{"generate", "spec", "--no-banner", "-c", absPath}, true)
+		result := cmd.ExecuteWithArgs([]string{"generate", "spec", "--no-banner", "-c", absPath})
 		Expect(result.Error).To(BeNil())
 		Expect(result.StdErr).To(BeEmpty())
 		Expect(result.Logs).ToNot(BeEmpty())
@@ -63,7 +63,7 @@ var _ = Describe("Commandline", func() {
 
 		absPath := utils.GetAbsPathByRelativeOrFail("./gleece.test.config.json")
 
-		result := cmd.ExecuteWithArgs([]string{"generate", "routes", "--no-banner", "-c", absPath}, true)
+		result := cmd.ExecuteWithArgs([]string{"generate", "routes", "--no-banner", "-c", absPath})
 		Expect(result.Error).To(BeNil())
 		Expect(result.StdErr).To(BeEmpty())
 		Expect(result.Logs).ToNot(BeEmpty())
@@ -81,7 +81,7 @@ var _ = Describe("Commandline", func() {
 
 		absPath := utils.GetAbsPathByRelativeOrFail("./gleece.test.config.json")
 
-		result := cmd.ExecuteWithArgs([]string{"generate", "spec-and-routes", "--no-banner", "-c", absPath}, true)
+		result := cmd.ExecuteWithArgs([]string{"generate", "spec-and-routes", "--no-banner", "-c", absPath})
 		Expect(result.Error).To(BeNil())
 		Expect(result.StdErr).To(BeEmpty())
 		Expect(result.Logs).ToNot(BeEmpty())
@@ -98,7 +98,7 @@ var _ = Describe("Commandline", func() {
 	Context("Version Command", func() {
 		It("Prints expected version information", func() {
 			// Note that Version, Build Date, Commit, etc. should be populated during build so they're expected to be empty
-			result := cmd.ExecuteWithArgs([]string{"version", "--no-banner"}, true)
+			result := cmd.ExecuteWithArgs([]string{"version", "--no-banner"})
 			Expect(result.StdOut).To(Equal("Gleece\nVersion: \nBuild Date: \nCommit: \nTarget architecture: \nTarget platform: \n"))
 
 		})
@@ -114,25 +114,25 @@ var _ = Describe("Commandline", func() {
 		})
 
 		It("Returns an error if an invalid dump format is given", func() {
-			result := cmd.ExecuteWithArgs([]string{"dump", "graph", "-f=invalid"}, true)
+			result := cmd.ExecuteWithArgs([]string{"dump", "graph", "-f=invalid"})
 			Expect(result.Error).To(MatchError(ContainSubstring("invalid --format")))
 			Expect(result.StdErr).To(ContainSubstring("Error: invalid --format"))
 		})
 
 		It("Returns an error if an given a non-existent Gleece config", func() {
-			result := cmd.ExecuteWithArgs([]string{"dump", "graph", "-c=./does.not.exist.json"}, true)
+			result := cmd.ExecuteWithArgs([]string{"dump", "graph", "-c=./does.not.exist.json"})
 			Expect(result.Error).To(MatchError(ContainSubstring("failed to load Gleece config from './does.not.exist.json'")))
 			Expect(result.StdErr).To(ContainSubstring("Error: failed to load Gleece config from './does.not.exist.json'"))
 		})
 
 		It("Correctly dumps graph using default params", func() {
-			result := cmd.ExecuteWithArgs([]string{"dump", "graph", "--no-banner"}, true)
+			result := cmd.ExecuteWithArgs([]string{"dump", "graph", "--no-banner"})
 			Expect(result.StdErr).To(BeEmpty())
 			Expect(result.StdOut).To(ContainSubstring("digraph SymbolGraph {"))
 		})
 
 		It("Correctly dumps graph using dot format and default path", func() {
-			result := cmd.ExecuteWithArgs([]string{"dump", "graph", "-f=dot", "-o=./gleece.txt"}, true)
+			result := cmd.ExecuteWithArgs([]string{"dump", "graph", "-f=dot", "-o=./gleece.txt"})
 			Expect(result.Logs).To(ContainSubstring("Graph successfully written"))
 
 			fileData, err := os.ReadFile("./gleece.txt")
@@ -147,7 +147,7 @@ var _ = Describe("Commandline", func() {
 				"-c=./gleece.test.config.json",
 				"-f=plain",
 				"-o=./gleece.manual.txt",
-			}, true)
+			})
 
 			Expect(result.Logs).To(ContainSubstring("Dumping graph to 'plain' format"))
 			fileData, err := os.ReadFile("./gleece.manual.txt")

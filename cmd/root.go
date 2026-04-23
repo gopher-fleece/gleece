@@ -31,7 +31,7 @@ var rootCmd = &cobra.Command{
 			fmt.Fprintln(cmd.OutOrStdout(), arguments.GopherAscii)
 		}
 
-		// This is basically safe as Cobra have already validated or provided default
+		// This is basically safe as Cobra has already validated or provided default
 		// values if we got here
 		verbosity, _ := cmd.Flags().GetUint8("verbosity")
 		logger.SetLogLevel(logger.LogLevel(verbosity))
@@ -61,7 +61,7 @@ func Execute() {
 }
 
 // ExecuteWithArgs runs the root command with provided arguments and captures stdout, stderr, and logs.
-func ExecuteWithArgs(args []string, redirectLogs bool) arguments.ExecuteWithArgsResult {
+func ExecuteWithArgs(args []string) arguments.ExecuteWithArgsResult {
 	// Capture the original log output
 	originalLogOutput := log.Writer()
 
@@ -118,4 +118,5 @@ func init() {
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(generateCmd)
 	rootCmd.AddCommand(dumpCmd)
+	rootCmd.AddCommand(initCmd)
 }
