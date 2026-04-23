@@ -5,11 +5,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"os"
-	"os/exec"
 	"strconv"
 	"strings"
 	"sync"
+	"time"
+
+	"github.com/gopher-fleece/gleece/v2/internal/lsp/server"
+	"github.com/gopher-fleece/gleece/v2/internal/lsp/server/ipc"
+	protocol "github.com/tliron/glsp/protocol_3_16"
 )
 
 type lspRequest struct {
@@ -27,39 +32,18 @@ type lspResponse struct {
 }
 
 type LSPClient struct {
-	stdin  io.WriteCloser
-	stdout io.ReadCloser
-	stderr io.ReadCloser
+	conn   io.ReadWriteCloser
+	reader *bufio.Reader
 	mu     sync.Mutex
 	nextID int64
 }
 
-func newLSPClient(cmd *exec.Cmd) (*LSPClient, error) {
-	stdin, err := cmd.StdinPipe()
-	if err != nil {
-		return nil, err
-	}
-
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return nil, err
-	}
-
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		return nil, err
-	}
-
-	if err := cmd.Start(); err != nil {
-		return nil, err
-	}
-
+func newLSPClient(conn io.ReadWriteCloser) *LSPClient {
 	return &LSPClient{
-		stdin:  stdin,
-		stdout: stdout,
-		stderr: stderr,
+		conn:   conn,
+		reader: bufio.NewReader(conn),
 		nextID: 1,
-	}, nil
+	}
 }
 
 func (c *LSPClient) Send(method string, params any) (*lspResponse, error) {
@@ -81,18 +65,16 @@ func (c *LSPClient) Send(method string, params any) (*lspResponse, error) {
 		return nil, err
 	}
 
-	if _, err := fmt.Fprintf(c.stdin, "Content-Length: %d\r\n\r\n", len(payload)); err != nil {
+	if _, err := fmt.Fprintf(c.conn, "Content-Length: %d\r\n\r\n", len(payload)); err != nil {
 		return nil, err
 	}
-	if _, err := c.stdin.Write(payload); err != nil {
+	if _, err := c.conn.Write(payload); err != nil {
 		return nil, err
 	}
-
-	reader := bufio.NewReader(c.stdout)
 
 	contentLength := 0
 	for {
-		line, err := reader.ReadString('\n')
+		line, err := c.reader.ReadString('\n')
 		if err != nil {
 			return nil, err
 		}
@@ -112,7 +94,7 @@ func (c *LSPClient) Send(method string, params any) (*lspResponse, error) {
 	}
 
 	body := make([]byte, contentLength)
-	if _, err := io.ReadFull(reader, body); err != nil {
+	if _, err := io.ReadFull(c.reader, body); err != nil {
 		return nil, err
 	}
 
@@ -124,16 +106,36 @@ func (c *LSPClient) Send(method string, params any) (*lspResponse, error) {
 	return &resp, nil
 }
 
-func runLsp() *LSPClient {
-	// Replace this with the actual server executable entrypoint you want to launch.
-	cmd := exec.Command(os.Args[0])
+func (c *LSPClient) Close() error {
+	return c.conn.Close()
+}
 
-	client, err := newLSPClient(cmd)
+func runLsp() *LSPClient {
+	const address = "127.0.0.1:43891"
+
+	langServer, err := server.NewLanguageServer(ipc.TcpOptions{
+		Address: address,
+	})
 	if err != nil {
 		panic(err)
 	}
 
-	return client
+	go func() {
+		if err := langServer.Run(); err != nil {
+			panic(err)
+		}
+	}()
+
+	var conn net.Conn
+	for range 20 {
+		conn, err = net.Dial("tcp", address)
+		if err == nil {
+			return newLSPClient(conn)
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+
+	panic(fmt.Errorf("failed to connect to lsp server at %s: %w", address, err))
 }
 
 func sendInit(client *LSPClient) {
@@ -146,16 +148,35 @@ func sendInit(client *LSPClient) {
 		panic(err)
 	}
 
-	fmt.Println(string(resp.Result))
+	fmt.Printf("Current PID: %v, Resp: %v", os.Getpid(), string(resp.Result))
+}
+
+func sendDidChangeTextDocument(client *LSPClient, uri string) {
+	body := protocol.DidChangeTextDocumentParams{
+		TextDocument: protocol.VersionedTextDocumentIdentifier{
+			TextDocumentIdentifier: protocol.TextDocumentIdentifier{
+				URI: uri,
+			},
+		},
+	}
+
+	resp, err := client.Send("textDocument/didChange", body)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("Current PID: %v, Resp: %v", os.Getpid(), string(resp.Result))
 }
 
 func main() {
 	client := runLsp()
 	defer func() {
-		_ = client.stdin.Close()
-		_ = client.stdout.Close()
-		_ = client.stderr.Close()
+		_ = client.Close()
 	}()
 
 	sendInit(client)
+	sendDidChangeTextDocument(
+		client,
+		"/mnt/7e91759c-6dd7-4c99-8d38-e6422452a469/git/gleece/test/sanity/sanity.controller.go",
+	)
 }

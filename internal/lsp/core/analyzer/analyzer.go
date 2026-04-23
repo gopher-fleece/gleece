@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/gopher-fleece/gleece/v2/core/pipeline"
+	"github.com/gopher-fleece/gleece/v2/core/validators/diagnostics"
 	"github.com/gopher-fleece/gleece/v2/definitions"
 	"github.com/gopher-fleece/gleece/v2/gast"
 	"github.com/tliron/glsp"
@@ -52,14 +53,18 @@ func (analyzer *GleeceAnalyzer) invalidateFile(ctx *glsp.Context, filePath strin
 			return pipeErr
 		}
 
-		go ctx.Notify(
-			protocol.ServerTextDocumentPublishDiagnostics,
-			protocol.PublishDiagnosticsParams{
-				URI:         filePath,
-				Diagnostics: entityDiagsToLsp(diags),
-			},
-		)
+		analyzer.pushDiagnosticsAsync(ctx, filePath, diags)
 	}
 
 	return nil
+}
+
+func (analyzer *GleeceAnalyzer) pushDiagnosticsAsync(ctx *glsp.Context, fileUri string, diagnostics []diagnostics.EntityDiagnostic) {
+	go ctx.Notify(
+		protocol.ServerTextDocumentPublishDiagnostics,
+		protocol.PublishDiagnosticsParams{
+			URI:         fileUri,
+			Diagnostics: entityDiagsToLsp(diagnostics),
+		},
+	)
 }

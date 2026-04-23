@@ -5,26 +5,30 @@ import (
 
 	"github.com/gopher-fleece/gleece/v2/internal/lsp/common"
 	"github.com/gopher-fleece/gleece/v2/internal/lsp/handlers"
+	"github.com/gopher-fleece/gleece/v2/internal/lsp/server/ipc"
 	"github.com/gopher-fleece/gleece/v2/internal/lsp/state"
 	"github.com/tliron/glsp/server"
 )
 
-type LangServerOptions struct {
-	Ipc LangServerIpcType
+type LangServerOptions interface {
+	IpcType() ipc.LangServerIpcType
+	Validate() error
 }
 
 type LanguageServer struct {
-	ipcType LangServerIpcType
+	options LangServerOptions
 }
 
 func NewLanguageServer(opts LangServerOptions) (*LanguageServer, error) {
-	if opts.Ipc == "" || (opts.Ipc != LangServerIpcStdIo) {
-		return nil, fmt.Errorf("ipc type '%s' is not currently supported", opts.Ipc)
+	if opts == nil {
+		return nil, fmt.Errorf("options are required")
 	}
 
-	return &LanguageServer{
-		ipcType: opts.Ipc,
-	}, nil
+	if err := opts.Validate(); err != nil {
+		return nil, err
+	}
+
+	return &LanguageServer{options: opts}, nil
 }
 
 func (s *LanguageServer) Run() error {
@@ -32,10 +36,12 @@ func (s *LanguageServer) Run() error {
 	handler := handlers.GetProtocolHandler(&state)
 	srv := server.NewServer(&handler, common.LangSrvName, false)
 
-	switch s.ipcType {
-	case LangServerIpcStdIo:
+	switch opts := s.options.(type) {
+	case ipc.StdIoOptions:
 		return srv.RunStdio()
+	case ipc.TcpOptions:
+		return srv.RunTCP(opts.Address)
 	default:
-		return fmt.Errorf("unknown or unsupported ipc type '%s'", s.ipcType)
+		return fmt.Errorf("unknown or unsupported ipc type '%s'", opts.IpcType())
 	}
 }
