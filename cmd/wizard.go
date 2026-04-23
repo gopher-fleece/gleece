@@ -8,11 +8,11 @@ import (
 	"github.com/gopher-fleece/gleece/v2/definitions"
 )
 
-type wizard struct {
+type cliWizard struct {
 	reader *bufio.Reader
 }
 
-func (w *wizard) askOpenEnded(question string, defaultValue string) string {
+func (w *cliWizard) askOpenEnded(question string, defaultValue string) string {
 	if defaultValue != "" {
 		fmt.Printf("%s, Default: [%s]: ", question, defaultValue)
 	} else {
@@ -28,8 +28,8 @@ func (w *wizard) askOpenEnded(question string, defaultValue string) string {
 	return input
 }
 
-func (w *wizard) askBool(question string, defaultValue bool) bool {
-	fmt.Printf("%s (%s), Default: [%t]", question, "y/n", defaultValue)
+func (w *cliWizard) askBool(question string, defaultValue bool) bool {
+	fmt.Printf("%s (%s), Default: [%t]: ", question, "y/n", defaultValue)
 
 	input, _ := w.reader.ReadString('\n')
 	input = strings.ToLower(strings.TrimSpace(input))
@@ -40,7 +40,7 @@ func (w *wizard) askBool(question string, defaultValue bool) bool {
 	return input == "y" || input == "yes"
 }
 
-func (w *wizard) askSelection(question string, options []string, defaultValue string) string {
+func (w *cliWizard) askSelection(question string, options []string, defaultValue string) string {
 	fmt.Printf("%s (%s), Default: [%s]: ", question, strings.Join(options, "|"), defaultValue)
 
 	for {
@@ -60,7 +60,7 @@ func (w *wizard) askSelection(question string, options []string, defaultValue st
 	}
 }
 
-func (w *wizard) askVarArgs(question string, defaultValues []string) []string {
+func (w *cliWizard) askVarArgs(question string, defaultValues []string) []string {
 	fmt.Printf("%s (comma separated), Default: [%s]: ", question, strings.Join(defaultValues, ","))
 
 	input, _ := w.reader.ReadString('\n')
@@ -81,22 +81,26 @@ func (w *wizard) askVarArgs(question string, defaultValues []string) []string {
 	return result
 }
 
-func (w *wizard) askSecuritySchemes() []definitions.SecuritySchemeConfig {
+func (w *cliWizard) askSecuritySchemes() []definitions.SecuritySchemeConfig {
 	var schemes []definitions.SecuritySchemeConfig
 	for {
 		scheme := definitions.SecuritySchemeConfig{}
-		scheme.SecurityName = w.askOpenEnded("Scheme name (e.g. someSchemaName)", "")
+		scheme.SecurityName = w.askOpenEnded("Scheme name (e.g. mySchema)", "")
 		if scheme.SecurityName == "" {
 			break
 		}
 		scheme.Description = w.askOpenEnded("Description", "")
 		scheme.Type = definitions.SecuritySchemeType(w.askSelection("Type", []string{"apiKey", "http", "oauth2", "openIdConnect"}, "http"))
 
-		if scheme.Type == definitions.APIKey {
-			scheme.In = definitions.SecuritySchemeIn(w.askSelection("In", []string{"query", "header", "cookie"}, "header"))
-			scheme.FieldName = w.askOpenEnded("Field name", "X-API-KEY")
-		} else if scheme.Type == definitions.HTTP {
-			scheme.Scheme = definitions.HttpAuthScheme(w.askOpenEnded("Scheme (e.g. bearer, basic)", "bearer"))
+		switch scheme.Type {
+		case definitions.APIKey:
+			w.askApiKeySchema(&scheme)
+		case definitions.HTTP:
+			w.askHttpSchema(&scheme)
+		case definitions.OAuth2:
+			w.askOAuth2Schema(&scheme)
+		case definitions.OpenIDConnect:
+			w.askOpenIDConnectSchema(&scheme)
 		}
 
 		schemes = append(schemes, scheme)
@@ -106,4 +110,68 @@ func (w *wizard) askSecuritySchemes() []definitions.SecuritySchemeConfig {
 		}
 	}
 	return schemes
+}
+
+func (w *cliWizard) askOAuthFlow() *definitions.OAuthFlow {
+	flow := &definitions.OAuthFlow{}
+	flow.AuthorizationURL = w.askOpenEnded("Authorization URL", "")
+	flow.TokenURL = w.askOpenEnded("Token URL", "")
+	flow.RefreshURL = w.askOpenEnded("Refresh URL", "")
+
+	scopes := w.askVarArgs("Scopes (key:value pairs separated by commas)", []string{})
+	if len(scopes) > 0 {
+		flow.Scopes = make(map[string]string)
+		for _, s := range scopes {
+			parts := strings.Split(s, ":")
+			if len(parts) == 2 {
+				flow.Scopes[parts[0]] = parts[1]
+			}
+		}
+	}
+
+	return flow
+}
+
+func (w *cliWizard) askApiKeySchema(scheme *definitions.SecuritySchemeConfig) {
+	scheme.In = definitions.SecuritySchemeIn(w.askSelection("In", []string{"query", "header", "cookie"}, "header"))
+	scheme.FieldName = w.askOpenEnded("Field name", "X-API-KEY")
+}
+
+func (w *cliWizard) askHttpSchema(scheme *definitions.SecuritySchemeConfig) {
+	scheme.Scheme = definitions.HttpAuthScheme(w.askSelection(
+		"Scheme",
+		[]string{
+			"basic",
+			"bearer",
+			"digest",
+			"hoba",
+			"mutual",
+			"negotiate",
+			"oauth",
+			"scram-sha-1",
+			"scram-sha-256",
+			"vapid",
+		},
+		"bearer"),
+	)
+}
+
+func (w *cliWizard) askOAuth2Schema(scheme *definitions.SecuritySchemeConfig) {
+	scheme.Flows = &definitions.OAuthFlows{}
+	if w.askBool("Configure implicit flow?", false) {
+		scheme.Flows.Implicit = w.askOAuthFlow()
+	}
+	if w.askBool("Configure password flow?", false) {
+		scheme.Flows.Password = w.askOAuthFlow()
+	}
+	if w.askBool("Configure client credentials flow?", false) {
+		scheme.Flows.ClientCredentials = w.askOAuthFlow()
+	}
+	if w.askBool("Configure authorization code flow?", false) {
+		scheme.Flows.AuthorizationCode = w.askOAuthFlow()
+	}
+}
+
+func (w *cliWizard) askOpenIDConnectSchema(scheme *definitions.SecuritySchemeConfig) {
+	scheme.OpenIdConnectUrl = w.askOpenEnded("OpenID Connect URL", "")
 }

@@ -22,7 +22,7 @@ var initCmd = &cobra.Command{
 }
 
 func runWizard() {
-	w := &wizard{
+	w := &cliWizard{
 		reader: bufio.NewReader(os.Stdin),
 	}
 
@@ -32,13 +32,23 @@ func runWizard() {
 
 	config := definitions.GleeceConfig{}
 
-	// Common Config
+	askCommonConfig(w, &config)
+	askRoutesConfig(w, &config)
+	askAuthConfig(w, &config)
+	askOpenApiConfig(w, &config)
+	askSecSchemas(w, &config)
+	askExperimentalConfigs(w, &config)
+	saveConfig(config)
+}
+
+func askCommonConfig(w *cliWizard, config *definitions.GleeceConfig) {
 	fmt.Println("--- Common Configuration ---")
 	config.CommonConfig.ControllerGlobs = w.askVarArgs("Controller globs (e.g. ./**/*.go)", []string{"./**/controllers/**/*.go"})
 	config.CommonConfig.AllowPackageLoadFailures = w.askBool("Allow package load failures?", false)
 	fmt.Println()
+}
 
-	// Routes Config
+func askRoutesConfig(w *cliWizard, config *definitions.GleeceConfig) {
 	fmt.Println("--- Routes Configuration ---")
 	config.RoutesConfig.Engine = definitions.RoutingEngineType(w.askSelection("Routing engine", []string{"gin", "echo", "mux", "fiber", "chi"}, "gin"))
 	config.RoutesConfig.PackageName = w.askOpenEnded("Go package name for generated routes", "routes")
@@ -46,35 +56,55 @@ func runWizard() {
 	config.RoutesConfig.OutputFilePerms = w.askOpenEnded("Output file permissions", "0644")
 	config.RoutesConfig.ValidateResponsePayload = w.askBool("Validate response payload?", false)
 	config.RoutesConfig.SkipGenerateDateComment = w.askBool("Skip generation date comment?", true)
+}
 
-	// Authorization Config
+func askAuthConfig(w *cliWizard, config *definitions.GleeceConfig) {
+	fmt.Println("--- Authorization Configuration ---")
 	config.RoutesConfig.AuthorizationConfig.AuthFileFullPackageName = w.askOpenEnded("Full package name for auth middleware file", "")
 	config.RoutesConfig.AuthorizationConfig.EnforceSecurityOnAllRoutes = w.askBool("Enforce security on all routes?", true)
 	fmt.Println()
+}
 
-	// OpenAPI Config
+func askOpenApiConfig(w *cliWizard, config *definitions.GleeceConfig) {
 	fmt.Println("--- OpenAPI Generator Configuration ---")
 	config.OpenAPIGeneratorConfig.OpenAPI = w.askSelection("OpenAPI version", []string{"3.0.0", "3.1.0"}, "3.0.0")
 	config.OpenAPIGeneratorConfig.Info.Title = w.askOpenEnded("API Title", "My API")
 	config.OpenAPIGeneratorConfig.Info.Description = w.askOpenEnded("API Description", "")
 	config.OpenAPIGeneratorConfig.Info.Version = w.askOpenEnded("API Version", "1.0.0")
+	config.OpenAPIGeneratorConfig.Info.TermsOfService = w.askOpenEnded("Terms of Service URL", "")
+
+	if w.askBool("Include contact information?", false) {
+		config.OpenAPIGeneratorConfig.Info.Contact = &definitions.OpenAPIContact{
+			Name:  w.askOpenEnded("Contact Name", ""),
+			URL:   w.askOpenEnded("Contact URL", ""),
+			Email: w.askOpenEnded("Contact Email", ""),
+		}
+	}
+
+	if w.askBool("Include license information?", false) {
+		config.OpenAPIGeneratorConfig.Info.License = &definitions.OpenAPILicense{
+			Name: w.askOpenEnded("License Name", ""),
+			URL:  w.askOpenEnded("License URL", ""),
+		}
+	}
+
 	config.OpenAPIGeneratorConfig.BaseURL = w.askOpenEnded("Base URL", "http://localhost:8080")
-
 	config.OpenAPIGeneratorConfig.SpecGeneratorConfig.OutputPath = w.askOpenEnded("OpenAPI spec output path", "./docs/swagger.json")
-
 	fmt.Println()
+}
+
+func askSecSchemas(w *cliWizard, config *definitions.GleeceConfig) {
 	fmt.Println("--- Security Schemes ---")
 	if w.askBool("Add a security scheme?", false) {
 		config.OpenAPIGeneratorConfig.SecuritySchemes = w.askSecuritySchemes()
 	}
+}
 
-	// Experimental Config
+func askExperimentalConfigs(w *cliWizard, config *definitions.GleeceConfig) {
 	fmt.Println("--- Experimental Configuration ---")
 	config.ExperimentalConfig.ValidateTopLevelOnlyEnum = w.askBool("Validate top-level only enums?", false)
 	config.ExperimentalConfig.GenerateEnumValidator = w.askBool("Generate enum validator?", false)
-
 	fmt.Println()
-	saveConfig(config)
 }
 
 func saveConfig(config definitions.GleeceConfig) {
