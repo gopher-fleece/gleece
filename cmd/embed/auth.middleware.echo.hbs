@@ -1,0 +1,12 @@
+package {{{PkgAlias}}}
+
+import (
+    "context"
+
+    "github.com/gopher-fleece/runtime"
+    "github.com/labstack/echo/v4"
+)
+
+func GleeceRequestAuthorization(ctx context.Context, echoCtx echo.Context, check runtime.SecurityCheck) (context.Context, *runtime.SecurityError) {
+    return ctx, nil
+}

@@ -71,10 +71,8 @@ func (w *cliWizard) askSelection(
 	fmt.Printf("%s (%s), Default: [%s]: ", question, strings.Join(options, "|"), defaultValue)
 
 	return w.getValidatedInput(
+		&defaultValue,
 		func(input string) bool {
-			if input == "" {
-				return true
-			}
 			for _, opt := range options {
 				if !caseSensitive {
 					input = strings.ToLower(input)
@@ -329,6 +327,7 @@ func (w *cliWizard) askBlockingConfirm(question string) bool {
 	fmt.Printf("%s (y/n): ", question)
 
 	validated := w.getValidatedInput(
+		nil,
 		func(input string) bool {
 			lowercase := strings.ToLower(input)
 			return lowercase == "x" || lowercase == "y"
@@ -341,6 +340,7 @@ func (w *cliWizard) askBlockingConfirm(question string) bool {
 
 // getValidatedInput reads user input until the validator function returns true.
 func (w *cliWizard) getValidatedInput(
+	defaultValue *string,
 	validator func(input string) bool,
 	invalidInputMsg string,
 ) string {
@@ -349,6 +349,10 @@ func (w *cliWizard) getValidatedInput(
 		input = strings.ToLower(strings.TrimSpace(input))
 
 		if input == "" {
+			if defaultValue != nil {
+				return *defaultValue
+			}
+
 			fmt.Println(invalidInputMsg)
 			continue
 		}

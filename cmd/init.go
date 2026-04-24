@@ -6,8 +6,13 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 
+	"github.com/aymerick/raymond"
+	"github.com/gopher-fleece/gleece/v2/cmd/embed"
 	"github.com/gopher-fleece/gleece/v2/definitions"
+	"github.com/gopher-fleece/gleece/v2/gast"
 	"github.com/spf13/cobra"
 )
 
@@ -36,8 +41,9 @@ func runWizard() {
 	askOpenApiConfig(w, &config)
 	askSecSchemas(w, &config)
 	askExperimentalConfigs(w, &config)
-
 	saveConfig(w, config)
+
+	askIfShouldGenerateCode(w, &config)
 }
 
 // askCommonConfig prompts the user for common configuration settings like package name, templates, and target language.
@@ -130,7 +136,75 @@ func askExperimentalConfigs(w *cliWizard, config *definitions.GleeceConfig) {
 	fmt.Println()
 }
 
+func askIfShouldGenerateCode(w *cliWizard, config *definitions.GleeceConfig) {
+	fmt.Println("--- Boilerplate Code Generation ---")
+	if !w.askBool("Generate authentication middleware skeleton code?", true) {
+		fmt.Println()
+		return
+	}
+
+	splitPkgPath := strings.Split(config.RoutesConfig.AuthorizationConfig.AuthFileFullPackageName, "/")
+	concatenatedPath := append(splitPkgPath[1:], "authentication.go")
+	suggestedOutputPath := filepath.Join(concatenatedPath...)
+
+	selectedOutputPath := w.askFilePath("Authentication middleware output path", suggestedOutputPath, "go")
+	configStr, err := generateAuthMiddleware(config)
+	if err != nil {
+		fmt.Println(fmt.Sprintf("Failed to generate authentication middleware code - %v", err))
+		return
+	}
+
+	var finalOutputPath string
+	if filepath.IsAbs(selectedOutputPath) {
+		finalOutputPath = selectedOutputPath
+	} else {
+		abs, absErr := filepath.Abs(suggestedOutputPath)
+		if absErr != nil {
+			fmt.Println("Failed to determine absolute path for output file. Will attempt to use user-provided path instead")
+			finalOutputPath = selectedOutputPath
+		} else {
+			finalOutputPath = abs
+		}
+	}
+
+	saveFileWithOverwriteConfirmation(w, finalOutputPath, []byte(configStr))
+}
+
+func generateAuthMiddleware(config *definitions.GleeceConfig) (string, error) {
+	var template string
+
+	switch config.RoutesConfig.Engine {
+	case definitions.RoutingEngineChi:
+		template = embed.ChiAuthMiddleware
+		break
+	case definitions.RoutingEngineEcho:
+		template = embed.EchoAuthMiddleware
+		break
+	case definitions.RoutingEngineFiber:
+		template = embed.FiberAuthMiddleware
+		break
+	case definitions.RoutingEngineGin:
+		template = embed.GinAuthMiddleware
+		break
+	case definitions.RoutingEngineMux:
+		template = embed.MuxAuthMiddleware
+		break
+	}
+
+	ctx := map[string]any{
+		"PkgAlias": gast.GetDefaultPkgAliasByName(config.RoutesConfig.AuthorizationConfig.AuthFileFullPackageName),
+	}
+
+	result, err := raymond.Render(template, ctx)
+	if err != nil {
+		fmt.Println(fmt.Sprintf("Failed to render authentication middleware code - %v", err))
+	}
+
+	return result, err
+}
+
 // removeNilValuesRecursive recursively traverses map/slice structures and deletes nil fields.
+// Note this method is not perfect - some nulls may remain under some cases, but it's good enough here.
 func removeNilValuesRecursive(v any) any {
 	switch valueType := v.(type) {
 	case map[string]any:
@@ -195,21 +269,33 @@ func saveConfig(w *cliWizard, config definitions.GleeceConfig) {
 		)
 	}
 
-	filename := "gleece.config.json"
+	saveFileWithOverwriteConfirmation(w, "gleece.config.json", configBytes)
+}
 
-	if _, statErr := os.Stat(filename); statErr == nil {
+func saveFileWithOverwriteConfirmation(w *cliWizard, fileName string, data []byte) bool {
+	_, statErr := os.Stat(fileName)
+
+	if statErr == nil {
 		// Prompt before overwriting
-		if !w.askBlockingConfirm("A gleece.config.json file already exists. Overwrite?") {
+		if !w.askBlockingConfirm(fmt.Sprintf("File '%s' already exists. Overwrite?", fileName)) {
 			fmt.Println("Aborting...")
-			return
+			return false
+		}
+	} else if errors.Is(statErr, os.ErrNotExist) {
+		dirPath := filepath.Dir(fileName)
+		mkdirErr := os.MkdirAll(dirPath, 0755)
+		if mkdirErr != nil {
+			fmt.Println(fmt.Sprintf("Could not mkdir %s - %v", dirPath, mkdirErr))
 		}
 	}
 
-	err = os.WriteFile(filename, configBytes, 0644)
+	err := os.WriteFile(fileName, data, 0644)
 	if err == nil {
-		fmt.Printf("Successfully created %s\n", filename)
-	} else {
-		fmt.Println(fmt.Sprintf("Failed to write the configuration file -  %v", err))
-		fmt.Println(fmt.Sprintf("Dumping the configuration file contents to console:\n%s", string(configBytes)))
+		fmt.Printf("Successfully created %s\n", fileName)
+		return true
 	}
+
+	fmt.Println(fmt.Sprintf("Failed to write file '%s' -  %v", fileName, err))
+	fmt.Println(fmt.Sprintf("Dumping file contents to console:\n%s", string(data)))
+	return false
 }
