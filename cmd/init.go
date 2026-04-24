@@ -20,6 +20,7 @@ var initCmd = &cobra.Command{
 	},
 }
 
+// runWizard initializes and executes the CLI wizard to gather Gleece configuration.
 func runWizard() {
 	w := newCliWizard(bufio.NewReader(os.Stdin))
 
@@ -35,9 +36,11 @@ func runWizard() {
 	askOpenApiConfig(w, &config)
 	askSecSchemas(w, &config)
 	askExperimentalConfigs(w, &config)
+
 	saveConfig(w, config)
 }
 
+// askCommonConfig prompts the user for common configuration settings like package name, templates, and target language.
 func askCommonConfig(w *cliWizard, config *definitions.GleeceConfig) {
 	fmt.Println("--- Common Configuration ---")
 	config.CommonConfig.ControllerGlobs = w.askVarArgs("Controller globs (e.g. ./**/*.go)", []string{"./**/controllers/**/*.go"})
@@ -45,9 +48,15 @@ func askCommonConfig(w *cliWizard, config *definitions.GleeceConfig) {
 	fmt.Println()
 }
 
+// askRoutesConfig prompts the user for routing engine and configuration.
 func askRoutesConfig(w *cliWizard, config *definitions.GleeceConfig) {
 	fmt.Println("--- Routes Configuration ---")
-	config.RoutesConfig.Engine = definitions.RoutingEngineType(w.askSelection("Routing engine", []string{"gin", "echo", "mux", "fiber", "chi"}, "gin"))
+	config.RoutesConfig.Engine = definitions.RoutingEngineType(w.askSelection(
+		"Routing engine",
+		[]string{"gin", "echo", "mux", "fiber", "chi"},
+		"gin",
+		true,
+	))
 	config.RoutesConfig.PackageName = w.askOpenEnded("Go package name for generated routes", "routes")
 	config.RoutesConfig.OutputPath = w.askFilePath(
 		"Output path for generated routes",
@@ -59,6 +68,7 @@ func askRoutesConfig(w *cliWizard, config *definitions.GleeceConfig) {
 	config.RoutesConfig.SkipGenerateDateComment = w.askBool("Skip generation date comment?", true)
 }
 
+// askAuthConfig prompts the user for authentication-related settings.
 func askAuthConfig(w *cliWizard, config *definitions.GleeceConfig) {
 	fmt.Println("--- Authorization Configuration ---")
 	config.RoutesConfig.AuthorizationConfig.AuthFileFullPackageName = w.askOpenEnded("Full package name for auth middleware file", "authentication")
@@ -66,9 +76,15 @@ func askAuthConfig(w *cliWizard, config *definitions.GleeceConfig) {
 	fmt.Println()
 }
 
+// askOpenApiConfig prompts the user for OpenAPI specific information including info object details and output paths.
 func askOpenApiConfig(w *cliWizard, config *definitions.GleeceConfig) {
 	fmt.Println("--- OpenAPI Generator Configuration ---")
-	config.OpenAPIGeneratorConfig.OpenAPI = w.askSelection("OpenAPI version", []string{"3.0.0", "3.1.0"}, "3.0.0")
+	config.OpenAPIGeneratorConfig.OpenAPI = w.askSelection(
+		"OpenAPI version",
+		[]string{"3.0.0", "3.1.0"},
+		"3.0.0",
+		true,
+	)
 	config.OpenAPIGeneratorConfig.Info.Title = w.askOpenEnded("API Title", "My API")
 	config.OpenAPIGeneratorConfig.Info.Description = w.askOpenEnded("API Description", "")
 	config.OpenAPIGeneratorConfig.Info.Version = w.askOpenEnded("API Version", "1.0.0")
@@ -98,6 +114,7 @@ func askOpenApiConfig(w *cliWizard, config *definitions.GleeceConfig) {
 	fmt.Println()
 }
 
+// askSecSchemas prompts the user to add security schemes to the OpenAPI generator config.
 func askSecSchemas(w *cliWizard, config *definitions.GleeceConfig) {
 	fmt.Println("--- Security Schemes ---")
 	if w.askBool("Add a security scheme?", false) {
@@ -105,6 +122,7 @@ func askSecSchemas(w *cliWizard, config *definitions.GleeceConfig) {
 	}
 }
 
+// askExperimentalConfigs prompts the user for experimental feature toggles.
 func askExperimentalConfigs(w *cliWizard, config *definitions.GleeceConfig) {
 	fmt.Println("--- Experimental Configuration ---")
 	config.ExperimentalConfig.ValidateTopLevelOnlyEnum = w.askBool("Validate top-level only enums?", false)
@@ -112,6 +130,7 @@ func askExperimentalConfigs(w *cliWizard, config *definitions.GleeceConfig) {
 	fmt.Println()
 }
 
+// removeNilValuesRecursive recursively traverses map/slice structures and deletes nil fields.
 func removeNilValuesRecursive(v any) any {
 	switch valueType := v.(type) {
 	case map[string]any:
@@ -139,6 +158,7 @@ func removeNilValuesRecursive(v any) any {
 	}
 }
 
+// marshalConfig converts a GleeceConfig struct to JSON while cleaning out nil values.
 func marshalConfig(config definitions.GleeceConfig) ([]byte, error) {
 	data, err := json.MarshalIndent(config, "", "  ")
 	if err != nil {
@@ -161,6 +181,7 @@ func marshalConfig(config definitions.GleeceConfig) ([]byte, error) {
 	return cleanedData, nil
 }
 
+// saveConfig marshals and writes the configuration to a file.
 func saveConfig(w *cliWizard, config definitions.GleeceConfig) {
 	configBytes, err := marshalConfig(config)
 	if err != nil {
