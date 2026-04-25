@@ -1,4 +1,4 @@
-package imports_test
+package commandline_test
 
 import (
 	"github.com/gopher-fleece/runtime"

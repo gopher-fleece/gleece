@@ -292,10 +292,12 @@ func (w *cliWizard) askFilePath(question string, defaultValue string, forceExten
 			normalizedReqExt := "." + strings.TrimPrefix(forceExtension, ".")
 
 			fileExt := filepath.Ext(input)
-			if fileExt != "" && fileExt != normalizedReqExt {
+			if fileExt == "" {
+				input = input + normalizedReqExt
+			} else if fileExt != normalizedReqExt {
 				input = strings.TrimSuffix(input, fileExt)
+				input = input + normalizedReqExt
 			}
-			input = input + normalizedReqExt
 		}
 
 		// If the path is relative, we can use it as is
@@ -319,7 +321,6 @@ func (w *cliWizard) askFilePath(question string, defaultValue string, forceExten
 
 		return rel
 	}
-
 }
 
 // askBlockingConfirm prompts the user for confirmation.
@@ -330,7 +331,7 @@ func (w *cliWizard) askBlockingConfirm(question string) bool {
 		nil,
 		func(input string) bool {
 			lowercase := strings.ToLower(input)
-			return lowercase == "x" || lowercase == "y"
+			return lowercase == "y" || lowercase == "n"
 		},
 		"Please confirm or reject by typing 'y' or 'n' and pressing enter",
 	)

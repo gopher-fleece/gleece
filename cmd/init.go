@@ -278,7 +278,7 @@ func saveFileWithOverwriteConfirmation(w *cliWizard, fileName string, data []byt
 	if statErr == nil {
 		// Prompt before overwriting
 		if !w.askBlockingConfirm(fmt.Sprintf("File '%s' already exists. Overwrite?", fileName)) {
-			fmt.Println("Aborting...")
+			fmt.Println("Configuration overwrite aborted")
 			return false
 		}
 	} else if errors.Is(statErr, os.ErrNotExist) {
