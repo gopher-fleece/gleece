@@ -213,8 +213,7 @@ func (w *cliWizard) askHttpSchema(scheme *definitions.SecuritySchemeConfig) {
 		},
 		"bearer",
 		true,
-	),
-	)
+	))
 }
 
 // askOAuth2Schema prompts the user for OAuth2 security scheme details.
@@ -236,7 +235,7 @@ func (w *cliWizard) askOAuth2Schema(scheme *definitions.SecuritySchemeConfig) {
 
 // askOpenIDConnectSchema prompts the user for OpenID Connect schema details.
 func (w *cliWizard) askOpenIDConnectSchema(scheme *definitions.SecuritySchemeConfig) {
-	scheme.OpenIdConnectUrl = w.askOpenEnded("OpenID Connect URL", "")
+	scheme.OpenIdConnectUrl = w.askUrl("OpenID Connect URL", "")
 }
 
 // askFilePerms prompts the user for file permission octal string input and validates it.
@@ -347,7 +346,7 @@ func (w *cliWizard) getValidatedInput(
 ) string {
 	for {
 		input, _ := w.reader.ReadString('\n')
-		input = strings.ToLower(strings.TrimSpace(input))
+		input = strings.TrimSpace(input)
 
 		if input == "" {
 			if defaultValue != nil {

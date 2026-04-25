@@ -136,6 +136,149 @@ var _ = Describe("Init Command", Serial, func() {
 		Expect(cfg.ExperimentalConfig.GenerateEnumValidator).To(BeTrue())
 	})
 
+	It("Adds multiple security schemes and validates fields", func() {
+		input := getInput(Questionnaire{
+			AddSecurityScheme: []string{"y"},
+			SecuritySchemes: []SecuritySchemeInput{
+				{
+					"MyApiKey",
+					"API Key description",
+					"apiKey",
+					"header",
+					"X-API-KEY",
+				},
+				{
+					"MyHttp",
+					"HTTP description",
+					"http",
+					"basic",
+				},
+				{
+					"MyOAuth2",
+					"OAuth2 description",
+					"oauth2",
+					"y",
+					"https://auth.com",
+					"https://token.com",
+					"https://refresh.com",
+					"scope1:value1",
+					"n",
+					"n",
+					"n",
+				},
+				{
+					"MyOIDC",
+					"OIDC description",
+					"openIdConnect",
+					"https://oidc.com",
+				},
+			},
+			GenerateAuthMiddleware: []string{"n"},
+		})
+
+		out, _, err := runInitWithInput(input)
+		Expect(out).ToNot(BeNil())
+		Expect(err).To(BeNil())
+
+		cfg := readInitConfig("./gleece.config.json")
+		Expect(cfg.OpenAPIGeneratorConfig.SecuritySchemes).To(HaveLen(4))
+	})
+
+	It("Adds apiKey security scheme and validates fields", func() {
+		input := getInput(Questionnaire{
+			AddSecurityScheme: []string{"y"},
+			SecuritySchemes: []SecuritySchemeInput{
+				{"MyApiKey", "API Key description", "apiKey", "invalid-in", "query", "MyField"},
+			},
+			GenerateAuthMiddleware: []string{"n"},
+		})
+
+		stdout, _, err := runInitWithInput(input)
+		Expect(err).To(BeNil())
+		Expect(stdout).To(ContainSubstring("Invalid selection. Please choose from (query|header|cookie)"))
+
+		cfg := readInitConfig("./gleece.config.json")
+		Expect(cfg.OpenAPIGeneratorConfig.SecuritySchemes).To(HaveLen(1))
+		Expect(cfg.OpenAPIGeneratorConfig.SecuritySchemes[0].Type).To(Equal(definitions.APIKey))
+		Expect(cfg.OpenAPIGeneratorConfig.SecuritySchemes[0].In).To(Equal(definitions.SecuritySchemeIn("query")))
+	})
+
+	It("Adds http security scheme and validates fields", func() {
+		input := getInput(Questionnaire{
+			AddSecurityScheme: []string{"y"},
+			SecuritySchemes: []SecuritySchemeInput{
+				{"MyHttp", "HTTP description", "http", "invalid-scheme", "basic"},
+			},
+			GenerateAuthMiddleware: []string{"n"},
+		})
+
+		stdout, _, err := runInitWithInput(input)
+		Expect(err).To(BeNil())
+		Expect(stdout).To(ContainSubstring("Invalid selection. Please choose from"))
+
+		cfg := readInitConfig("./gleece.config.json")
+		Expect(cfg.OpenAPIGeneratorConfig.SecuritySchemes).To(HaveLen(1))
+		Expect(cfg.OpenAPIGeneratorConfig.SecuritySchemes[0].Type).To(Equal(definitions.HTTP))
+		Expect(cfg.OpenAPIGeneratorConfig.SecuritySchemes[0].Scheme).To(Equal(definitions.HttpAuthScheme("basic")))
+	})
+
+	It("Adds oauth2 security scheme and validates fields", func() {
+		input := getInput(Questionnaire{
+			AddSecurityScheme: []string{"y"},
+			SecuritySchemes: []SecuritySchemeInput{
+				{"MyOAuth2", "OAuth2 description", "oauth2", "n", "n", "n", "n"},
+			},
+			GenerateAuthMiddleware: []string{"n"},
+		})
+
+		_, _, err := runInitWithInput(input)
+		Expect(err).To(BeNil())
+
+		cfg := readInitConfig("./gleece.config.json")
+		Expect(cfg.OpenAPIGeneratorConfig.SecuritySchemes).To(HaveLen(1))
+		Expect(cfg.OpenAPIGeneratorConfig.SecuritySchemes[0].Type).To(Equal(definitions.OAuth2))
+	})
+
+	It("Adds oauth2 security scheme with invalid URLs", func() {
+		input := getInput(Questionnaire{
+			AddSecurityScheme: []string{"y"},
+			SecuritySchemes: []SecuritySchemeInput{
+				{"MyOAuth2", "OAuth2 description", "oauth2", "y", "not-a-url", "https://auth.com", "not-a-url", "https://token.com", "not-a-url", "https://refresh.com", "n"},
+			},
+			GenerateAuthMiddleware: []string{"n"},
+		})
+
+		stdout, _, err := runInitWithInput(input)
+		Expect(err).To(BeNil())
+		Expect(stdout).To(ContainSubstring("Invalid URL format."))
+
+		cfg := readInitConfig("./gleece.config.json")
+		Expect(cfg.OpenAPIGeneratorConfig.SecuritySchemes).To(HaveLen(1))
+		Expect(cfg.OpenAPIGeneratorConfig.SecuritySchemes[0].Type).To(Equal(definitions.OAuth2))
+		Expect(cfg.OpenAPIGeneratorConfig.SecuritySchemes[0].Flows.Implicit.AuthorizationURL).To(Equal("https://auth.com"))
+		Expect(cfg.OpenAPIGeneratorConfig.SecuritySchemes[0].Flows.Implicit.TokenURL).To(Equal("https://token.com"))
+		Expect(cfg.OpenAPIGeneratorConfig.SecuritySchemes[0].Flows.Implicit.RefreshURL).To(Equal("https://refresh.com"))
+	})
+
+	It("Adds openIdConnect security scheme and validates fields", func() {
+		input := getInput(Questionnaire{
+			AddSecurityScheme: []string{"y"},
+			SecuritySchemes: []SecuritySchemeInput{
+				{"MyOIDC", "OIDC description", "openIdConnect", "not-a-url", "https://oidc.com"},
+			},
+			GenerateAuthMiddleware: []string{"n"},
+		})
+
+		stdout, _, err := runInitWithInput(input)
+		Expect(err).To(BeNil())
+		Expect(stdout).To(ContainSubstring("Invalid URL format."))
+
+		cfg := readInitConfig("./gleece.config.json")
+		Expect(cfg.OpenAPIGeneratorConfig.SecuritySchemes).To(HaveLen(1))
+		Expect(cfg.OpenAPIGeneratorConfig.SecuritySchemes[0].Type).To(Equal(definitions.OpenIDConnect))
+		Expect(cfg.OpenAPIGeneratorConfig.SecuritySchemes[0].OpenIdConnectUrl).To(Equal("https://oidc.com"))
+	})
+
 	It("Prompts an error when providing invalid overwrite confirmation and rejecting", func() {
 		// First run to create the config file.
 		createStdout, createStderr, createErr := runInitWithInput(getLineForDefaultConfig())
@@ -254,6 +397,8 @@ func runInitWithInput(input string) (stdout string, stderr string, err error) {
 	return stdoutBuffer.String(), result.StdErr, result.Error
 }
 
+type SecuritySchemeInput []string
+
 type Questionnaire struct {
 	ControllerGlobs           []string
 	AllowPackageLoadFailures  []string
@@ -277,6 +422,7 @@ type Questionnaire struct {
 	AddSecurityScheme         []string
 	ValidateTopLevelOnlyEnum  []string
 	GenerateEnumValidator     []string
+	SecuritySchemes           []SecuritySchemeInput
 	OverwriteConfirmation     []string
 	GenerateAuthMiddleware    []string
 	AuthMiddlewareOutputPath  []string
@@ -321,6 +467,19 @@ func getInput(q Questionnaire) string {
 	appendOrEmpty(q.BaseURL, "")
 	appendOrEmpty(q.OpenAPISpecOutputPath, "")
 	appendOrEmpty(q.AddSecurityScheme, "")
+
+	// Only append SecuritySchemes if AddSecurityScheme effectively resulted in 'y'
+	shouldAddSecurity := false
+	if len(q.AddSecurityScheme) > 0 {
+		last := q.AddSecurityScheme[len(q.AddSecurityScheme)-1]
+		if last != "" {
+			shouldAddSecurity = last == "y" || last == "yes"
+		}
+	}
+	if shouldAddSecurity {
+		inputs = append(inputs, getSecuritySchemesInput(q.SecuritySchemes)...)
+	}
+
 	appendOrEmpty(q.ValidateTopLevelOnlyEnum, "")
 	appendOrEmpty(q.GenerateEnumValidator, "")
 
@@ -332,4 +491,17 @@ func getInput(q Questionnaire) string {
 	appendOrEmpty(q.AuthMiddlewareOutputPath, "")
 
 	return strings.Join(inputs, "\n") + "\n"
+}
+
+func getSecuritySchemesInput(schemes []SecuritySchemeInput) []string {
+	var inputs []string
+	for i, scheme := range schemes {
+		inputs = append(inputs, scheme...)
+		if i < len(schemes)-1 {
+			inputs = append(inputs, "y")
+		} else {
+			inputs = append(inputs, "n")
+		}
+	}
+	return inputs
 }
