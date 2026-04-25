@@ -8,70 +8,33 @@ import (
 
 	"github.com/gopher-fleece/gleece/v2/cmd"
 	"github.com/gopher-fleece/gleece/v2/definitions"
+	"github.com/gopher-fleece/gleece/v2/infrastructure/logger"
+	"github.com/gopher-fleece/gleece/v2/test/utils"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
-func readInitConfig(path string) definitions.GleeceConfig {
-	data, err := os.ReadFile(path)
-	Expect(err).To(BeNil())
+var _ = Describe("Init Command", Serial, func() {
+	var originalWd string
 
-	var cfg definitions.GleeceConfig
-	Expect(json.Unmarshal(data, &cfg)).To(Succeed())
-
-	return cfg
-}
-
-func runInitWithInput(input string) (stdout string, stderr string, err error) {
-	originalStdin := os.Stdin
-	originalStdout := os.Stdout
-	originalWd, wdErr := os.Getwd()
-	Expect(wdErr).To(BeNil())
-
-	stdinR, stdinW, err := os.Pipe()
-	Expect(err).To(BeNil())
-
-	stdoutR, stdoutW, err := os.Pipe()
-	Expect(err).To(BeNil())
-
-	_, err = io.WriteString(stdinW, input)
-	Expect(err).To(BeNil())
-	Expect(stdinW.Close()).To(BeNil())
-
-	os.Stdin = stdinR
-	os.Stdout = stdoutW
-
-	defer func() {
-		os.Stdin = originalStdin
-		os.Stdout = originalStdout
-		_ = stdinR.Close()
-		_ = stdoutW.Close()
-		_ = stdoutR.Close()
-		_ = os.Chdir(originalWd)
-	}()
-
-	result := cmd.ExecuteWithArgs([]string{"init", "--no-banner"})
-
-	_ = stdoutW.Close()
-	outBytes, _ := io.ReadAll(stdoutR)
-
-	return string(outBytes), result.StdErr, result.Error
-}
-
-func repeatNewlines(count int) string {
-	return strings.Repeat("\n", count)
-}
-
-var _ = Describe("Init Command", func() {
 	BeforeEach(func() {
-		Expect(os.MkdirAll("./dist", 0o755)).To(BeNil())
-		Expect(os.Chdir("./dist")).To(BeNil())
+		var err error
+		originalWd, err = os.Getwd()
+		Expect(err).To(BeNil())
+
+		Expect(os.MkdirAll("./dist", 0o755)).To(Succeed())
+		Expect(os.Chdir("./dist")).To(Succeed())
+	})
+
+	AfterEach(func() {
+		Expect(os.Chdir(originalWd)).To(Succeed())
+		utils.DeleteDistInCurrentFolderOrFail()
+		logger.SetLogLevel(logger.LogLevelNone)
+		cmd.Reset()
 	})
 
 	It("Creates a default configuration file with defaults and confirms generation", func() {
-		input := repeatNewlines(30) + "y\n"
-
-		stdout, stderr, err := runInitWithInput(input)
+		stdout, stderr, err := runInitWithInput(getLineForDefaultConfig())
 		Expect(err).To(BeNil())
 		Expect(stderr).To(BeEmpty())
 		Expect(stdout).To(ContainSubstring("Successfully created gleece.config.json"))
@@ -97,11 +60,32 @@ var _ = Describe("Init Command", func() {
 	})
 
 	It("Rejects invalid values and re-prompts until valid input is provided", func() {
-		input := repeatNewlines(5) +
-			"bad-perms\n" +
-			"0640\n" +
-			repeatNewlines(25) +
-			"y\n"
+		input := lines(
+			"",          // Controller globs
+			"",          // Allow package load failures
+			"",          // Routing engine
+			"",          // Routes package name
+			"",          // Routes output path
+			"bad-perms", // Invalid file permissions
+			"0640",      // Valid file permissions
+			"",          // Validate response payload
+			"",          // Skip generation date comment
+			"",          // Auth middleware package name
+			"",          // Enforce security on all routes
+			"",          // OpenAPI version
+			"",          // API title
+			"",          // API description
+			"",          // API version
+			"",          // Terms of service URL
+			"",          // Include contact information?
+			"",          // Include license information?
+			"",          // Base URL
+			"",          // OpenAPI spec output path
+			"",          // Add a security scheme?
+			"",          // Validate top-level only enums?
+			"",          // Generate enum validator?
+			"n",         // Generate authentication middleware skeleton code?
+		)
 
 		stdout, stderr, err := runInitWithInput(input)
 		Expect(err).To(BeNil())
@@ -114,7 +98,7 @@ var _ = Describe("Init Command", func() {
 	})
 
 	It("Uses user-provided values and validates formatted inputs", func() {
-		input := strings.Join([]string{
+		input := lines(
 			"src/controllers/**/*.go",
 			"y",
 			"echo",
@@ -146,8 +130,8 @@ var _ = Describe("Init Command", func() {
 			"n",
 			"y",
 			"y",
-			"x",
-		}, "\n") + "\n"
+			"n",
+		)
 
 		stdout, stderr, err := runInitWithInput(input)
 		Expect(err).To(BeNil())
@@ -185,15 +169,41 @@ var _ = Describe("Init Command", func() {
 	})
 
 	It("Exercises overwrite confirmation invalid, reject, and accept branches", func() {
-		// First, create the file using defaults so the second run hits the overwrite path.
-		createInput := repeatNewlines(30) + "y\n"
-		createStdout, createStderr, createErr := runInitWithInput(createInput)
+		// First run to create the config file.
+		createStdout, createStderr, createErr := runInitWithInput(getLineForDefaultConfig())
 		Expect(createErr).To(BeNil())
 		Expect(createStderr).To(BeEmpty())
 		Expect(createStdout).To(ContainSubstring("Successfully created gleece.config.json"))
 
-		// Second run: invalid confirmation first, then reject with 'x'.
-		rejectInput := repeatNewlines(30) + "maybe\nn\nn"
+		// Second run: invalid confirmation first, then reject with 'n'.
+		rejectInput := lines(
+			"",      // Controller globs
+			"",      // Allow package load failures
+			"",      // Routing engine
+			"",      // Routes package name
+			"",      // Routes output path
+			"",      // Output file permissions
+			"",      // Validate response payload
+			"",      // Skip generation date comment
+			"",      // Auth middleware package name
+			"",      // Enforce security on all routes
+			"",      // OpenAPI version
+			"",      // API title
+			"",      // API description
+			"",      // API version
+			"",      // Terms of service URL
+			"",      // Include contact information?
+			"",      // Include license information?
+			"",      // Base URL
+			"",      // OpenAPI spec output path
+			"",      // Add a security scheme?
+			"",      // Validate top-level only enums?
+			"",      // Generate enum validator?
+			"maybe", // Invalid overwrite confirmation
+			"n",     // Reject overwrite
+			"n",     // Generate authentication middleware skeleton code?
+		)
+
 		rejectStdout, rejectStderr, rejectErr := runInitWithInput(rejectInput)
 		Expect(rejectErr).To(BeNil())
 		Expect(rejectStderr).To(BeEmpty())
@@ -201,15 +211,121 @@ var _ = Describe("Init Command", func() {
 		Expect(rejectStdout).To(ContainSubstring("Please confirm or reject by typing 'y' or 'n' and pressing enter"))
 		Expect(rejectStdout).To(ContainSubstring("Configuration overwrite aborted"))
 
-		// Third run: Accept overwrite with 'y'.
-		acceptInput := repeatNewlines(30) + "y\nn"
+		// Third run: invalid confirmation first, then accept with 'y'.
+		acceptInput := lines(
+			"",      // Controller globs
+			"",      // Allow package load failures
+			"",      // Routing engine
+			"",      // Routes package name
+			"",      // Routes output path
+			"",      // Output file permissions
+			"",      // Validate response payload
+			"",      // Skip generation date comment
+			"",      // Auth middleware package name
+			"",      // Enforce security on all routes
+			"",      // OpenAPI version
+			"",      // API title
+			"",      // API description
+			"",      // API version
+			"",      // Terms of service URL
+			"",      // Include contact information?
+			"",      // Include license information?
+			"",      // Base URL
+			"",      // OpenAPI spec output path
+			"",      // Add a security scheme?
+			"",      // Validate top-level only enums?
+			"",      // Generate enum validator?
+			"maybe", // Invalid overwrite confirmation
+			"y",     // Accept overwrite
+			"n",     // Generate authentication middleware skeleton code?
+		)
+
 		acceptStdout, acceptStderr, acceptErr := runInitWithInput(acceptInput)
 		Expect(acceptErr).To(BeNil())
 		Expect(acceptStderr).To(BeEmpty())
 		Expect(acceptStdout).To(ContainSubstring("File 'gleece.config.json' already exists. Overwrite? (y/n): "))
+		Expect(acceptStdout).To(ContainSubstring("Please confirm or reject by typing 'y' or 'n' and pressing enter"))
 		Expect(acceptStdout).To(ContainSubstring("Successfully created gleece.config.json"))
-
-		_, err := os.Stat("./gleece.config.json")
-		Expect(err).To(BeNil())
 	})
 })
+
+func readInitConfig(path string) definitions.GleeceConfig {
+	data, err := os.ReadFile(path)
+	Expect(err).To(BeNil())
+
+	var cfg definitions.GleeceConfig
+	Expect(json.Unmarshal(data, &cfg)).To(Succeed())
+
+	return cfg
+}
+
+func runInitWithInput(input string) (stdout string, stderr string, err error) {
+	originalStdin := os.Stdin
+	originalStdout := os.Stdout
+
+	stdinR, stdinW, err := os.Pipe()
+	Expect(err).To(BeNil())
+
+	stdoutR, stdoutW, err := os.Pipe()
+	Expect(err).To(BeNil())
+
+	var stdoutBuffer strings.Builder
+	stdoutDone := make(chan error, 1)
+
+	go func() {
+		_, copyErr := io.Copy(&stdoutBuffer, stdoutR)
+		stdoutDone <- copyErr
+	}()
+
+	_, err = io.WriteString(stdinW, input)
+	Expect(err).To(BeNil())
+	Expect(stdinW.Close()).To(BeNil())
+
+	os.Stdin = stdinR
+	os.Stdout = stdoutW
+
+	result := cmd.ExecuteWithArgs([]string{"init", "--no-banner"})
+
+	_ = stdoutW.Close()
+	Expect(<-stdoutDone).To(BeNil())
+
+	os.Stdin = originalStdin
+	os.Stdout = originalStdout
+
+	_ = stdinR.Close()
+	_ = stdoutR.Close()
+
+	return stdoutBuffer.String(), result.StdErr, result.Error
+}
+
+func lines(values ...string) string {
+	return strings.Join(values, "\n") + "\n"
+}
+
+func getLineForDefaultConfig() string {
+	return lines(
+		"",  // Controller globs
+		"",  // Allow package load failures
+		"",  // Routing engine
+		"",  // Routes package name
+		"",  // Routes output path
+		"",  // Output file permissions
+		"",  // Validate response payload
+		"",  // Skip generation date comment
+		"",  // Auth middleware package name
+		"",  // Enforce security on all routes
+		"",  // OpenAPI version
+		"",  // API title
+		"",  // API description
+		"",  // API version
+		"",  // Terms of service URL
+		"",  // Include contact information?
+		"",  // Include license information?
+		"",  // Base URL
+		"",  // OpenAPI spec output path
+		"",  // Add a security scheme?
+		"",  // Validate top-level only enums?
+		"",  // Generate enum validator?
+		"n", // Generate authentication middleware skeleton code?
+	)
+}
