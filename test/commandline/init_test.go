@@ -60,32 +60,9 @@ var _ = Describe("Init Command", Serial, func() {
 	})
 
 	It("Rejects invalid values and re-prompts until valid input is provided", func() {
-		input := lines(
-			"",          // Controller globs
-			"",          // Allow package load failures
-			"",          // Routing engine
-			"",          // Routes package name
-			"",          // Routes output path
-			"bad-perms", // Invalid file permissions
-			"0640",      // Valid file permissions
-			"",          // Validate response payload
-			"",          // Skip generation date comment
-			"",          // Auth middleware package name
-			"",          // Enforce security on all routes
-			"",          // OpenAPI version
-			"",          // API title
-			"",          // API description
-			"",          // API version
-			"",          // Terms of service URL
-			"",          // Include contact information?
-			"",          // Include license information?
-			"",          // Base URL
-			"",          // OpenAPI spec output path
-			"",          // Add a security scheme?
-			"",          // Validate top-level only enums?
-			"",          // Generate enum validator?
-			"n",         // Generate authentication middleware skeleton code?
-		)
+		input := getInput(Questionnaire{
+			OutputFilePerms: []string{"bad-perms", "0640"},
+		})
 
 		stdout, stderr, err := runInitWithInput(input)
 		Expect(err).To(BeNil())
@@ -98,40 +75,31 @@ var _ = Describe("Init Command", Serial, func() {
 	})
 
 	It("Uses user-provided values and validates formatted inputs", func() {
-		input := lines(
-			"src/controllers/**/*.go",
-			"y",
-			"echo",
-			"api",
-			"./custom/routes.go",
-			"0755",
-			"y",
-			"n",
-			"custom.auth",
-			"n",
-			"3.1.0",
-			"My Custom API",
-			"My custom description",
-			"2.0.0",
-			"not-a-url",
-			"https://example.com/tos",
-			"y",
-			"Jane Doe",
-			"not-a-url",
-			"https://example.com",
-			"invalid-email",
-			"jane@example.com",
-			"y",
-			"MIT",
-			"not-a-url",
-			"https://example.com/lic",
-			"https://example.com/api",
-			"./docs/openapi.json",
-			"n",
-			"y",
-			"y",
-			"n",
-		)
+		input := getInput(Questionnaire{
+			ControllerGlobs:           []string{"src/controllers/**/*.go"},
+			AllowPackageLoadFailures:  []string{"y"},
+			RoutingEngine:             []string{"echo"},
+			RoutesPackageName:         []string{"api"},
+			RoutesOutputPath:          []string{"./custom/routes.go"},
+			OutputFilePerms:           []string{"0755"},
+			ValidateResponsePayload:   []string{"y"},
+			SkipGenerateDateComment:   []string{"n"},
+			AuthMiddlewarePackageName: []string{"custom.auth"},
+			EnforceSecurity:           []string{"n"},
+			OpenAPIVersion:            []string{"3.1.0"},
+			APITitle:                  []string{"My Custom API"},
+			APIDescription:            []string{"My custom description"},
+			APIVersion:                []string{"2.0.0"},
+			TermsOfServiceURL:         []string{"not-a-url", "https://example.com/tos"},
+			IncludeContact:            []string{"y", "Jane Doe", "not-a-url", "https://example.com", "invalid-email", "jane@example.com"},
+			IncludeLicense:            []string{"y", "MIT", "not-a-url", "https://example.com/lic"},
+			BaseURL:                   []string{"https://example.com/api"},
+			OpenAPISpecOutputPath:     []string{"./docs/openapi.json"},
+			AddSecurityScheme:         []string{"n"},
+			ValidateTopLevelOnlyEnum:  []string{"y"},
+			GenerateEnumValidator:     []string{"y"},
+			GenerateAuthMiddleware:    []string{"n"},
+		})
 
 		stdout, stderr, err := runInitWithInput(input)
 		Expect(err).To(BeNil())
@@ -168,7 +136,7 @@ var _ = Describe("Init Command", Serial, func() {
 		Expect(cfg.ExperimentalConfig.GenerateEnumValidator).To(BeTrue())
 	})
 
-	It("Exercises overwrite confirmation invalid, reject, and accept branches", func() {
+	It("Prompts an error when providing invalid overwrite confirmation and rejecting", func() {
 		// First run to create the config file.
 		createStdout, createStderr, createErr := runInitWithInput(getLineForDefaultConfig())
 		Expect(createErr).To(BeNil())
@@ -176,76 +144,64 @@ var _ = Describe("Init Command", Serial, func() {
 		Expect(createStdout).To(ContainSubstring("Successfully created gleece.config.json"))
 
 		// Second run: invalid confirmation first, then reject with 'n'.
-		rejectInput := lines(
-			"",      // Controller globs
-			"",      // Allow package load failures
-			"",      // Routing engine
-			"",      // Routes package name
-			"",      // Routes output path
-			"",      // Output file permissions
-			"",      // Validate response payload
-			"",      // Skip generation date comment
-			"",      // Auth middleware package name
-			"",      // Enforce security on all routes
-			"",      // OpenAPI version
-			"",      // API title
-			"",      // API description
-			"",      // API version
-			"",      // Terms of service URL
-			"",      // Include contact information?
-			"",      // Include license information?
-			"",      // Base URL
-			"",      // OpenAPI spec output path
-			"",      // Add a security scheme?
-			"",      // Validate top-level only enums?
-			"",      // Generate enum validator?
-			"maybe", // Invalid overwrite confirmation
-			"n",     // Reject overwrite
-			"n",     // Generate authentication middleware skeleton code?
-		)
+		rejectInput := getInput(Questionnaire{
+			OverwriteConfirmation:  []string{"maybe", "n"},
+			GenerateAuthMiddleware: []string{"n"},
+		})
 
-		rejectStdout, rejectStderr, rejectErr := runInitWithInput(rejectInput)
-		Expect(rejectErr).To(BeNil())
-		Expect(rejectStderr).To(BeEmpty())
-		Expect(rejectStdout).To(ContainSubstring("File 'gleece.config.json' already exists. Overwrite? (y/n): "))
-		Expect(rejectStdout).To(ContainSubstring("Please confirm or reject by typing 'y' or 'n' and pressing enter"))
-		Expect(rejectStdout).To(ContainSubstring("Configuration overwrite aborted"))
+		stdout, stderr, err := runInitWithInput(rejectInput)
+		Expect(err).To(BeNil())
+		Expect(stderr).To(BeEmpty())
+		Expect(stdout).To(ContainSubstring("File 'gleece.config.json' already exists. Overwrite? (y/n): "))
+		Expect(stdout).To(ContainSubstring("Please confirm or reject by typing 'y' or 'n' and pressing enter"))
+		Expect(stdout).To(ContainSubstring("Configuration overwrite aborted"))
+	})
 
-		// Third run: invalid confirmation first, then accept with 'y'.
-		acceptInput := lines(
-			"",      // Controller globs
-			"",      // Allow package load failures
-			"",      // Routing engine
-			"",      // Routes package name
-			"",      // Routes output path
-			"",      // Output file permissions
-			"",      // Validate response payload
-			"",      // Skip generation date comment
-			"",      // Auth middleware package name
-			"",      // Enforce security on all routes
-			"",      // OpenAPI version
-			"",      // API title
-			"",      // API description
-			"",      // API version
-			"",      // Terms of service URL
-			"",      // Include contact information?
-			"",      // Include license information?
-			"",      // Base URL
-			"",      // OpenAPI spec output path
-			"",      // Add a security scheme?
-			"",      // Validate top-level only enums?
-			"",      // Generate enum validator?
-			"maybe", // Invalid overwrite confirmation
-			"y",     // Accept overwrite
-			"n",     // Generate authentication middleware skeleton code?
-		)
+	It("Successfully overwrites configuration when accepting overwrite", func() {
+		// First run to create the config file.
+		createStdout, createStderr, createErr := runInitWithInput(getLineForDefaultConfig())
+		Expect(createErr).To(BeNil())
+		Expect(createStderr).To(BeEmpty())
+		Expect(createStdout).To(ContainSubstring("Successfully created gleece.config.json"))
 
-		acceptStdout, acceptStderr, acceptErr := runInitWithInput(acceptInput)
-		Expect(acceptErr).To(BeNil())
-		Expect(acceptStderr).To(BeEmpty())
-		Expect(acceptStdout).To(ContainSubstring("File 'gleece.config.json' already exists. Overwrite? (y/n): "))
-		Expect(acceptStdout).To(ContainSubstring("Please confirm or reject by typing 'y' or 'n' and pressing enter"))
-		Expect(acceptStdout).To(ContainSubstring("Successfully created gleece.config.json"))
+		// Second run: accept with 'y'.
+		acceptInput := getInput(Questionnaire{
+			OverwriteConfirmation:  []string{"y"},
+			GenerateAuthMiddleware: []string{"n"},
+		})
+
+		stdout, stderr, err := runInitWithInput(acceptInput)
+		Expect(err).To(BeNil())
+		Expect(stderr).To(BeEmpty())
+		Expect(stdout).To(ContainSubstring("File 'gleece.config.json' already exists. Overwrite? (y/n): "))
+		Expect(stdout).To(ContainSubstring("Successfully created gleece.config.json"))
+	})
+
+	It("Generates authentication middleware skeleton code", func() {
+		input := getInput(Questionnaire{
+			AuthMiddlewarePackageName: []string{"auth/pkg"},
+			GenerateAuthMiddleware:    []string{"y"},
+		})
+
+		_, _, err := runInitWithInput(input)
+		Expect(err).To(BeNil())
+
+		// Verify authentication.go exists in the expected directory
+		// The code suggests:
+		// splitPkgPath := strings.Split(config.RoutesConfig.AuthorizationConfig.AuthFileFullPackageName, "/")
+		// concatenatedPath := append(splitPkgPath[1:], "authentication.go")
+		// suggestedOutputPath := filepath.Join(concatenatedPath...)
+		// If input is "auth/pkg", split is ["auth", "pkg"].
+		// splitPkgPath[1:] is ["pkg"].
+		// Output is "pkg/authentication.go".
+
+		expectedPath := "pkg/authentication.go"
+		_, err = os.Stat(expectedPath)
+		Expect(err).To(BeNil(), "Authentication middleware file should exist at %s", expectedPath)
+
+		content, err := os.ReadFile(expectedPath)
+		Expect(err).To(BeNil())
+		Expect(string(content)).To(ContainSubstring("package pkg"))
 	})
 })
 
@@ -298,34 +254,82 @@ func runInitWithInput(input string) (stdout string, stderr string, err error) {
 	return stdoutBuffer.String(), result.StdErr, result.Error
 }
 
-func lines(values ...string) string {
-	return strings.Join(values, "\n") + "\n"
+type Questionnaire struct {
+	ControllerGlobs           []string
+	AllowPackageLoadFailures  []string
+	RoutingEngine             []string
+	RoutesPackageName         []string
+	RoutesOutputPath          []string
+	OutputFilePerms           []string
+	ValidateResponsePayload   []string
+	SkipGenerateDateComment   []string
+	AuthMiddlewarePackageName []string
+	EnforceSecurity           []string
+	OpenAPIVersion            []string
+	APITitle                  []string
+	APIDescription            []string
+	APIVersion                []string
+	TermsOfServiceURL         []string
+	IncludeContact            []string
+	IncludeLicense            []string
+	BaseURL                   []string
+	OpenAPISpecOutputPath     []string
+	AddSecurityScheme         []string
+	ValidateTopLevelOnlyEnum  []string
+	GenerateEnumValidator     []string
+	OverwriteConfirmation     []string
+	GenerateAuthMiddleware    []string
+	AuthMiddlewareOutputPath  []string
 }
 
 func getLineForDefaultConfig() string {
-	return lines(
-		"",  // Controller globs
-		"",  // Allow package load failures
-		"",  // Routing engine
-		"",  // Routes package name
-		"",  // Routes output path
-		"",  // Output file permissions
-		"",  // Validate response payload
-		"",  // Skip generation date comment
-		"",  // Auth middleware package name
-		"",  // Enforce security on all routes
-		"",  // OpenAPI version
-		"",  // API title
-		"",  // API description
-		"",  // API version
-		"",  // Terms of service URL
-		"",  // Include contact information?
-		"",  // Include license information?
-		"",  // Base URL
-		"",  // OpenAPI spec output path
-		"",  // Add a security scheme?
-		"",  // Validate top-level only enums?
-		"",  // Generate enum validator?
-		"n", // Generate authentication middleware skeleton code?
-	)
+	return getInput(Questionnaire{
+		OverwriteConfirmation: []string{"n"},
+	})
+}
+
+func getInput(q Questionnaire) string {
+	var inputs []string
+
+	// Helper to append a slice of strings if it exists, otherwise a default value
+	appendOrEmpty := func(field []string, defaultValue string) {
+		if len(field) == 0 {
+			inputs = append(inputs, defaultValue)
+		} else {
+			inputs = append(inputs, field...)
+		}
+	}
+
+	// This order must match the prompt sequence in init.go/cliWizard
+	appendOrEmpty(q.ControllerGlobs, "")
+	appendOrEmpty(q.AllowPackageLoadFailures, "")
+	appendOrEmpty(q.RoutingEngine, "")
+	appendOrEmpty(q.RoutesPackageName, "")
+	appendOrEmpty(q.RoutesOutputPath, "")
+	appendOrEmpty(q.OutputFilePerms, "")
+	appendOrEmpty(q.ValidateResponsePayload, "")
+	appendOrEmpty(q.SkipGenerateDateComment, "")
+	appendOrEmpty(q.AuthMiddlewarePackageName, "")
+	appendOrEmpty(q.EnforceSecurity, "")
+	appendOrEmpty(q.OpenAPIVersion, "")
+	appendOrEmpty(q.APITitle, "")
+	appendOrEmpty(q.APIDescription, "")
+	appendOrEmpty(q.APIVersion, "")
+	appendOrEmpty(q.TermsOfServiceURL, "")
+	appendOrEmpty(q.IncludeContact, "")
+	appendOrEmpty(q.IncludeLicense, "")
+	appendOrEmpty(q.BaseURL, "")
+	appendOrEmpty(q.OpenAPISpecOutputPath, "")
+	appendOrEmpty(q.AddSecurityScheme, "")
+	appendOrEmpty(q.ValidateTopLevelOnlyEnum, "")
+	appendOrEmpty(q.GenerateEnumValidator, "")
+
+	if len(q.OverwriteConfirmation) > 0 {
+		inputs = append(inputs, q.OverwriteConfirmation...)
+	}
+
+	appendOrEmpty(q.GenerateAuthMiddleware, "")
+	appendOrEmpty(q.AuthMiddlewareOutputPath, "")
+
+	return strings.Join(inputs, "\n") + "\n"
 }
