@@ -74,6 +74,7 @@ func askRoutesConfig(w *cliWizard, config *definitions.GleeceConfig) {
 	config.RoutesConfig.OutputFilePerms = w.askFilePerms("Output file permissions", "0644")
 	config.RoutesConfig.ValidateResponsePayload = w.askBool("Validate response payload?", false)
 	config.RoutesConfig.SkipGenerateDateComment = w.askBool("Skip generation date comment?", true)
+	fmt.Println()
 }
 
 // askAuthConfig prompts the user for authentication-related settings.
@@ -128,6 +129,7 @@ func askSecSchemas(w *cliWizard, config *definitions.GleeceConfig) {
 	if w.askBool("Add a security scheme?", false) {
 		config.OpenAPIGeneratorConfig.SecuritySchemes = w.askSecuritySchemes()
 	}
+	fmt.Println()
 }
 
 // askExperimentalConfigs prompts the user for experimental feature toggles.
@@ -172,6 +174,7 @@ func askAboutCodeGeneration(w *cliWizard, config *definitions.GleeceConfig) {
 	}
 
 	saveFileWithOverwriteConfirmation(w, finalOutputPath, []byte(configStr))
+	fmt.Println()
 }
 
 // generateAuthMiddleware creates an authentication middleware file for the configured routing engine
@@ -275,6 +278,7 @@ func saveConfig(w *cliWizard, config definitions.GleeceConfig) {
 	}
 
 	saveFileWithOverwriteConfirmation(w, "gleece.config.json", configBytes)
+	fmt.Println()
 }
 
 // saveFileWithOverwriteConfirmation attempts to save the given file, prompting the user
