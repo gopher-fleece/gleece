@@ -18,8 +18,10 @@ import (
 
 var initCmd = &cobra.Command{
 	Use:   "init",
-	Short: "Initialize a new Gleece configuration",
-	Long:  `The init command starts a wizard that asks questions and creates a gleece.config.json file.`,
+	Short: "Initialize a new Gleece project or re-configure an existing one",
+	Long: `The init command is a wizard that guides you through the process of initializing a Gleece project.
+Currently, this includes creating the necessary configuration and some of the necessary boilerplate code.
+`,
 	Run: func(cmd *cobra.Command, args []string) {
 		runWizard()
 	},
@@ -43,7 +45,7 @@ func runWizard() {
 	askExperimentalConfigs(w, &config)
 	saveConfig(w, config)
 
-	askIfShouldGenerateCode(w, &config)
+	askAboutCodeGeneration(w, &config)
 }
 
 // askCommonConfig prompts the user for common configuration settings like package name, templates, and target language.
@@ -136,7 +138,9 @@ func askExperimentalConfigs(w *cliWizard, config *definitions.GleeceConfig) {
 	fmt.Println()
 }
 
-func askIfShouldGenerateCode(w *cliWizard, config *definitions.GleeceConfig) {
+// askAboutCodeGeneration prompts the user if they want to generate boilerplate code
+// such as the authentication middleware
+func askAboutCodeGeneration(w *cliWizard, config *definitions.GleeceConfig) {
 	fmt.Println("--- Boilerplate Code Generation ---")
 	if !w.askBool("Generate authentication middleware skeleton code?", true) {
 		fmt.Println()
@@ -170,6 +174,7 @@ func askIfShouldGenerateCode(w *cliWizard, config *definitions.GleeceConfig) {
 	saveFileWithOverwriteConfirmation(w, finalOutputPath, []byte(configStr))
 }
 
+// generateAuthMiddleware creates an authentication middleware file for the configured routing engine
 func generateAuthMiddleware(config *definitions.GleeceConfig) (string, error) {
 	var template string
 
@@ -272,6 +277,9 @@ func saveConfig(w *cliWizard, config definitions.GleeceConfig) {
 	saveFileWithOverwriteConfirmation(w, "gleece.config.json", configBytes)
 }
 
+// saveFileWithOverwriteConfirmation attempts to save the given file, prompting the user
+//
+//	to confirm overwriting as necessary
 func saveFileWithOverwriteConfirmation(w *cliWizard, fileName string, data []byte) bool {
 	_, statErr := os.Stat(fileName)
 
