@@ -28,7 +28,7 @@ var _ = Describe("Error-handling", func() {
 	It("Returns a clear error when configuration fails validation", func() {
 		configPath := utils.GetAbsPathByRelativeOrFail("gleece.invalid.config.json")
 		_, _, err := cmd.GetConfigAndMetadata(arguments.CliArguments{ConfigPath: configPath})
-		Expect(err).To(MatchError(ContainSubstring("Field 'ControllerGlobs' failed validation with tag 'min'")))
+		Expect(err).To(MatchError(ContainSubstring("Field 'ControllerGlobs' (GleeceConfig.CommonConfig.ControllerGlobs) failed validation with tag 'min'")))
 	})
 
 	It("Returns a clear error when configuration has a non-existent template override", func() {

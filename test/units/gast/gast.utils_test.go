@@ -151,7 +151,6 @@ var _ = Describe("Unit Tests - AST", func() {
 				Package: pos,
 			}
 
-			// Now call your function
 			fullPkg, err := gast.GetFullPackageName(astFile, fileSet)
 			Expect(err).To(
 				Or(

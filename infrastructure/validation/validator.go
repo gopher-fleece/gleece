@@ -1,6 +1,7 @@
 package validation
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -116,7 +117,9 @@ func ExtractValidationErrorMessage(err error, fieldName *string) string {
 		return ""
 	}
 
-	validationErrors, ok := err.(validator.ValidationErrors)
+	var validationErrors validator.ValidationErrors
+	ok := errors.As(err, &validationErrors)
+
 	if !ok {
 		return err.Error()
 	}
@@ -127,7 +130,7 @@ func ExtractValidationErrorMessage(err error, fieldName *string) string {
 		if fieldName != nil {
 			fName = *fieldName
 		}
-		errStr += fmt.Sprintf("Field '%s' failed validation with tag '%s'. ", fName, validationErr.Tag())
+		errStr += fmt.Sprintf("Field '%s' (%s) failed validation with tag '%s'. ", fName, validationErr.Namespace(), validationErr.Tag())
 	}
 
 	return errStr

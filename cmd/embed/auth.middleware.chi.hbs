@@ -1,0 +1,12 @@
+package {{{PkgAlias}}}
+
+import (
+    "context"
+    "net/http"
+    
+    "github.com/gopher-fleece/runtime"
+)
+
+func GleeceRequestAuthorization(ctx context.Context, r *http.Request, check runtime.SecurityCheck) (context.Context, *runtime.SecurityError) {
+    return ctx, nil
+}

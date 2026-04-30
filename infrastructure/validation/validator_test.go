@@ -93,11 +93,11 @@ var _ = Describe("Validation Utilities", func() {
 
 			// Extract readable validation error messages
 			message := ExtractValidationErrorMessage(err, nil)
-			Expect(message).To(ContainSubstring("Field 'SliceField' failed validation with tag 'not_nil_array'."))
-			Expect(message).To(ContainSubstring("Field 'StringField' failed validation with tag 'starts_with_letter'."))
-			Expect(message).To(ContainSubstring("Field 'RegexField' failed validation with tag 'regex'."))
-			Expect(message).To(ContainSubstring("Field 'SecurityIn' failed validation with tag 'security_schema_in'."))
-			Expect(message).To(ContainSubstring("Field 'SecurityType' failed validation with tag 'security_schema_type'."))
+			Expect(message).To(ContainSubstring("Field 'SliceField' (TestStruct.SliceField) failed validation with tag 'not_nil_array'."))
+			Expect(message).To(ContainSubstring("Field 'StringField' (TestStruct.StringField) failed validation with tag 'starts_with_letter'."))
+			Expect(message).To(ContainSubstring("Field 'RegexField' (TestStruct.RegexField) failed validation with tag 'regex'."))
+			Expect(message).To(ContainSubstring("Field 'SecurityIn' (TestStruct.SecurityIn) failed validation with tag 'security_schema_in'."))
+			Expect(message).To(ContainSubstring("Field 'SecurityType' (TestStruct.SecurityType) failed validation with tag 'security_schema_type'."))
 		})
 
 		It("should return a readable message with overridden field name", func() {
@@ -117,11 +117,11 @@ var _ = Describe("Validation Utilities", func() {
 			// Extract readable validation error messages with overridden field name
 			overrideFieldName := "CustomField"
 			message := ExtractValidationErrorMessage(err, &overrideFieldName)
-			Expect(message).To(ContainSubstring("Field 'CustomField' failed validation with tag 'not_nil_array'."))
-			Expect(message).To(ContainSubstring("Field 'CustomField' failed validation with tag 'starts_with_letter'."))
-			Expect(message).To(ContainSubstring("Field 'CustomField' failed validation with tag 'regex'."))
-			Expect(message).To(ContainSubstring("Field 'CustomField' failed validation with tag 'security_schema_in'."))
-			Expect(message).To(ContainSubstring("Field 'CustomField' failed validation with tag 'security_schema_type'."))
+			Expect(message).To(ContainSubstring("Field 'CustomField' (TestStruct.SliceField) failed validation with tag 'not_nil_array'."))
+			Expect(message).To(ContainSubstring("Field 'CustomField' (TestStruct.StringField) failed validation with tag 'starts_with_letter'."))
+			Expect(message).To(ContainSubstring("Field 'CustomField' (TestStruct.RegexField) failed validation with tag 'regex'."))
+			Expect(message).To(ContainSubstring("Field 'CustomField' (TestStruct.SecurityIn) failed validation with tag 'security_schema_in'."))
+			Expect(message).To(ContainSubstring("Field 'CustomField' (TestStruct.SecurityType) failed validation with tag 'security_schema_type'."))
 		})
 	})
 })

@@ -1,0 +1,12 @@
+package {{{PkgAlias}}}
+
+import (
+    "context"
+
+    "github.com/gofiber/fiber/v2"
+    "github.com/gopher-fleece/runtime"
+)
+
+func GleeceRequestAuthorization(ctx context.Context, fiberCtx *fiber.Ctx, check runtime.SecurityCheck) (context.Context, *runtime.SecurityError) {
+    return ctx, nil
+}
